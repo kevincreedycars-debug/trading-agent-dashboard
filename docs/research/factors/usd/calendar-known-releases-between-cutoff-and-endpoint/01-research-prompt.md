@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-calendar-known-releases-between-cutoff-and-endpoint` for factor `calendar.known-releases-between-cutoff-and-endpoint` on asset USD; group label `usd-topic-calendar-and-data-quality` (Calendar state and the data-quality gate); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `calendar.known-releases-between-cutoff-and-endpoint` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -46,11 +47,12 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 
 ## Questions for this factor
 
-1. Chain question: does `calendar.known-releases-between-cutoff-and-endpoint` - Known releases inside the window - carry information about the next 24-hour dollar move, and in which quantity? Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.
-2. Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?
-3. What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?
-4. Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?
-5. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
+1. Chain question: what should `calendar.known-releases-between-cutoff-and-endpoint` - Known releases inside the window - change about the call, given that it is a quality gate rather than a directional input? Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.
+2. Which releases fall inside the session, how are their timestamps verified before the cutoff, and what happens when a release time is scheduled but its consensus is unavailable?
+3. Does a known-but-unreleased event change the expected direction, the expected dispersion, or only the confidence in a call, and how can that be measured rather than assumed?
+4. Can the event be used without using its outcome, and is a pre-release positioning effect distinguishable from the post-release reaction that the next session will contain?
+5. What is the honest treatment of a session whose dominant event is a release the collector cannot date reliably: abstain, widen, or call with a stated caveat?
+6. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
 
 ## Existing thresholds are context, not the scope limit
 

@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-rates-term-premium-and-curve` for factor `rates.term-premium-and-curve` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `rates.term-premium-and-curve` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,11 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `rates.term-premium-and-curve` - Term premium and curve - carry information about the next 24-hour dollar move, and in which quantity? 10Y minus 2Y slope, and whether the level or the change carries information across the session.
-2. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
-3. Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?
-4. Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?
-5. Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?
+2. Is the informative object the slope level, its change, or a term-premium estimate, and can a term premium be estimated with the data named here rather than asserted?
+3. Is a curve slope observable at 05:00 London from previous closes, and how does a stale slope interact with a session that contains a US data release?
+4. Does the slope carry growth expectations, inflation compensation, or a term-premium and duration-demand story, and what observable separates them?
+5. Does the slope add information beyond the levels of its two legs, each of which already carries its own chain, and is it a regime variable or a direction?
+6. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ## Existing thresholds are context, not the scope limit
 

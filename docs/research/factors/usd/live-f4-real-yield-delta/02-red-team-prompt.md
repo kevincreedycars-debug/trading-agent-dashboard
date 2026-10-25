@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f4-real-yield-delta` for factor `live.f4-real-yield-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `red_team`; this stage returns exactly one Markdown document (review).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f4-real-yield-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Reviewed document: the research return registered against factor chain `usd-factor-live-f4-real-yield-delta`, stage `research`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.
 
 ## What this stage is for
@@ -52,6 +53,16 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 `SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.
 
 For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.
+
+## The questions this stage must carry forward
+
+A question does not stop at stage 1. For each question below, say whether the research report answers it, answers it only partly or does not answer it, and give the verdict that follows from the source you checked.
+
+1. Is the informative quantity the TIPS real yield change, the nominal-minus-breakeven split, or the level, and how much of the change comes from the breakeven measurement itself?
+2. How stale is DFII10 at the cutoff, and do TIPS liquidity and off-the-run pricing contaminate the measured change enough to matter for a five-day window?
+3. Is the mechanism a real discount-rate story for the dollar or a growth story, and what observable separates a real-rate rise that helps the dollar from one that hurts it?
+4. Does the real yield add information beyond the nominal 10Y and the front-end delta, and would the evidence support the deployed five-day change over a shorter window?
+5. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ## The session this is written for
 

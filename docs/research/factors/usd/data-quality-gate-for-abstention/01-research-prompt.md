@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-data-quality-gate-for-abstention` for factor `data.quality-gate-for-abstention` on asset USD; group label `usd-topic-calendar-and-data-quality` (Calendar state and the data-quality gate); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `data.quality-gate-for-abstention` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -46,11 +47,12 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 
 ## Questions for this factor
 
-1. Chain question: does `data.quality-gate-for-abstention` - Data quality gate for abstention - carry information about the next 24-hour dollar move, and in which quantity? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.
-2. Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?
-3. What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?
-4. Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?
-5. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
+1. Chain question: what should `data.quality-gate-for-abstention` - Data quality gate for abstention - change about the call, given that it is a quality gate rather than a directional input? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.
+2. Which data states should force abstention - missing, stale, revised, or unreachable at the cutoff - and how is each state detected without an as-of check in the live collector?
+3. Does the gate improve directional accuracy on the sessions it does trade, and what does it cost in coverage and in skipped sessions that would have been called correctly?
+4. How are skipped sessions counted - as errors, as excluded observations, or as a separate coverage figure - and what benchmark makes abstention comparable to always calling?
+5. Which sessions does the gate skip in practice, and are they the sessions where a call was least likely to be right, or simply the sessions with the most missing inputs?
+6. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
 
 ## Existing thresholds are context, not the scope limit
 

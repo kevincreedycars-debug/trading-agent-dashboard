@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-calendar-known-releases-between-cutoff-and-endpoint` for factor `calendar.known-releases-between-cutoff-and-endpoint` on asset USD; group label `usd-topic-calendar-and-data-quality` (Calendar state and the data-quality gate); stage `red_team`; this stage returns exactly one Markdown document (review).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `calendar.known-releases-between-cutoff-and-endpoint` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Reviewed document: the research return registered against factor chain `usd-factor-calendar-known-releases-between-cutoff-and-endpoint`, stage `research`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.
 
 ## What this stage is for
@@ -52,6 +53,16 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 `SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.
 
 For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.
+
+## The questions this stage must carry forward
+
+A question does not stop at stage 1. For each question below, say whether the research report answers it, answers it only partly or does not answer it, and give the verdict that follows from the source you checked.
+
+1. Which releases fall inside the session, how are their timestamps verified before the cutoff, and what happens when a release time is scheduled but its consensus is unavailable?
+2. Does a known-but-unreleased event change the expected direction, the expected dispersion, or only the confidence in a call, and how can that be measured rather than assumed?
+3. Can the event be used without using its outcome, and is a pre-release positioning effect distinguishable from the post-release reaction that the next session will contain?
+4. What is the honest treatment of a session whose dominant event is a release the collector cannot date reliably: abstain, widen, or call with a stated caveat?
+5. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
 
 ## The session this is written for
 

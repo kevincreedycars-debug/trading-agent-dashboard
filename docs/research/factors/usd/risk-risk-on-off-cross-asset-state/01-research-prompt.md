@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-risk-risk-on-off-cross-asset-state` for factor `risk.risk-on-off-cross-asset-state` on asset USD; group label `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `risk.risk-on-off-cross-asset-state` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,11 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `risk.risk-on-off-cross-asset-state` - Risk-on and risk-off cross-asset state - carry information about the next 24-hour dollar move, and in which quantity? Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.
-2. Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?
-3. Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?
-4. Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?
-5. Which instrument labels these factors, given that DXY has no verified intraday source?
+2. Which assets define the risk state, at what cutoff, and do their quotes share one window, or is the state assembled from instruments that are closed at 05:00 London?
+3. Is one composite state justified, or does the evidence support separate equity, credit and commodity channels with different signs for the dollar?
+4. How much does the state overlap the VIX level, gold and the equity-dollar relation, and which single chain should own the risk factor?
+5. Does the risk state carry directional information at all, or is it a conditioning variable that changes the sign of other factors?
+6. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ## Existing thresholds are context, not the scope limit
 

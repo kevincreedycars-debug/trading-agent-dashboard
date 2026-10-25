@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-calendar-days-since-and-until-high-impact-events` for factor `calendar.days-since-and-until-high-impact-events` on asset USD; group label `usd-topic-calendar-and-data-quality` (Calendar state and the data-quality gate); stage `red_team`; this stage returns exactly one Markdown document (review).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `calendar.days-since-and-until-high-impact-events` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Reviewed document: the research return registered against factor chain `usd-factor-calendar-days-since-and-until-high-impact-events`, stage `research`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.
 
 ## What this stage is for
@@ -52,6 +53,16 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 `SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.
 
 For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.
+
+## The questions this stage must carry forward
+
+A question does not stop at stage 1. For each question below, say whether the research report answers it, answers it only partly or does not answer it, and give the verdict that follows from the source you checked.
+
+1. Is distance from a high-impact date a meaningful state variable, and does the evidence support drift before a release, after it, or neither?
+2. Which events count as high impact, and does the answer depend on a classification that is itself hindsight-defined?
+3. Is the mechanism positioning, hedging demand, or pre-announcement drift, and what observable at the cutoff separates it from ordinary seasonality?
+4. Is the distance measure distinct from the release-window factor and from a volatility regime, and does it carry any information beyond them?
+5. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
 
 ## The session this is written for
 

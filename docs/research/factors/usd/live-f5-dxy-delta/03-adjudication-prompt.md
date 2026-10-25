@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f5-dxy-delta` for factor `live.f5-dxy-delta` on asset USD; group label `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f5-dxy-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `live.f5-dxy-delta` (chain `usd-factor-live-f5-dxy-delta`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,17 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Is the stored DTWEXBGS the broad trade-weighted index rather than DXY, and what does calling it the dollar index do to every claim that quotes it?
+2. Is a one-day change of a daily H.10 index observable at 05:00 London given its publication lag, and what does the d1 to d5 to d20 fallback ladder do to the horizon of the signal?
+3. Is the informative content own-session momentum, mean reversion after a large move, or slow trend, and which of them can a 24-hour session capture at all?
+4. Does the index delta predict the next session, or is it an accounting identity against the bilateral pairs that the label instrument is meant to measure?
+5. Which dollar index is a claim actually about, and does the answer change with the index construction?
+6. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ## Five kinds of evidence that must not be mixed
 

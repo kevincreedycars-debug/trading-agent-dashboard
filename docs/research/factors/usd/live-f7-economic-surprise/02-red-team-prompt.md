@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f7-economic-surprise` for factor `live.f7-economic-surprise` on asset USD; group label `usd-topic-economic-surprise-and-fed-bias` (Economic surprises, first prints and Fed bias); stage `red_team`; this stage returns exactly one Markdown document (review).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f7-economic-surprise` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Reviewed document: the research return registered against factor chain `usd-factor-live-f7-economic-surprise`, stage `research`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.
 
 ## What this stage is for
@@ -52,6 +53,17 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 `SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.
 
 For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.
+
+## The questions this stage must carry forward
+
+A question does not stop at stage 1. For each question below, say whether the research report answers it, answers it only partly or does not answer it, and give the verdict that follows from the source you checked.
+
+1. What is a surprise here, and can any consensus or first-print vintage published before the release be reached, or is the stored usd_signal an unversioned derived value whose input cannot be recovered?
+2. Is the release outcome observable before the 05:00 London cutoff, and what does the signal do on a session whose releases land inside the window rather than before it?
+3. Is the mechanism an immediate repricing of rate expectations, a risk-premium change or a growth surprise, and does the direction depend on the policy reaction function in force?
+4. Does a surprise signal add information beyond the front-end rate change that follows it, and how much of the surprise reaction is already in the dollar by the next cutoff?
+5. Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?
+6. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
 
 ## The session this is written for
 

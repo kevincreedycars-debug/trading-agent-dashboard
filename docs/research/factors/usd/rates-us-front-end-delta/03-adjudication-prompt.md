@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-rates-us-front-end-delta` for factor `rates.us-front-end-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `rates.us-front-end-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `rates.us-front-end-delta` (chain `usd-factor-rates-us-front-end-delta`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,16 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Do the 2Y and 3M series share a publication lag and a market calendar, and is a change computed from a stale 3M print comparable to one computed from the 2Y?
+2. Is the informative quantity the 3M bill, the 2Y note, their difference, or a policy-expectation measure implied by them, and does the 3M bill carry a flight-to-quality distortion?
+3. Does a front-end change reflect expected policy, term premium, or a liquidity and collateral effect, and what observable at the cutoff separates them?
+4. Does this chain duplicate the live F2 and F3 chains, and if so what does it add - the 3M leg, the policy-cycle conditioning, or nothing?
+5. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ## Five kinds of evidence that must not be mixed
 

@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-risk-vix-level-and-change-at-cutoff` for factor `risk.vix-level-and-change-at-cutoff` on asset USD; group label `usd-topic-vix-level-and-risk-regime` (VIX, its change and the USD risk regime at the 05:00 London cutoff); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `risk.vix-level-and-change-at-cutoff` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `risk.vix-level-and-change-at-cutoff` (chain `usd-factor-risk-vix-level-and-change-at-cutoff`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,16 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. What does the VIX level at the cutoff add to the level the deployed F1 rule already uses, and is a second chain carrying the same variable a duplication the synthesis has to resolve?
+2. Is the informative quantity the level, the one-day change, the five-day change, or the change between the last US close and the cutoff, and how stale is the observation at 05:00 London?
+3. Is the mechanism a safe-haven demand for dollars, a funding or liquidity squeeze, or a risk-appetite shock, and what observable separates them?
+4. Does the VIX change add information beyond the cross-asset risk state and the equity move, and is its sign the same in a calm and a stressed regime?
+5. Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?
 
 ## Five kinds of evidence that must not be mixed
 

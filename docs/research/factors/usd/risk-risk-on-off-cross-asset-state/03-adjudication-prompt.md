@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-risk-risk-on-off-cross-asset-state` for factor `risk.risk-on-off-cross-asset-state` on asset USD; group label `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `risk.risk-on-off-cross-asset-state` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `risk.risk-on-off-cross-asset-state` (chain `usd-factor-risk-risk-on-off-cross-asset-state`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,16 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Which assets define the risk state, at what cutoff, and do their quotes share one window, or is the state assembled from instruments that are closed at 05:00 London?
+2. Is one composite state justified, or does the evidence support separate equity, credit and commodity channels with different signs for the dollar?
+3. How much does the state overlap the VIX level, gold and the equity-dollar relation, and which single chain should own the risk factor?
+4. Does the risk state carry directional information at all, or is it a conditioning variable that changes the sign of other factors?
+5. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ## Five kinds of evidence that must not be mixed
 

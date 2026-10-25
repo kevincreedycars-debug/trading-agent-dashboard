@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f6-gold-delta` for factor `live.f6-gold-delta` on asset USD; group label `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations); stage `red_team`; this stage returns exactly one Markdown document (review).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f6-gold-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Reviewed document: the research return registered against factor chain `usd-factor-live-f6-gold-delta`, stage `research`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.
 
 ## What this stage is for
@@ -52,6 +53,17 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 `SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.
 
 For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.
+
+## The questions this stage must carry forward
+
+A question does not stop at stage 1. For each question below, say whether the research report answers it, answers it only partly or does not answer it, and give the verdict that follows from the source you checked.
+
+1. Is gold read as an inverse dollar proxy, a real-rate hedge or a safe-haven asset, and how would the sign differ between those three readings?
+2. Is the Coinbase XAU-USD spot quote the same instrument, venue and window as the gold the literature measures, and how does a 24/7 crypto-venue quote behave against a 05:00 London cutoff?
+3. Is a five-day gold change the right transformation, and does the one-day fallback change the meaning of the signal rather than only its horizon?
+4. Does gold add information beyond the real yield, the VIX level and the cross-asset risk state, or is its apparent dollar relation a restatement of real rates?
+5. Which dollar index is a claim actually about, and does the answer change with the index construction?
+6. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ## The session this is written for
 

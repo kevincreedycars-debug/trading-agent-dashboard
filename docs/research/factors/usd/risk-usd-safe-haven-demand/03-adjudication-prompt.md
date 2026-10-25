@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-risk-usd-safe-haven-demand` for factor `risk.usd-safe-haven-demand` on asset USD; group label `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `risk.usd-safe-haven-demand` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `risk.usd-safe-haven-demand` (chain `usd-factor-risk-usd-safe-haven-demand`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,16 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. What observation distinguishes the dollar being bought as insurance from the dollar being bought for carry, and can that distinction be measured at the cutoff?
+2. Is safe-haven demand a separate factor or the residual of the risk state, the VIX level and the rate differentials, and is there an instrument that isolates it, such as cross-currency basis or FX-implied volatility skew?
+3. Does the relation hold symmetrically in risk-off and risk-on, and is the sign stable across funding-stress episodes?
+4. Does safe-haven demand add incremental information beyond the risk state and the VIX, and what data would have to be bought before it can be tested?
+5. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ## Five kinds of evidence that must not be mixed
 

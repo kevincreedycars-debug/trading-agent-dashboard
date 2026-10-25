@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f6-gold-delta` for factor `live.f6-gold-delta` on asset USD; group label `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f6-gold-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,12 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `live.f6-gold-delta` - F6 Gold delta - carry information about the next 24-hour dollar move, and in which quantity? Gold move as an inverse dollar-risk read.
-2. Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?
-3. Which dollar index is a claim actually about, and does the answer change with the index construction?
-4. Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?
-5. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
+2. Is gold read as an inverse dollar proxy, a real-rate hedge or a safe-haven asset, and how would the sign differ between those three readings?
+3. Is the Coinbase XAU-USD spot quote the same instrument, venue and window as the gold the literature measures, and how does a 24/7 crypto-venue quote behave against a 05:00 London cutoff?
+4. Is a five-day gold change the right transformation, and does the one-day fallback change the meaning of the signal rather than only its horizon?
+5. Does gold add information beyond the real yield, the VIX level and the cross-asset risk state, or is its apparent dollar relation a restatement of real rates?
+6. Which dollar index is a claim actually about, and does the answer change with the index construction?
+7. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ## Existing thresholds are context, not the scope limit
 

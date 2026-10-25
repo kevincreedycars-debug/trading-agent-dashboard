@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f9-dollar-smile` for factor `live.f9-dollar-smile` on asset USD; group label `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f9-dollar-smile` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,12 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `live.f9-dollar-smile` - F9 Dollar Smile regime - carry information about the next 24-hour dollar move, and in which quantity? The smile regime read from the VIX level and the bias string.
-2. Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?
-3. Which dollar index is a claim actually about, and does the answer change with the index construction?
-4. Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?
-5. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
+2. Is the dollar smile a measured relation in this window or a descriptive story, and what observation would falsify it?
+3. The deployed reading uses the VIX 25/16 pair and the bias string: are those the right variables, and does the smile need a third state such as global growth or funding stress that neither captures?
+4. Is the smile a regime variable that should switch other factors signs, or a separate directional factor, and can those two roles be told apart with session data?
+5. Does the smile add anything to the VIX level and the cross-asset risk state it is computed from, and is the rulebook weight of 12 defensible against the coded 1?
+6. Which dollar index is a claim actually about, and does the answer change with the index construction?
+7. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ## Existing thresholds are context, not the scope limit
 

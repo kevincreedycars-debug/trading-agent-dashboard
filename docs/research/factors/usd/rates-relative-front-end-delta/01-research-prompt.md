@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-rates-relative-front-end-delta` for factor `rates.relative-front-end-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `rates.relative-front-end-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,11 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `rates.relative-front-end-delta` - Relative front-end delta - carry information about the next 24-hour dollar move, and in which quantity? US against German and other G10 front ends, with each euro-area and UK leg named rather than implied.
-2. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
-3. Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?
-4. Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?
-5. Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?
+2. Which foreign front end is used, from which source, and is it observable at 05:00 London on the same date and vintage as the US leg?
+3. Is a bilateral differential the right object, or should the dollar basket weights determine a weighted differential against several front ends?
+4. Does the relative move reflect divergent policy expectations, a common global factor, or a currency-specific risk premium?
+5. Does the differential add information beyond the US front end and the dollar index, and is a German leg a proxy for the euro rather than for the relative factor?
+6. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ## Existing thresholds are context, not the scope limit
 

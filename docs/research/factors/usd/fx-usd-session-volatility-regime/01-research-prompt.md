@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-fx-usd-session-volatility-regime` for factor `fx.usd-session-volatility-regime` on asset USD; group label `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `fx.usd-session-volatility-regime` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -46,11 +47,12 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 
 ## Questions for this factor
 
-1. Chain question: does `fx.usd-session-volatility-regime` - USD session volatility regime - carry information about the next 24-hour dollar move, and in which quantity? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.
-2. Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?
-3. Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?
-4. Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?
-5. Which instrument labels these factors, given that DXY has no verified intraday source?
+1. Chain question: what should `fx.usd-session-volatility-regime` - USD session volatility regime - change about the call, given that it is a abstention gate rather than a directional input? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.
+2. Is realised volatility measured from the label instrument, from a proxy, or from an implied measure, and over which window is it observable at the cutoff?
+3. Does the regime change the expected direction, the expected dispersion, or only whether a call should be made at all?
+4. Is the abstention value of a volatility regime separable from a data-quality gate, and what threshold would be a measured quantity rather than a convention?
+5. Does the volatility regime interact with the VIX level and the risk state, or does it restate them in dollar terms?
+6. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ## Existing thresholds are context, not the scope limit
 

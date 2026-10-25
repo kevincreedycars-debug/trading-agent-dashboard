@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f10-equity-versus-usd` for factor `live.f10-equity-versus-usd` on asset USD; group label `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f10-equity-versus-usd` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `live.f10-equity-versus-usd` (chain `usd-factor-live-f10-equity-versus-usd`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,17 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. The stored input is a QQQ ETF quote: what is the difference between the Nasdaq-100 index, the NQ future and the ETF for a 24-hour London session, and which one does a claim actually need?
+2. Is the QQQ quote a regular-hours close with gaps, a pre-market price or a delayed snapshot at the cutoff, and what do the ETF premium to net asset value and its distributions do to a one-day change?
+3. Is the equity-dollar relation a risk-appetite channel, a rate channel or a growth channel, and is its sign stable across regimes or does it flip with the VIX gate?
+4. Does the equity move add information beyond the VIX level and the cross-asset risk state, or is it the same risk appetite counted a third time?
+5. Which dollar index is a claim actually about, and does the answer change with the index construction?
+6. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ## Five kinds of evidence that must not be mixed
 

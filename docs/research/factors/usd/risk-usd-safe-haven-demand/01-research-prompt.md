@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-risk-usd-safe-haven-demand` for factor `risk.usd-safe-haven-demand` on asset USD; group label `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `risk.usd-safe-haven-demand` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,11 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `risk.usd-safe-haven-demand` - USD safe-haven demand - carry information about the next 24-hour dollar move, and in which quantity? Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move.
-2. Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?
-3. Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?
-4. Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?
-5. Which instrument labels these factors, given that DXY has no verified intraday source?
+2. What observation distinguishes the dollar being bought as insurance from the dollar being bought for carry, and can that distinction be measured at the cutoff?
+3. Is safe-haven demand a separate factor or the residual of the risk state, the VIX level and the rate differentials, and is there an instrument that isolates it, such as cross-currency basis or FX-implied volatility skew?
+4. Does the relation hold symmetrically in risk-off and risk-on, and is the sign stable across funding-stress episodes?
+5. Does safe-haven demand add incremental information beyond the risk state and the VIX, and what data would have to be bought before it can be tested?
+6. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ## Existing thresholds are context, not the scope limit
 

@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f4-real-yield-delta` for factor `live.f4-real-yield-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f4-real-yield-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `live.f4-real-yield-delta` (chain `usd-factor-live-f4-real-yield-delta`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,16 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Is the informative quantity the TIPS real yield change, the nominal-minus-breakeven split, or the level, and how much of the change comes from the breakeven measurement itself?
+2. How stale is DFII10 at the cutoff, and do TIPS liquidity and off-the-run pricing contaminate the measured change enough to matter for a five-day window?
+3. Is the mechanism a real discount-rate story for the dollar or a growth story, and what observable separates a real-rate rise that helps the dollar from one that hurts it?
+4. Does the real yield add information beyond the nominal 10Y and the front-end delta, and would the evidence support the deployed five-day change over a shorter window?
+5. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ## Five kinds of evidence that must not be mixed
 

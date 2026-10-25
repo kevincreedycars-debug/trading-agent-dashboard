@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f5-dxy-delta` for factor `live.f5-dxy-delta` on asset USD; group label `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f5-dxy-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,12 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `live.f5-dxy-delta` - F5 DXY delta - carry information about the next 24-hour dollar move, and in which quantity? Trailing change in the dollar index the collector stores as dxy_level (FRED DTWEXBGS), with a d1 to d5 to d20 substitution ladder.
-2. Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?
-3. Which dollar index is a claim actually about, and does the answer change with the index construction?
-4. Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?
-5. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
+2. Is the stored DTWEXBGS the broad trade-weighted index rather than DXY, and what does calling it the dollar index do to every claim that quotes it?
+3. Is a one-day change of a daily H.10 index observable at 05:00 London given its publication lag, and what does the d1 to d5 to d20 fallback ladder do to the horizon of the signal?
+4. Is the informative content own-session momentum, mean reversion after a large move, or slow trend, and which of them can a 24-hour session capture at all?
+5. Does the index delta predict the next session, or is it an accounting identity against the bilateral pairs that the label instrument is meant to measure?
+6. Which dollar index is a claim actually about, and does the answer change with the index construction?
+7. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ## Existing thresholds are context, not the scope limit
 

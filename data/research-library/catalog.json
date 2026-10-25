@@ -12,6 +12,11 @@
     "GBP"
   ],
   "scope_note": "Research management only. Preparing a task writes nothing to a model, uploading a report records evidence, and a returned report becomes a rule only after a review accepts it and a backtest supports it.",
+  "prompt_template": {
+    "version": "research-prompt-v3.1.0",
+    "generated_by": "scripts/build_research_library.js",
+    "note": "Every stage prompt is rendered by this builder at this version; each stage records the version and the file hash it was rendered to, and both the dashboard copy and the automated dispatch verify that hash before use."
+  },
   "storage": {
     "registry_path": "data/research-library/documents.json",
     "library_root": ".local/research-library",
@@ -425,10 +430,7 @@
         }
       ],
       "probes": [
-        "Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?",
-        "Does the volatility-of-volatility or term-structure information add anything the level does not already carry?",
-        "Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?",
-        "How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?"
+        "Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?"
       ],
       "dispatched_brief_text": "# VIX and the subsequent direction of the US dollar - comprehensive research brief (live.f1-vix-level)\n\n- Task: `USD-BASELINE-AUDIT-01`. Report brief 1.0.0 of the deep-research tier, context version usd-session-context-20261014.1, pack version 2.0.0, extracted 2026-10-15 on branch `research/usd-session-20261013` at `d07af11166ea1d39e5f4184e85a993e03bcb7137`.\n- Read [`deep-research/CONTEXT_PACK_NEUTRAL.md`](deep-research/CONTEXT_PACK_NEUTRAL.md) first. It carries the session, the existing factors, the rules in force, the data that exists and the decisions that are open - and nothing else, on purpose.\n- This brief is step 1 of four. A research card is step 3's output, under the same task, and it is not what this brief asks for.\n\n## 1. What is asked\n\nProduce one comprehensive, source-backed report. It is the primary deliverable of this programme:\n\nA comprehensive, source-backed report investigating how VIX - its level, its change and its interactions with the other factors in this system - relates to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.\n\nWe have a rule in force that reads the VIX level as a risk regime, and a session we have defined but have not measured, because the instrument that would label it has no verified quote source. Neither of those is the question. The question is what the evidence actually says about how VIX and the things it interacts with relate to where the dollar goes next, inside this window, and where that evidence is thin, contradictory or absent.\n\nReturn the report as markdown, plus the source note described in section 6. Format the report with the sections of section 3 in that order: a reader who disagrees with you should be able to find the weakness.\n\n## 2. The session the report is written for\n\n- Start 05:00 Europe/London. End 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart; every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.\n- The label instrument is proposed as DXY and is UNVERIFIED: no intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.\n- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. The closed 24-hour study behind it overlaps the corrected session for 14.5 nominal hours (15.5 in the weeks when New York has changed and London has not) and leaves the session's first 9.5 hours unmeasured. Read every number in this repository as belonging to one of those windows, and say which.\n\n## 3. What the report must cover\n\n1. What VIX is and what it measures, from sources: the level, the index family around it, the futures term structure, and anything published about volatility of volatility. Name the instrument and the window of every claim.\n2. The proposed mechanisms by which VIX would move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.\n3. Level against change: whether the level, the 1-day change or a longer change is the informative quantity, and on what evidence that judgement rests.\n4. Interactions with the factors in this system, taken from the context pack's factor table: for each one, whether the sources support an interaction with VIX, what the two together would imply, and which pairs would double-count one input. The deployed set already reads VIX in 3 places - `live.f1-vix-level`, `live.f9-dollar-smile`, `live.f10-equity-versus-usd` - and the session set carries its own VIX card, so name every overlap you rely on and every overlap you are introducing.\n5. Where the relation weakens, changes sign or stops being informative: growth shocks against policy and funding shocks, low-volatility regimes, event days, month-end and quarter-end, and what the sources say distinguishes them.\n6. What is already in the price at the cutoff, given that 05:00 London follows the US close that produced the VIX print, and how a study could tell a reaction from a prediction.\n7. The cross-asset carriers of the same channel: equities, credit, gold, rates and crypto, with the same instrument and window labelling.\n8. Event and calendar conditioning inside the window, including the release calendar and the H.10 timing.\n9. What the sources cannot settle: contradictions, weak identification, period dependence, and claims that are plausible but unsourced.\n10. What our own session cannot be measured on yet, stated plainly, and what that does not block.\n11. Candidate relations, unranked: as many as the sources support, each with the window it was evidenced on, the direction, the condition under which it holds and what would falsify it.\n12. Open questions, and what you would need to fetch or measure next.\n13. What is not claimed, in your own words.\n\n## 4. Evidence standards\n\n- Cite only what you actually fetched in this session: the link, the passage you relied on, when the source is dated, and what that passage supports.\n- Label the window of every piece of evidence. A close-to-close daily relation, an intraday slice, an options-implied measure and a 30-hour study window are four different objects; none of them may be presented as evidence about our 05:00-to-05:00 session.\n- Keep mechanism apart from measurement. A coherent argument for why a channel exists is not a measurement of it, and a modelled or simulated figure is not an observed one.\n- Where sources disagree, give both and say which one you find better identified and why.\n- Prefer primary sources - the exchange, the index provider, the Federal Reserve, the paper itself - over summaries, and say when only a summary was reachable.\n- Name the instrument a claim is really about, every time. Never present another instrument as DXY.\n- A relation that exists on another asset, another window or another era is reported as exactly that.\n\n## 5. Context, not a limit\n\n- The rule in force and the data reachable today are context for this programme, not limits on it. The deployed sign, weight, threshold and lookback are the object of an audit; they are never evidence for a claim. A review may use any source it can fetch and cite, whether or not this repository can reproduce it. What is missing blocks one thing only: empirical validation of our exact session. It does not block research into mechanisms, evidence and interactions, and it is never a reason to narrow the question to what this repository happens to hold.\n- At most two programmable hypotheses per returned card. That limit is a card rule: it applies to the individual research card in step 3, and it does not apply to the discovery phase, where a report may state, compare and rank as many candidate relations as its sources support.\n- The label instrument and quote source are unverified, and the missing-quote policy, the flat band and the tie rule are open decisions listed in the context pack. None of them is frozen here, none of them is yours to freeze, and the report may say what the sources imply for each of them.\n\n## 6. What to return\n\n1. The report, as markdown, with the sections of section 3 in that order and an explicit what-is-not-claimed section.\n2. The source note: every source you fetched, its link, the passage you relied on, what it supports, the window it concerns and whether it is primary; then the questions you could not resolve and what you could not reach behind a paywall or a login.\n3. Both upload against `USD-BASELINE-AUDIT-01` for `live.f1-vix-level` in the Research Library. An upload records evidence; it is not an approval, and it moves no factor's status.\n\n## 7. Prohibitions\n\nDo not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not\nmeasured it, say it is unmeasured. Numbers you remember are not evidence.\nDo not use hindsight: never state what a past period would have predicted using information that was not\navailable at that time, and do not present a later revision as a first print.\nCite only sources you actually fetched in this session, with the link and the passage you relied on.\nWhere you are uncertain, say so and give the reason; an unresolved question is a valid return.\nState effects that are already in the price at the cutoff rather than counting them again as predictive.\nTreat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.\nName the instrument a claim is really about. Never present another instrument as DXY.\nNo production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by\nthis pack, and none may be proposed as part of the deliverable.\n\n## 8. What happens after you return it\n\nAn independent red team attacks the report claim by claim (step 2, `deep-research/RED_TEAM_REVIEW_BRIEF.md`). Only what survives is carried into the revised synthesis and the structured research cards (step 3, `deep-research/SYNTHESIS_AND_CARDS_BRIEF.md`), where the per-card limit of at most two programmable hypotheses applies. Nothing is scored before the session and data contract is frozen (step 4, `deep-research/BACKTEST_HANDOFF_BRIEF.md`), and no weight, sign, threshold or lookback changes because a report or a backtest exists.\n\n## 9. What this brief is not\n\n- Not a research card: a card is step 3's output, on the schema, and the two-hypothesis limit is not a limit on this report.\n- Not an audit of our deployed rule, and not an approval of it or of any replacement: the deployed rule is context to be tested against the evidence, never evidence for a claim.\n- Not a measurement of our session: the report says what is known and how well, and states plainly what the missing label data leaves unmeasured.\n- Not a backtest, a performance figure, an accuracy rate or a sample size, and it asserts none.\n- Not a live change of any kind: no production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this brief.\n\n## 10. The other nine deployed factors and the fifteen session factors\n\nThis brief is the programme's first report and its subject is VIX. The other factor ids in the context pack get their own assignments: the deployed set audits code that runs (tasks `USD-BASELINE-AUDIT-01` to `USD-BASELINE-AUDIT-10`, one per factor, of which only `USD-BASELINE-AUDIT-01` is addressed here), and the fifteen session factors carry the two field packages. The same four steps apply to them when their turns come.\n",
       "programme_red_team_path": "docs/research/handoff/usd/v1/deep-research/RED_TEAM_REVIEW_BRIEF.md",
@@ -516,10 +518,7 @@
         }
       ],
       "probes": [
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ]
     },
     {
@@ -577,9 +576,7 @@
         }
       ],
       "probes": [
-        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
         "Which dollar index is a claim actually about, and does the answer change with the index construction?",
-        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
         "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
       ]
     },
@@ -631,10 +628,8 @@
         }
       ],
       "probes": [
-        "Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?",
-        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?",
-        "Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?",
-        "How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?"
+        "Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?",
+        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?"
       ]
     },
     {
@@ -699,9 +694,6 @@
         }
       ],
       "probes": [
-        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
-        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
-        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
         "Which instrument labels these factors, given that DXY has no verified intraday source?"
       ]
     },
@@ -752,9 +744,6 @@
         }
       ],
       "probes": [
-        "Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?",
-        "What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?",
-        "Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?",
         "Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?"
       ]
     }
@@ -800,10 +789,11 @@
       ],
       "probes": [
         "Chain question: does `live.f1-vix-level` - F1 VIX level and risk regime - carry information about the next 24-hour dollar move, and in which quantity? VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them.",
-        "Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?",
-        "Does the volatility-of-volatility or term-structure information add anything the level does not already carry?",
-        "Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?",
-        "How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?"
+        "Is the informative quantity the VIX level at the last US close, its one-day change or its five-day change, and does the deployed 25/16 pair add anything a continuous level does not?",
+        "How stale is the VIXCLS observation at the 05:00 London cutoff, and what does that staleness do to a claim that the level is a cutoff-time regime read?",
+        "Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and which observable at the cutoff separates them from a common hidden driver?",
+        "Does the VIX level still carry information once the cross-asset risk state, gold and the credit spread are in the model, or is it the same risk factor counted twice?",
+        "Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?"
       ],
       "programme_red_team_path": "docs/research/handoff/usd/v1/deep-research/RED_TEAM_REVIEW_BRIEF.md",
       "stages": [
@@ -812,10 +802,11 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f1-vix-level/01-research-prompt.md",
-          "prompt_sha256": "eb5280a192ea0a189339a92b481128046743dcde7e42a61174c27a4945ea2072",
-          "prompt_bytes": 16156,
+          "prompt_sha256": "596a6530858850cf2865185eee5140e41267102a4a84c612551504336319d324",
+          "prompt_bytes": 16598,
           "prompt_source": {
             "kind": "dispatched_brief",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md",
             "sha256": "40a05c141bf2c6baab1417b896d763174fd06242725b4c0d6c60842aacdc0923",
             "note": "Generated from the dispatched brief and the chain map; the brief is cited by path and hash, not reproduced."
@@ -830,12 +821,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f1-vix-level/02-red-team-prompt.md",
-          "prompt_sha256": "246a6fc0cf7bd9a88584425200c71681cc893644e82a7a7936ca2b8ec3e10289",
-          "prompt_bytes": 13473,
+          "prompt_sha256": "78d66cdab6eb8a9cbbf088044af6ff856a49556263dd9332f23e7bba0dbe400d",
+          "prompt_bytes": 14699,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f1-vix-level/02-red-team-prompt.md",
-            "sha256": "246a6fc0cf7bd9a88584425200c71681cc893644e82a7a7936ca2b8ec3e10289",
+            "sha256": "78d66cdab6eb8a9cbbf088044af6ff856a49556263dd9332f23e7bba0dbe400d",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -848,12 +840,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f1-vix-level/03-adjudication-prompt.md",
-          "prompt_sha256": "4626bb5ea78f0c7fb4560fc2d34a888111d25b0982f19f6a0cdb0966a5f18979",
-          "prompt_bytes": 14898,
+          "prompt_sha256": "c2e7312a5ec487c91ac24cef62b9b9b8b460f51a012eb0354af5eef18cdcd366",
+          "prompt_bytes": 16119,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f1-vix-level/03-adjudication-prompt.md",
-            "sha256": "4626bb5ea78f0c7fb4560fc2d34a888111d25b0982f19f6a0cdb0966a5f18979",
+            "sha256": "c2e7312a5ec487c91ac24cef62b9b9b8b460f51a012eb0354af5eef18cdcd366",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -897,10 +890,11 @@
       ],
       "probes": [
         "Chain question: does `risk.vix-level-and-change-at-cutoff` - VIX level and change at the cutoff - carry information about the next 24-hour dollar move, and in which quantity? VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.",
-        "Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?",
-        "Does the volatility-of-volatility or term-structure information add anything the level does not already carry?",
-        "Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?",
-        "How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?"
+        "What does the VIX level at the cutoff add to the level the deployed F1 rule already uses, and is a second chain carrying the same variable a duplication the synthesis has to resolve?",
+        "Is the informative quantity the level, the one-day change, the five-day change, or the change between the last US close and the cutoff, and how stale is the observation at 05:00 London?",
+        "Is the mechanism a safe-haven demand for dollars, a funding or liquidity squeeze, or a risk-appetite shock, and what observable separates them?",
+        "Does the VIX change add information beyond the cross-asset risk state and the equity move, and is its sign the same in a calm and a stressed regime?",
+        "Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?"
       ],
       "stages": [
         {
@@ -908,12 +902,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/01-research-prompt.md",
-          "prompt_sha256": "794dd30ac866496baeb5e0475ee167962e93d07cd941f2ea5ce084187138988b",
-          "prompt_bytes": 14486,
+          "prompt_sha256": "33dbe1c600dbcc82b7aa09fc0fae21367b9cef94fcdc4a2578553fd3a7096221",
+          "prompt_bytes": 14930,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/01-research-prompt.md",
-            "sha256": "794dd30ac866496baeb5e0475ee167962e93d07cd941f2ea5ce084187138988b",
+            "sha256": "33dbe1c600dbcc82b7aa09fc0fae21367b9cef94fcdc4a2578553fd3a7096221",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -926,12 +921,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/02-red-team-prompt.md",
-          "prompt_sha256": "f9bbdf507c524ba9d1817cd35d5941b42d4889b56a9f8aefd94ac7ebc2d909c7",
-          "prompt_bytes": 12978,
+          "prompt_sha256": "93899fc00f97d348ecd521564e051549c7067e0e2dfd0310508787b8c8b5f752",
+          "prompt_bytes": 14206,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/02-red-team-prompt.md",
-            "sha256": "f9bbdf507c524ba9d1817cd35d5941b42d4889b56a9f8aefd94ac7ebc2d909c7",
+            "sha256": "93899fc00f97d348ecd521564e051549c7067e0e2dfd0310508787b8c8b5f752",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -944,12 +940,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/03-adjudication-prompt.md",
-          "prompt_sha256": "40760ae24dd2a6f3ae495730f4a93273dec17f457e1544a5e0cc2c7651729241",
-          "prompt_bytes": 14977,
+          "prompt_sha256": "899b664d5067b1658d67e8012c24fd0199c07f6e30827c8414888eb852d57e68",
+          "prompt_bytes": 16200,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/03-adjudication-prompt.md",
-            "sha256": "40760ae24dd2a6f3ae495730f4a93273dec17f457e1544a5e0cc2c7651729241",
+            "sha256": "899b664d5067b1658d67e8012c24fd0199c07f6e30827c8414888eb852d57e68",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -992,10 +989,11 @@
       ],
       "probes": [
         "Chain question: does `live.f2-us-2y-delta` - F2 US 2Y yield delta - carry information about the next 24-hour dollar move, and in which quantity? Change in the US 2Y yield as a policy-expectation proxy.",
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Is the informative quantity the five-day change, the level or a same-session change, and does the deployed five-day window measure anything inside the 24-hour session?",
+        "Is the FRED DGS2 value at the cutoff the previous US close, and what vintage or revision risk attaches to a series read that way two business days after the fact?",
+        "Does a 2Y move carry policy expectations, growth news or a term-premium and liquidity component, and which observable at the cutoff separates a growth shock from a policy shock?",
+        "Does the 2Y delta survive once the 10Y real yield, the US-DE spread and the curve slope are in the same model, and does the same-day dollar reaction leave anything for the following 24 hours?",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ],
       "stages": [
         {
@@ -1003,12 +1001,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f2-us-2y-delta/01-research-prompt.md",
-          "prompt_sha256": "0e38c78c8580d54c408d20659fc39046ae848ab69a4e096f939c970453b07cb7",
-          "prompt_bytes": 14093,
+          "prompt_sha256": "e3543fd84333516d7ffdcade2101cef8f7c6827a033a69475fd38e770e3a791a",
+          "prompt_bytes": 14572,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f2-us-2y-delta/01-research-prompt.md",
-            "sha256": "0e38c78c8580d54c408d20659fc39046ae848ab69a4e096f939c970453b07cb7",
+            "sha256": "e3543fd84333516d7ffdcade2101cef8f7c6827a033a69475fd38e770e3a791a",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1021,12 +1020,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f2-us-2y-delta/02-red-team-prompt.md",
-          "prompt_sha256": "549fe00ff0d42a4943eefa0e7a7dc9909e391f4bc0a8af521949783df18256ad",
-          "prompt_bytes": 12690,
+          "prompt_sha256": "6779813eb48d01f99dcbbd9ae459f94769ba6b6075ac7ad5e7c71c27eb7d8780",
+          "prompt_bytes": 13963,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f2-us-2y-delta/02-red-team-prompt.md",
-            "sha256": "549fe00ff0d42a4943eefa0e7a7dc9909e391f4bc0a8af521949783df18256ad",
+            "sha256": "6779813eb48d01f99dcbbd9ae459f94769ba6b6075ac7ad5e7c71c27eb7d8780",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1039,12 +1039,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f2-us-2y-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "72bc5b054841db0a3720cb981e6966668f0794c0db97f9995e6b81ad1685b0f5",
-          "prompt_bytes": 14673,
+          "prompt_sha256": "b53a492cb678433dde3c947f5e4519523d2a88876fd625496b2f54c0dc7cc073",
+          "prompt_bytes": 15941,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f2-us-2y-delta/03-adjudication-prompt.md",
-            "sha256": "72bc5b054841db0a3720cb981e6966668f0794c0db97f9995e6b81ad1685b0f5",
+            "sha256": "b53a492cb678433dde3c947f5e4519523d2a88876fd625496b2f54c0dc7cc073",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1087,10 +1088,11 @@
       ],
       "probes": [
         "Chain question: does `live.f3-us-de-2y-spread-delta` - F3 US-DE 2Y spread delta - carry information about the next 24-hour dollar move, and in which quantity? Change in the US minus German 2Y spread, derived in the collector from two series.",
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Is the spread built from two series with different publication lags and market calendars, and what does that mismatch do to a five-day change computed at the cutoff?",
+        "Is the informative part the US leg, the German leg or the difference, and can the two legs be separated with data observable at 05:00 London?",
+        "Are Bund yields available on the same date and vintage as DGS2, and what happens to the spread when one leg misses a session or is republished?",
+        "Does the relative 2Y spread add anything beyond the US 2Y delta and the broad dollar index, or is its weight the US leg counted twice?",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ],
       "stages": [
         {
@@ -1098,12 +1100,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/01-research-prompt.md",
-          "prompt_sha256": "27a59ad664484db3137cca1d39d1c84dff848cd476fd1f1ab2116ad6c3b4902f",
-          "prompt_bytes": 14262,
+          "prompt_sha256": "59eb96a107e3bd299c926162db6cf191cea0a88273a6058ecf661cd59e928aa7",
+          "prompt_bytes": 14627,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/01-research-prompt.md",
-            "sha256": "27a59ad664484db3137cca1d39d1c84dff848cd476fd1f1ab2116ad6c3b4902f",
+            "sha256": "59eb96a107e3bd299c926162db6cf191cea0a88273a6058ecf661cd59e928aa7",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1116,12 +1119,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/02-red-team-prompt.md",
-          "prompt_sha256": "2a97fc0a1ef4fe1d3f6a53727a931a2844001b0fd64fbc0786c0c3dca7e80fa0",
-          "prompt_bytes": 12829,
+          "prompt_sha256": "258104d80e7e6be56191baa371cf44ba384bacde2367942e109b259ebc83a12d",
+          "prompt_bytes": 13988,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/02-red-team-prompt.md",
-            "sha256": "2a97fc0a1ef4fe1d3f6a53727a931a2844001b0fd64fbc0786c0c3dca7e80fa0",
+            "sha256": "258104d80e7e6be56191baa371cf44ba384bacde2367942e109b259ebc83a12d",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1134,12 +1138,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "e89d7f600cc58982dd51bbe38329d9daf4102b87029e74fb83c808742f440e55",
-          "prompt_bytes": 14822,
+          "prompt_sha256": "e073772cb01d99219605b8966a4cce25e6cb641b1231207bc662b25443346eb0",
+          "prompt_bytes": 15976,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/03-adjudication-prompt.md",
-            "sha256": "e89d7f600cc58982dd51bbe38329d9daf4102b87029e74fb83c808742f440e55",
+            "sha256": "e073772cb01d99219605b8966a4cce25e6cb641b1231207bc662b25443346eb0",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1182,10 +1187,11 @@
       ],
       "probes": [
         "Chain question: does `live.f4-real-yield-delta` - F4 US 10Y real yield delta - carry information about the next 24-hour dollar move, and in which quantity? Change in the 10Y TIPS real yield.",
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Is the informative quantity the TIPS real yield change, the nominal-minus-breakeven split, or the level, and how much of the change comes from the breakeven measurement itself?",
+        "How stale is DFII10 at the cutoff, and do TIPS liquidity and off-the-run pricing contaminate the measured change enough to matter for a five-day window?",
+        "Is the mechanism a real discount-rate story for the dollar or a growth story, and what observable separates a real-rate rise that helps the dollar from one that hurts it?",
+        "Does the real yield add information beyond the nominal 10Y and the front-end delta, and would the evidence support the deployed five-day change over a shorter window?",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ],
       "stages": [
         {
@@ -1193,12 +1199,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f4-real-yield-delta/01-research-prompt.md",
-          "prompt_sha256": "77326250ec089ea4e18d7d5f6c12266277bebd50902b730bca655c369eb01a22",
-          "prompt_bytes": 14109,
+          "prompt_sha256": "3b41ba77d1c9911712c3a3bb384ba9b403ec1832f381bb19a9b97286ba38ddb8",
+          "prompt_bytes": 14555,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f4-real-yield-delta/01-research-prompt.md",
-            "sha256": "77326250ec089ea4e18d7d5f6c12266277bebd50902b730bca655c369eb01a22",
+            "sha256": "3b41ba77d1c9911712c3a3bb384ba9b403ec1832f381bb19a9b97286ba38ddb8",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1211,12 +1218,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f4-real-yield-delta/02-red-team-prompt.md",
-          "prompt_sha256": "1b0735b150c4b198aef21fad078b9fc55f41d475476e34b8315a5e718289a32b",
-          "prompt_bytes": 12722,
+          "prompt_sha256": "3d5c2eec36fd74dbc31d729407df6d473900c0499ebd1024c8166b9a95294a71",
+          "prompt_bytes": 13962,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f4-real-yield-delta/02-red-team-prompt.md",
-            "sha256": "1b0735b150c4b198aef21fad078b9fc55f41d475476e34b8315a5e718289a32b",
+            "sha256": "3d5c2eec36fd74dbc31d729407df6d473900c0499ebd1024c8166b9a95294a71",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1229,12 +1237,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f4-real-yield-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "65548daefeddba09d93c7c6c9ac753ba58af334e3504198a8da1baaaa508aeb4",
-          "prompt_bytes": 14710,
+          "prompt_sha256": "5202efe0a321e1f2b380df589b85cad806522732f0e587dcb6e68f0da4a9fbdd",
+          "prompt_bytes": 15945,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f4-real-yield-delta/03-adjudication-prompt.md",
-            "sha256": "65548daefeddba09d93c7c6c9ac753ba58af334e3504198a8da1baaaa508aeb4",
+            "sha256": "5202efe0a321e1f2b380df589b85cad806522732f0e587dcb6e68f0da4a9fbdd",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1277,10 +1286,11 @@
       ],
       "probes": [
         "Chain question: does `rates.us-front-end-delta` - US front-end delta - carry information about the next 24-hour dollar move, and in which quantity? 2Y and 3M yield changes as policy-expectation proxies, with the publication lag of each series stated.",
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Do the 2Y and 3M series share a publication lag and a market calendar, and is a change computed from a stale 3M print comparable to one computed from the 2Y?",
+        "Is the informative quantity the 3M bill, the 2Y note, their difference, or a policy-expectation measure implied by them, and does the 3M bill carry a flight-to-quality distortion?",
+        "Does a front-end change reflect expected policy, term premium, or a liquidity and collateral effect, and what observable at the cutoff separates them?",
+        "Does this chain duplicate the live F2 and F3 chains, and if so what does it add - the 3M leg, the policy-cycle conditioning, or nothing?",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ],
       "stages": [
         {
@@ -1288,12 +1298,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/rates-us-front-end-delta/01-research-prompt.md",
-          "prompt_sha256": "80d89a8a493bbb45b235d95275ef5235ed75b57d3c8059c300ecb43493ef7f0e",
-          "prompt_bytes": 14242,
+          "prompt_sha256": "d9b9c5c47846754a6f9368d0f29a258269dbb4815af36f13475ae28607c50090",
+          "prompt_bytes": 14646,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-us-front-end-delta/01-research-prompt.md",
-            "sha256": "80d89a8a493bbb45b235d95275ef5235ed75b57d3c8059c300ecb43493ef7f0e",
+            "sha256": "d9b9c5c47846754a6f9368d0f29a258269dbb4815af36f13475ae28607c50090",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1306,12 +1317,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/rates-us-front-end-delta/02-red-team-prompt.md",
-          "prompt_sha256": "1ae5fdeb886cfb837777b4cba3fefbd95535eca490831d009ed92b2f207b0f51",
-          "prompt_bytes": 12790,
+          "prompt_sha256": "27dab28a5551e6612387a4a1fe9baf8211d05eeb4c764a4d14953a0723332fc4",
+          "prompt_bytes": 13988,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-us-front-end-delta/02-red-team-prompt.md",
-            "sha256": "1ae5fdeb886cfb837777b4cba3fefbd95535eca490831d009ed92b2f207b0f51",
+            "sha256": "27dab28a5551e6612387a4a1fe9baf8211d05eeb4c764a4d14953a0723332fc4",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1324,12 +1336,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/rates-us-front-end-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "51e61dda0e6d9966b42059dce8023bcd673201d7e5db7d4874d9936fa9b85a8a",
-          "prompt_bytes": 14778,
+          "prompt_sha256": "7dfde1112ee2040385ffc642a73f506a4e4f3e17bdb88d878b64c13001192d43",
+          "prompt_bytes": 15971,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-us-front-end-delta/03-adjudication-prompt.md",
-            "sha256": "51e61dda0e6d9966b42059dce8023bcd673201d7e5db7d4874d9936fa9b85a8a",
+            "sha256": "7dfde1112ee2040385ffc642a73f506a4e4f3e17bdb88d878b64c13001192d43",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1372,10 +1385,11 @@
       ],
       "probes": [
         "Chain question: does `rates.relative-front-end-delta` - Relative front-end delta - carry information about the next 24-hour dollar move, and in which quantity? US against German and other G10 front ends, with each euro-area and UK leg named rather than implied.",
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Which foreign front end is used, from which source, and is it observable at 05:00 London on the same date and vintage as the US leg?",
+        "Is a bilateral differential the right object, or should the dollar basket weights determine a weighted differential against several front ends?",
+        "Does the relative move reflect divergent policy expectations, a common global factor, or a currency-specific risk premium?",
+        "Does the differential add information beyond the US front end and the dollar index, and is a German leg a proxy for the euro rather than for the relative factor?",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ],
       "stages": [
         {
@@ -1383,12 +1397,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/rates-relative-front-end-delta/01-research-prompt.md",
-          "prompt_sha256": "674a0a44823f4c52b59a5eb88e709fd7be558512e7c753062226396c5cc13aab",
-          "prompt_bytes": 14279,
+          "prompt_sha256": "0f0f47b3624cd7c82ccb125e60203593f17c08d9996d024993fa35dc0ec89095",
+          "prompt_bytes": 14619,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-relative-front-end-delta/01-research-prompt.md",
-            "sha256": "674a0a44823f4c52b59a5eb88e709fd7be558512e7c753062226396c5cc13aab",
+            "sha256": "0f0f47b3624cd7c82ccb125e60203593f17c08d9996d024993fa35dc0ec89095",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1401,12 +1416,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/rates-relative-front-end-delta/02-red-team-prompt.md",
-          "prompt_sha256": "4ccc57c59bcf57239334650ba63e0ffd131c0a7a8e1f2e17b1ccf4133900499c",
-          "prompt_bytes": 12822,
+          "prompt_sha256": "a50a340f4eadb98656552d0c3dee4648d8c087c6e448660276b97f8f24848ba5",
+          "prompt_bytes": 13956,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-relative-front-end-delta/02-red-team-prompt.md",
-            "sha256": "4ccc57c59bcf57239334650ba63e0ffd131c0a7a8e1f2e17b1ccf4133900499c",
+            "sha256": "a50a340f4eadb98656552d0c3dee4648d8c087c6e448660276b97f8f24848ba5",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1419,12 +1435,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/rates-relative-front-end-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "066d83b0d5d716baa82ae36cdee4e862b2a6582755255694cd3c9cd231989c8e",
-          "prompt_bytes": 14816,
+          "prompt_sha256": "08cdb27b6f40a52917066a4e62d9388b94805018429b2bb495d644910233331b",
+          "prompt_bytes": 15945,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-relative-front-end-delta/03-adjudication-prompt.md",
-            "sha256": "066d83b0d5d716baa82ae36cdee4e862b2a6582755255694cd3c9cd231989c8e",
+            "sha256": "08cdb27b6f40a52917066a4e62d9388b94805018429b2bb495d644910233331b",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1467,10 +1484,11 @@
       ],
       "probes": [
         "Chain question: does `rates.real-yield-delta` - Real yield delta - carry information about the next 24-hour dollar move, and in which quantity? 10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.",
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Is the real yield measured from TIPS, from a nominal-minus-survey-expectations decomposition, or from a model, and which of them is available at the cutoff?",
+        "Does the move come from the nominal leg or the breakeven, and how reliable is the breakeven when both inflation swaps and TIPS liquidity are imperfect?",
+        "Is the mechanism a discount-rate channel for the dollar, a growth channel, or a risk-premium channel, and what evidence separates those cases?",
+        "Does this chain duplicate live F4, and does a 5Y real yield add anything to the 10Y that the deployed chain already uses?",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ],
       "stages": [
         {
@@ -1478,12 +1496,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/rates-real-yield-delta/01-research-prompt.md",
-          "prompt_sha256": "7df670f304797bc453a30f7bd6a7b3457e77c4122e8a6a08085abeee28fd2459",
-          "prompt_bytes": 14197,
+          "prompt_sha256": "1065b3e93f1fe3feca49fa2c932cd52dafce9b870f7064e2ee3d5513d0324878",
+          "prompt_bytes": 14549,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-real-yield-delta/01-research-prompt.md",
-            "sha256": "7df670f304797bc453a30f7bd6a7b3457e77c4122e8a6a08085abeee28fd2459",
+            "sha256": "1065b3e93f1fe3feca49fa2c932cd52dafce9b870f7064e2ee3d5513d0324878",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1496,12 +1515,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/rates-real-yield-delta/02-red-team-prompt.md",
-          "prompt_sha256": "773466b2842e72f2ce268c2a8bcc2e304eb16d20d8080516551c321a334f968d",
-          "prompt_bytes": 12746,
+          "prompt_sha256": "6ecde82bc0f8e57c7d85addc55be599338a6065a51e5929f0b5f94a3744bdc46",
+          "prompt_bytes": 13892,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-real-yield-delta/02-red-team-prompt.md",
-            "sha256": "773466b2842e72f2ce268c2a8bcc2e304eb16d20d8080516551c321a334f968d",
+            "sha256": "6ecde82bc0f8e57c7d85addc55be599338a6065a51e5929f0b5f94a3744bdc46",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1514,12 +1534,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/rates-real-yield-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "3e15ee5219bbc09206b97658037fec9d11f310bba71fa2bc6475041c798c0f84",
-          "prompt_bytes": 14732,
+          "prompt_sha256": "8ed4ff59e65df8f75491d12a211706d2b30a3b784bbcbb16a78fd75e053d7ec1",
+          "prompt_bytes": 15873,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-real-yield-delta/03-adjudication-prompt.md",
-            "sha256": "3e15ee5219bbc09206b97658037fec9d11f310bba71fa2bc6475041c798c0f84",
+            "sha256": "8ed4ff59e65df8f75491d12a211706d2b30a3b784bbcbb16a78fd75e053d7ec1",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1562,10 +1583,11 @@
       ],
       "probes": [
         "Chain question: does `rates.term-premium-and-curve` - Term premium and curve - carry information about the next 24-hour dollar move, and in which quantity? 10Y minus 2Y slope, and whether the level or the change carries information across the session.",
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Is the informative object the slope level, its change, or a term-premium estimate, and can a term premium be estimated with the data named here rather than asserted?",
+        "Is a curve slope observable at 05:00 London from previous closes, and how does a stale slope interact with a session that contains a US data release?",
+        "Does the slope carry growth expectations, inflation compensation, or a term-premium and duration-demand story, and what observable separates them?",
+        "Does the slope add information beyond the levels of its two legs, each of which already carries its own chain, and is it a regime variable or a direction?",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ],
       "stages": [
         {
@@ -1573,12 +1595,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/rates-term-premium-and-curve/01-research-prompt.md",
-          "prompt_sha256": "50712e386f9de9d77084eb1747459f5018e39bd18976e095b60b1e1860e0deab",
-          "prompt_bytes": 14241,
+          "prompt_sha256": "589a6fef305cec3166fb4a62e247146f32bd1376fefc2aa2a78e38ff403bec40",
+          "prompt_bytes": 14637,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-term-premium-and-curve/01-research-prompt.md",
-            "sha256": "50712e386f9de9d77084eb1747459f5018e39bd18976e095b60b1e1860e0deab",
+            "sha256": "589a6fef305cec3166fb4a62e247146f32bd1376fefc2aa2a78e38ff403bec40",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1591,12 +1614,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/rates-term-premium-and-curve/02-red-team-prompt.md",
-          "prompt_sha256": "65313433d8db9c98060f923946276d1c565600a569a093f11cec26966d2b0ce6",
-          "prompt_bytes": 12792,
+          "prompt_sha256": "b3ffc8c4ec04ed1f33e9c099b36daa7db70ddfe508b53dfc53eb8ee903f6e2e9",
+          "prompt_bytes": 13982,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-term-premium-and-curve/02-red-team-prompt.md",
-            "sha256": "65313433d8db9c98060f923946276d1c565600a569a093f11cec26966d2b0ce6",
+            "sha256": "b3ffc8c4ec04ed1f33e9c099b36daa7db70ddfe508b53dfc53eb8ee903f6e2e9",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1609,12 +1633,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/rates-term-premium-and-curve/03-adjudication-prompt.md",
-          "prompt_sha256": "9258c7926d7bf9955f80b48a3b28df77137f3a09228a0f0be24bb9a8cfbf08c2",
-          "prompt_bytes": 14784,
+          "prompt_sha256": "70113ff77015310644de001e2fa969a8c4933e23abf91d865546fb0a96211c4d",
+          "prompt_bytes": 15969,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-term-premium-and-curve/03-adjudication-prompt.md",
-            "sha256": "9258c7926d7bf9955f80b48a3b28df77137f3a09228a0f0be24bb9a8cfbf08c2",
+            "sha256": "70113ff77015310644de001e2fa969a8c4933e23abf91d865546fb0a96211c4d",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1657,10 +1682,11 @@
       ],
       "probes": [
         "Chain question: does `rates.credit-spread-delta` - Credit spread delta - carry information about the next 24-hour dollar move, and in which quantity? High-yield spread change as a growth and risk proxy, with its overlap against the cross-asset risk card bounded.",
-        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
-        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
-        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
-        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+        "Which credit series measures the spread the claim is about, at what rating and maturity, and how stale is it at the cutoff?",
+        "Is the informative quantity the spread level, a one-day change, or a change over several days, and does a spread change lag the equity move it is meant to signal?",
+        "Is the mechanism a growth signal, a risk-appetite signal, or a funding and default-risk signal, and does the sign for the dollar differ between the default story and the risk story?",
+        "Does the credit spread add information beyond the VIX level, the equity move and the risk state, or is it a slower restatement of the same risk factor?",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?"
       ],
       "stages": [
         {
@@ -1668,12 +1694,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/rates-credit-spread-delta/01-research-prompt.md",
-          "prompt_sha256": "57bd934ae12b22537d37cf241bb69f680681f1118eda78f3bef506e18c8ebe56",
-          "prompt_bytes": 14252,
+          "prompt_sha256": "2c7a8da2e25d4c356c8104c6a57b04f7d88e49031cb64f306f11480a74d80ee9",
+          "prompt_bytes": 14651,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-credit-spread-delta/01-research-prompt.md",
-            "sha256": "57bd934ae12b22537d37cf241bb69f680681f1118eda78f3bef506e18c8ebe56",
+            "sha256": "2c7a8da2e25d4c356c8104c6a57b04f7d88e49031cb64f306f11480a74d80ee9",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1686,12 +1713,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/rates-credit-spread-delta/02-red-team-prompt.md",
-          "prompt_sha256": "f2722166ec897622e79fbf3e3afb1884c33280a55ade3641ac6dccba477866bc",
-          "prompt_bytes": 12789,
+          "prompt_sha256": "2025dd76b6076072b9ec8ea782bde66c4350547dfb7497b8bec8bfac972061e3",
+          "prompt_bytes": 13982,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-credit-spread-delta/02-red-team-prompt.md",
-            "sha256": "f2722166ec897622e79fbf3e3afb1884c33280a55ade3641ac6dccba477866bc",
+            "sha256": "2025dd76b6076072b9ec8ea782bde66c4350547dfb7497b8bec8bfac972061e3",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1704,12 +1732,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/rates-credit-spread-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "3f8d84f0f0db6c5f70bc13b871e3f33a31e7564fe435b2e3ab411ae6a3670060",
-          "prompt_bytes": 14778,
+          "prompt_sha256": "d43ea40c1df0d5b2091a91953a6177fe05c461e0f100ebaa23ff94612003c125",
+          "prompt_bytes": 15966,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/rates-credit-spread-delta/03-adjudication-prompt.md",
-            "sha256": "3f8d84f0f0db6c5f70bc13b871e3f33a31e7564fe435b2e3ab411ae6a3670060",
+            "sha256": "d43ea40c1df0d5b2091a91953a6177fe05c461e0f100ebaa23ff94612003c125",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1752,9 +1781,11 @@
       ],
       "probes": [
         "Chain question: does `live.f5-dxy-delta` - F5 DXY delta - carry information about the next 24-hour dollar move, and in which quantity? Trailing change in the dollar index the collector stores as dxy_level (FRED DTWEXBGS), with a d1 to d5 to d20 substitution ladder.",
-        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
+        "Is the stored DTWEXBGS the broad trade-weighted index rather than DXY, and what does calling it the dollar index do to every claim that quotes it?",
+        "Is a one-day change of a daily H.10 index observable at 05:00 London given its publication lag, and what does the d1 to d5 to d20 fallback ladder do to the horizon of the signal?",
+        "Is the informative content own-session momentum, mean reversion after a large move, or slow trend, and which of them can a 24-hour session capture at all?",
+        "Does the index delta predict the next session, or is it an accounting identity against the bilateral pairs that the label instrument is meant to measure?",
         "Which dollar index is a claim actually about, and does the answer change with the index construction?",
-        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
         "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
       ],
       "stages": [
@@ -1763,12 +1794,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f5-dxy-delta/01-research-prompt.md",
-          "prompt_sha256": "cbc6597f9044ddd8286e8213858454d1da5426d6362eb4151ad8a880cb4c09c9",
-          "prompt_bytes": 14199,
+          "prompt_sha256": "853b851b500da5bc5f6c45e41f0a48657f8cdbc74b280739d41e7ed1f295b776",
+          "prompt_bytes": 14775,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f5-dxy-delta/01-research-prompt.md",
-            "sha256": "cbc6597f9044ddd8286e8213858454d1da5426d6362eb4151ad8a880cb4c09c9",
+            "sha256": "853b851b500da5bc5f6c45e41f0a48657f8cdbc74b280739d41e7ed1f295b776",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1781,12 +1813,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f5-dxy-delta/02-red-team-prompt.md",
-          "prompt_sha256": "251eaac82522accec28811deaf42fc3d0c0a62fa7936891dfb6771ba9ba44f76",
-          "prompt_bytes": 12815,
+          "prompt_sha256": "72434b5d4d7bed93e148cf2531c39ce6ff62b95919e1c6fa36550d5dec2460ab",
+          "prompt_bytes": 14100,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f5-dxy-delta/02-red-team-prompt.md",
-            "sha256": "251eaac82522accec28811deaf42fc3d0c0a62fa7936891dfb6771ba9ba44f76",
+            "sha256": "72434b5d4d7bed93e148cf2531c39ce6ff62b95919e1c6fa36550d5dec2460ab",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1799,12 +1832,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f5-dxy-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "0039353cc1e704091f5a83b28cb512397537a7a1fd0012e3bb95ad6153e0a05c",
-          "prompt_bytes": 14796,
+          "prompt_sha256": "61ec73cea29afa292a50647f1388eb8e5bf2348fe4da23b7bc45527766e0a7e3",
+          "prompt_bytes": 16076,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f5-dxy-delta/03-adjudication-prompt.md",
-            "sha256": "0039353cc1e704091f5a83b28cb512397537a7a1fd0012e3bb95ad6153e0a05c",
+            "sha256": "61ec73cea29afa292a50647f1388eb8e5bf2348fe4da23b7bc45527766e0a7e3",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1847,9 +1881,11 @@
       ],
       "probes": [
         "Chain question: does `live.f6-gold-delta` - F6 Gold delta - carry information about the next 24-hour dollar move, and in which quantity? Gold move as an inverse dollar-risk read.",
-        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
+        "Is gold read as an inverse dollar proxy, a real-rate hedge or a safe-haven asset, and how would the sign differ between those three readings?",
+        "Is the Coinbase XAU-USD spot quote the same instrument, venue and window as the gold the literature measures, and how does a 24/7 crypto-venue quote behave against a 05:00 London cutoff?",
+        "Is a five-day gold change the right transformation, and does the one-day fallback change the meaning of the signal rather than only its horizon?",
+        "Does gold add information beyond the real yield, the VIX level and the cross-asset risk state, or is its apparent dollar relation a restatement of real rates?",
         "Which dollar index is a claim actually about, and does the answer change with the index construction?",
-        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
         "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
       ],
       "stages": [
@@ -1858,12 +1894,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f6-gold-delta/01-research-prompt.md",
-          "prompt_sha256": "30f072088937e69947c30abb601396a52e5412458e2e892c3e2bf63a4e025b2a",
-          "prompt_bytes": 14014,
+          "prompt_sha256": "3b20b5e2bfd0106aebfadf09871cba6cc5983761058a0a60cd124ba3f9b2c9f3",
+          "prompt_bytes": 14588,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f6-gold-delta/01-research-prompt.md",
-            "sha256": "30f072088937e69947c30abb601396a52e5412458e2e892c3e2bf63a4e025b2a",
+            "sha256": "3b20b5e2bfd0106aebfadf09871cba6cc5983761058a0a60cd124ba3f9b2c9f3",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1876,12 +1913,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f6-gold-delta/02-red-team-prompt.md",
-          "prompt_sha256": "061d4ec0dcdb25d8e3fec902970d360ffce81d28b5796eb819e5a04dbfe005a9",
-          "prompt_bytes": 12718,
+          "prompt_sha256": "5abffc6ec7302d62f3b1751095de591b77357dda9a6142fb7a78a441b1d4f58c",
+          "prompt_bytes": 14001,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f6-gold-delta/02-red-team-prompt.md",
-            "sha256": "061d4ec0dcdb25d8e3fec902970d360ffce81d28b5796eb819e5a04dbfe005a9",
+            "sha256": "5abffc6ec7302d62f3b1751095de591b77357dda9a6142fb7a78a441b1d4f58c",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1894,12 +1932,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f6-gold-delta/03-adjudication-prompt.md",
-          "prompt_sha256": "52cff0559f1c7c20eb4d858fbb369178b30054be7edf7840e13f8535e93909bb",
-          "prompt_bytes": 14700,
+          "prompt_sha256": "c5ecb88d053a1f6956473e4b1a764d9b5977fbf4c2c74a8793d04c6b6e8b29c7",
+          "prompt_bytes": 15978,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f6-gold-delta/03-adjudication-prompt.md",
-            "sha256": "52cff0559f1c7c20eb4d858fbb369178b30054be7edf7840e13f8535e93909bb",
+            "sha256": "c5ecb88d053a1f6956473e4b1a764d9b5977fbf4c2c74a8793d04c6b6e8b29c7",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -1942,9 +1981,11 @@
       ],
       "probes": [
         "Chain question: does `live.f9-dollar-smile` - F9 Dollar Smile regime - carry information about the next 24-hour dollar move, and in which quantity? The smile regime read from the VIX level and the bias string.",
-        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
+        "Is the dollar smile a measured relation in this window or a descriptive story, and what observation would falsify it?",
+        "The deployed reading uses the VIX 25/16 pair and the bias string: are those the right variables, and does the smile need a third state such as global growth or funding stress that neither captures?",
+        "Is the smile a regime variable that should switch other factors signs, or a separate directional factor, and can those two roles be told apart with session data?",
+        "Does the smile add anything to the VIX level and the cross-asset risk state it is computed from, and is the rulebook weight of 12 defensible against the coded 1?",
         "Which dollar index is a claim actually about, and does the answer change with the index construction?",
-        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
         "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
       ],
       "stages": [
@@ -1953,12 +1994,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f9-dollar-smile/01-research-prompt.md",
-          "prompt_sha256": "66e5a56c3a357279cde2b1962619d05faa85221beb841b1abfb22764f07acfbb",
-          "prompt_bytes": 14053,
+          "prompt_sha256": "afdb08136c00336115b0cc158d9ef1ea95f0ebce12c9b0a5126c79ce47c62503",
+          "prompt_bytes": 14634,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f9-dollar-smile/01-research-prompt.md",
-            "sha256": "66e5a56c3a357279cde2b1962619d05faa85221beb841b1abfb22764f07acfbb",
+            "sha256": "afdb08136c00336115b0cc158d9ef1ea95f0ebce12c9b0a5126c79ce47c62503",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -1971,12 +2013,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f9-dollar-smile/02-red-team-prompt.md",
-          "prompt_sha256": "82aea6202110fa982769e07bfd80856ed77521c55907cc517932d5212cd87d4f",
-          "prompt_bytes": 12728,
+          "prompt_sha256": "dcce9b1810e2c114c59247b5925d4826b1e8ba5bd988a33cadd51f9c3e1849d1",
+          "prompt_bytes": 14018,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f9-dollar-smile/02-red-team-prompt.md",
-            "sha256": "82aea6202110fa982769e07bfd80856ed77521c55907cc517932d5212cd87d4f",
+            "sha256": "dcce9b1810e2c114c59247b5925d4826b1e8ba5bd988a33cadd51f9c3e1849d1",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -1989,12 +2032,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f9-dollar-smile/03-adjudication-prompt.md",
-          "prompt_sha256": "864f42d09fb72c6de75156431f5f6d453e0e86731b2bc247211d339bfc324941",
-          "prompt_bytes": 14712,
+          "prompt_sha256": "feb34572127aae5d6145a828ffbff2f2645bae7528d7bbb2e4a672f83762be74",
+          "prompt_bytes": 15997,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f9-dollar-smile/03-adjudication-prompt.md",
-            "sha256": "864f42d09fb72c6de75156431f5f6d453e0e86731b2bc247211d339bfc324941",
+            "sha256": "feb34572127aae5d6145a828ffbff2f2645bae7528d7bbb2e4a672f83762be74",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2037,9 +2081,11 @@
       ],
       "probes": [
         "Chain question: does `live.f10-equity-versus-usd` - F10 Equity versus USD - carry information about the next 24-hour dollar move, and in which quantity? Cross-asset read of equities against the dollar, gated by the VIX regime.",
-        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
+        "The stored input is a QQQ ETF quote: what is the difference between the Nasdaq-100 index, the NQ future and the ETF for a 24-hour London session, and which one does a claim actually need?",
+        "Is the QQQ quote a regular-hours close with gaps, a pre-market price or a delayed snapshot at the cutoff, and what do the ETF premium to net asset value and its distributions do to a one-day change?",
+        "Is the equity-dollar relation a risk-appetite channel, a rate channel or a growth channel, and is its sign stable across regimes or does it flip with the VIX gate?",
+        "Does the equity move add information beyond the VIX level and the cross-asset risk state, or is it the same risk appetite counted a third time?",
         "Which dollar index is a claim actually about, and does the answer change with the index construction?",
-        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
         "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
       ],
       "stages": [
@@ -2048,12 +2094,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f10-equity-versus-usd/01-research-prompt.md",
-          "prompt_sha256": "e8f592ab0ad65790ae07e27edb1f4fa7d0ff2055a3f3821c6e9b1a8937ab306b",
-          "prompt_bytes": 14157,
+          "prompt_sha256": "3e0118907323a78278149624c1e55cf2500a40e77870e9b698c70fa570a6b636",
+          "prompt_bytes": 14793,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f10-equity-versus-usd/01-research-prompt.md",
-            "sha256": "e8f592ab0ad65790ae07e27edb1f4fa7d0ff2055a3f3821c6e9b1a8937ab306b",
+            "sha256": "3e0118907323a78278149624c1e55cf2500a40e77870e9b698c70fa570a6b636",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2066,12 +2113,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f10-equity-versus-usd/02-red-team-prompt.md",
-          "prompt_sha256": "7cfeea800b6a221acc3066fd362decd29f90a37658608c50c2303ead99742eb3",
-          "prompt_bytes": 12821,
+          "prompt_sha256": "491a6b844f4adfab6d4156cc62cd0e26b747a9fe395e021ec09a8fdfb10ca46f",
+          "prompt_bytes": 14166,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f10-equity-versus-usd/02-red-team-prompt.md",
-            "sha256": "7cfeea800b6a221acc3066fd362decd29f90a37658608c50c2303ead99742eb3",
+            "sha256": "491a6b844f4adfab6d4156cc62cd0e26b747a9fe395e021ec09a8fdfb10ca46f",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2084,12 +2132,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f10-equity-versus-usd/03-adjudication-prompt.md",
-          "prompt_sha256": "8346716a85924f0c6f4959738a8f84fdf33cf59264101e1f6da922cdd2749b4f",
-          "prompt_bytes": 14811,
+          "prompt_sha256": "ec86a6983df993b85877bd5ad93ac44aca3ac462a3ab5a96719111c363acc020",
+          "prompt_bytes": 16151,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f10-equity-versus-usd/03-adjudication-prompt.md",
-            "sha256": "8346716a85924f0c6f4959738a8f84fdf33cf59264101e1f6da922cdd2749b4f",
+            "sha256": "ec86a6983df993b85877bd5ad93ac44aca3ac462a3ab5a96719111c363acc020",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2132,10 +2181,12 @@
       ],
       "probes": [
         "Chain question: does `live.f7-economic-surprise` - F7 US economic surprise - carry information about the next 24-hour dollar move, and in which quantity? The highest-weight live family. The stored usd_signal per event is copied straight through, with no consensus and no first-print vintage reachable from this repository.",
-        "Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?",
-        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?",
-        "Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?",
-        "How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?"
+        "What is a surprise here, and can any consensus or first-print vintage published before the release be reached, or is the stored usd_signal an unversioned derived value whose input cannot be recovered?",
+        "Is the release outcome observable before the 05:00 London cutoff, and what does the signal do on a session whose releases land inside the window rather than before it?",
+        "Is the mechanism an immediate repricing of rate expectations, a risk-premium change or a growth surprise, and does the direction depend on the policy reaction function in force?",
+        "Does a surprise signal add information beyond the front-end rate change that follows it, and how much of the surprise reaction is already in the dollar by the next cutoff?",
+        "Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?",
+        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?"
       ],
       "stages": [
         {
@@ -2143,12 +2194,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f7-economic-surprise/01-research-prompt.md",
-          "prompt_sha256": "cb2af855d8553d1c6f1c996f42de8ef93d6149a1b537f1c4facc522a62793ae9",
-          "prompt_bytes": 14512,
+          "prompt_sha256": "cdcce036f2610dae9baea6a7ae64521813a51644256565ce1242fcb03df099b7",
+          "prompt_bytes": 15164,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f7-economic-surprise/01-research-prompt.md",
-            "sha256": "cb2af855d8553d1c6f1c996f42de8ef93d6149a1b537f1c4facc522a62793ae9",
+            "sha256": "cdcce036f2610dae9baea6a7ae64521813a51644256565ce1242fcb03df099b7",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2161,12 +2213,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f7-economic-surprise/02-red-team-prompt.md",
-          "prompt_sha256": "2ae39142d5787b636a01e2ece7bbcbef64d47ef30e529cca028dda23a9c5b0d3",
-          "prompt_bytes": 13019,
+          "prompt_sha256": "13ac64d2ef18764c41edab999c405252e3717ae5b0438268237ef9779f880881",
+          "prompt_bytes": 14440,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f7-economic-surprise/02-red-team-prompt.md",
-            "sha256": "2ae39142d5787b636a01e2ece7bbcbef64d47ef30e529cca028dda23a9c5b0d3",
+            "sha256": "13ac64d2ef18764c41edab999c405252e3717ae5b0438268237ef9779f880881",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2179,12 +2232,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f7-economic-surprise/03-adjudication-prompt.md",
-          "prompt_sha256": "e7ed01eaf308be24dd0d438d4379f380dff0b07b529f0c77ef672230966abc52",
-          "prompt_bytes": 15008,
+          "prompt_sha256": "952483617a798f20118ed4e86ce6fecd5585ce51ecd61d6521e34ffa765f164c",
+          "prompt_bytes": 16424,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f7-economic-surprise/03-adjudication-prompt.md",
-            "sha256": "e7ed01eaf308be24dd0d438d4379f380dff0b07b529f0c77ef672230966abc52",
+            "sha256": "952483617a798f20118ed4e86ce6fecd5585ce51ecd61d6521e34ffa765f164c",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2227,10 +2281,12 @@
       ],
       "probes": [
         "Chain question: does `live.f8-fed-bias` - F8 Fed bias - carry information about the next 24-hour dollar move, and in which quantity? Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change.",
-        "Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?",
-        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?",
-        "Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?",
-        "How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?"
+        "Is a bias string a measurement or an interpretation, and can the same words be turned into a reproducible, dated, pre-cutoff value?",
+        "No vintage of the string is retained: does the deployed read measure a change, a level, or a revision introduced after the fact, and what would a versioned series look like?",
+        "Does the bias label carry information beyond the front-end rate change and the release surprise that ostensibly produce it?",
+        "If the string cannot be versioned, what is the honest Layer 1 role: a documented input, a documented exclusion, or no incremental value?",
+        "Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?",
+        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?"
       ],
       "stages": [
         {
@@ -2238,12 +2294,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/live-f8-fed-bias/01-research-prompt.md",
-          "prompt_sha256": "6ddfbcd30f981d7288dc58021f79b69490ac668ab7c4cf799f49dac3f74be8a0",
-          "prompt_bytes": 14299,
+          "prompt_sha256": "adeeb238d4752e1ca853902c1b334a3f53933e90a75b7f8ab39aa12512737918",
+          "prompt_bytes": 14799,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f8-fed-bias/01-research-prompt.md",
-            "sha256": "6ddfbcd30f981d7288dc58021f79b69490ac668ab7c4cf799f49dac3f74be8a0",
+            "sha256": "adeeb238d4752e1ca853902c1b334a3f53933e90a75b7f8ab39aa12512737918",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2256,12 +2313,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/live-f8-fed-bias/02-red-team-prompt.md",
-          "prompt_sha256": "9ea0245c7e61ad07f9438df505ff5a9cd686908f5b24918d735ad0bd59431122",
-          "prompt_bytes": 12845,
+          "prompt_sha256": "70155a8fd105b146cd8d01f0810f61ad303e2f30e31a18089cce625ff12c4947",
+          "prompt_bytes": 14114,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f8-fed-bias/02-red-team-prompt.md",
-            "sha256": "9ea0245c7e61ad07f9438df505ff5a9cd686908f5b24918d735ad0bd59431122",
+            "sha256": "70155a8fd105b146cd8d01f0810f61ad303e2f30e31a18089cce625ff12c4947",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2274,12 +2332,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/live-f8-fed-bias/03-adjudication-prompt.md",
-          "prompt_sha256": "597fa33a1ad654ce940fc217bbfafbfd4e3b5e5c4004f48686ced704a583e20d",
-          "prompt_bytes": 14825,
+          "prompt_sha256": "3a8f64e3ddadc9d1c00533430cf962403cf3d57f8a2a1d46cb16ef2db1b2abd0",
+          "prompt_bytes": 16089,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/live-f8-fed-bias/03-adjudication-prompt.md",
-            "sha256": "597fa33a1ad654ce940fc217bbfafbfd4e3b5e5c4004f48686ced704a583e20d",
+            "sha256": "3a8f64e3ddadc9d1c00533430cf962403cf3d57f8a2a1d46cb16ef2db1b2abd0",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2322,10 +2381,12 @@
       ],
       "probes": [
         "Chain question: does `macro.release-surprise-at-first-print` - Release surprise at first print - carry information about the next 24-hour dollar move, and in which quantity? The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable.",
-        "Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?",
-        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?",
-        "Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?",
-        "How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?"
+        "What is the surprise - the first print minus the consensus published before the release - and can any such pair be reached without a paid vintage archive?",
+        "At which moment does the surprise become observable, and how much of the reaction is already inside the dollar by the next 05:00 London cutoff?",
+        "Is the mechanism a policy-expectation repricing or a risk-premium change, and does the sign depend on the state of the policy cycle and on where the policy rate sits?",
+        "Does the surprise add information beyond the front-end rate change and the equity move that follow the print, and what is the honest conclusion if no vintage source is reachable at all?",
+        "Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?",
+        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?"
       ],
       "stages": [
         {
@@ -2333,12 +2394,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/01-research-prompt.md",
-          "prompt_sha256": "3e3236ed30ddc8531ee8462f79e1d6eef1176d9c2998b1f13f57617314864ee9",
-          "prompt_bytes": 14619,
+          "prompt_sha256": "0c2ccd04ee73be16a9488d4d6ac5a95ee9bb8d8bb4f9d4e67b7615aac367121b",
+          "prompt_bytes": 15204,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/01-research-prompt.md",
-            "sha256": "3e3236ed30ddc8531ee8462f79e1d6eef1176d9c2998b1f13f57617314864ee9",
+            "sha256": "0c2ccd04ee73be16a9488d4d6ac5a95ee9bb8d8bb4f9d4e67b7615aac367121b",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2351,12 +2413,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/02-red-team-prompt.md",
-          "prompt_sha256": "2d065f4a2669eecd5b051b61d2d042a22539915c898149cfed8c6f12c9454bc0",
-          "prompt_bytes": 13087,
+          "prompt_sha256": "1d1b439e1bcbab4af1b873866bfb96e864aa3b9cf9901f770e04765ded71d64c",
+          "prompt_bytes": 14441,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/02-red-team-prompt.md",
-            "sha256": "2d065f4a2669eecd5b051b61d2d042a22539915c898149cfed8c6f12c9454bc0",
+            "sha256": "1d1b439e1bcbab4af1b873866bfb96e864aa3b9cf9901f770e04765ded71d64c",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2369,12 +2432,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/03-adjudication-prompt.md",
-          "prompt_sha256": "f4a9e27b4e9c711e2a863678ec14eb9208b1d887ea36f3de6df9332574c9f870",
-          "prompt_bytes": 15088,
+          "prompt_sha256": "62582c491a6ac9dfac4bc46ba040dd02c82797e15f608868bea9e51a2cf4feef",
+          "prompt_bytes": 16437,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/03-adjudication-prompt.md",
-            "sha256": "f4a9e27b4e9c711e2a863678ec14eb9208b1d887ea36f3de6df9332574c9f870",
+            "sha256": "62582c491a6ac9dfac4bc46ba040dd02c82797e15f608868bea9e51a2cf4feef",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2417,9 +2481,10 @@
       ],
       "probes": [
         "Chain question: does `fx.usd-session-momentum` - USD session momentum - carry information about the next 24-hour dollar move, and in which quantity? Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.",
-        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
-        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
-        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Momentum in which instrument, over which lookback, and is a trailing one-day or five-day move in the label instrument observable at 05:00 London when that instrument has no verified intraday source?",
+        "Is the trailing move measured on the same instrument and quote source as the label, or on a proxy that introduces a basis the signal cannot separate from momentum?",
+        "Is the mechanism continuation under gradual information diffusion, or mean reversion after a liquidity-driven move, and what measurable condition separates them?",
+        "Is session momentum distinct from the dollar index delta and the overnight range position, and does it survive the bid-ask bounce of a 24-hour window?",
         "Which instrument labels these factors, given that DXY has no verified intraday source?"
       ],
       "stages": [
@@ -2428,12 +2493,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/fx-usd-session-momentum/01-research-prompt.md",
-          "prompt_sha256": "94b09fefdf6a93bf6b0a64ce0cc32f1595feb3e33e7d3d839b9e75514cea72c2",
-          "prompt_bytes": 14196,
+          "prompt_sha256": "27fce7b7a5f184c8ec124f46a07e34c3c89f7f80cc0bf574cb131f37f452e38f",
+          "prompt_bytes": 14703,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-session-momentum/01-research-prompt.md",
-            "sha256": "94b09fefdf6a93bf6b0a64ce0cc32f1595feb3e33e7d3d839b9e75514cea72c2",
+            "sha256": "27fce7b7a5f184c8ec124f46a07e34c3c89f7f80cc0bf574cb131f37f452e38f",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2446,12 +2512,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/fx-usd-session-momentum/02-red-team-prompt.md",
-          "prompt_sha256": "393cab30f171b85dd4696ae8d1ffff117b7786b503494ffe96b5681782f294a5",
-          "prompt_bytes": 12795,
+          "prompt_sha256": "b3029b4e07ee316750b6540136f7fba85c3d73000dc11e35493f2d3933fe8244",
+          "prompt_bytes": 14005,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-session-momentum/02-red-team-prompt.md",
-            "sha256": "393cab30f171b85dd4696ae8d1ffff117b7786b503494ffe96b5681782f294a5",
+            "sha256": "b3029b4e07ee316750b6540136f7fba85c3d73000dc11e35493f2d3933fe8244",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2464,12 +2531,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/fx-usd-session-momentum/03-adjudication-prompt.md",
-          "prompt_sha256": "12077dba67297c2244a4b195b90a377f7a3c1e116e97da33532bc361ac1767c4",
-          "prompt_bytes": 14782,
+          "prompt_sha256": "647754dab2e30d3eef25a95a014cb9333994fb93f4e645f3d1a2f4c8b07d1a13",
+          "prompt_bytes": 15987,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-session-momentum/03-adjudication-prompt.md",
-            "sha256": "12077dba67297c2244a4b195b90a377f7a3c1e116e97da33532bc361ac1767c4",
+            "sha256": "647754dab2e30d3eef25a95a014cb9333994fb93f4e645f3d1a2f4c8b07d1a13",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2512,9 +2580,10 @@
       ],
       "probes": [
         "Chain question: does `fx.usd-overnight-range-position` - USD overnight range position - carry information about the next 24-hour dollar move, and in which quantity? Where the dollar sits in its own recent range at the cutoff, as a bound on the session move rather than a directional call.",
-        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
-        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
-        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Where in its own range is the dollar at the cutoff, measured over which lookback, and does the answer depend on where the range window starts relative to the 05:00 London boundary?",
+        "Is the range computed from the same quote source as the label instrument, and how do missing prints or a thin overnight session distort the measured position?",
+        "Is range position a state variable that bounds the expected session move, a breakout signal, or an artefact of the range window itself?",
+        "Is it distinct from session momentum and the volatility regime, or can its information be recovered from those two?",
         "Which instrument labels these factors, given that DXY has no verified intraday source?"
       ],
       "stages": [
@@ -2523,12 +2592,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/fx-usd-overnight-range-position/01-research-prompt.md",
-          "prompt_sha256": "953aa2411bf243ac5edaf9f1547412049f574e911512f2350e9aaa4ff8aee281",
-          "prompt_bytes": 14250,
+          "prompt_sha256": "85aaddbea025b56227d9742e62ea3349f16164651cc76c1e669e7218d7bd5278",
+          "prompt_bytes": 14673,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-overnight-range-position/01-research-prompt.md",
-            "sha256": "953aa2411bf243ac5edaf9f1547412049f574e911512f2350e9aaa4ff8aee281",
+            "sha256": "85aaddbea025b56227d9742e62ea3349f16164651cc76c1e669e7218d7bd5278",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2541,12 +2611,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/fx-usd-overnight-range-position/02-red-team-prompt.md",
-          "prompt_sha256": "3ab67384890d6365fef6c6c69966f0e4683542b6d2293db8d1f600bc9b882433",
-          "prompt_bytes": 12858,
+          "prompt_sha256": "edfd5c6556c9ba1a1b8ee2919368674b249ba844d12702d055a043ad82e0f433",
+          "prompt_bytes": 13984,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-overnight-range-position/02-red-team-prompt.md",
-            "sha256": "3ab67384890d6365fef6c6c69966f0e4683542b6d2293db8d1f600bc9b882433",
+            "sha256": "edfd5c6556c9ba1a1b8ee2919368674b249ba844d12702d055a043ad82e0f433",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2559,12 +2630,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/fx-usd-overnight-range-position/03-adjudication-prompt.md",
-          "prompt_sha256": "fa14631fc06c8d422eb4c6b11dadedd93961a636000d8f4c8f9c3125befd9677",
-          "prompt_bytes": 14853,
+          "prompt_sha256": "b6bef4fde4c5da571f6be600802fa3f4e8d32d57be334224e4973f73fb7f9152",
+          "prompt_bytes": 15974,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-overnight-range-position/03-adjudication-prompt.md",
-            "sha256": "fa14631fc06c8d422eb4c6b11dadedd93961a636000d8f4c8f9c3125befd9677",
+            "sha256": "b6bef4fde4c5da571f6be600802fa3f4e8d32d57be334224e4973f73fb7f9152",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2606,10 +2678,11 @@
         }
       ],
       "probes": [
-        "Chain question: does `fx.usd-session-volatility-regime` - USD session volatility regime - carry information about the next 24-hour dollar move, and in which quantity? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.",
-        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
-        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
-        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Chain question: what should `fx.usd-session-volatility-regime` - USD session volatility regime - change about the call, given that it is a abstention gate rather than a directional input? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.",
+        "Is realised volatility measured from the label instrument, from a proxy, or from an implied measure, and over which window is it observable at the cutoff?",
+        "Does the regime change the expected direction, the expected dispersion, or only whether a call should be made at all?",
+        "Is the abstention value of a volatility regime separable from a data-quality gate, and what threshold would be a measured quantity rather than a convention?",
+        "Does the volatility regime interact with the VIX level and the risk state, or does it restate them in dollar terms?",
         "Which instrument labels these factors, given that DXY has no verified intraday source?"
       ],
       "stages": [
@@ -2618,12 +2691,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/01-research-prompt.md",
-          "prompt_sha256": "ba0eda94f31c8fd11d5210087bd1584a3a118ebec41be29c4c80c04cc8b75d7f",
-          "prompt_bytes": 14293,
+          "prompt_sha256": "4c4fcb141c13fb25b1114ee595d2336c58ccc0e831ad2e6c833f6a83ba4bd3a6",
+          "prompt_bytes": 14691,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/01-research-prompt.md",
-            "sha256": "ba0eda94f31c8fd11d5210087bd1584a3a118ebec41be29c4c80c04cc8b75d7f",
+            "sha256": "4c4fcb141c13fb25b1114ee595d2336c58ccc0e831ad2e6c833f6a83ba4bd3a6",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2636,12 +2710,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/02-red-team-prompt.md",
-          "prompt_sha256": "9809c7df87b9413a95452829118850d4214eeaa7dac66b75a6860cf63463d52c",
-          "prompt_bytes": 12887,
+          "prompt_sha256": "d972addbddf27e171f92e13f11be38fce18dac16a6a9910cda485a58d58bcc4b",
+          "prompt_bytes": 13967,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/02-red-team-prompt.md",
-            "sha256": "9809c7df87b9413a95452829118850d4214eeaa7dac66b75a6860cf63463d52c",
+            "sha256": "d972addbddf27e171f92e13f11be38fce18dac16a6a9910cda485a58d58bcc4b",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2654,12 +2729,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/03-adjudication-prompt.md",
-          "prompt_sha256": "8006f87ceb54cd906f32b376390932cfa5153480b46ae91a952e5c9d28a05cac",
-          "prompt_bytes": 14883,
+          "prompt_sha256": "40e1fade34c5db5de3fead36bc9b68e2b0eb1b724e55420ca84d6e8130a37715",
+          "prompt_bytes": 15958,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/03-adjudication-prompt.md",
-            "sha256": "8006f87ceb54cd906f32b376390932cfa5153480b46ae91a952e5c9d28a05cac",
+            "sha256": "40e1fade34c5db5de3fead36bc9b68e2b0eb1b724e55420ca84d6e8130a37715",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2702,9 +2778,10 @@
       ],
       "probes": [
         "Chain question: does `risk.usd-safe-haven-demand` - USD safe-haven demand - carry information about the next 24-hour dollar move, and in which quantity? Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move.",
-        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
-        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
-        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "What observation distinguishes the dollar being bought as insurance from the dollar being bought for carry, and can that distinction be measured at the cutoff?",
+        "Is safe-haven demand a separate factor or the residual of the risk state, the VIX level and the rate differentials, and is there an instrument that isolates it, such as cross-currency basis or FX-implied volatility skew?",
+        "Does the relation hold symmetrically in risk-off and risk-on, and is the sign stable across funding-stress episodes?",
+        "Does safe-haven demand add incremental information beyond the risk state and the VIX, and what data would have to be bought before it can be tested?",
         "Which instrument labels these factors, given that DXY has no verified intraday source?"
       ],
       "stages": [
@@ -2713,12 +2790,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/01-research-prompt.md",
-          "prompt_sha256": "ac0414741067ef5e29ca97918aab398e7c54d25c7e736702591b7734f0261968",
-          "prompt_bytes": 14175,
+          "prompt_sha256": "c093e63e786b5770f8f1a0abc4f54db83dbca070a9dbdac8ff427cf9f9c62d1e",
+          "prompt_bytes": 14653,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/01-research-prompt.md",
-            "sha256": "ac0414741067ef5e29ca97918aab398e7c54d25c7e736702591b7734f0261968",
+            "sha256": "c093e63e786b5770f8f1a0abc4f54db83dbca070a9dbdac8ff427cf9f9c62d1e",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2731,12 +2809,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/02-red-team-prompt.md",
-          "prompt_sha256": "e900ddf1c1904d287bbe989cd388c960de15be466ff3131fb593a66e7fbb021e",
-          "prompt_bytes": 12797,
+          "prompt_sha256": "def26f6a02f5294790b5b11897bc3fb87e1ca5a495efca56b624c97e3e4ad418",
+          "prompt_bytes": 13978,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/02-red-team-prompt.md",
-            "sha256": "e900ddf1c1904d287bbe989cd388c960de15be466ff3131fb593a66e7fbb021e",
+            "sha256": "def26f6a02f5294790b5b11897bc3fb87e1ca5a495efca56b624c97e3e4ad418",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2749,12 +2828,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/03-adjudication-prompt.md",
-          "prompt_sha256": "6abbd420560a93d5a6a3e6de99d313c0fda4ca88b1cebf9cb2b6e46ad03a33af",
-          "prompt_bytes": 14787,
+          "prompt_sha256": "cb54cb7cc32a0f5d04e69b30b857eabe67a7f245eb7686d6309677e9eb8e5c1c",
+          "prompt_bytes": 15963,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/03-adjudication-prompt.md",
-            "sha256": "6abbd420560a93d5a6a3e6de99d313c0fda4ca88b1cebf9cb2b6e46ad03a33af",
+            "sha256": "cb54cb7cc32a0f5d04e69b30b857eabe67a7f245eb7686d6309677e9eb8e5c1c",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2797,9 +2877,10 @@
       ],
       "probes": [
         "Chain question: does `risk.risk-on-off-cross-asset-state` - Risk-on and risk-off cross-asset state - carry information about the next 24-hour dollar move, and in which quantity? Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.",
-        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
-        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
-        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Which assets define the risk state, at what cutoff, and do their quotes share one window, or is the state assembled from instruments that are closed at 05:00 London?",
+        "Is one composite state justified, or does the evidence support separate equity, credit and commodity channels with different signs for the dollar?",
+        "How much does the state overlap the VIX level, gold and the equity-dollar relation, and which single chain should own the risk factor?",
+        "Does the risk state carry directional information at all, or is it a conditioning variable that changes the sign of other factors?",
         "Which instrument labels these factors, given that DXY has no verified intraday source?"
       ],
       "stages": [
@@ -2808,12 +2889,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/01-research-prompt.md",
-          "prompt_sha256": "33258800bad72d276a6fb995e10bb3b6d9dfde546948461d7a0073694dca24d8",
-          "prompt_bytes": 14406,
+          "prompt_sha256": "5a94fc2ea68ac38e42ef65242272d7dde6a94494c94e5dbb692b0ebdcf130423",
+          "prompt_bytes": 14816,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/01-research-prompt.md",
-            "sha256": "33258800bad72d276a6fb995e10bb3b6d9dfde546948461d7a0073694dca24d8",
+            "sha256": "5a94fc2ea68ac38e42ef65242272d7dde6a94494c94e5dbb692b0ebdcf130423",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2826,12 +2908,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/02-red-team-prompt.md",
-          "prompt_sha256": "a5fba91d9cc92a5cf5666688efefb05c5363b1024d5073236dc6925fe453b3f0",
-          "prompt_bytes": 12992,
+          "prompt_sha256": "c52a9e7ad2771a32dea3007e26984496a1ff7b2c230b6300c53b4670b7f62465",
+          "prompt_bytes": 14105,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/02-red-team-prompt.md",
-            "sha256": "a5fba91d9cc92a5cf5666688efefb05c5363b1024d5073236dc6925fe453b3f0",
+            "sha256": "c52a9e7ad2771a32dea3007e26984496a1ff7b2c230b6300c53b4670b7f62465",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2844,12 +2927,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/03-adjudication-prompt.md",
-          "prompt_sha256": "678a847003435979362732e7d0f182c057d83fa269c9bd060a7213ee533c7fae",
-          "prompt_bytes": 14990,
+          "prompt_sha256": "8f3aed73995111cd849940799f427be8e2b6c4a466bb1db9b538adce6567259d",
+          "prompt_bytes": 16098,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/03-adjudication-prompt.md",
-            "sha256": "678a847003435979362732e7d0f182c057d83fa269c9bd060a7213ee533c7fae",
+            "sha256": "8f3aed73995111cd849940799f427be8e2b6c4a466bb1db9b538adce6567259d",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2891,10 +2975,11 @@
         }
       ],
       "probes": [
-        "Chain question: does `calendar.known-releases-between-cutoff-and-endpoint` - Known releases inside the window - carry information about the next 24-hour dollar move, and in which quantity? Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.",
-        "Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?",
-        "What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?",
-        "Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?",
+        "Chain question: what should `calendar.known-releases-between-cutoff-and-endpoint` - Known releases inside the window - change about the call, given that it is a quality gate rather than a directional input? Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.",
+        "Which releases fall inside the session, how are their timestamps verified before the cutoff, and what happens when a release time is scheduled but its consensus is unavailable?",
+        "Does a known-but-unreleased event change the expected direction, the expected dispersion, or only the confidence in a call, and how can that be measured rather than assumed?",
+        "Can the event be used without using its outcome, and is a pre-release positioning effect distinguishable from the post-release reaction that the next session will contain?",
+        "What is the honest treatment of a session whose dominant event is a release the collector cannot date reliably: abstain, widen, or call with a stated caveat?",
         "Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?"
       ],
       "stages": [
@@ -2903,12 +2988,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/01-research-prompt.md",
-          "prompt_sha256": "fecfbc64c19ff8b1b42a13435d65c8a3fb72172e1b9138de9c2748e71c2b59cb",
-          "prompt_bytes": 14474,
+          "prompt_sha256": "34083016c1dcd5c85dde5edf3b8060fcefc2de646b3b5467dfdeca50cef63e35",
+          "prompt_bytes": 15006,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/01-research-prompt.md",
-            "sha256": "fecfbc64c19ff8b1b42a13435d65c8a3fb72172e1b9138de9c2748e71c2b59cb",
+            "sha256": "34083016c1dcd5c85dde5edf3b8060fcefc2de646b3b5467dfdeca50cef63e35",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -2921,12 +3007,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/02-red-team-prompt.md",
-          "prompt_sha256": "2494a98400dad67e479f2b151853e3921751537c82ddb6d5e793bc9b0a58a7bd",
-          "prompt_bytes": 13047,
+          "prompt_sha256": "c7b88f883656d8c70edb9fe2cc5444fba062a5c95eb39a7e16b94f981d0d2de0",
+          "prompt_bytes": 14277,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/02-red-team-prompt.md",
-            "sha256": "2494a98400dad67e479f2b151853e3921751537c82ddb6d5e793bc9b0a58a7bd",
+            "sha256": "c7b88f883656d8c70edb9fe2cc5444fba062a5c95eb39a7e16b94f981d0d2de0",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -2939,12 +3026,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/03-adjudication-prompt.md",
-          "prompt_sha256": "813649a89c70f900e730daed86235544295de2c19de04f7c24b2fd834fce4a8e",
-          "prompt_bytes": 15062,
+          "prompt_sha256": "1bcc370c5f4986fd82870cec869e09e165628f357deefbc938654f3eac23585b",
+          "prompt_bytes": 16287,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/03-adjudication-prompt.md",
-            "sha256": "813649a89c70f900e730daed86235544295de2c19de04f7c24b2fd834fce4a8e",
+            "sha256": "1bcc370c5f4986fd82870cec869e09e165628f357deefbc938654f3eac23585b",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -2987,9 +3075,10 @@
       ],
       "probes": [
         "Chain question: does `calendar.days-since-and-until-high-impact-events` - Distance from high-impact events - carry information about the next 24-hour dollar move, and in which quantity? Positioning measured as distance from known high-impact dates, using only the release calendar and never the surprise.",
-        "Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?",
-        "What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?",
-        "Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?",
+        "Is distance from a high-impact date a meaningful state variable, and does the evidence support drift before a release, after it, or neither?",
+        "Which events count as high impact, and does the answer depend on a classification that is itself hindsight-defined?",
+        "Is the mechanism positioning, hedging demand, or pre-announcement drift, and what observable at the cutoff separates it from ordinary seasonality?",
+        "Is the distance measure distinct from the release-window factor and from a volatility regime, and does it carry any information beyond them?",
         "Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?"
       ],
       "stages": [
@@ -2998,12 +3087,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/01-research-prompt.md",
-          "prompt_sha256": "c9e5db323b1793ae45de0d45452b553c315fc4704f57cce5528e36b92d3855ae",
-          "prompt_bytes": 14398,
+          "prompt_sha256": "5beed0646aea904d71b1562d5d1f06c44bc40018f01138153cbe522c4b1b4966",
+          "prompt_bytes": 14776,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/01-research-prompt.md",
-            "sha256": "c9e5db323b1793ae45de0d45452b553c315fc4704f57cce5528e36b92d3855ae",
+            "sha256": "5beed0646aea904d71b1562d5d1f06c44bc40018f01138153cbe522c4b1b4966",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -3016,12 +3106,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/02-red-team-prompt.md",
-          "prompt_sha256": "23321505e75f2758748ea804a92ca7cd8c253200d9b68ad89d729dbc47e3901e",
-          "prompt_bytes": 12994,
+          "prompt_sha256": "3cc31c2cd95226fbe037e8e78367e862dc60dbc71cbeef54d0568724cc8a407e",
+          "prompt_bytes": 14088,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/02-red-team-prompt.md",
-            "sha256": "23321505e75f2758748ea804a92ca7cd8c253200d9b68ad89d729dbc47e3901e",
+            "sha256": "3cc31c2cd95226fbe037e8e78367e862dc60dbc71cbeef54d0568724cc8a407e",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -3034,12 +3125,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/03-adjudication-prompt.md",
-          "prompt_sha256": "44f197f5541df1f3d5ea8705760b7947c9ffd65dff04c8ce91aaa0652ac3a46f",
-          "prompt_bytes": 15006,
+          "prompt_sha256": "82d03dfa282b85a20b4f405920e0fe6f2c515d79bc0f4501040c363eb6c24193",
+          "prompt_bytes": 16095,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/03-adjudication-prompt.md",
-            "sha256": "44f197f5541df1f3d5ea8705760b7947c9ffd65dff04c8ce91aaa0652ac3a46f",
+            "sha256": "82d03dfa282b85a20b4f405920e0fe6f2c515d79bc0f4501040c363eb6c24193",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -3081,10 +3173,11 @@
         }
       ],
       "probes": [
-        "Chain question: does `data.quality-gate-for-abstention` - Data quality gate for abstention - carry information about the next 24-hour dollar move, and in which quantity? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.",
-        "Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?",
-        "What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?",
-        "Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?",
+        "Chain question: what should `data.quality-gate-for-abstention` - Data quality gate for abstention - change about the call, given that it is a quality gate rather than a directional input? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.",
+        "Which data states should force abstention - missing, stale, revised, or unreachable at the cutoff - and how is each state detected without an as-of check in the live collector?",
+        "Does the gate improve directional accuracy on the sessions it does trade, and what does it cost in coverage and in skipped sessions that would have been called correctly?",
+        "How are skipped sessions counted - as errors, as excluded observations, or as a separate coverage figure - and what benchmark makes abstention comparable to always calling?",
+        "Which sessions does the gate skip in practice, and are they the sessions where a call was least likely to be right, or simply the sessions with the most missing inputs?",
         "Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?"
       ],
       "stages": [
@@ -3093,12 +3186,13 @@
           "order": 1,
           "label": "Research",
           "prompt_path": "docs/research/factors/usd/data-quality-gate-for-abstention/01-research-prompt.md",
-          "prompt_sha256": "02d7fbdb1b06471c6c1e4d4f29c9dbda08caf94bc3312d204a629c5bd88543d8",
-          "prompt_bytes": 14311,
+          "prompt_sha256": "c678464b7be9a72811800b78e251fa349e7a10aaf391ab6807a9ed8cdf41a5fc",
+          "prompt_bytes": 14852,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/data-quality-gate-for-abstention/01-research-prompt.md",
-            "sha256": "02d7fbdb1b06471c6c1e4d4f29c9dbda08caf94bc3312d204a629c5bd88543d8",
+            "sha256": "c678464b7be9a72811800b78e251fa349e7a10aaf391ab6807a9ed8cdf41a5fc",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "report",
@@ -3111,12 +3205,13 @@
           "order": 2,
           "label": "Red-team",
           "prompt_path": "docs/research/factors/usd/data-quality-gate-for-abstention/02-red-team-prompt.md",
-          "prompt_sha256": "6b2ab0345953eaffe6c46f7240509af366cb3612f8d1d8555b0a3a28968dd928",
-          "prompt_bytes": 12888,
+          "prompt_sha256": "213ec6a3130808303cfcf252df78d6109f18fc0b4d64079eabd2c39da25efd6d",
+          "prompt_bytes": 14127,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/data-quality-gate-for-abstention/02-red-team-prompt.md",
-            "sha256": "6b2ab0345953eaffe6c46f7240509af366cb3612f8d1d8555b0a3a28968dd928",
+            "sha256": "213ec6a3130808303cfcf252df78d6109f18fc0b4d64079eabd2c39da25efd6d",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
@@ -3129,12 +3224,13 @@
           "order": 3,
           "label": "Adjudication",
           "prompt_path": "docs/research/factors/usd/data-quality-gate-for-abstention/03-adjudication-prompt.md",
-          "prompt_sha256": "40eb5c1b42442fc12cc8e4ccb0bb3a56b4d5b1eb4109bf21cbc64977cfe96375",
-          "prompt_bytes": 14884,
+          "prompt_sha256": "e0f67af53c7697b0255ab5bd79dda5a201dc6e61048e0902beed6ab878e39e8f",
+          "prompt_bytes": 16118,
           "prompt_source": {
             "kind": "generated",
+            "template_version": "research-prompt-v3.1.0",
             "repo_path": "docs/research/factors/usd/data-quality-gate-for-abstention/03-adjudication-prompt.md",
-            "sha256": "40eb5c1b42442fc12cc8e4ccb0bb3a56b4d5b1eb4109bf21cbc64977cfe96375",
+            "sha256": "e0f67af53c7697b0255ab5bd79dda5a201dc6e61048e0902beed6ab878e39e8f",
             "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
@@ -3207,12 +3303,13 @@
         "order": 1,
         "label": "Final analysis",
         "prompt_path": "docs/research/final/usd/final-asset-analysis/01-final-analysis-prompt.md",
-        "prompt_sha256": "bf5feb6c7fc42513bf57d11d03dd4c8b279e18e5ef1d0be378097786cbff60ca",
-        "prompt_bytes": 13241,
+        "prompt_sha256": "1dd0ff38b43882ae3063e2b9941cdc90fceb7d52d2cb4ebc992844daa6030358",
+        "prompt_bytes": 13408,
         "prompt_source": {
           "kind": "generated",
+          "template_version": "research-prompt-v3.1.0",
           "repo_path": "docs/research/final/usd/final-asset-analysis/01-final-analysis-prompt.md",
-          "sha256": "bf5feb6c7fc42513bf57d11d03dd4c8b279e18e5ef1d0be378097786cbff60ca",
+          "sha256": "1dd0ff38b43882ae3063e2b9941cdc90fceb7d52d2cb4ebc992844daa6030358",
           "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
         },
         "document_type": "synthesis",
@@ -3226,12 +3323,13 @@
         "order": 2,
         "label": "Final red-team",
         "prompt_path": "docs/research/final/usd/final-asset-analysis/02-final-red-team-prompt.md",
-        "prompt_sha256": "02da2bfc8a2b59a07fde7d476bc454c117cf639ffd1e8ece842dcd73b640d169",
-        "prompt_bytes": 12625,
+        "prompt_sha256": "7307c9c096c339a6ffbdadc63a415aa214b3347639927b39cf00bbc7898992e0",
+        "prompt_bytes": 12792,
         "prompt_source": {
           "kind": "generated",
+          "template_version": "research-prompt-v3.1.0",
           "repo_path": "docs/research/final/usd/final-asset-analysis/02-final-red-team-prompt.md",
-          "sha256": "02da2bfc8a2b59a07fde7d476bc454c117cf639ffd1e8ece842dcd73b640d169",
+          "sha256": "7307c9c096c339a6ffbdadc63a415aa214b3347639927b39cf00bbc7898992e0",
           "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
         },
         "document_type": "review",
@@ -3247,12 +3345,13 @@
         "order": 3,
         "label": "Final adjudication",
         "prompt_path": "docs/research/final/usd/final-asset-analysis/03-final-adjudication-prompt.md",
-        "prompt_sha256": "e2828915e08ce23cab4cdff44dd18379a808c307e5aeb8aa76d64af253f90e2c",
-        "prompt_bytes": 14339,
+        "prompt_sha256": "4af2e3a09f7170d99160c0e3be96327ebfb32612c1e1a27b23572453d0f50754",
+        "prompt_bytes": 14506,
         "prompt_source": {
           "kind": "generated",
+          "template_version": "research-prompt-v3.1.0",
           "repo_path": "docs/research/final/usd/final-asset-analysis/03-final-adjudication-prompt.md",
-          "sha256": "e2828915e08ce23cab4cdff44dd18379a808c307e5aeb8aa76d64af253f90e2c",
+          "sha256": "4af2e3a09f7170d99160c0e3be96327ebfb32612c1e1a27b23572453d0f50754",
           "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
         },
         "document_type": "synthesis",
@@ -4622,7 +4721,17 @@
         "Consensus and first-print vintages sit behind paid feeds, which is why two live factors and one research card are blocked.",
         "The five task prompts are external work: this repository prepares them, it does not run them."
       ],
-      "note": "This library changes nothing about the live engine. The deployed USD node still computes its ten factors with the coded weight vector while the rulebook it reads declares a different one."
+      "note": "This library changes nothing about the live engine. The deployed USD node still computes its ten factors with the coded weight vector while the rulebook it reads declares a different one.",
+      "catalogue": {
+        "state": "dispatchable",
+        "factor_entries": 25,
+        "factor_chains": 25,
+        "stage_prompts": 78,
+        "published_briefs": 25,
+        "prompt_profile": "usd-session-v1",
+        "open_decisions": 5,
+        "note": "Complete: every factor has a catalogue entry, a three-stage chain with its prompts, and a published brief."
+      }
     },
     {
       "asset": "EUR",
@@ -4634,7 +4743,23 @@
         "No assignment is published for this asset."
       ],
       "factors": [],
-      "note": "No USD sign, weight, threshold or factor transfers to another asset without its own research."
+      "note": "No USD sign, weight, threshold or factor transfers to another asset without its own research.",
+      "catalogue": {
+        "state": "profile_only",
+        "factor_entries": 0,
+        "factor_chains": 0,
+        "stage_prompts": 0,
+        "published_briefs": 0,
+        "prompt_profile": "none",
+        "open_decisions": 1,
+        "note": "Asset profile only: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.",
+        "remaining": [
+          "A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.",
+          "One factor entry per candidate factor, with its series, publication timing, transformations and blockers.",
+          "One three-stage chain per factor, so the prompt set has to be written and checked before anything can be dispatched.",
+          "A published brief per factor, and an asset-level final chain with its own completion gate."
+        ]
+      }
     },
     {
       "asset": "GOLD",
@@ -4646,7 +4771,23 @@
         "No assignment is published for this asset."
       ],
       "factors": [],
-      "note": "Gold keeps its own horizon policy and backtesting loop."
+      "note": "Gold keeps its own horizon policy and backtesting loop.",
+      "catalogue": {
+        "state": "profile_only",
+        "factor_entries": 0,
+        "factor_chains": 0,
+        "stage_prompts": 0,
+        "published_briefs": 0,
+        "prompt_profile": "none",
+        "open_decisions": 1,
+        "note": "Asset profile only: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.",
+        "remaining": [
+          "A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.",
+          "One factor entry per candidate factor, with its series, publication timing, transformations and blockers.",
+          "One three-stage chain per factor, so the prompt set has to be written and checked before anything can be dispatched.",
+          "A published brief per factor, and an asset-level final chain with its own completion gate."
+        ]
+      }
     },
     {
       "asset": "SILVER",
@@ -4658,7 +4799,23 @@
         "No assignment is published for this asset."
       ],
       "factors": [],
-      "note": "No USD result transfers here."
+      "note": "No USD result transfers here.",
+      "catalogue": {
+        "state": "profile_only",
+        "factor_entries": 0,
+        "factor_chains": 0,
+        "stage_prompts": 0,
+        "published_briefs": 0,
+        "prompt_profile": "none",
+        "open_decisions": 1,
+        "note": "Asset profile only: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.",
+        "remaining": [
+          "A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.",
+          "One factor entry per candidate factor, with its series, publication timing, transformations and blockers.",
+          "One three-stage chain per factor, so the prompt set has to be written and checked before anything can be dispatched.",
+          "A published brief per factor, and an asset-level final chain with its own completion gate."
+        ]
+      }
     },
     {
       "asset": "NQ",
@@ -4670,7 +4827,23 @@
         "No assignment is published for this asset."
       ],
       "factors": [],
-      "note": "The only NQ input in the live USD collector is a QQQ quote, which is an ETF, not the index."
+      "note": "The only NQ input in the live USD collector is a QQQ quote, which is an ETF, not the index.",
+      "catalogue": {
+        "state": "profile_only",
+        "factor_entries": 0,
+        "factor_chains": 0,
+        "stage_prompts": 0,
+        "published_briefs": 0,
+        "prompt_profile": "none",
+        "open_decisions": 1,
+        "note": "Asset profile only: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.",
+        "remaining": [
+          "A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.",
+          "One factor entry per candidate factor, with its series, publication timing, transformations and blockers.",
+          "One three-stage chain per factor, so the prompt set has to be written and checked before anything can be dispatched.",
+          "A published brief per factor, and an asset-level final chain with its own completion gate."
+        ]
+      }
     },
     {
       "asset": "BTC",
@@ -4682,7 +4855,23 @@
         "No assignment is published for this asset."
       ],
       "factors": [],
-      "note": "No USD result transfers here."
+      "note": "No USD result transfers here.",
+      "catalogue": {
+        "state": "profile_only",
+        "factor_entries": 0,
+        "factor_chains": 0,
+        "stage_prompts": 0,
+        "published_briefs": 0,
+        "prompt_profile": "none",
+        "open_decisions": 1,
+        "note": "Asset profile only: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.",
+        "remaining": [
+          "A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.",
+          "One factor entry per candidate factor, with its series, publication timing, transformations and blockers.",
+          "One three-stage chain per factor, so the prompt set has to be written and checked before anything can be dispatched.",
+          "A published brief per factor, and an asset-level final chain with its own completion gate."
+        ]
+      }
     },
     {
       "asset": "WTI",
@@ -4694,7 +4883,23 @@
         "No assignment is published for this asset."
       ],
       "factors": [],
-      "note": "No USD result transfers here."
+      "note": "No USD result transfers here.",
+      "catalogue": {
+        "state": "profile_only",
+        "factor_entries": 0,
+        "factor_chains": 0,
+        "stage_prompts": 0,
+        "published_briefs": 0,
+        "prompt_profile": "none",
+        "open_decisions": 1,
+        "note": "Asset profile only: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.",
+        "remaining": [
+          "A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.",
+          "One factor entry per candidate factor, with its series, publication timing, transformations and blockers.",
+          "One three-stage chain per factor, so the prompt set has to be written and checked before anything can be dispatched.",
+          "A published brief per factor, and an asset-level final chain with its own completion gate."
+        ]
+      }
     },
     {
       "asset": "GBP",
@@ -4706,7 +4911,23 @@
         "No assignment is published for this asset."
       ],
       "factors": [],
-      "note": "No USD result transfers here."
+      "note": "No USD result transfers here.",
+      "catalogue": {
+        "state": "profile_only",
+        "factor_entries": 0,
+        "factor_chains": 0,
+        "stage_prompts": 0,
+        "published_briefs": 0,
+        "prompt_profile": "none",
+        "open_decisions": 1,
+        "note": "Asset profile only: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.",
+        "remaining": [
+          "A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.",
+          "One factor entry per candidate factor, with its series, publication timing, transformations and blockers.",
+          "One three-stage chain per factor, so the prompt set has to be written and checked before anything can be dispatched.",
+          "A published brief per factor, and an asset-level final chain with its own completion gate."
+        ]
+      }
     }
   ]
 }

@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-fx-usd-overnight-range-position` for factor `fx.usd-overnight-range-position` on asset USD; group label `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `fx.usd-overnight-range-position` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `fx.usd-overnight-range-position` (chain `usd-factor-fx-usd-overnight-range-position`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,16 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Where in its own range is the dollar at the cutoff, measured over which lookback, and does the answer depend on where the range window starts relative to the 05:00 London boundary?
+2. Is the range computed from the same quote source as the label instrument, and how do missing prints or a thin overnight session distort the measured position?
+3. Is range position a state variable that bounds the expected session move, a breakout signal, or an artefact of the range window itself?
+4. Is it distinct from session momentum and the volatility regime, or can its information be recovered from those two?
+5. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ## Five kinds of evidence that must not be mixed
 

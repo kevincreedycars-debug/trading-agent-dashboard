@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f8-fed-bias` for factor `live.f8-fed-bias` on asset USD; group label `usd-topic-economic-surprise-and-fed-bias` (Economic surprises, first prints and Fed bias); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f8-fed-bias` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,12 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `live.f8-fed-bias` - F8 Fed bias - carry information about the next 24-hour dollar move, and in which quantity? Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change.
-2. Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?
-3. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
-4. Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?
-5. How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?
+2. Is a bias string a measurement or an interpretation, and can the same words be turned into a reproducible, dated, pre-cutoff value?
+3. No vintage of the string is retained: does the deployed read measure a change, a level, or a revision introduced after the fact, and what would a versioned series look like?
+4. Does the bias label carry information beyond the front-end rate change and the release surprise that ostensibly produce it?
+5. If the string cannot be versioned, what is the honest Layer 1 role: a documented input, a documented exclusion, or no incremental value?
+6. Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?
+7. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
 
 ## Existing thresholds are context, not the scope limit
 

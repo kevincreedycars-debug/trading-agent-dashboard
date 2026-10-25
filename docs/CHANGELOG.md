@@ -1,4 +1,38 @@
 # Changelog
+## 2026-10-25 (integration lane) - Every factor asks its own questions: `research-prompt-v3.1.0` on `main`
+
+- `d6cff707` from `workstream/c-research-programme` was ported onto the deployed builder rather than merged or
+  cherry-picked whole. Its base is 1,526 commits behind `origin/main`; taking its `lib/research_library.js`,
+  `script.js` or prompt files would have reverted the hosted upload path, the `Uploaded` label,
+  `original_filename`, the `GBP`-last asset order, the cited-brief prompts, the five evidence kinds and the five
+  allowed conclusions.
+- What was taken is the content: each of the 25 factor entries owns its four questions in a `FACTOR_PROBES`
+  block, a group label keeps only its one or two shared questions, stages 2 and 3 re-ask the factor's own
+  questions, a chain whose role is a gate is asked what it changes about the call, and abstention is judged on
+  directional accuracy, coverage and skipped sessions against a benchmark of always calling. The builder now
+  refuses a chain whose factor has no authored questions, so a chain cannot silently borrow a sibling's.
+- The catalogue carries `prompt_template.version` = `research-prompt-v3.1.0` and
+  `prompt_source.template_version` on every stage, with the same `prompt_sha256`/`prompt_bytes` discipline as
+  before, plus a derived `assets[].catalogue`: USD `dispatchable` (25 entries, 25 chains, 78 prompts, 25
+  briefs), the other seven `profile_only` with `remaining` and `open_decisions`. Every generated prompt names the
+  version; the page cache-buster is `20261025-research-prompt-v310`.
+- Seven chains no longer carry another factor's question and `live.f4-real-yield-delta` no longer asks its own
+  question back at itself; 78 of 78 prompts carry the version and every stage carries its chain's questions.
+  `docs/research-library/PROMPT_TEMPLATE_INTEGRATION.md` records the defect table, the port decision, the review
+  check, the per-stage VIX hashes and the automation handoff.
+- The registry moved once, for documentation: `docs/research-library/README.md` was corrected (it still said the
+  VIX brief was reproduced in full and gave an old asset order), so `research-library-readme` is version 12,
+  21,972 bytes, sha256 `85982bb4d63dbafce7545d01fed0647f636ee14ea51dac850ed5f45e5ee6d8f0`, with version 11 kept
+  immutable. No report, review or adjudication was edited, re-registered or re-versioned; the VIX report stays
+  version 1, 84,056 bytes, sha256 `e4151937…`; no factor status, weight, threshold or live call moved; the final
+  chain stays `usd-final-asset-analysis`, `locked` at `0/25`; the seven non-USD assets stay `profile_only`.
+- Guards: `chains --check`, `topics --check`, `catalog --check` and `verify` clean; library unit 35/35 with three
+  new guards (per-factor questions through all three stages, the gate and abstention treatment, the catalogue
+  states); library unit plus export 41/41; library plus pipeline plus handoff 66/66; `test:unit` 609 with 0
+  failures. The library browser test fails waiting for a download event, and fails identically on untouched
+  `origin/main` `9c618d22` in a fresh worktree, so it is pre-existing and environmental rather than caused here.
+- Nothing was published to a model, dispatched or uploaded, and no allowance was spent.
+
 ## 2026-10-25 (integration lane) - Astra route integrated, the supervisor reads chains, probes specified
 
 ### Integrated from `workstream/b-dashboard-interface`

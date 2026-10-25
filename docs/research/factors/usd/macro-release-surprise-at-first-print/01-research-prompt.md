@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-macro-release-surprise-at-first-print` for factor `macro.release-surprise-at-first-print` on asset USD; group label `usd-topic-economic-surprise-and-fed-bias` (Economic surprises, first prints and Fed bias); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `macro.release-surprise-at-first-print` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,12 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `macro.release-surprise-at-first-print` - Release surprise at first print - carry information about the next 24-hour dollar move, and in which quantity? The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable.
-2. Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?
-3. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
-4. Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?
-5. How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?
+2. What is the surprise - the first print minus the consensus published before the release - and can any such pair be reached without a paid vintage archive?
+3. At which moment does the surprise become observable, and how much of the reaction is already inside the dollar by the next 05:00 London cutoff?
+4. Is the mechanism a policy-expectation repricing or a risk-premium change, and does the sign depend on the state of the policy cycle and on where the policy rate sits?
+5. Does the surprise add information beyond the front-end rate change and the equity move that follow the print, and what is the honest conclusion if no vintage source is reachable at all?
+6. Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?
+7. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
 
 ## Existing thresholds are context, not the scope limit
 

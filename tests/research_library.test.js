@@ -1054,3 +1054,78 @@ test("a chain reads its registry documents by factor and its hosted rows by chai
   assert.equal(adjudication.parent_document_id, hostedDocument.document_id, "stage three attaches the hosted red-team");
 });
 
+
+test("every factor chain owns its questions and carries them through all three stages", () => {
+  // At research-prompt-v3.1.0 a chain may not borrow a sibling factor's question. The defect this guards was
+  // group-level inheritance: seven chains repeated questions written for another factor, and stages 2 and 3
+  // dropped every question, so an assignment could be closed without answering the one it was written for.
+  const version = catalog.prompt_template?.version;
+  assert.equal(version, "research-prompt-v3.1.0", "the catalogue names the prompt template version");
+  const chains = ResearchLibrary.listFactorChains(catalog, "USD");
+  assert.equal(chains.length, 25);
+  const questionTopics = new Map();
+  chains.forEach(chain => {
+    const questions = chain.probes.slice(1);
+    assert.ok(chain.probes[0].startsWith("Chain question:"), `${chain.factor_id} needs its own chain question`);
+    assert.ok(questions.length >= 4, `${chain.factor_id} needs at least four authored questions, has ${questions.length}`);
+    questions.forEach(question => {
+      if (!questionTopics.has(question)) questionTopics.set(question, new Set());
+      questionTopics.get(question).add(chain.topic_id);
+    });
+    ResearchLibrary.chainStages(chain).forEach(stage => {
+      assert.equal(stage.prompt_source?.template_version, version, `${stage.prompt_path} must record the template version`);
+      const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+      assert.ok(text.includes(version), `${stage.prompt_path} must name ${version}`);
+      questions.forEach(question =>
+        assert.ok(text.includes(question), `${stage.prompt_path} must re-ask: ${question.slice(0, 60)}`)
+      );
+    });
+  });
+  const borrowed = [...questionTopics.entries()].filter(([, topics]) => topics.size > 1);
+  assert.deepEqual(borrowed, [], "a question may be shared inside its group label, never across labels");
+});
+
+test("the data-quality gate asks what it changes, and abstention is judged on accuracy, coverage and skipped sessions", () => {
+  // A gate is not a directional factor. Asking it which way the dollar moves makes an honest "this carries no
+  // directional information" read as a failed assignment, and an abstention rule that is scored only on the
+  // sessions it trades rewards skipping the hard ones. The agreed comparison is coverage-matched: the gate
+  // must be measured against calling every session, with skipped sessions counted.
+  const chain = ResearchLibrary.factorChainForFactor(catalog, "data.quality-gate-for-abstention");
+  assert.ok(chain, "the gate chain exists");
+  assert.equal(chain.factor_role, "quality gate");
+  assert.equal(chain.probes[0].includes("carry information about the next 24-hour dollar move"), false);
+  assert.equal(chain.probes[0].includes("change about the call"), true);
+  const questions = chain.probes.join(" ");
+  ["accuracy", "coverage", "skipped sessions", "always calling"].forEach(term =>
+    assert.ok(questions.includes(term), `the gate questions must name ${term}`)
+  );
+  ["research", "red_team", "adjudication"].forEach(stageId => {
+    const stage = ResearchLibrary.chainStageById(chain, stageId);
+    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+    ["accuracy", "coverage", "skipped sessions"].forEach(term =>
+      assert.ok(text.includes(term), `${stage.prompt_path} must carry the ${term} question`)
+    );
+  });
+});
+
+test("the catalogue says which assets can dispatch and keeps the other seven profile only", () => {
+  const usd = catalog.assets.find(asset => asset.asset === "USD");
+  assert.equal(usd.catalogue.state, "dispatchable");
+  assert.equal(usd.catalogue.factor_entries, 25);
+  assert.equal(usd.catalogue.factor_chains, 25);
+  assert.equal(usd.catalogue.stage_prompts, 78);
+  assert.equal(usd.catalogue.published_briefs, 25);
+  const drafts = catalog.assets.filter(asset => asset.asset !== "USD");
+  assert.deepEqual(drafts.map(asset => asset.asset), ["EUR", "GOLD", "SILVER", "NQ", "BTC", "WTI", "GBP"]);
+  drafts.forEach(asset => {
+    assert.equal(asset.catalogue.state, "profile_only", `${asset.asset} is profile only`);
+    assert.equal(asset.catalogue.factor_entries, 0);
+    assert.equal(asset.catalogue.stage_prompts, 0);
+    assert.ok(asset.catalogue.remaining.length >= 4, `${asset.asset} must name what it still needs`);
+    assert.ok(asset.catalogue.open_decisions >= 1, `${asset.asset} must name its open decision`);
+  });
+  // The final chain stays gated: a catalogue record opens nothing.
+  const gate = ResearchLibrary.finalChain(catalog, "USD").gate;
+  assert.equal(gate.factor_count, 25);
+});
+

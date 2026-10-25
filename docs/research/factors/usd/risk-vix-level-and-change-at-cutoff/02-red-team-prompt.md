@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-risk-vix-level-and-change-at-cutoff` for factor `risk.vix-level-and-change-at-cutoff` on asset USD; group label `usd-topic-vix-level-and-risk-regime` (VIX, its change and the USD risk regime at the 05:00 London cutoff); stage `red_team`; this stage returns exactly one Markdown document (review).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `risk.vix-level-and-change-at-cutoff` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Reviewed document: the research return registered against factor chain `usd-factor-risk-vix-level-and-change-at-cutoff`, stage `research`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.
 
 ## What this stage is for
@@ -52,6 +53,16 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 `SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.
 
 For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.
+
+## The questions this stage must carry forward
+
+A question does not stop at stage 1. For each question below, say whether the research report answers it, answers it only partly or does not answer it, and give the verdict that follows from the source you checked.
+
+1. What does the VIX level at the cutoff add to the level the deployed F1 rule already uses, and is a second chain carrying the same variable a duplication the synthesis has to resolve?
+2. Is the informative quantity the level, the one-day change, the five-day change, or the change between the last US close and the cutoff, and how stale is the observation at 05:00 London?
+3. Is the mechanism a safe-haven demand for dollars, a funding or liquidity squeeze, or a risk-appetite shock, and what observable separates them?
+4. Does the VIX change add information beyond the cross-asset risk state and the equity move, and is its sign the same in a calm and a stressed regime?
+5. Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?
 
 ## The session this is written for
 

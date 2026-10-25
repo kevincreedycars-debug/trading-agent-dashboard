@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-data-quality-gate-for-abstention` for factor `data.quality-gate-for-abstention` on asset USD; group label `usd-topic-calendar-and-data-quality` (Calendar state and the data-quality gate); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `data.quality-gate-for-abstention` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `data.quality-gate-for-abstention` (chain `usd-factor-data-quality-gate-for-abstention`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,16 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Which data states should force abstention - missing, stale, revised, or unreachable at the cutoff - and how is each state detected without an as-of check in the live collector?
+2. Does the gate improve directional accuracy on the sessions it does trade, and what does it cost in coverage and in skipped sessions that would have been called correctly?
+3. How are skipped sessions counted - as errors, as excluded observations, or as a separate coverage figure - and what benchmark makes abstention comparable to always calling?
+4. Which sessions does the gate skip in practice, and are they the sessions where a call was least likely to be right, or simply the sessions with the most missing inputs?
+5. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
 
 ## Five kinds of evidence that must not be mixed
 

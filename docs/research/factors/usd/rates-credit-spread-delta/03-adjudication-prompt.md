@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-rates-credit-spread-delta` for factor `rates.credit-spread-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `rates.credit-spread-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `rates.credit-spread-delta` (chain `usd-factor-rates-credit-spread-delta`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,16 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Which credit series measures the spread the claim is about, at what rating and maturity, and how stale is it at the cutoff?
+2. Is the informative quantity the spread level, a one-day change, or a change over several days, and does a spread change lag the equity move it is meant to signal?
+3. Is the mechanism a growth signal, a risk-appetite signal, or a funding and default-risk signal, and does the sign for the dollar differ between the default story and the risk story?
+4. Does the credit spread add information beyond the VIX level, the equity move and the risk state, or is it a slower restatement of the same risk factor?
+5. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ## Five kinds of evidence that must not be mixed
 

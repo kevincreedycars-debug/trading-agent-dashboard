@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-fx-usd-session-momentum` for factor `fx.usd-session-momentum` on asset USD; group label `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `fx.usd-session-momentum` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,11 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `fx.usd-session-momentum` - USD session momentum - carry information about the next 24-hour dollar move, and in which quantity? Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.
-2. Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?
-3. Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?
-4. Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?
-5. Which instrument labels these factors, given that DXY has no verified intraday source?
+2. Momentum in which instrument, over which lookback, and is a trailing one-day or five-day move in the label instrument observable at 05:00 London when that instrument has no verified intraday source?
+3. Is the trailing move measured on the same instrument and quote source as the label, or on a proxy that introduces a basis the signal cannot separate from momentum?
+4. Is the mechanism continuation under gradual information diffusion, or mean reversion after a liquidity-driven move, and what measurable condition separates them?
+5. Is session momentum distinct from the dollar index delta and the overnight range position, and does it survive the bid-ask bounce of a 24-hour window?
+6. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ## Existing thresholds are context, not the scope limit
 

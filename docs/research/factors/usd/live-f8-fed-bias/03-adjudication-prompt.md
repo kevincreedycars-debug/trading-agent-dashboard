@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f8-fed-bias` for factor `live.f8-fed-bias` on asset USD; group label `usd-topic-economic-surprise-and-fed-bias` (Economic surprises, first prints and Fed bias); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f8-fed-bias` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `live.f8-fed-bias` (chain `usd-factor-live-f8-fed-bias`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,17 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Is a bias string a measurement or an interpretation, and can the same words be turned into a reproducible, dated, pre-cutoff value?
+2. No vintage of the string is retained: does the deployed read measure a change, a level, or a revision introduced after the fact, and what would a versioned series look like?
+3. Does the bias label carry information beyond the front-end rate change and the release surprise that ostensibly produce it?
+4. If the string cannot be versioned, what is the honest Layer 1 role: a documented input, a documented exclusion, or no incremental value?
+5. Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?
+6. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
 
 ## Five kinds of evidence that must not be mixed
 

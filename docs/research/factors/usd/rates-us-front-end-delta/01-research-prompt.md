@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-rates-us-front-end-delta` for factor `rates.us-front-end-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `rates.us-front-end-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,11 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `rates.us-front-end-delta` - US front-end delta - carry information about the next 24-hour dollar move, and in which quantity? 2Y and 3M yield changes as policy-expectation proxies, with the publication lag of each series stated.
-2. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
-3. Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?
-4. Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?
-5. Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?
+2. Do the 2Y and 3M series share a publication lag and a market calendar, and is a change computed from a stale 3M print comparable to one computed from the 2Y?
+3. Is the informative quantity the 3M bill, the 2Y note, their difference, or a policy-expectation measure implied by them, and does the 3M bill carry a flight-to-quality distortion?
+4. Does a front-end change reflect expected policy, term premium, or a liquidity and collateral effect, and what observable at the cutoff separates them?
+5. Does this chain duplicate the live F2 and F3 chains, and if so what does it add - the 3M leg, the policy-cycle conditioning, or nothing?
+6. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ## Existing thresholds are context, not the scope limit
 

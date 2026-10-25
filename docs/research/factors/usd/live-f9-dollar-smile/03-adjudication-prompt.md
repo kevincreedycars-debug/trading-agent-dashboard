@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-live-f9-dollar-smile` for factor `live.f9-dollar-smile` on asset USD; group label `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f9-dollar-smile` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - Attach both documents this stage judges: the research return for factor `live.f9-dollar-smile` (chain `usd-factor-live-f9-dollar-smile`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
 
 ## What this stage is for
@@ -23,6 +24,17 @@ Read the research report and the red-team review together and produce the best-s
 - Reject an objection the evidence does not support, and say what is wrong with it.
 - A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
 - A narrowing that keeps the true part of a claim is a decision, not a compromise.
+
+## The questions this stage must decide
+
+A question does not stop at stage 1. Decide each question below on the two documents and on the sources you fetched yourself; where the evidence does not decide, record it as unresolved and name what would decide it.
+
+1. Is the dollar smile a measured relation in this window or a descriptive story, and what observation would falsify it?
+2. The deployed reading uses the VIX 25/16 pair and the bias string: are those the right variables, and does the smile need a third state such as global growth or funding stress that neither captures?
+3. Is the smile a regime variable that should switch other factors signs, or a separate directional factor, and can those two roles be told apart with session data?
+4. Does the smile add anything to the VIX level and the cross-asset risk state it is computed from, and is the rulebook weight of 12 defensible against the coded 1?
+5. Which dollar index is a claim actually about, and does the answer change with the index construction?
+6. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ## Five kinds of evidence that must not be mixed
 

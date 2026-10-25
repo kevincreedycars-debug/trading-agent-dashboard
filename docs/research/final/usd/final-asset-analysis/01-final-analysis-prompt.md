@@ -3,6 +3,7 @@
 - Asset-level final chain `usd-final-asset-analysis` on asset USD; stage `final_analysis`; this stage returns exactly one Markdown document (synthesis).
 - This is the asset-level synthesis chain: it reads every factor-chain adjudication and is not itself a factor result. It opens only through the gate, never because a prompt was copied.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This stage opens only when every factor chain has delivered research, red team and adjudication against its current parent versions. Read the adjudications of all of them; do not substitute an earlier research report for an adjudication.
 
 ## What this stage is for

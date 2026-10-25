@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-risk-vix-level-and-change-at-cutoff` for factor `risk.vix-level-and-change-at-cutoff` on asset USD; group label `usd-topic-vix-level-and-risk-regime` (VIX, its change and the USD risk regime at the 05:00 London cutoff); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `risk.vix-level-and-change-at-cutoff` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,11 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `risk.vix-level-and-change-at-cutoff` - VIX level and change at the cutoff - carry information about the next 24-hour dollar move, and in which quantity? VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.
-2. Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?
-3. Does the volatility-of-volatility or term-structure information add anything the level does not already carry?
-4. Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?
-5. How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?
+2. What does the VIX level at the cutoff add to the level the deployed F1 rule already uses, and is a second chain carrying the same variable a duplication the synthesis has to resolve?
+3. Is the informative quantity the level, the one-day change, the five-day change, or the change between the last US close and the cutoff, and how stale is the observation at 05:00 London?
+4. Is the mechanism a safe-haven demand for dollars, a funding or liquidity squeeze, or a risk-appetite shock, and what observable separates them?
+5. Does the VIX change add information beyond the cross-asset risk state and the equity move, and is its sign the same in a calm and a stressed regime?
+6. Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?
 
 ## Existing thresholds are context, not the scope limit
 

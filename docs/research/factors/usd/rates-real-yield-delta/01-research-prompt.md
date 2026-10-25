@@ -3,6 +3,7 @@
 - Factor chain `usd-factor-rates-real-yield-delta` for factor `rates.real-yield-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `research`; this stage returns exactly one Markdown document (report).
 - The chain belongs to one factor entry, so the evidence this stage returns maps to `rates.real-yield-delta` and is not counted as a second independent result elsewhere.
 - Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
+- Prompt template `research-prompt-v3.1.0`; `data/research-library/catalog.json` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.
 - This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
 
 ## What this stage is for
@@ -47,10 +48,11 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 ## Questions for this factor
 
 1. Chain question: does `rates.real-yield-delta` - Real yield delta - carry information about the next 24-hour dollar move, and in which quantity? 10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.
-2. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
-3. Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?
-4. Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?
-5. Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?
+2. Is the real yield measured from TIPS, from a nominal-minus-survey-expectations decomposition, or from a model, and which of them is available at the cutoff?
+3. Does the move come from the nominal leg or the breakeven, and how reliable is the breakeven when both inflation swaps and TIPS liquidity are imperfect?
+4. Is the mechanism a discount-rate channel for the dollar, a growth channel, or a risk-premium channel, and what evidence separates those cases?
+5. Does this chain duplicate live F4, and does a 5Y real yield add anything to the 10Y that the deployed chain already uses?
+6. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ## Existing thresholds are context, not the scope limit
 
