@@ -291,6 +291,31 @@ registry's `usd-24h` hash pair passes in an LF checkout and needs no `registry -
 VIX report back in the browser test needs `.local/research-library/objects`, which is a local evidence folder;
 without it the page can still show the chain but cannot serve the exact version for download.
 
+## The VIX red-team pilot: prepared here, dispatched from the canonical checkout
+
+The pilot is one bounded stage: `usd-factor-live-f1-vix-level` stage 2, judged against the registered
+research version. What this branch establishes, read from the CLI rather than assumed:
+
+- `plan --topic usd-topic-vix-level-and-risk-regime --runnable` lists two runnable stages, both with no
+  claim held and no attempt recorded: the VIX red-team (page state `awaiting_upload`, because stage 1 is
+  delivered) and the second VIX factor chain's research stage.
+- `preview` for that stage pins what a dispatch would use: prompt
+  `docs/research/factors/usd/live-f1-vix-level/02-red-team-prompt.md` at sha256
+  `11c3837b3fdf2d5265350387fd36037a5d2e5e7cb54e89ab519fe19e52952acd`, envelope sha256
+  `a12684bb8824ae585914521aee84e96a5d9aa5cece363fcc240cb0699e6a2658`, 101351 bytes, parent
+  `usd-baseline-audit-01-vix-usd-report` version 1.
+- No earlier VIX red-team document was found anywhere: not in this worktree, not in the canonical
+  checkout, not in `.local`, not in the temporary directories. The pilot is therefore a fresh stage, not
+  a recovery.
+- Allowance as read now: limit 6, reserve 1, usable 5, used 0, and the provider limit signal is not wired
+  in (`enforced: false`, code `provider_disabled`). The 85 percent capacity and 15 percent owner reserve
+  are launch thresholds, so the pilot's own record has to carry the provider's usage and limit numbers;
+  "one allowance unit" is not a reading.
+- Not dispatched from this branch: the pipeline queue lives in `.local/research-pipeline`, which is local
+  to a checkout, so a dispatch here would be invisible to the page the operator uses and would spend a
+  local allowance unit on nothing. Dispatch belongs in the canonical checkout once it carries this prompt
+  hash, followed by the research session that produces the review and the upload that registers it.
+
 ## Handoff after the push
 
 Branch `workstream/c-research-programme` is pushed for review. The coordinator integrates; this
