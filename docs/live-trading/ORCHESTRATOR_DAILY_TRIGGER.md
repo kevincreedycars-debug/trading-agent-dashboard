@@ -158,3 +158,24 @@ skip; only `decision=trigger` plus a changed status file is proof that the clock
 - `data/workflow-control.json` - the switch and the webhook the page and this job share.
 - `data/workflow-status.json` - what the flow writes when it finishes; the job's evidence.
 - `exports/master_orchestrator.json` - the exported definition, including the webhook node and the status node.
+
+## The daily schedule, stated as an attempt rather than a time
+
+The schedule is an **attempt**, and the doc says so because the difference matters when the record is read back:
+
+| what | when (America/New_York) | what it is |
+| --- | --- | --- |
+| first intended attempt | 07:07 | the first slot at or after 07:00 that finds the day free calls the webhook |
+| later attempts | 08:07, 09:07, 10:07 | retries, used only when the earlier slot skipped or was not started |
+| cutoff | 11:00 | a slot at or after 11:00 skips, so an outage at 07:00 cannot fire a run in the evening |
+
+GitHub's cron wakes every hour at :07 UTC and the job decides on a New York clock, so these are *scheduled
+attempts*: GitHub can start a slot minutes late, drop one under load, or skip a day entirely. Nothing in this
+repository can promise 07:07 happened; the run list is what says whether it did.
+
+**Automatic daily execution is not verified.** Until an actual `schedule` run reaches `decision=trigger`,
+calls the webhook, writes `data/workflow-status.json` and publishes valid artifacts, the honest statement is:
+the cron exists and its guard answers. Two separate records must be kept apart in any handoff - a manual
+`workflow_dispatch` success (today's 40203054555) and a scheduled skip (40220928984) are neither of them proof
+of an automatic trading day.
+

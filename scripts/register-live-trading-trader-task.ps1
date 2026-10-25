@@ -12,6 +12,11 @@
   order tool itself gates on, so an unarmed registration is a cadence that reads the artifacts, reads the
   terminal and writes down the ticket it would have left, and sends nothing whatever.
 
+  -Show and -Test are read-only with respect to production. -Show writes nothing at all. -Test runs the
+  launcher unarmed against its own state, journal, log and lock under tmp\live-trading-selftest, and checks
+  that the live wrapper and the task definition are byte-for-byte what they were before it started. Neither
+  branch is allowed to pass --confirm-live, whatever the registration being tested will carry.
+
   The loop reads its own artifacts by path and resolves the published checkout the same way the feed
   publisher does, so no path here has to name them: the calls and the ladder come from the published tree,
   the bars from this machine's own snapshot.
@@ -21,7 +26,7 @@
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/register-live-trading-trader-task.ps1
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/register-live-trading-trader-task.ps1 -Arm
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/register-live-trading-trader-task.ps1 -Remove
-  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/register-live-trading-trader-task.ps1 -Arm -Test
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/register-live-trading-trader-task.ps1 -Test
 #>
 param(
   [string] $TaskName = "LiveTradingTraderTick019",
@@ -177,7 +182,18 @@ function Write-Wrapper($path, $lines) {
   return $path
 }
 
-function Get-WrapperLines($extraFlags) {
+function Get-WrapperLines($extraFlags, $paths = $null) {
+  # Where this wrapper writes. The live registration passes nothing and gets the production files below; the
+  # self test passes its own directory, so a launcher test cannot spend the signal bar or the state the live
+  # loop is about to read.
+  if (-not $paths) {
+    $paths = @{
+      state = $statePath
+      log = $logPath
+      lock = $lockPath
+      journal = $journalPath
+    }
+  }
   # The rule's entry carries no expiry, and the hold that decides how many pairs may be working at once is the
   # rule's own one ticket per pair, so both flags are written into the task only when a registration asked for one
   # deliberately: 0 means the rule's own answer in each case, and the loop removes a limit whose reason has gone
@@ -187,7 +203,7 @@ function Get-WrapperLines($extraFlags) {
   $maxOpenArgument = ""
   if ($MaxOpen -gt 0) { $maxOpenArgument = "--max-open $MaxOpen " }
   $command = "`"$Node`" `"$runner`" --once $extraFlags --quiet --python `"$Python`" " +
-    "--state `"$statePath`" --log `"$logPath`" --lock `"$lockPath`" --journal `"$journalPath`" " +
+    "--state `"$($paths.state)`" --log `"$($paths.log)`" --lock `"$($paths.lock)`" --journal `"$($paths.journal)`" " +
     "${laneArgument}${expireArgument}${maxOpenArgument}--max-per-day $MaxPerDay$terminalArgument"
   $lines = @(
     "@echo off",
@@ -216,6 +232,36 @@ function Get-LauncherPair($wrapper) {
   }
   Write-Output "Hidden runner '$HiddenRunner' is absent; cmd.exe will be started directly and its window may flash."
   return "cmd.exe", "/c $wrapper"
+}
+
+# Fingerprints of the two things a read-only run must leave alone: the wrapper the scheduler runs, and the
+# task definition the scheduler holds. They are read, never written, and -Test compares them before and after
+# its run so "nothing changed" is a checked fact rather than a claim in a comment.
+function Get-FileSha256($path) {
+  if (-not (Test-Path -LiteralPath $path)) { return $null }
+  return (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLower()
+}
+
+function Get-TextSha256($text) {
+  if ($null -eq $text) { return $null }
+  $sha = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes([string]$text)
+    return ([System.BitConverter]::ToString($sha.ComputeHash($bytes)) -replace "-", "").ToLower()
+  } finally {
+    $sha.Dispose()
+  }
+}
+
+function Get-ProductionFingerprint {
+  $taskXml = $null
+  if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
+    $taskXml = Export-ScheduledTask -TaskName $TaskName
+  }
+  return @{
+    wrapper_sha256 = Get-FileSha256 $wrapperPath
+    task_sha256 = Get-TextSha256 $taskXml
+  }
 }
 
 # --align is the point of the task, and the settle window is later here than the feed's own twenty seconds:
@@ -281,17 +327,37 @@ $plan = [ordered]@{
 }
 
 if ($Show) {
+  # Read-only, and it says so with numbers: the fingerprints of the wrapper and the task definition are what a
+  # reader compares against a run made later, or against the same two values on the host after a migration.
+  $productionFingerprint = Get-ProductionFingerprint
+  $plan["wrapper_sha256"] = $productionFingerprint.wrapper_sha256
+  $plan["task_sha256"] = $productionFingerprint.task_sha256
   Write-Plan $plan
   return
 }
 
 # -Test proves the launcher, not the cadence: a throwaway task with the same action and runtime, a wrapper
-# without --align so the run happens within seconds, and the log watched for a new line. It is registered
-# with the same -Arm decision, so a test of an unarmed registration places nothing.
+# without --align so the run happens within seconds, and its own log watched for a new line. Two things it must
+# never do. It must never carry --confirm-live, whatever the registration being tested will carry: a self test
+# that can place a ticket is not a test, and `-Arm -Test` used to pass the arming flag straight into the wrapper
+# it ran. And it must never write the production state, journal, log or lock: a run against the live state
+# records the signal bar it read as spent, which can stop the very trade the loop was about to place. It
+# therefore runs unarmed against files under tmp\live-trading-selftest, and the production wrapper and task
+# definition are fingerprinted before and after the run; a change to either one fails the test instead of
+# passing quietly.
 if ($Test) {
   $selfTestName = "$TaskName-Selftest"
-  $selfTestWrapper = Join-Path $RepoRoot "tmp\live-trading-trader-selftest.cmd"
-  Write-Wrapper $selfTestWrapper (Get-WrapperLines $armArgument.Trim()) | Out-Null
+  $selfTestDir = Join-Path $RepoRoot "tmp\live-trading-selftest"
+  New-Item -ItemType Directory -Force -Path $selfTestDir | Out-Null
+  $selfTestWrapper = Join-Path $selfTestDir "live-trading-trader-selftest.cmd"
+  $selfTestPaths = @{
+    state = Join-Path $selfTestDir "live-trading-trader-state.json"
+    log = Join-Path $selfTestDir "live-trading-trader.log"
+    lock = Join-Path $selfTestDir "live-trading-trader.lock"
+    journal = Join-Path $selfTestDir "live-trading-orders.log"
+  }
+  $productionBefore = Get-ProductionFingerprint
+  Write-Wrapper $selfTestWrapper (Get-WrapperLines "" $selfTestPaths) | Out-Null
   $selfTestLauncher, $selfTestArguments = Get-LauncherPair $selfTestWrapper
   $selfTestAction = New-ScheduledTaskAction -Execute $selfTestLauncher -Argument $selfTestArguments
   $selfTestTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(10)
@@ -300,7 +366,7 @@ if ($Test) {
   if (Get-ScheduledTask -TaskName $selfTestName -ErrorAction SilentlyContinue) {
     Unregister-ScheduledTask -TaskName $selfTestName -Confirm:$false
   }
-  $before = if (Test-Path -LiteralPath $logPath) { @(Get-Content -LiteralPath $logPath).Count } else { 0 }
+  $before = if (Test-Path -LiteralPath $selfTestPaths.log) { @(Get-Content -LiteralPath $selfTestPaths.log).Count } else { 0 }
   Register-ScheduledTask -TaskName $selfTestName -Action $selfTestAction -Trigger $selfTestTrigger `
     -Settings $selfTestSettings -Description "Temporary launcher self test for the Live Trading trader loop." | Out-Null
   Start-ScheduledTask -TaskName $selfTestName
@@ -309,24 +375,33 @@ if ($Test) {
   $after = $before
   while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 3
-    $after = if (Test-Path -LiteralPath $logPath) { @(Get-Content -LiteralPath $logPath).Count } else { 0 }
+    $after = if (Test-Path -LiteralPath $selfTestPaths.log) { @(Get-Content -LiteralPath $selfTestPaths.log).Count } else { 0 }
     if ($after -gt $before) { break }
   }
   $selfTestInfo = Get-ScheduledTaskInfo -TaskName $selfTestName
-  $lastLine = if ($after -gt $before) { Get-Content -LiteralPath $logPath -Tail 1 } else { "" }
+  $lastLine = if ($after -gt $before) { Get-Content -LiteralPath $selfTestPaths.log -Tail 1 } else { "" }
   Unregister-ScheduledTask -TaskName $selfTestName -Confirm:$false
 
   $verdict = "the launcher never reached the loop"
-  if ($lastLine -like '*"status":"placed"*') { $verdict = "the launcher ran the loop and a ticket was placed" }
+  if ($lastLine -like '*"status":"placed"*') { $verdict = "the launcher ran the loop and a ticket was placed - it should not have been able to" }
   elseif ($lastLine -like '*"status":"nothing_to_place"*') { $verdict = "the launcher ran the loop, which found nothing confirmed" }
   elseif ($lastLine -like '*"status":"planned"*') { $verdict = "the launcher ran the loop unarmed, which placed nothing" }
   elseif ($after -gt $before) { $verdict = "the launcher ran the loop, which reported: $lastLine" }
 
+  $productionAfter = Get-ProductionFingerprint
+  $wrapperUnchanged = $productionBefore.wrapper_sha256 -eq $productionAfter.wrapper_sha256
+  $taskUnchanged = $productionBefore.task_sha256 -eq $productionAfter.task_sha256
   Write-Output "self_test_task      = $selfTestName"
   Write-Output "self_test_command   = cmd.exe /c $selfTestWrapper"
+  Write-Output "self_test_armed     = false (a self test never passes --confirm-live)"
+  if ($Arm) { Write-Output "self_test_note      = -Arm was passed and was not used: a launcher test places nothing" }
+  Write-Output "self_test_files     = $selfTestDir"
   Write-Output "self_test_result    = $($selfTestInfo.LastTaskResult)"
-  Write-Output ("self_test_log_lines = {0} before, {1} after" -f $before, $after)
+  Write-Output ( "self_test_log_lines = {0} before, {1} after" -f $before, $after )
   Write-Output "self_test_verdict   = $verdict"
+  Write-Output "self_test_production_unchanged = $($wrapperUnchanged -and $taskUnchanged)"
+  if (-not $wrapperUnchanged) { throw "The self test changed the live wrapper $wrapperPath; it must not." }
+  if (-not $taskUnchanged) { throw "The self test changed the definition of task $TaskName; it must not." }
   return
 }
 

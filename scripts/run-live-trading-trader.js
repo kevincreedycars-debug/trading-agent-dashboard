@@ -102,6 +102,7 @@
 // the next run - or the next reader - can tell what this path has done without trusting this file.
 const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 
 const strategy = require("../lib/l2l_strategy.js");
@@ -115,6 +116,22 @@ const feedPublisher = require("./publish-live-trading-feed.js");
 const closeRequests = require("../lib/live_trading_close_request.js");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
+// Which machine and checkout produced a run, so the page can tell the PC from the always-on host while both
+// exist during a migration. It is evidence rather than configuration: a heartbeat that says "armed" and names
+// this machine is the only way to know which host wrote it, because two hosts can run the same lane and each
+// one's lock says nothing about the other. A computer name, the checkout's folder name and the platform are
+// not credentials, and the absolute path is left out because it would name the operator's Windows profile.
+const HOST_IDENTITY = Object.freeze({
+  computer: (() => {
+    try {
+      return os.hostname() || null;
+    } catch {
+      return null;
+    }
+  })(),
+  platform: process.platform,
+  checkout: path.basename(REPO_ROOT)
+});
 const ORDER_TOOL_RELATIVE = "tools/mt5-bridge/live-trading-order.py";
 // The calls and the ladder come from the published checkout - the bytes the published page serves - and that
 // path is resolved by the feed publisher's own helper, so one checkout is read by both.
@@ -1742,6 +1759,11 @@ function traderStatus(record, { nowMs } = {}) {
   return {
     schema_version: STATUS_SCHEMA_VERSION,
     lane: record?.lane ?? null,
+    // The machine that wrote this heartbeat, and the cadence it sits on, so a page can say whether the loop is
+    // fresh and on which host - two hosts can hold the same lane during a migration, and the older heartbeat
+    // must never be read as the newer one running.
+    host: HOST_IDENTITY,
+    expected_interval_seconds: record?.interval_seconds ?? null,
     at_utc: at,
     written_at_utc: new Date(Number.isFinite(nowMs) ? nowMs : Date.now()).toISOString(),
     armed: record?.armed === true,
@@ -1850,6 +1872,9 @@ function runOnce(options, deps = {}) {
     // cannot mistake one log for the other.
     lane: options.lane ?? null,
     armed: options.confirmLive === true,
+    // The bar width this run aligns to, carried into the heartbeat so the page judges staleness on the cadence
+    // the loop actually keeps rather than a number it keeps for itself.
+    interval_seconds: options.intervalSeconds,
     sources: {
       published: relativePath(published),
       calls: relativePath(callsPath),

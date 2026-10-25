@@ -351,8 +351,20 @@ function publishLanes(options, deps = {}) {
     lanes[lanes.length - 1].trader_status = {
       published: lane.status_published,
       written_at_utc: status.written_at_utc ?? status.at_utc ?? null,
+      at_utc: status.at_utc ?? null,
       armed: status.armed === true,
-      status: status.status ?? null
+      status: status.status ?? null,
+      // The machine that wrote the heartbeat, as the heartbeat itself names it. The publisher does not stamp its
+      // own name here: during a cutover the publisher and the loop can be on different hosts, and the page has
+      // to see the host of the loop rather than the host of the commit.
+      host: typeof status?.host?.computer === "string" ? status.host.computer : null,
+      expected_interval_seconds:
+        status?.expected_interval_seconds !== null &&
+        status?.expected_interval_seconds !== undefined &&
+        Number.isFinite(Number(status.expected_interval_seconds)) &&
+        Number(status.expected_interval_seconds) > 0
+          ? Number(status.expected_interval_seconds)
+          : null
     };
     extras.push({ label: lane.id, source: statusSource, target: lane.status_published });
   }

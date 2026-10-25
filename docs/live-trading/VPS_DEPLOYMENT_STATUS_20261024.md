@@ -333,6 +333,11 @@ schema_version is live-trading-close-request-v1...` on every tick. **Close now o
 order tool directly and never touches the log - so a hand close is one press away while this window is open. The
 window closes when `main` carries both the v2 document and the new page; runbook section 5b.2 has the order.
 
+**This paragraph described the branch, not `main`, until 2026-10-25.** `liveTradingAccounts` was written on
+`workers/live-trading-20260929` and never merged, so the published page drew no account card at all: the
+heartbeat the publisher carried had no reader, which is why two days of an unarmed loop read as ordinary on the
+page. Section 11 records the port, the host row and the stale rule that now make it visible.
+
 ## 8. What has to be true before you leave, in order
 
 1. Host bought (section 2), first RDP session, Windows licence confirmed on the invoice.
@@ -539,4 +544,90 @@ table before the prices) - so they are read off the cart rather than asserted he
 Account #2 stays parked (`"enabled": false`) and blocks none of the above: switching it on is a second clone, terminal
 and task names, plus that one line in the lanes file.
 
+
+## 11. 2026-10-25, late: the account card, the bundle and the read-back
+
+Four things were built and one hazard was found. All of it is on `main`; the three scripts the PC runs were
+copied to the runtime checkout byte-for-byte, so the next tick carries them.
+
+### 11.1 The account card now says whether a loop is alive, and where it is
+
+The strip that only existed on the branch is on the published page. Each card draws: lane state (enabled or
+disabled), the account, arming, the last heartbeat with its age and instant, the last result, the snapshot age,
+the trader host, and the open position count.
+
+Two rules make it honest:
+
+- **Armed and fresh are separate fields.** A heartbeat older than three ticks (900s at the M5 cadence the
+  heartbeat itself states) is drawn as **HEARTBEAT STALE**, with a sentence above the rows: it was armed when it
+  last wrote, and nothing shows a loop running now. The arming row reads "armed when last seen - no run since"
+  rather than "armed". A heartbeat with no readable time is treated as stale, because silence cannot be shown to
+  be current.
+- **The host is evidence, not configuration.** The trader writes `host: { computer, platform, checkout }` into
+  its heartbeat; the publisher copies the host into the lane's row in the same commit, so a device holding an
+  older artifact still sees which machine wrote it. The publisher never stamps its own name: during a cutover
+  the publisher and the loop can be on different hosts, and the page must show the loop's host. The absolute
+  checkout path is deliberately not published - it would name the operator's profile.
+
+Lane 2 stays **DISABLED** with the sentence that says it is parked rather than broken, and no arming row at all:
+a lane with no trader must not borrow one. Rows are stacked at phone width (one column under 560px) and the test
+holds a 390px viewport to no sideways overflow.
+
+### 11.2 The self test could have armed the loop; it no longer can
+
+`-Arm -Test` used to pass the registration's own `--confirm-live` into the wrapper the self test ran, so proving
+the launcher could have placed a ticket. `-Test` now runs **unarmed, always**, against its own state, journal, log
+and lock under `tmp/live-trading-selftest`, and it fingerprints the production wrapper and the production task
+definition before the run and again after it: a change to either one throws instead of passing quietly. `-Show`
+gained `wrapper_sha256` and `task_sha256`, so an inspection names what it read.
+
+The regression for this is a real run, not a comment: `tests/live_trading_trader.test.js` registers nothing,
+executes `-Show` twice against a throwaway checkout, and asserts the wrapper's hash, the directory listing and
+the output are all unchanged.
+
+### 11.3 Effective settings are read back, and two readings are compared
+
+`scripts/export-live-trading-effective-config.ps1` reads the four places the effective answer lives - the
+wrapper, the task definition, the lanes file and the heartbeat - and writes one document. It parses
+`--confirm-live`, `--max-open`, `--max-per-day`, `--expire-minutes`, `--align`, `--settle-seconds`,
+`--interval-seconds`, lane, the account identity from both the heartbeat and the lanes file, and the checkout,
+terminal, state, log, lock and journal paths. `-Compare` sorts the differences into **behaviour** (a change in
+what the loop does: exit 1) and **location** (a path that moved: exit 1 until `-AllowRelocatedPaths` says the
+move is intended). Same-host comparisons also compare the wrapper and task hashes; cross-host ones say they
+skipped them rather than reporting a difference that is not one.
+
+Read back on this PC at 2026-10-25T20:50Z: lane `ftmo-1`, **armed true**, `max_open 1`, `max_per_day 4`,
+`expire_minutes 30`, `settle_seconds 90`, `align true`, account `***614 / FTMO-Server` (heartbeat and lanes file
+agree), task `LiveTradingTraderTick019` Ready with `PT5M`, `IgnoreNew`, `PT10M`, and wrapper
+`49172f4e…755f9`. That document is the "before" side of the cutover comparison.
+
+
+
+### 11.4 The migration bundle, prepared but not final
+
+`scripts/prepare-live-trading-migration.js` writes one directory per lane holding the state, journal, run log,
+heartbeat, wrapper, lanes file and publish state, each with bytes and SHA-256, plus a manifest that names the
+checkout, commit, dirty flag, restore order, and a `heartbeat` block that says the copied record is history and
+not proof of a running loop. Credentials are not in it and a file that matches a password, token or key pattern
+refuses the run rather than being redacted. `--verify` re-hashes everything, refuses an unnamed file, and
+re-scans. `docs/live-trading/MIGRATION_CUTOVER.md` is the procedure: stop the PC and prove the process exited,
+take and verify the final copy, reconcile positions, pendings and deal history, install the host, restore in the
+manifest's order, compare the effective settings, prove the PC cannot restart its trader, arm only the host and
+verify a newly generated heartbeat, then move publishing last, with a rollback for each half.
+
+The provisional bundle sits at `<checkout>/.local/live-trading-migration/ftmo-1` (git-ignored) and was rebuilt
+after the host field landed. It is **not** the cutover copy: the PC keeps writing state while it trades, so the
+copy taken after the stop is the one restored, and the manifest says so in `provisional`.
+
+### 11.5 What is ready, what is proved, and what is still yours
+
+- **Ready:** the card and its tests; the host field end to end (`heartbeat` to publisher row to page); the read-back
+  and comparison script with its tests; the bundle, its verifier and the cutover/rollback procedure.
+- **Proved on this machine:** 615 unit and 84 browser tests green; `-Show` proved read-only by hash; the two
+  effective-config readings compared (`identical`); the real bundle written and `--verify`d on live state; the
+  page drawing a fresh armed card, a stale armed card and the parked lane at 390px.
+- **Not proved:** that the host trades correctly after a restore, that a reboot recovers with nobody logged in,
+  and that the PC stays off. Those need the host.
+- **Yours:** the cart at ≈€16.20 / 1 month / UK / Desktop Experience, the IONOS quote, and the stop-and-arm at
+  cutover. Nothing in this section changes what the PC is doing: one trader, one publisher, lane 2 disabled.
 

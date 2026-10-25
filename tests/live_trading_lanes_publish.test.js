@@ -255,6 +255,65 @@ test("both lanes leave in one commit and one push, each written to its own publi
 });
 
 
+// The page can say which machine is trading only if the heartbeat's host travels with the commit. The publisher
+// copies the artifact as it is and also states the host and the cadence in the lane's row, so a device that
+// cannot read the artifact still sees which host wrote it.
+test("a heartbeat's host and cadence travel with the lanes document", () => {
+  const space = workspace();
+  const written = new Date(NOW_MS - 30_000).toISOString();
+  fs.mkdirSync(path.join(space.first.rootDir, "tmp"), { recursive: true });
+  fs.writeFileSync(
+    path.join(space.first.rootDir, "tmp", "live-trading-trader-status.json"),
+    JSON.stringify({
+      schema_version: "live-trading-trader-status-v1",
+      lane: "ftmo-1",
+      host: { computer: "PC-PRODUCTION", platform: "win32", checkout: "live-trading" },
+      expected_interval_seconds: 300,
+      at_utc: written,
+      written_at_utc: written,
+      armed: true,
+      status: "nothing_to_place",
+      account: { login_masked: null, server: null }
+    }, null, 2)
+  );
+  const git = fakeGit();
+
+  const result = lanes.publishLanes(optionsFor(space), deps(git));
+
+  assert.equal(result.action, "published");
+  const row = result.lanes.find((lane) => lane.id === "ftmo-1");
+  assert.equal(row.trader_status.host, "PC-PRODUCTION", "the lane row names the host that wrote the heartbeat");
+  assert.equal(row.trader_status.expected_interval_seconds, 300, "the lane row carries the cadence the page judges staleness on");
+  assert.equal(row.trader_status.at_utc, written);
+  assert.equal(row.trader_status.written_at_utc, written);
+  assert.equal(row.trader_status.armed, true);
+  // The artifact itself is copied unchanged, so the host block a reader opens is the loop's own.
+  const copy = JSON.parse(fs.readFileSync(
+    path.join(space.checkout, "data", "live-trading-trader.ftmo-1.json"),
+    "utf8"
+  ));
+  assert.equal(copy.host.computer, "PC-PRODUCTION");
+});
+
+// A heartbeat from a lane that was not deployed must never be invented, and a heartbeat with no host must not be
+// given one by the publisher: the row says null rather than borrowing the publisher's own machine name.
+test("a heartbeat with no host in it leaves the lane row's host null", () => {
+  const space = workspace();
+  fs.mkdirSync(path.join(space.first.rootDir, "tmp"), { recursive: true });
+  fs.writeFileSync(
+    path.join(space.first.rootDir, "tmp", "live-trading-trader-status.json"),
+    JSON.stringify({ lane: "ftmo-1", written_at_utc: new Date(NOW_MS).toISOString(), armed: true, status: "nothing_to_place" })
+  );
+  const git = fakeGit();
+
+  const result = lanes.publishLanes(optionsFor(space), deps(git));
+
+  assert.equal(result.action, "published");
+  const row = result.lanes.find((lane) => lane.id === "ftmo-1");
+  assert.equal(row.trader_status.host, null, "the publisher must not stamp its own host on a heartbeat");
+  assert.equal(row.trader_status.expected_interval_seconds, null);
+});
+
 test("a lane with no snapshot refuses the run before git is asked anything", () => {
   const space = workspace();
   fs.rmSync(space.second.artifact);

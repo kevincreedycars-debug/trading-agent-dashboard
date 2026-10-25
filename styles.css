@@ -8322,6 +8322,44 @@ body {
 .live-trading-chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .live-trading-chip { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; padding: 5px 9px; border: 1px solid #26374b; border-radius: 6px; background: #0c1622; color: #dbe6f3; font: 500 11px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-chip b { color: #8ea6c0; font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+/* The accounts strip: one card per account, and the only place on the page that states whether a loop is
+   alive behind an account. The rows are a definition list rather than a table so a label and its value can
+   stack on a phone instead of being squeezed into two columns of narrow text. */
+.live-trading-lanes { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.live-trading-lanes h3 { margin: 0; color: #dbe6f3; font: 700 12px 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.live-trading-lanes-caption { margin: 0; color: #93a7bf; font: 500 11px/1.5 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-lanes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 10px; min-width: 0; }
+.live-trading-lane-card { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 12px; border: 1px solid #26374b; border-radius: 8px; background: #0a1420; }
+.live-trading-lane-card.live { border-color: #2b6b57; }
+.live-trading-lane-card.waiting { border-color: #7a5a24; }
+.live-trading-lane-card.stale { border-color: #b4742a; background: #12141a; }
+.live-trading-lane-card.error { border-color: #7a3a44; }
+.live-trading-lane-card.parked { border-color: #35485f; background: #0b131d; }
+.live-trading-lane-card header { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.live-trading-lane-card h4 { margin: 0; min-width: 0; color: #dbe6f3; font: 700 12px 'IBM Plex Mono', monospace; letter-spacing: .04em; overflow-wrap: anywhere; }
+.live-trading-lane-badge { flex: 0 0 auto; padding: 3px 8px; border: 1px solid #35485f; border-radius: 999px; color: #cfdcec; font: 700 9.5px 'IBM Plex Mono', monospace; letter-spacing: .06em; white-space: normal; text-align: center; }
+.live-trading-lane-badge.live { color: #7ef0c4; border-color: #2b6b57; background: rgba(79, 209, 165, .12); }
+.live-trading-lane-badge.waiting { color: #f0c274; border-color: #7a5a24; background: rgba(224, 165, 60, .12); }
+.live-trading-lane-badge.stale { color: #ffcf8a; border-color: #b4742a; background: rgba(224, 165, 60, .22); }
+.live-trading-lane-badge.error { color: #ff9aa4; border-color: #7a3a44; background: rgba(255, 107, 122, .12); }
+.live-trading-lane-badge.parked { color: #93a7bf; border-color: #35485f; background: rgba(123, 142, 166, .10); }
+.live-trading-lane-alert { margin: 0; padding: 7px 9px; border: 1px solid #b4742a; border-left: 3px solid #e0a53c; border-radius: 6px; background: rgba(224, 165, 60, .10); color: #ffd9a3; font: 600 11px/1.5 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-lane-rows { display: grid; gap: 4px; margin: 0; min-width: 0; }
+.live-trading-lane-row { display: grid; grid-template-columns: minmax(88px, max-content) minmax(0, 1fr); gap: 8px; align-items: baseline; min-width: 0; }
+.live-trading-lane-row dt { color: #8ea6c0; font: 600 9.5px 'IBM Plex Mono', monospace; letter-spacing: .06em; text-transform: uppercase; overflow-wrap: anywhere; }
+.live-trading-lane-row dd { margin: 0; min-width: 0; color: #dbe6f3; font: 500 11px/1.45 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-lane-row.is-armed dd { color: #7ef0c4; }
+.live-trading-lane-row.is-stale dd { color: #ffcf8a; }
+.live-trading-lane-row.is-muted dt,
+.live-trading-lane-row.is-muted dd { color: #9fb1c6; }
+.live-trading-lanes-note { margin: 0; color: #93a7bf; font: 500 11px/1.55 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-lane-card.parked .live-trading-lanes-note { color: #b9c8d9; }
+@media (max-width: 560px) {
+  .live-trading-lane-card { padding: 10px; }
+  .live-trading-lane-card header { flex-wrap: wrap; }
+  .live-trading-lane-row { grid-template-columns: minmax(0, 1fr); gap: 1px; }
+  .live-trading-lane-row dt { font-size: 9px; }
+}
 .live-trading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
 /* The two read-back tables: what is open, then what closed. They sit under the four cards and scroll
    sideways rather than wrapping, because a trade reads as a row or not at all. */

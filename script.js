@@ -35,6 +35,10 @@ const liveTradingCloseUrl = "./data/live-trading-close-request.json?v=20261024-l
 // before the document existed can still ask, on the primary lane whose feed it is reading.
 const liveTradingLanesUrl = "./data/live-trading-lanes.json?v=20261024-live-trading-lanes-v1";
 const LIVE_TRADING_FEED_PATH = "data/live-trading.json";
+// Each lane's trader heartbeat: the small document the loop writes on every run, which the publisher carries in
+// the same commit as the snapshot. The accounts strip reads it, so a missing heartbeat costs one card a row
+// rather than costing the tab its tables.
+const liveTradingStatusUrl = (lane) => `./data/live-trading-trader.${lane}.json?v=20261025-live-trading-accounts-v1`;
 // The lane this page's own snapshot belongs to when the lanes document does not name it. This page reads the
 // primary feed, which is the lane the lanes document calls ftmo-1; if that ever changes, an ask stamped with the
 // old id is refused by the loop rather than sent to the wrong account.
@@ -316,6 +320,17 @@ let confidenceBandDeliveryData = null;
 let researchProofMapData = null;
 let backtestEngineData = null;
 let liveTradingData = null;
+// The accounts strip's own reads: the publisher's lanes document and each lane's snapshot and heartbeat. Kept
+// apart from `liveTradingData` because the primary lane's snapshot is that same object, and a strip that
+// replaced it would make the tables below disagree with the card above.
+const liveTradingLanes = {
+  present: false,
+  document: null,
+  error: "",
+  snapshots: {},
+  statuses: {},
+  errors: {}
+};
 let economicEventRefreshData = null;
 let economicEventsSourceData = null;
 let inputHealthData = null;
@@ -15816,6 +15831,226 @@ function liveTradingPrice(value, digits) {
   return numeric.toFixed(Number.isInteger(Number(digits)) ? Number(digits) : 2);
 }
 
+// ---- The accounts strip: one card per FTMO account ------------------------------------------------------
+// The publisher writes `data/live-trading-lanes.json` and each lane's snapshot and heartbeat in one commit. The
+// strip answers four questions per account without opening a log: is the lane deployed, is a loop behind it
+// alive, what did that loop last do, and on which machine. The one mistake it must not make is letting a stale
+// record read as a healthy one. A heartbeat saying "armed" that stopped writing hours ago says what the loop
+// was told, not that it is running, so the age is drawn beside it and a stale card says so at the top rather
+// than in a footnote. `armed` and the freshness of the record are therefore two fields, never one badge.
+const LIVE_TRADING_HEARTBEAT_MIN_WINDOW_SECONDS = 900;
+
+function liveTradingMillisecondsSince(stamp) {
+  const at = Date.parse(stamp || "");
+  return Number.isNaN(at) ? null : Date.now() - at;
+}
+
+function liveTradingLaneRows() {
+  const lanes = liveTradingLanes.document?.lanes;
+  return Array.isArray(lanes) ? lanes.filter(row => row && typeof row === "object" && row.id) : [];
+}
+
+function liveTradingLaneEnabled(lane) {
+  // Enabled is the default in the lanes file and here: only an explicit false parks a lane, so a document
+  // written before the flag existed does not read as "everything disabled".
+  return !lane || lane.enabled !== false;
+}
+
+// One heartbeat, from the artifact when this page could read it and from the lanes document when it could not.
+// The publisher copies the same facts into the lane's row, so a device holding an older commit still sees what
+// the loop last said instead of an empty card.
+function liveTradingLaneHeartbeat(lane) {
+  const artifact = liveTradingLanes.statuses[lane.id]?.data || null;
+  const summary = lane?.trader && typeof lane.trader === "object" ? lane.trader : null;
+  const facts = artifact || (summary && (summary.written_at_utc || summary.armed !== undefined) ? summary : null);
+  if (!facts) {
+    return {
+      present: false,
+      stale: false,
+      unknownAge: false,
+      ageSeconds: null,
+      windowSeconds: LIVE_TRADING_HEARTBEAT_MIN_WINDOW_SECONDS,
+      armed: false,
+      status: null,
+      reason: null,
+      host: null,
+      writtenAt: null
+    };
+  }
+  // Three missed ticks is the window, and no less than fifteen minutes: the loop runs on the M5 clock, so a
+  // heartbeat older than that is a loop that is not running, whatever the record still says.
+  const interval = Number(facts.expected_interval_seconds);
+  const windowSeconds = Number.isFinite(interval) && interval > 0
+    ? Math.max(LIVE_TRADING_HEARTBEAT_MIN_WINDOW_SECONDS, Math.round(interval * 3))
+    : LIVE_TRADING_HEARTBEAT_MIN_WINDOW_SECONDS;
+  const writtenAt = facts.written_at_utc || facts.at_utc || null;
+  const ageSecondsRaw = liveTradingMillisecondsSince(writtenAt);
+  const ageSeconds = ageSecondsRaw === null ? null : Math.max(0, Math.round(ageSecondsRaw / 1000));
+  return {
+    present: true,
+    armed: facts.armed === true,
+    status: facts.status ?? null,
+    reason: typeof facts.reason === "string" ? facts.reason : null,
+    host: typeof facts.host?.computer === "string"
+      ? facts.host.computer
+      : typeof facts.host === "string" ? facts.host : null,
+    writtenAt,
+    ageSeconds,
+    windowSeconds,
+    unknownAge: ageSeconds === null,
+    // A heartbeat with no readable time cannot be shown to be current, so it is treated as stale rather than
+    // as healthy: silence is the one thing this card may not present as a running loop.
+    stale: ageSeconds === null ? true : ageSeconds > windowSeconds
+  };
+}
+
+function liveTradingLaneRow(label, value, tone = "") {
+  return `<div class="live-trading-lane-row${tone ? ` is-${escapeHtml(tone)}` : ""}"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
+}
+
+function liveTradingLaneCard(lane) {
+  const enabled = liveTradingLaneEnabled(lane);
+  const snapshot = enabled ? liveTradingLanes.snapshots[lane.id]?.data || null : null;
+  const loadError = liveTradingLanes.errors[lane.id] || "";
+  const account = snapshot?.account || {};
+  const identity = [account.login_masked || lane.account_login_masked, account.server || lane.account_server]
+    .filter(Boolean)
+    .join(" / ");
+  const snapshotAge = snapshot ? liveTradingAgeSeconds(snapshot) : null;
+  const heartbeat = liveTradingLaneHeartbeat(lane);
+  const stale = enabled && heartbeat.present && heartbeat.stale;
+  const tone = !enabled ? "parked" : loadError ? "error" : !snapshot ? "waiting" : stale ? "stale" : "live";
+  const badge = !enabled
+    ? "DISABLED"
+    : loadError ? "UNREADABLE" : !snapshot ? "NO SNAPSHOT" : stale ? "HEARTBEAT STALE" : "LIVE";
+
+  const traderValue = !heartbeat.present
+    ? "no heartbeat published"
+    : heartbeat.stale
+      ? `${heartbeat.armed ? "armed" : "not armed"} when last seen - no run since`
+      : heartbeat.armed ? "armed" : "not armed";
+  const heartbeatValue = !heartbeat.present
+    ? "none"
+    : heartbeat.unknownAge
+      ? "no readable time"
+      : `${liveTradingAgeLabel(heartbeat.ageSeconds)} - ${heartbeat.writtenAt}`;
+  const resultValue = !heartbeat.present
+    ? "none recorded"
+    : `${heartbeat.status || "unknown"}${heartbeat.unknownAge ? "" : ` (${liveTradingAgeLabel(heartbeat.ageSeconds)})`}`;
+  const snapshotValue = !enabled
+    ? "not published for a disabled lane"
+    : snapshot
+      ? `${liveTradingAgeLabel(snapshotAge)} - ${snapshot.generated_at_utc || "no time"}`
+      : loadError ? "not readable" : "not published";
+  const hostValue = !heartbeat.present ? "none" : heartbeat.host || "not recorded in this heartbeat";
+  const positions = snapshot
+    ? String(account.positions_open ?? (Array.isArray(snapshot.positions) ? snapshot.positions.length : 0))
+    : displayDash();
+
+  // The alert is the part that must be impossible to miss: an old armed record drawn as a healthy card is the
+  // exact mistake this strip exists to prevent, so it is a sentence above the rows, not a colour.
+  const alert = stale
+    ? `<p class="live-trading-lane-alert">${escapeHtml(
+        heartbeat.unknownAge
+          ? "The last heartbeat carries no readable time, so nothing here shows a loop running. Whatever it says about arming is a record of a run, not a state."
+          : `No heartbeat for ${liveTradingAgeLabel(heartbeat.ageSeconds)} - past the ${Math.round(heartbeat.windowSeconds / 60)}m window. It was ${heartbeat.armed ? "armed" : "not armed"} when it last wrote; nothing here shows a loop running now.`
+      )}</p>`
+    : "";
+
+  const note = !enabled
+    ? "Parked in config/live-trading-lanes.json: this lane is not deployed, so nothing is published for it and no loop trades it. Flipping it to \"enabled\": true - or deleting the line, since enabled is the default - is the whole switch-on, and its snapshot appears here on the next publish."
+    : heartbeat.present
+      ? heartbeat.stale
+        ? `The last run${heartbeat.host ? ` on ${heartbeat.host}` : ""} reported ${heartbeat.status || "nothing"}. The arming row above is history until a fresh heartbeat replaces it.`
+        : heartbeat.reason || `The loop last ran ${liveTradingAgeLabel(heartbeat.ageSeconds)}${heartbeat.host ? ` on ${heartbeat.host}` : ""} and reported ${heartbeat.status || "unknown"}.`
+      : "No trader heartbeat has been published for this lane, so this page can say what the account holds but not whether a loop is watching it.";
+
+  const rows = [
+    liveTradingLaneRow("Lane", enabled ? "enabled" : "disabled", enabled ? "" : "muted"),
+    liveTradingLaneRow("Account", identity || "not configured"),
+    liveTradingLaneRow(
+      "Trader",
+      traderValue,
+      !heartbeat.present ? "muted" : heartbeat.stale ? "stale" : heartbeat.armed ? "armed" : "muted"
+    ),
+    liveTradingLaneRow("Heartbeat", heartbeatValue, heartbeat.stale ? "stale" : ""),
+    liveTradingLaneRow("Last result", resultValue),
+    liveTradingLaneRow("Snapshot", snapshotValue, snapshot ? "" : "muted"),
+    liveTradingLaneRow("Trader host", hostValue, heartbeat.host ? "" : "muted")
+  ];
+  if (enabled) rows.push(liveTradingLaneRow("Positions", positions));
+
+  return `
+    <article class="live-trading-lane-card ${escapeHtml(tone)}" data-lane="${escapeHtml(lane.id)}">
+      <header>
+        <h4>${escapeHtml(lane.label || lane.id)}</h4>
+        <span class="live-trading-lane-badge ${escapeHtml(tone)}">${escapeHtml(badge)}</span>
+      </header>
+      ${alert}
+      <dl class="live-trading-lane-rows">${rows.join("")}</dl>
+      <p class="live-trading-lanes-note">${escapeHtml(note)}</p>
+    </article>
+  `;
+}
+
+function liveTradingAccounts() {
+  const rows = liveTradingLaneRows();
+  if (!rows.length) {
+    // No document yet is not the same as a broken page: the lanes file arrives with the publisher's next
+    // commit after the page is deployed, and until then this tab still draws the primary snapshot below.
+    const why = liveTradingLanes.error
+      ? `could not be read (${liveTradingLanes.error})`
+      : liveTradingLanes.present ? "carries no lanes" : "is not published yet";
+    return `
+      <section class="live-trading-lanes">
+        <h3>Accounts</h3>
+        <p class="live-trading-empty">The lanes document ${escapeHtml(why)}, so this page cannot say which accounts exist or which of them are deployed. It is written by the one publisher in the same commit as the snapshots.</p>
+      </section>
+    `;
+  }
+  return `
+    <section class="live-trading-lanes" aria-label="FTMO accounts">
+      <h3>Accounts</h3>
+      <p class="live-trading-lanes-caption">One card per FTMO account, read from <span class="live-trading-mono">data/live-trading-lanes.json</span>, each lane's own snapshot and the loop's heartbeat. A heartbeat older than three ticks is drawn as stale: it records that a loop ran, and is not proof that one is running now.</p>
+      <div class="live-trading-lanes-grid">${rows.map(lane => liveTradingLaneCard(lane)).join("")}</div>
+    </section>
+  `;
+}
+
+// Reading the lanes document and every lane's own artifacts. Each file is optional: a disabled lane has no
+// snapshot and a trader that has never run has no heartbeat, and both are facts the strip states rather than
+// errors that hide the rest of the tab. The primary lane's snapshot is the one `loadDashboard` already read,
+// so it is not fetched twice.
+async function loadLiveTradingLanes() {
+  const document_ = await fetchOptionalJson(liveTradingLanesUrl);
+  liveTradingLanes.present = document_.present === true;
+  liveTradingLanes.document = document_.data || null;
+  liveTradingLanes.error = document_.error;
+  liveTradingLanes.snapshots = {};
+  liveTradingLanes.statuses = {};
+  liveTradingLanes.errors = {};
+  const rows = liveTradingLaneRows();
+  await Promise.all(rows.map(async (lane) => {
+    if (!liveTradingLaneEnabled(lane)) return;
+    if (lane.feed === LIVE_TRADING_FEED_PATH) {
+      liveTradingLanes.snapshots[lane.id] = liveTradingData && !liveTradingData.meta?.error
+        ? { present: true, data: liveTradingData, error: "" }
+        : { present: false, data: null, error: "" };
+      return;
+    }
+    const relative = String(lane.feed || "").replace(/^\.?\//, "");
+    if (!relative) return;
+    const snapshot = await fetchOptionalJson(`./${relative}?v=20261025-live-trading-accounts-v1`);
+    liveTradingLanes.snapshots[lane.id] = snapshot;
+    if (snapshot.error) liveTradingLanes.errors[lane.id] = snapshot.error;
+  }));
+  await Promise.all(rows.map(async (lane) => {
+    const status = await fetchOptionalJson(liveTradingStatusUrl(lane.id));
+    if (status.present) liveTradingLanes.statuses[lane.id] = status;
+    else if (status.error) liveTradingLanes.errors[lane.id] = liveTradingLanes.errors[lane.id] || status.error;
+  }));
+}
+
 function liveTradingSigned(value, digits) {
   if (value === null || value === undefined) return displayDash();
   const numeric = Number(value);
@@ -18917,6 +19152,8 @@ function renderLiveTrading(data) {
       <p>${escapeHtml(freshness.detail)}</p>
     </div>
 
+    ${liveTradingAccounts()}
+
     <div class="live-trading-chips">${accountChips}</div>
 
     ${liveTradingChartShell(data, ruleState)}
@@ -19434,6 +19671,26 @@ async function fetchLocalJson(url) {
   return response.json();
 }
 
+// The same read, for a file that is allowed not to be there. A disabled lane has no snapshot published and a
+// trader that has never run has no heartbeat; both absences are facts the accounts strip states, and neither
+// should read as the page being broken. A file that is present but unreadable is still an error, and is kept
+// as one.
+async function fetchOptionalJson(url) {
+  let response;
+  try {
+    response = await fetch(url, { cache: "no-store" });
+  } catch (error) {
+    return { present: false, data: null, error: `${url}: ${error.message}` };
+  }
+  if (response.status === 404) return { present: false, data: null, error: "" };
+  if (!response.ok) return { present: false, data: null, error: `${url} ${response.status}` };
+  try {
+    return { present: true, data: await response.json(), error: "" };
+  } catch (error) {
+    return { present: false, data: null, error: `${url}: ${error.message}` };
+  }
+}
+
 async function fetchResearchView(viewName, options = {}) {
   const url = new URL(`${researchSupabaseUrl}/${viewName}`);
   url.searchParams.set("select", options.select || "*");
@@ -19925,6 +20182,9 @@ async function loadDashboard() {
   renderFactorEdgeLab(factorEdgeLabData);
   renderResearchLibrary();
   renderShadowLogicBacktest(phase2ShadowBacktestData);
+  // The accounts strip is read after the primary snapshot, so its first card is that snapshot's own object
+  // rather than a second fetch of the same file.
+  await loadLiveTradingLanes();
   renderLiveTrading(liveTradingData);
   renderWorkflowStatus(workflowStatus);
   renderOverviewStatusPanel();

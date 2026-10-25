@@ -9,6 +9,8 @@
 // those; these tests hold the loop that reads them.
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -2327,3 +2329,113 @@ test("the registration script rewrites the live wrapper only when it registers, 
     "the wrapper being replaced is kept as a backup"
   );
 });
+
+// The page can only tell one host from another if the heartbeat says which host wrote it. During a migration
+// two machines can hold the same lane, each with its own lock, and a lock on one of them says nothing about the
+// other: the computer name in the heartbeat is the only evidence of which one actually ran. The absolute path
+// is deliberately left out, because it would name the operator's Windows profile on a public page.
+test("the heartbeat names the host that wrote it and the cadence it sits on", () => {
+  const dir = tempDir();
+  const spawn = fakeSpawn({ status: { positions: [], orders: [], history: [] } });
+  runOnce(optionsFor(dir, {}), { spawn, now: () => NOW });
+  const status = JSON.parse(fs.readFileSync(path.join(dir, "trader-status.json"), "utf8"));
+
+  assert.equal(status.host.computer, os.hostname(), "the heartbeat must name the computer that wrote it");
+  assert.equal(status.host.platform, process.platform);
+  assert.equal(status.host.checkout, path.basename(repoRoot), "the checkout is named by its folder, not by its path");
+  assert.equal(status.expected_interval_seconds, 300, "the heartbeat states the cadence the page should judge it on");
+  assert.equal(
+    JSON.stringify(status.host).includes(repoRoot),
+    false,
+    "the heartbeat must not publish an absolute path"
+  );
+});
+
+// A self test that can arm is not a test, and a self test that runs against the live state spends the signal
+// bar the real loop was about to trade on. The registration script used to pass the registration's own arming
+// flag into the wrapper it ran, so `-Arm -Test` could have placed a ticket while proving the launcher.
+test("the launcher self test never arms and never runs against the live state", () => {
+  const registrationSource = fs.readFileSync(
+    path.join(repoRoot, "scripts", "register-live-trading-trader-task.ps1"),
+    "utf8"
+  );
+  const testBranch = registrationSource.slice(
+    registrationSource.indexOf("if ($Test) {"),
+    registrationSource.indexOf("# The one place the live wrapper is written")
+  );
+  assert.ok(testBranch.length > 0, "the script keeps its -Test branch");
+  assert.equal(/\$armArgument/.test(testBranch), false, "the self test must not reuse the registration's arming flag");
+  assert.match(testBranch, /Get-WrapperLines "" \$selfTestPaths/, "the self test runs unarmed with its own paths");
+  assert.match(testBranch, /self_test_armed\s+= false/, "the self test says in its output that it is unarmed");
+  assert.match(testBranch, /productionBefore = Get-ProductionFingerprint/);
+  assert.match(testBranch, /self_test_production_unchanged/);
+  assert.match(testBranch, /throw "The self test changed the live wrapper/, "a changed wrapper fails the test");
+  assert.match(testBranch, /throw "The self test changed the definition of task/, "a changed task definition fails the test");
+  assert.equal(
+    /Register-ScheduledTask -TaskName \$TaskName\b/.test(testBranch),
+    false,
+    "the self test must never register the production task name"
+  );
+});
+
+
+// -Show is the inspection an operator runs against a live machine, so the only acceptable proof is that the
+// wrapper and the checkout are exactly as they were. This runs the real script against a throwaway checkout
+// and compares a hash of the wrapper before and after, rather than trusting a comment that says it is read-only.
+test("a read-only -Show leaves the live wrapper and the checkout untouched", { skip: process.platform !== "win32" }, () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "live-trading-show-"));
+  fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "tools", "mt5-bridge"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "config"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "tmp"), { recursive: true });
+  fs.copyFileSync(runnerPath, path.join(dir, "scripts", "run-live-trading-trader.js"));
+  fs.copyFileSync(
+    path.join(repoRoot, "tools", "mt5-bridge", "live-trading-order.py"),
+    path.join(dir, "tools", "mt5-bridge", "live-trading-order.py")
+  );
+  fs.writeFileSync(
+    path.join(dir, "config", "live-trading-lanes.json"),
+    JSON.stringify({ schema_version: 1, lanes: [{ id: "ftmo-1", label: "FTMO account 1", root: "." }] }, null, 2)
+  );
+  const wrapperPath = path.join(dir, "tmp", "live-trading-trader-run.cmd");
+  const wrapper = [
+    "@echo off",
+    "rem production wrapper fixture: the flags below are what the page must be able to read back",
+    "cd /d \"" + dir + "\"",
+    "\"" + process.execPath + "\" \"" + path.join(dir, "scripts", "run-live-trading-trader.js") +
+      "\" --once --align --settle-seconds 90 --confirm-live --quiet --lane \"ftmo-1\" --expire-minutes 30 --max-open 1 --max-per-day 4"
+  ].join("\r\n");
+  fs.writeFileSync(wrapperPath, wrapper + "\r\n", "ascii");
+  const digest = () => crypto.createHash("sha256").update(fs.readFileSync(wrapperPath)).digest("hex");
+  const before = digest();
+  const filesBefore = fs.readdirSync(path.join(dir, "tmp")).sort();
+
+  const run = () => spawnSync("powershell", [
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", path.join(repoRoot, "scripts", "register-live-trading-trader-task.ps1"),
+    "-Show",
+    "-RepoRoot", dir,
+    "-TaskName", "LiveTradingTraderTick019-ReadOnlyProbe"
+  ], { encoding: "utf8", timeout: 60000 });
+
+  const first = run();
+  assert.equal(first.status, 0, first.stderr || first.stdout);
+  assert.match(first.stdout, /armed\s+= false/, "-Show reports the registration it would make, which is unarmed");
+  assert.match(first.stdout, /live_wrapper_armed\s+= true/, "-Show reads the arming out of the wrapper that exists");
+  assert.match(first.stdout, /max_per_day\s+= 4/, "-Show states the registration's own cap rather than a hidden default");
+  // The wrapper's own flags are not in the plan - the plan is what a registration would write - so -Show names
+  // the wrapper by hash instead, which is what the effective-config script reads back in full.
+  assert.match(first.stdout, /wrapper_sha256\s+= [a-f0-9]{64}/, "-Show names the wrapper it read, by hash");
+
+  const second = run();
+  assert.equal(second.status, 0, second.stderr || second.stdout);
+  assert.equal(digest(), before, "the live wrapper must be byte-for-byte what it was");
+  assert.deepEqual(fs.readdirSync(path.join(dir, "tmp")).sort(), filesBefore, "a read-only run must add no file to tmp/");
+  assert.equal(
+    second.stdout.replace(/\r\n/g, "\n"),
+    first.stdout.replace(/\r\n/g, "\n"),
+    "-Show must answer the same question the same way, with no state of its own"
+  );
+});
+
