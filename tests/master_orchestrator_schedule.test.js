@@ -23,7 +23,7 @@ test("the trigger wakes every hour and decides the 07:00 New York run in New Yor
   assert.match(workflow, /TZ: America\/New_York/, "the job's clock is New York, so date and hour follow daylight saving");
   assert.match(workflow, /local_hour=\$\(\(10#\$\(date \+%H\)\)\)/, "the hour is read from that clock");
   assert.match(workflow, /local_hour" -lt 7/, "nothing before 07:00 New York");
-  assert.match(workflow, /local_hour" -gt 10/, "a slot that arrives after 10:00 New York is not a reason to run at night");
+  assert.match(workflow, /local_hour" -ge 11/, "a slot that arrives at 11:00 New York or later is not a reason to run");
 });
 
 test("one call a day, one at a time", () => {

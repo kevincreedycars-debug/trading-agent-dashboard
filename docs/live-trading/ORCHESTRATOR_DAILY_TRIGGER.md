@@ -25,14 +25,14 @@ UTC and decides in `America/New_York` whether this slot is the day's run:
 | local hour (America/New_York) | what the job does |
 | --- | --- |
 | before 07:00 | skip, "it is before 07:00 New York" |
-| 07:00-10:00, nothing run today | call the webhook, then confirm the run from `data/workflow-status.json` |
-| 07:00-10:00, a run today already succeeded | skip, so a delayed slot cannot double up |
-| 07:00-10:00, a run today still in flight | skip, so a second call cannot overlap the orchestrator |
-| after 10:00 | skip, so an outage at 07:00 does not fire a run at ten at night |
+| 07:00-10:59, nothing run today | call the webhook, then confirm the run from `data/workflow-status.json` |
+| 07:00-10:59, a run today already succeeded | skip, so a delayed slot cannot double up |
+| 07:00-10:59, a run today still in flight | skip, so a second call cannot overlap the orchestrator |
+| 11:00 or later | skip, so an outage at 07:00 does not fire a run at ten at night |
 
-The 07:00-10:00 window exists because GitHub often starts scheduled runs several minutes late; a 07:00 slot that
-starts at 07:14 still runs. Daylight saving needs no maintenance: the hour is read on a New York clock, so the same
-cron gives 07:00 ET in both halves of the year.
+The four slots at 07:07, 08:07, 09:07 and 10:07 exist because GitHub often starts scheduled runs several minutes
+late; a 07:00 slot that starts at 07:14 still runs. Daylight saving needs no maintenance: the hour is read on a New
+York clock, so the same cron gives 07:00 ET in both halves of the year.
 
 **What the job writes.** Nothing. It is `contents: read` and never checks out the repository. The record of the
 invocation is the Actions run itself: the step summary carries the local time, the decision and why, the webhook's

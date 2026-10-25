@@ -6,8 +6,9 @@
 # GitHub's cron is fixed to UTC and cannot follow a New York clock, so this wakes every hour at :07 and decides in
 # America/New_York whether this slot is the day's run. Scheduled runs on GitHub are often started some minutes
 # late, so the rule is "the first slot at or after 07:00 New York", not "exactly 07:00": a slot delayed to 07:14
-# still runs, and any later slot that day sees the earlier success and stops. The window closes at 10:00 New York,
-# so a GitHub outage at 07:00 does not cause an orchestrator run at ten at night.
+# still runs, and any later slot that day sees the earlier success and stops. The last slot is the 10:07 one, and a
+# slot that arrives at 11:00 or later is turned away, so a GitHub outage at 07:00 does not cause an orchestrator run
+# at ten at night.
 name: master-orchestrator-daily
 
 on:
@@ -93,8 +94,8 @@ jobs:
             reason="a run of this job is still in flight, so a second call would overlap the orchestrator"
           elif [ "$local_hour" -lt 7 ]; then
             reason="it is before 07:00 New York"
-          elif [ "$local_hour" -gt 10 ]; then
-            reason="the 07:00-10:00 New York window has closed for today"
+          elif [ "$local_hour" -ge 11 ]; then
+            reason="the 07:00-10:00 New York slots have all passed for today"
           elif [ "${FORCE:-false}" = "true" ]; then
             decision=trigger
             reason="a person asked for it outside the guards"
