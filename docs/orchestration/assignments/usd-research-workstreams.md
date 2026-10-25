@@ -1,5 +1,14 @@
 # USD research: three parallel workstreams, the shared contract and the two bootstrap prompts
 
+> **Superseded on 2026-10-19 by the factor-chain cycle.** The Research Library now works one factor chain at a
+> time (research, red-team, adjudication) under six topic labels, plus the gated `usd-final-asset-analysis`
+> chain with its own final analysis, final red-team and final adjudication. Topics are grouping labels and own no stage. The topic-stage contract, the `docs/research/topics/usd/`
+> paths and the research-topic bootstrap prompts below are historical; read
+> `docs/research-library/README.md`, the `factor_chains` and `final_chain` entries in
+> `data/research-library/catalog.json`, and the prompts under `docs/research/factors/usd/` and
+> `docs/research/final/usd/` for the current route. The worktree setup and file-ownership split still stand,
+> with workstream C owning chain probes and per-factor prompt wording.
+
 Written 2026-10-15 by the interactive coordinator for the research-topics cycle. This is the handover for the
 three concurrent workstreams the owner asked for: A lead coordinator and integration (this working folder),
 B dashboard interface and document workflow, C research prompts and programme.
