@@ -819,3 +819,13 @@ to satisfy a check.
 - **Next, in order:** wait for the email; §12.2 steps 1-3; run `-Mode Plan` against the real roots and follow it;
   `-Mode Verify -ProbeTerminal -PinnedCommit <commit>` until every check is `ok` (nothing ignored); then the
   cutover in [MIGRATION_CUTOVER.md](MIGRATION_CUTOVER.md), with publishing moving last.
+- **The pinned commit to deploy:** `5a73c295b3cede5bce0172603c8d1bf14c8e7dcb`, pushed to `main` at
+  2026-10-25T22:08:36Z - the commit that carries the probe, the prepare/verify script, the access handoff and the
+  monitor. It is **not** a floating reference: the host clones this SHA into both checkouts, and
+  `-Mode Verify -PinnedCommit 5a73c295` fails if either tree has moved. Later commits on `main` are the live
+  publisher's data files; they are not code and the host does not pull them.
+- **The observation clock, stated honestly.** The external monitor's first scheduled run is the first
+  measurement taken from outside this PC, and it starts from 2026-10-25T22:08Z. The *unattended operation period*
+  the user asked for cannot start at that timestamp: it starts when the host trades, the PC is off and the
+  monitor stays green across at least one scheduled daily signal. Durations will be reported from that moment,
+  not from this one.

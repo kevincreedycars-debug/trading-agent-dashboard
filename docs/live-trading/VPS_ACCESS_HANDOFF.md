@@ -151,8 +151,9 @@ list is data in the script rather than prose, so the two cannot drift. In short:
 1. prove the host: `Get-ComputerInfo`, `explorer.exe` present, UTC;
 2. runtime: Node 22, Git, Python 3.13, `pip install MetaTrader5==5.0.6231` (the PC's versions);
 3. two checkouts at **one pinned commit** - `C:\live-trading\runtime` for execution, `C:\live-trading\publisher`
-   for publishing - and **no scheduled task that pulls or reinstalls** anything, so nothing updates itself while
-   you are away;
+   for publishing (`5a73c295` is the commit to pin as of 2026-10-25T22:08Z; re-read it at cutover rather than
+   trusting this line) - and **no scheduled task that pulls or reinstalls** anything, so nothing updates itself
+   while you are away;
 4. one MT5 terminal per lane at the path the lanes file names, each logged in by hand;
 5. tasks registered unarmed, in order: lane feed, trader without `--confirm-live`, publisher **last**;
 6. `-Mode Verify -ProbeTerminal -PinnedCommit <commit>` until every blocking check is `ok`;
@@ -176,4 +177,34 @@ unreachable. A failed run is visible in the Actions list, and GitHub's default n
 owner for a failed scheduled workflow. What it cannot see: whether the *terminal* is still logged in on the host
 when nothing is being published at all (that shows up as staleness, which is the point), and anything about the
 VPS itself, which has no agent on it by design.
+
+
+## 8. Stopping in a hurry, and getting back
+
+**Pause new entries without taking the lane down.** Disabling the trader task stops new entries and leaves the
+terminal, the feed and the publisher running, so the page keeps telling the truth while nothing new is placed:
+
+```powershell
+Disable-ScheduledTask -TaskName LiveTradingTraderTick019      # lane 1
+Disable-ScheduledTask -TaskName LiveTradingTraderTick-ftmo2   # lane 2, when it exists
+Get-ScheduledTaskInfo -TaskName LiveTradingTraderTick019 | Select-Object LastRunTime, LastTaskResult
+```
+
+That is a pause, not a close: open positions and working orders stay, which is the point - a stop that closed
+them would be a trading decision taken by an outage. Closing is deliberate and separate, through
+`tools/mt5-bridge/live-trading-order.py` with `--confirm-live` or in the terminal by hand. Re-enabling is the same
+command with `Enable-ScheduledTask`, and nothing about it re-arms anything else.
+
+**Emergency access.** In this order, because each step is wider than the one before: the FTMO client area (reset
+the trading password, which does not touch the terminal's open positions); the MT5 terminal over RDP (close or
+flatten by hand); the Contabo panel (power-cycle or reinstall the machine); and only then the local DPAPI store.
+The broker is the authority on the account; a host that cannot be reached is a host problem, never an account
+problem, and the FTMO client area does not need the host.
+
+**Rollback to the PC.** [MIGRATION_CUTOVER.md](MIGRATION_CUTOVER.md) carries the reverse sequence, and the two
+rules that make it safe rather than hopeful: the host's trader is disabled and its publisher unregistered *before*
+the PC's trader is registered again, and the PC is armed only after its own `-Mode Verify` run is green on its own
+paths. The bundle that would be restored verifies byte for byte; the full stop-restore-arm cycle has not been
+rehearsed, because a rehearsal needs the second host it protects - so treat the first rollback as an unproven
+procedure performed carefully, not as a tested one.
 
