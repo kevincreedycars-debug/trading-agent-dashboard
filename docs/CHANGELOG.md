@@ -1,4 +1,37 @@
 # Changelog
+## 2026-10-25 (integration lane) - Astra route integrated, the supervisor reads chains, probes specified
+
+### Integrated from `workstream/b-dashboard-interface`
+
+- `lib/research_pipeline.js` (the unattended supervisor), `scripts/research-pipeline.js`, its 15 guards and
+  `docs/research/pipeline/EXECUTION_ROUTE.md` are on `main` as `eff87b6b` and `a122544e`, cherry-picked rather
+  than merged so the branch's unrelated 923-file divergence stays out.
+- The supervisor was written against a catalogue whose topics carried the three stages. `main` keeps the stages
+  on the factor chain, so against `data/research-library/catalog.json` the first version read zero stages and
+  nothing was runnable. `3ad0700a` resolves a topic to its chains, requires `--chain` when a topic groups more
+  than one chain, and derives the job key and document id from the chain. Read-only check against the committed
+  catalogue: 75 stages, 25 runnable, 1 delivered (the VIX research report), no dispatch, no allowance spent.
+
+### Specified, not changed
+
+- `docs/research/programme/PROBE_SPEC_20261025.md`: the seven chains whose probes do not fit the factor, the
+  exact probes to add and the group probes to keep, the abstention rule (coverage, the withheld-call score and a
+  coverage-matched comparison on comparable sessions, reported together), and the guards the prompt lane adds.
+  DeepSeek's prompt lane owns the generator; this lane reviews and accepts. No prompt changed.
+- `docs/research/programme/LANES_20261025.md`: owner, branch, commit, integration state and next action per
+  workstream, including that the internal research and automation lanes are additional sessions rather than the
+  owner's, and that the automation lane's "no supported route" conclusion is superseded.
+
+### Verified
+
+- The automation lane's carrier evidence is corroborated here from the artifacts on this PC: 6,179-byte return,
+  sha256 `0621219e…`, byte-identical stored object, registry row `gpt-6-astra` / `library_object`, one dispatch in
+  `usage.json`, one `turn.completed` with 269,333 input and 1,632 output tokens, `auth_mode: chatgpt`.
+- `node --test tests/research_pipeline.test.js` 15/15. Full `npm test` 686 with 683 passing: the library browser
+  failure is the fresh-worktree one (no private objects), and the two `refresh_progress` browser tests pass 26/26
+  alone on both `f54b34f7` and this commit, so they are load-sensitive rather than new.
+
+
 ## 2026-10-25 (interactive coordinator, research programme, round two) - briefs de-duplicated, positive conclusion allowed, asset order aligned
 
 ### Changed
