@@ -69,6 +69,21 @@ the run reports any `status` other than `success`. A green run therefore means t
 own record. The step summary of that run carries `decision`, the webhook HTTP code, and the run's
 `status`/`failed_step` for the same reason.
 
+## The first scheduled tick, 2026-10-25, and what it did not prove
+
+The cron fired on its own for the first time: **run 40220928984**, event `schedule`, started
+2026-10-25T18:22:23Z (14:22 New York), conclusion success, with `runs_today_succeeded=1` and
+`decision=skip (today already has a successful run of this job, so a second call would be a duplicate)` in the step
+summary - `nothing was called`.
+
+That is the guard working, not the schedule failing: the day's live run was the hand-dispatched 40203054555 at
+14:36:48Z, and the 18:22Z slot is past the 10:07 New York cut-off in any case, so the duplicate guard answered first.
+
+Two consequences. The first **automatic** live run is the 07:07 `America/New_York` slot on 2026-10-26 (11:07Z), and it
+is the one to watch: a red run there says the schedule is wrong, a green one with `decision=trigger` is the first
+evidence that the clock, and not a person, starts the orchestrator. Until then "the cloud schedule runs it daily" is
+still a claim about a guard that fired, not about a scheduled run that called the webhook.
+
 ## What this does not fix
 
 - The n8n flow's own status writer stamps `triggered_by: "dashboard_or_manual"` in a Code node. A scheduled call is

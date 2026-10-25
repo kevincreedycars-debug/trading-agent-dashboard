@@ -21,6 +21,8 @@ done, what is blocked on a purchase or a login, and what is code that does not e
 | The secret scanner's report is readable when it has no console: one line per finding instead of a `Format-Table` sized to the terminal | `scripts/check-repo-for-secrets.ps1` | `backtester/tests/secret_scanner.test.js` 5/5, and the full local suite was **758 pass, 0 fail** in the research-library branch's checkout (a main-line checkout lists 666 test cases, so the two runs are not the same file list) |
 | Two browser-test expectations that only held while the account was flat now read the artifacts instead of a remembered stage: the read-only guard allows the Close button the Open-positions table draws for a lane ticket and none other, and the rule-panel case expects the module's own stages, so a pair holding an open position reads `blocked` rather than `no call` | `tests/live_trading_dashboard.browser.test.js`, `tests/live_trading_rule_panel.browser.test.js` | on a main-line checkout with the local research-library object store present: **666 tests, 666 pass, 0 fail** (the same tree without that ignored blob fails `research_library.browser.test.js`, and nothing else) |
 
+Where the two suite counts come from, and why neither is a quality signal: [TEST_SUITE_666_VS_758.md](TEST_SUITE_666_VS_758.md).
+
 Why it mattered: 00:00 Prague is 22:00 or 23:00 UTC, so the old UTC cut handed the loop a **second** daily cap
 inside the same FTMO trading day (01:00/02:00 local). The counter is a placement counter, not a loss-limit guard,
 and that sentence is now in `--help` too. Historical placements were not rewritten: the day is derived from each
@@ -43,27 +45,59 @@ VPS:
 - Data centre in the **UK/London**, then ping the FTMO server from the box before trusting it.
 - Windows licence **included**, monthly term, RDP access, provider console reboot.
 
-**The page prices, read on 2026-10-24 evening.** Contabo's Windows pages answered this time, so the numbers below are
-the provider's own, not a guess:
+**Verified at the configurator on 2026-10-25.** The table this page carried on 2026-10-24 read Contabo's headline VPS
+rate as a Windows total, and the difference is the whole decision: the plan rate and the Windows Server licence are
+**two separate monthly lines** in Contabo's configurator, and the licence is not included in the plan price. The
+numbers below are the configurator's own, read plan by plan (Cloud VPS Core is the new name for Cloud VPS); nothing
+here is a cart total, because the cart is where term, region and VAT are fixed.
 
-| Product | Spec | Price shown (24-month rate) | Verdict |
-| --- | --- | --- | --- |
-| Contabo **Cloud VPS 4 + Windows Server** | 4 vCPU, 8 GB RAM, 100 GB SSD, 1 snapshot, 200 Mbit/s | €5.50/month incl. VAT (€4.40 excl.) | **the one to buy**: meets the floor, UK is a listed location |
-| Contabo **Cloud VPS 6 + Windows Server** | 6 vCPU, 12 GB RAM, 200 GB SSD / 100 GB NVMe | €7.50/month incl. VAT (€6.00 excl.) | the comfortable option: two terminals plus Node and Python leave room |
-| Contabo Cloud VPS 8 + Windows Server | 8 vCPU, 24 GB RAM, 300 GB SSD / 150 GB NVMe | €14.00/month incl. VAT (€11.20 excl.) | more than this job needs |
-| netcup VPS 1000 G12.5 | 4 vCore, 8 GB RAM, 128 GB SSD | €14.50/month incl. 19% VAT (12-month term) | **rejected**: netcup sells no Windows licence (self-install, 180-day trial only) |
-| IONOS VPS+ Windows | not read: the plan table truncated on every fetch | - | unquoted rather than guessed |
+| Plan | Spec | Windows Server Datacenter 2025 (2022/2019/2016 same price) | Plan, 1 month | Plan, 12 months | Plan, 24 months | Windows total, 1 month | Windows total, 24 months |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Cloud VPS Core 4 | 4 vCPU, 8 GB RAM, 100 GB SSD, 1 snapshot, 200 Mbit/s | +EUR 8.00/month | EUR 5.50 | EUR 4.68 | EUR 4.40 | **EUR 13.50** | EUR 12.40 |
+| Cloud VPS Core 6 | 6 vCPU, 12 GB RAM, 200 GB SSD or 100 GB NVMe, 2 snapshots, 300 Mbit/s | +EUR 17.00/month | EUR 7.50 | EUR 6.38 | EUR 6.00 | EUR 24.50 | EUR 23.00 |
+| Cloud VPS Core 8 | 8 vCPU, 24 GB RAM, 300 GB SSD or 150 GB NVMe, 3 snapshots, 600 Mbit/s | +EUR 28.00/month | EUR 14.00 | EUR 11.90 | EUR 11.20 | EUR 42.00 | EUR 39.20 |
+| netcup VPS 1000 G12.5 | 4 vCore, 8 GB RAM, 128 GB SSD | not offered | - | - | - | - | - |
+| IONOS VPS+ Windows | not read: the plan table truncated on every fetch | - | - | - | - | - | - |
 
-- Order page: `https://contabo.com/en/windows-servers-vps/` (the product page carries the plan cards above; the licence
-  is included in that price, and Contabo's own FAQ says a customer-supplied Windows licence is **not** allowed).
-- Location list on the same page: Australia, India, Germany, Japan, Singapore, **United Kingdom**, United States.
-  Choose the UK location at checkout, then ping the FTMO server from the box before trusting it.
-- The €5.50 is the *24-month* rate the page headlines. If a 1-month term is wanted, the checkout shows that price
-  instead; read the **term line**, the **Windows Server version** (2022 or 2025 with Desktop Experience - not Server
-  Core, which cannot run MT5) and the **location line** before paying. Nothing here is bought yet.
-- Account checklist for the purchase itself: business or private account with 2FA on, address and VAT details that
-  match the card, a card that accepts foreign currency, the provider's abuse/support contact saved somewhere other
-  than the host, and the invoice in the same mailbox the renewal notices reach.
+Every row: **no setup fee** at any term (`No Setup Fee`, and the order summary prints `One-Time EUR 0.00`), one IPv4
+included, unlimited traffic under fair use. netcup stays rejected for the same reason as before: it sells no Windows
+licence, only a self-install with a 180-day trial. IONOS stays **unquoted** rather than guessed.
+
+What those same reads did settle, and what they did not:
+
+- **Licence.** Windows Server Datacenter is an image option priced per month, chosen at install from the Control
+  Panel. There is no "bring your own licence" path in the configurator, which matches the 2026-10-24 note that
+  Contabo does not accept customer-supplied Windows licences. **Desktop Experience vs Server Core is therefore an
+  install-time check** (Server Core cannot run MT5), not a purchase-time one.
+- **Region.** The configurator's region list is `Best / Europe / America / Asia / Australia`; Contabo's UK data
+  centre is Portsmouth. A specific UK location is picked inside Europe at checkout, so the runbook's "choose the UK
+  location, then ping the FTMO server from the box" step is unchanged and still to be done.
+- **VAT.** The configurator shows the plan and licence rates with no tax line; the site's country selector is
+  labelled "Country (Tax Purposes Only)" and lists United Kingdom at 20%; the Cloud VPS page's footnote calls its
+  card prices "the effective monthly rate for a 24-month subscription including applicable taxes". Those statements
+  do not add up to one verified gross figure, so the totals above are **before VAT**. At 20% UK VAT, Core 4 with
+  Windows is EUR 16.20/month on a 1-month term and EUR 14.88/month on 24 months - arithmetic on the configurator's
+  figures, not a quote. The cart, with country set to the United Kingdom, is where the gross total is read.
+- **Term and renewal.** Minimum initial contract length 1 month; the following contract length equals the initial
+  one; cancellation notice none (pre-paid) or 4 weeks (post-paid). A 24-month term therefore renews for another 24
+  months at the then-current price: EUR 4.40 is not a lifetime rate, and nothing here commits to 24 months.
+- **Provisioning.** Not stated anywhere on the pages read, and not verified. It does not change the buy decision;
+  the first RDP attempt is the evidence.
+
+Read these lines in the cart before paying, in this order: the **term** (1 month, not 24, unless that is intended), the
+**Windows Server version** and Desktop Experience, the **location** (UK), the **VAT line**, the **total payable now**,
+and whether a multi-month term is charged in full up front - the configurator only renders the default 1-month order
+summary, so that answer exists nowhere else.
+
+**The buy, if it is bought:** Cloud VPS Core 4 + Windows Server Datacenter at a 1-month term - EUR 13.50/month before
+VAT, about EUR 16.20 with UK VAT - because it meets the floor above and commits to nothing beyond a month. Core 6 +
+Windows (EUR 24.50/month before VAT) is the comfortable option only if nearly double the monthly cost is acceptable.
+Configurator links: `https://contabo.com/en/vps/cloud-vps-core-4/`, `.../cloud-vps-core-6/`, `.../cloud-vps-core-8/`;
+Windows product page `https://contabo.com/en/windows-servers-vps/`; UK location
+`https://contabo.com/en/locations/united-kingdom/`. Nothing is bought.
+- Account checklist for the purchase itself: business or private account with 2FA on, address and VAT details
+  that match the card, a card that accepts foreign currency, the provider's abuse/support contact saved somewhere
+  other than the host, and the invoice in the same mailbox the renewal notices reach.
 
 A second FTMO-provided VPS is worth one question to support, because it would arrive pre-configured for the
 platform; nothing in this repository confirms FTMO offers one for this account type.
@@ -168,6 +202,15 @@ different masked login/server than the lanes file says, and hands the set to
 `scripts/publish-live-trading-feed.js`, which now takes `--artifacts` and publishes them in **one commit and one
 push**. One publisher rather than one per lane is the point: two runs seconds apart would serve a page whose
 account blocks come from different reads, and two runs racing `main` is where a rejected push comes from.
+
+The lanes file the publisher reads by default was missing from `main` until 2026-10-25. Every reference to
+`config/live-trading-lanes.json` - the publisher's `--config` default, the registration script's `-Config` default, the
+trader's `--lane` error message, this page and the runbook - pointed at a file that existed only, untracked, in the PC
+worktree, so a fresh clone on a host would have failed the lanes publish at its first read. It is tracked now, with the
+layout section 6 already describes (lane 1 `root: "."`, lane 2 `root: "../ftmo2"` and `enabled: false`), and two tests
+in `tests/live_trading_lanes_publish.test.js` read the shipped file through the publisher's own loader: the two ids,
+the two published paths and the parked second lane, plus the absence of any credential-shaped key and the masked login
+`***614` being the only account text in it.
 
 `scripts/register-live-trading-lanes-publish-task.ps1` puts that on a ten-minute clock (`LiveTradingPublishLanes019`,
 hidden launcher, `-Show` / `-Test` / `-Remove`). Its `-Test` is a **dry run** through the launcher, so running it
