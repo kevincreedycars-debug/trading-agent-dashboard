@@ -17,6 +17,9 @@
 
 - The 78 generated prompts and `data/research-library/catalog.json` were regenerated together with
   `node scripts/build_research_library.js catalog --write`, so each prompt and its recorded hash still agree.
+- The catalogue cache-buster moved to `20261025-research-programme-v1` and `index.html` loads `script.js` with the
+  same version, so a returning reader does not keep a cached catalogue whose prompt hashes no longer match the
+  served prompts.
 
 ### Unchanged, and checked
 
