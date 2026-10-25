@@ -2302,3 +2302,28 @@ test("the run record states the trade day and the clock it was counted on", () =
   assert.equal(result.record.caps.trade_day_timezone, "Europe/Prague");
   assert.equal(result.record.caps.max_per_day, 4);
 });
+
+// Arming belongs to the registration, not to the file's defaults. The script that registers the live task must not
+// rewrite the wrapper the scheduler runs unless it is really registering one: on 2026-10-24 a read-only inspection
+// did, the production wrapper lost --confirm-live, --max-open 1 and --expire-minutes 30, and the task went on logging
+// a tidy "planned" line for two days. These assertions hold the order that prevents a repeat, and the backup that
+// makes a disarm reversible if it ever happens again.
+test("the registration script rewrites the live wrapper only when it registers, and keeps the one it replaces", () => {
+  const registrationSource = fs.readFileSync(
+    path.join(repoRoot, "scripts", "register-live-trading-trader-task.ps1"),
+    "utf8"
+  );
+  const showBranch = registrationSource.indexOf("if ($Show) {");
+  const testBranch = registrationSource.indexOf("if ($Test) {");
+  const liveWrite = registrationSource.indexOf("Write-Wrapper $wrapperPath");
+  assert.ok(showBranch > 0, "the script keeps its -Show branch");
+  assert.ok(testBranch > 0, "the script keeps its -Test branch");
+  assert.ok(liveWrite > showBranch, "-Show is answered before the live wrapper is written");
+  assert.ok(liveWrite > testBranch, "-Test is answered before the live wrapper is written");
+  assert.match(registrationSource, /live_wrapper_armed/, "the plan states whether the live wrapper is armed");
+  assert.match(
+    registrationSource,
+    /Copy-Item -LiteralPath \$wrapperPath -Destination \$backupPath/,
+    "the wrapper being replaced is kept as a backup"
+  );
+});

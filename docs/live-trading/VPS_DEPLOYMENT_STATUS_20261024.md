@@ -373,4 +373,135 @@ wait for now exists (section 7.1), so switching it on is its own clone, terminal
   07:00 intent the instance does not implement (that script is untracked and unowned here).
 - The trader heartbeat is written on this PC but **not yet published**: the running publisher is still the
   single-artifact `LiveTradingFeedTick019`, so the page's lane 1 card says "no heartbeat published" until the lanes
-  task replaces it.
+  task replaces it. **Superseded 2026-10-25**: the lanes publisher is now the only publisher on this PC and the
+  heartbeat travels with the snapshot - see section 10.
+
+## 10. 2026-10-25: the publisher switched, and the production trader was found unarmed
+
+### 10.1 The one publisher, and the snapshot that kept running
+
+`LiveTradingFeedTick019` was re-registered **without** `-Publish` at 2026-10-25T19:48:37Z. Its wrapper now reads
+`--once --align --quiet ...` and carries no `--publish`; the registration reports `publishes_anything = false`. The
+snapshot cadence itself is untouched: one aligned producer run per M5 bar into `data/live-trading.json`, logged in
+`tmp/live-trading-feed.log` (19:45:21Z was the last read before the change).
+
+`LiveTradingPublishLanes019` was registered at 2026-10-25T19:49:13Z: a ten-minute clock, `--min-interval-seconds 600`,
+`--config config/live-trading-lanes.json`, and
+`--checkout D:\trading-agent-dashboard-codex\.local\live-trading-feed-publish` - the same publish checkout, the same
+state file (`tmp/live-trading-publish-state.json`) and therefore the same 600s interval gate and the same lock
+(`live-trading-publish.lock`, 900s TTL) the old publisher used.
+
+The engine `scripts/publish-live-trading-feed.js` is kept: the lanes publisher calls it. What is retired is the
+single-artifact **invocation** - the `-Publish` flag on the feed task - not the file.
+
+No overlap, in three places: the feed task cannot publish any more (no flag); the lanes task is registered
+`MultipleInstances IgnoreNew` with a 15-minute limit, as the feed task is with 10; and the publisher's own lock refuses
+a second real publish on the shared checkout/state. The first two real lanes ticks (19:49:13Z and 19:49:41Z) exited 0
+as `too_soon` - "the last publish was 337s ago, inside the 600s cadence" - which is the interval gate doing its job,
+not a failure; the first publish was due at 19:59:41Z.
+
+The lanes publisher's own `-Test` (a `--force --dry-run`, so it cannot commit or push) answered `would_publish` with
+`extras` = `data/live-trading-trader.ftmo-1.json` and `data/live-trading-lanes.json`, lane 1 identity `***614`
+matched, and lane 2 `disabled` - "the lanes file marks this lane disabled, so it is not read and not published".
+
+### 10.2 The production loop had been unarmed since 2026-10-24 19:35Z
+
+`tmp/live-trading-trader-run.cmd` was rewritten at **2026-10-24T19:35:28Z** (local 20:35:28, BST) and lost three
+flags: `--confirm-live`, `--max-open 1` and `--expire-minutes 30`. The task name, the interval and the log line were
+unchanged, which is why it read as a normal cadence. The wrapper kept as
+`tmp/live-trading-trader-run.cmd.bak-20261005` still carries all three, so the before/after is readable on disk.
+
+**Cause, not guess:** `scripts/register-live-trading-trader-task.ps1` wrote the live wrapper *above* its `-Show` and
+`-Test` returns, so a read-only inspection (`-Show`) or a launcher self-test (`-Test`) rewrote the production command
+line from the script's defaults - no `-Arm`, no `-MaxOpen`, no `-ExpireMinutes`. That is the only way this file
+changes, and nothing else on this machine writes it.
+
+**What 19:26:30Z therefore was:** the production scheduled task, running **plan-only**. Not a deliberate dry run and
+not a separate process - `"armed": false`, `"status": "planned"`, and
+`"reason": "not armed: --confirm-live was not passed, so nothing was sent and no signal bar was spent."` Every tick
+from 19:35Z on 24 October to 19:46:30Z on 25 October read the account, the calls and the ladder, reviewed the pending
+orders and the open position, and sent nothing. The last armed tick before the disarm was **2026-10-23T19:31:30Z**
+(`"armed": true`, `"status": "placed"`), which placed ticket `302712595` at 19:31:32.365Z.
+
+**Fixed, and made hard to repeat.** The wrapper is now written only on the path that really registers the task; `-Show`
+is read-only (its output includes `live_wrapper_armed`, read from the wrapper) and `-Test` cannot touch it; and every
+registration keeps the previous wrapper as `...cmd.bak-<yyyyMMddHHmmss>` before replacing it. Re-armed at
+**2026-10-25T19:50:35Z** with the last authorised configuration - `-Arm -MaxOpen 1 -ExpireMinutes 30 -MaxPerDay 4`,
+lane `ftmo-1` - and the first armed tick at 19:51:30.011Z reports `armed: true`, caps
+`expire_minutes 30 / max_open 1 / max_per_day 4`, `status: nothing_to_place`, nothing sent. A leftover unarmed process
+from the pre-arm registration reached the same bar and was refused by the loop's own lock ("another run holds the
+lock"), so exactly one loop acted - the armed one.
+
+### 10.3 Exposure and the management it was (not) getting
+
+Read from the order tool's own journal at 2026-10-25T19:46:32Z, `***614 FTMO-Server`: balance 10014.23, equity
+10009.40, **one** open position, **no** pending orders.
+
+| field | value |
+| --- | --- |
+| ticket | 302712595 |
+| symbol / side / volume | XAUUSD buy 0.01 |
+| open price | 3997.55 |
+| stop loss / take profit | 3983.25 / 4069.03 |
+| magic | 20261004 (this lane's) |
+| comment | `l2l-rule-gold` |
+| floating P/L at 19:46:32Z | -4.25 |
+
+While unarmed, that position had only the stop and target it was placed with: the breakeven move (which would trigger
+at 4026.142, twice the 14.296 risk), the close-on-a-turned-call, and pending-order cancellation are all sends behind
+`--confirm-live`, and a plan-only run writes down what it would send and leaves the account alone. The review itself
+was still running every five minutes: GOLD's call reads `BULLISH_LEAN` and stands, so the row's decision was `keep` -
+"the long call for GOLD is still standing, so this position stays". With the loop armed again the same review now acts,
+and `--max-open 1` against one working ticket means no second ticket can be placed on any pair until this one closes.
+
+**Sole production writer, confirmed before arming:** one PC, one trader task (`LiveTradingTraderTick019`), one loop
+process per tick (the lock refused the duplicate), one publisher task, one publish checkout, and no VPS. Lane 2 is
+`"enabled": false` in `config/live-trading-lanes.json`, so no second account has a loop or a snapshot anywhere.
+
+### 10.4 The cart being bought (verified figures, what to read off the screen)
+
+Contabo, UK billing (the vendor's tax list reads "United Kingdom (20.0% VAT)"), **1-month** initial term, with the
+following term equal to the initial one:
+
+| line | selection | verified figure |
+| --- | --- | --- |
+| product | Cloud VPS **Core 4** - 4 vCPU, 8 GB RAM, 100 GB SSD, 200 Mbit/s | €5.50/month on a 1-month term |
+| licence | **Windows Server Datacenter** (billed separately from the plan) | +€8.00/month |
+| subtotal before VAT | | €13.50/month |
+| UK VAT 20% | | ≈ €2.70 |
+| **total** | | **≈ €16.20/month, no setup fee** |
+| 24-month alternative | €12.40/month before VAT, renews for another 24 months | not chosen |
+| location | **United Kingdom** - Contabo's UK data centre is in Portsmouth, England; GBP billing available | |
+| OS install | Windows Server **with Desktop Experience** | required - Server Core has no GUI and cannot run the MT5 terminal |
+
+Read off the cart before paying, and stop if any of these differ: a setup fee line, a term other than 1 month, VAT not
+at 20%, a total that is not ≈€16.20, a Windows selection offering only Server Core, or a location other than the
+United Kingdom. Two items could **not** be confirmed from the vendor's own pages in this session - the Windows version
+list and the Desktop Experience wording (the Windows page returned 404, and `contabo.com/en/vps/` truncated its plan
+table before the prices) - so they are read off the cart rather than asserted here.
+
+### 10.5 What is still between here and "PC off"
+
+1. The host does not exist. Provisioning time is still unverified; IONOS is still unquoted.
+2. On the host: one MT5 install per lane, logged in, Startup shortcut, Algo Trading **off**; then the three `-Test`
+   runs (feed register, trader register, lanes publish), then a snapshot carrying `***614`.
+3. State migration, in this order: `tmp/live-trading-trader-state.json` (held 36, cancellations 4, closes 1, moves 3),
+   `tmp/live-trading-orders.log` (the journal), `tmp/live-trading-trader-status.json` (the heartbeat), then
+   `data/live-trading.json` (regenerated anyway). The lanes file's `root`, `terminal` and `tasks` lines are the only
+   edits lane 1 needs on the host.
+4. Cutover is stop-before-start: **unregister** the PC's `LiveTradingTraderTick019` first, confirm no
+   `run-live-trading-trader.js` process remains, then register the host's trader unarmed, one tick, then arm it - and
+   only then move publishing (the PC's `LiveTradingPublishLanes019` removed before the host's is registered, because
+   two publishers on one branch is the race section 10.1 is about).
+5. Reboot recovery: `StartWhenAvailable` on all three tasks, autologon, the terminal's Startup shortcut, then one
+   reboot with nobody logged in and a fresh snapshot inside 15 minutes.
+6. PC-off checks: the page's snapshot and heartbeat ages, `node scripts/check-live-trading-publication.js` (it reads
+   the lanes document and, once the lanes publisher has run, the heartbeat that document declares), and the 07:07 New
+   York orchestrator slot recorded in [ORCHESTRATOR_DAILY_TRIGGER.md](ORCHESTRATOR_DAILY_TRIGGER.md).
+7. External monitoring is still manual: the Actions run list and the publication checker. Nothing pages anyone while
+   the PC is off.
+
+Account #2 stays parked (`"enabled": false`) and blocks none of the above: switching it on is a second clone, terminal
+and task names, plus that one line in the lanes file.
+
+

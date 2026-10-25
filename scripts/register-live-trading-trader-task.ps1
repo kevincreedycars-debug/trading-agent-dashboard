@@ -223,11 +223,14 @@ function Get-LauncherPair($wrapper) {
 # shape the producer does that aligning itself at -FeedSettleSeconds, so the loop starts the moment the snapshot
 # has been written and is not asked to wait for the following bar.
 $alignArgument = if ($ChainFeed) { $armArgument } else { "--align --settle-seconds 90$armArgument" }
-Write-Wrapper $wrapperPath (Get-WrapperLines $alignArgument) | Out-Null
 if ($wrapperPath -match " ") {
   throw "The wrapper path '$wrapperPath' contains a space, which the hidden launcher cannot be handed without " +
     "quoting it and reintroducing the doubled-quote fault. Move the repository to a path without spaces."
 }
+# The live wrapper is written only on the path that registers the task, at the bottom of this file. -Show and
+# -Test are read-only: an earlier build wrote it here, above the -Show branch, so inspecting the task rewrote
+# the wrapper the scheduler runs. On 2026-10-24 that is how this PC's production loop silently lost
+# --confirm-live, --max-open 1 and --expire-minutes 30 while the task name and log line looked unchanged.
 $launcher, $launcherArguments = Get-LauncherPair $wrapperPath
 $innerCommand = "cmd.exe /c $wrapperPath"
 
@@ -241,6 +244,13 @@ function Write-Plan($dictionary) {
     if ($value -is [bool]) { $value = ([string]$value).ToLower() }
     Write-Output ("{0,-18} = {1}" -f $key, ([string]$value))
   }
+}
+
+# What the live wrapper carries now, so -Show answers the question a reader actually has: is the task that runs
+# every five minutes armed, and with which caps? Read-only, like the rest of -Show.
+$liveWrapperArmed = "no wrapper yet"
+if (Test-Path -LiteralPath $wrapperPath) {
+  $liveWrapperArmed = ([bool]((Get-Content -LiteralPath $wrapperPath -Raw) -match '--confirm-live')).ToString().ToLower()
 }
 
 $plan = [ordered]@{
@@ -258,6 +268,7 @@ $plan = [ordered]@{
   launcher           = $launcher
   inner_command      = $innerCommand
   wrapper            = $wrapperPath
+  live_wrapper_armed = $liveWrapperArmed
   order_path         = "tools/mt5-bridge/live-trading-order.py, one pending limit per confirmed row"
   armed              = [bool]$Arm
   chain_feed         = [bool]$ChainFeed
@@ -318,6 +329,16 @@ if ($Test) {
   Write-Output "self_test_verdict   = $verdict"
   return
 }
+
+# The one place the live wrapper is written, reached only when this run is really registering the task. A copy of
+# what it held is kept first, so the flags a previous registration carried are readable and restorable rather than
+# a sentence in a log saying the loop used to be armed.
+if (Test-Path -LiteralPath $wrapperPath) {
+  $backupPath = "$wrapperPath.bak-" + (Get-Date).ToString("yyyyMMddHHmmss")
+  Copy-Item -LiteralPath $wrapperPath -Destination $backupPath -Force
+  Write-Output "previous_wrapper   = $backupPath"
+}
+Write-Wrapper $wrapperPath (Get-WrapperLines $alignArgument) | Out-Null
 
 $action = New-ScheduledTaskAction -Execute $launcher -Argument $launcherArguments
 # An interval with no duration is an indefinite repetition on this engine, which is what a cadence wants. A
