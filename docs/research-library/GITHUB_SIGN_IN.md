@@ -41,8 +41,12 @@ Both are on the owner's own accounts, so they cannot be done from this repositor
    (`...\.trading-agent-dashboard\scripts\set-credential.ps1`) and the provider is switched on with the
    Management API instead of the dashboard.
 
-Until step 2 is done, pressing the button returns "GitHub sign-in is not turned on for this library
-yet" and the email and password sign-in keeps working exactly as before.
+Until step 2 is done, the page itself reports "GitHub sign-in is not turned on for this library yet" and
+the email and password sign-in keeps working exactly as before. `signInWithGitHub()` asks the project's
+public `/auth/v1/settings` first, so a reader is never parked on the raw error document the authorize
+endpoint returns for a disabled provider. Pressed on the live page on 2026-10-25, the account block drew
+**Sign in with GitHub** first and the press drew that sentence in the block, with no session invented and
+no page error.
 
 ## The first GitHub sign-in and the ownership of record
 

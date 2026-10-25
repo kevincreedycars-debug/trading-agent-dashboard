@@ -402,6 +402,30 @@ test("GitHub sign-in sends the browser to the project's own OAuth endpoint", asy
   assert.match(result.message, /GitHub/);
 });
 
+test("when GitHub is not turned on the page says so and does not leave the reader on a raw error", async () => {
+  const calls = [];
+  configure(async url => {
+    calls.push(String(url));
+    if (String(url).includes("/auth/v1/settings")) {
+      return jsonResponse(200, { external: { email: true, github: false }, mailer_autoconfirm: false });
+    }
+    return jsonResponse(500, {});
+  }, {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {}
+  });
+  const visited = [];
+  const result = await ResearchUpload.signInWithGitHub({ redirect: url => visited.push(url) });
+
+  assert.equal(result.ok, false);
+  assert.equal(visited.length, 0, "the browser is not sent to an endpoint that would refuse it");
+  assert.match(result.message, /not turned on for this library yet/);
+  assert.match(result.message, /email and password/, "the working route is named");
+  assert.equal(calls.filter(url => url.endsWith("/auth/v1/settings")).length, 1);
+  assert.equal(ResearchUpload.authError(), result.message);
+});
+
 test("the page's own address is the default place GitHub sends the reader back to", async () => {
   configure(async () => jsonResponse(500, {}), {
     getItem: () => null,
