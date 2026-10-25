@@ -395,3 +395,58 @@ test("an unknown argument is a usage error rather than a silent default", () => 
   assert.match(run.err, /Unknown argument: --nope/);
 });
 
+// The lanes file the publisher, the registration script and the trader's `--lane` all name is a configuration
+// document, not a scratch file: a fresh clone that does not carry it cannot run the coordinated publisher at all,
+// because `--config` defaults to it. So the shipped file is read here through the publisher's own loader, which is
+// the only reading that decides what a run on a host would actually see.
+test("the shipped lanes file is the publisher's own default and names both accounts", () => {
+  assert.equal(lanes.DEFAULT_CONFIG, "config/live-trading-lanes.json");
+  const configPath = path.join(root, lanes.DEFAULT_CONFIG);
+  assert.equal(fs.existsSync(configPath), true, `${lanes.DEFAULT_CONFIG} has to travel with the code that reads it`);
+
+  const config = lanes.loadLanes(configPath);
+
+  assert.deepEqual(config.lanes.map((lane) => lane.id), ["ftmo-1", "ftmo-2"]);
+  // Account 1 is the lane this checkout runs; account 2 is parked until its terminal exists, and says so rather
+  // than failing as a missing snapshot.
+  assert.equal(config.lanes[0].enabled, true);
+  assert.equal(config.lanes[1].enabled, false);
+  // Each lane's snapshot and heartbeat land on their own paths beside the lanes document, which is what stops one
+  // account's read being published under the other's name.
+  assert.equal(config.lanes[0].published, "data/live-trading.json");
+  assert.equal(config.lanes[1].published, "data/live-trading.account2.json");
+  assert.deepEqual(
+    config.lanes.map((lane) => lane.status_published),
+    ["data/live-trading-trader.ftmo-1.json", "data/live-trading-trader.ftmo-2.json"]
+  );
+  assert.equal(config.lanes[0].root, ".");
+  assert.equal(config.lanes[1].root, "../ftmo2");
+  assert.equal(config.minIntervalSeconds, 600);
+  assert.equal(config.state, "tmp/live-trading-publish-state.json");
+  assert.equal(config.summary, "data/live-trading-lanes.json");
+});
+
+test("the shipped lanes file holds the masked identity and no credential", () => {
+  const configPath = path.join(root, lanes.DEFAULT_CONFIG);
+  const document = JSON.parse(fs.readFileSync(configPath, "utf8"));
+
+  // The page already shows the masked login, so it is the one account fact this file may carry. Anything a person
+  // could log in with - a password, a token, an investor login - has no place in a file that rides in a commit.
+  for (const lane of document.lanes) {
+    const keys = Object.keys(lane);
+    assert.equal(
+      keys.filter((key) => /pass|secret|token|investor|api[-_]?key/i.test(key)).length,
+      0,
+      `${lane.id} carries a credential-shaped key`
+    );
+    assert.equal(typeof lane.terminal, "string");
+  }
+  // Account 1 is configured, so it carries the masked login and server the page already shows and nothing more.
+  assert.match(document.lanes[0].account_login_masked, /^\*{3}\d{3}$/);
+  assert.match(document.lanes[0].account_server, /^FTMO-Server$/);
+  // Account 2 has no terminal yet, so it names no account at all rather than a placeholder that would pass an
+  // identity check against the wrong thing.
+  assert.equal(document.lanes[1].account_login_masked, null);
+  assert.equal(document.lanes[1].account_server, null);
+});
+

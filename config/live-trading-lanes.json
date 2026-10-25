@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "note": "One lane per FTMO account. Each lane runs its own MT5 terminal, its own snapshot artifact and its own trader, and there is one publisher for all of them: scripts/publish-live-trading-lanes.js reads every lane's artifact and publishes them in one commit, so the page can never serve one account newer than another. `root` is the checkout the lane's cadence runs in ('.' is this checkout). The roots below are the intended VPS layout; they are the one line to edit when the lanes live somewhere else. `enabled: false` parks a lane whose terminal is not deployed yet: it is reported as disabled and skipped, so account 2 cannot stop account 1 from publishing, and flipping it to true (or deleting the line, since enabled is the default) is the whole second-account switch-on. No password, no investor login and no token belongs in this file.",
+  "publish": {
+    "min_interval_seconds": 600,
+    "state": "tmp/live-trading-publish-state.json",
+    "summary": "data/live-trading-lanes.json"
+  },
+  "lanes": [
+    {
+      "id": "ftmo-1",
+      "label": "FTMO account 1",
+      "root": ".",
+      "feed": "data/live-trading.json",
+      "published": "data/live-trading.json",
+      "trader_status": "tmp/live-trading-trader-status.json",
+      "status_published": "data/live-trading-trader.ftmo-1.json",
+      "account_login_masked": "***614",
+      "account_server": "FTMO-Server",
+      "account_type": null,
+      "account_stage": null,
+      "terminal": "C:\\Program Files\\FTMO Global Markets MT5 Terminal",
+      "tasks": {
+        "lane": "LiveTradingLane-ftmo1",
+        "trader": "LiveTradingTraderTick019",
+        "startup": "LiveTradingTerminalStartup"
+      }
+    },
+    {
+      "id": "ftmo-2",
+      "label": "FTMO account 2",
+      "enabled": false,
+      "root": "../ftmo2",
+      "feed": "data/live-trading.json",
+      "published": "data/live-trading.account2.json",
+      "trader_status": "tmp/live-trading-trader-status.json",
+      "status_published": "data/live-trading-trader.ftmo-2.json",
+      "account_login_masked": null,
+      "account_server": null,
+      "account_type": null,
+      "account_stage": null,
+      "terminal": "C:\\Program Files\\FTMO Global Markets MT5 Terminal 2",
+      "tasks": {
+        "lane": "LiveTradingLane-ftmo2",
+        "trader": "LiveTradingTraderTick-ftmo2",
+        "startup": "LiveTradingTerminalStartup-ftmo2"
+      }
+    }
+  ]
+}
