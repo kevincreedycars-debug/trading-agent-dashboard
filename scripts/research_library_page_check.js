@@ -306,6 +306,23 @@ async function main() {
       report("Download saves the same bytes under the uploaded name", false, "no download event");
     }
 
+    // The final chain is gated by the registry, so a factor upload must not move its gate. This reads the card
+    // the way a reader does: the count it shows, whether it is unlocked, and whether an upload form is offered.
+    const finalCard = page.locator("[data-rl-final-chain]").first();
+    const finalPresent = (await finalCard.count()) > 0;
+    const gateCount = finalPresent ? String(await finalCard.getAttribute("data-rl-final-gate")) : "";
+    const gateUnlocked = finalPresent ? String(await finalCard.getAttribute("data-rl-final-unlocked")) : "";
+    const gateText = finalPresent
+      ? summarise(await finalCard.locator("[data-rl-final-gate-text]").first().innerText().catch(() => ""))
+      : "";
+    report("the final chain still reads its factor count",
+      finalPresent && /^\d+\/\d+$/.test(gateCount), gateCount);
+    report("a factor upload leaves the final chain gate closed",
+      gateUnlocked === "false", `unlocked=${gateUnlocked}; ${gateText.slice(0, 120)}`);
+    const finalInputs = finalPresent ? await finalCard.locator('input[type="file"], textarea').count() : 0;
+    report("no final-chain upload form is offered while the gate is closed",
+      gateUnlocked !== "false" || finalInputs === 0, `${finalInputs} input(s)`);
+
     const loopback = Array.from(hosts).filter(host => LOOPBACK.test(host));
     report("nothing asked the local service for anything", loopback.length === 0,
       `hosts contacted: ${Array.from(hosts).sort().join(", ")}`);

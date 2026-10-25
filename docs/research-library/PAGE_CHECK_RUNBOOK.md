@@ -27,26 +27,33 @@ a stored service token makes no loopback request at all.
 
 ## Signing in
 
-The account block on the library asks for an email address and a password and authenticates against
-Supabase Auth. The owner account is `research-library@example.com`, created with a confirmed address so
-no inbox is needed; its password is held by the owner and is not in this repository. Only accounts in
-`public.research_members` can read or write rows and objects; an account that can sign in but is not on
-that list is refused everything.
+**Sign in with GitHub** is the owner's chosen route and sits first in the account block. The button sends
+the browser to the project's own OAuth endpoint, so the GitHub client id and client secret live in
+Supabase and never in this page or this repository. The account email and password stay underneath as
+the fallback: the owner account `research-library@example.com` was created with a confirmed address so
+no inbox is needed, its password is held by the owner and is not in this repository. The two one-time
+steps that need the owner's own GitHub account are in `docs/research-library/GITHUB_SIGN_IN.md`.
+
+Only accounts in `public.research_members` can read or write rows and objects; an account that can sign
+in but is not on that list is refused everything, which is what keeps other GitHub users out.
 
 - **Remembered sign-in is already the behaviour.** The session is kept in that browser's local storage
   and refreshed with the stored refresh token before every request, so a phone that signed in once opens
-  the page the next day already signed in. Only a refused refresh token asks for the password again.
-- **There is no GitHub or Google sign-in.** The project has the email provider enabled and every
-  external provider off; the page offers no email-link button because the owner address has no inbox.
-  Turning on GitHub sign-in would be a Supabase dashboard change plus new UI, and would not remove the
-  need for the account to be on `research_members`.
+  the page the next day already signed in. Only a refused refresh token asks for a password again.
+- **GitHub replaces the typing, not the membership rule.** A GitHub sign-in arrives as a new Supabase
+  user, so that account is added to `research_members` once, by the owner, after the first sign-in; no
+  GitHub user is granted anything by default. The page offers no email-link button because the owner
+  address has no inbox.
 - The page stores the last email address used, so a returning reader types only the password after a
   refused session.
 
 ## What works from a phone with the PC switched off
 
-Verified on 2026-10-24 against the published page with the local service stopped (nothing listening on
-`127.0.0.1:8791`, and no loopback request observed during the run):
+Verified on 2026-10-25 against the published page (`c98bf16c`, Pages built 11:18Z) with the local service
+stopped (nothing listening on `127.0.0.1:8791`, and no loopback request observed during the run): every
+step below passed, and the final chain still read `0/25` with `unlocked=false` and no upload form
+offered after the factor upload, so the real gate was left exactly where it was. The same run on
+2026-10-24 first established the list:
 
 - sign in, remembered across a reload;
 - factor-chain stage 1, 2 and 3: choose one Markdown file, upload, read **Uploaded**, reload;
@@ -123,7 +130,9 @@ at phone width, and reports PASS or FAIL for each step:
 5. the session survives a reload and the stage still reads **Uploaded** with the same document id;
 6. stage 2 names that document as its input, and **Download inputs** returns byte-identical bytes;
 7. View opens the stored bytes and Download saves the same bytes under the uploaded name;
-8. nothing contacted a loopback host and the page raised no error.
+8. the final chain still reads its factor count, a factor upload leaves it closed, and no final-chain
+   upload form is offered while the gate reads closed;
+9. nothing contacted a loopback host and the page raised no error.
 
 It uploads the registered check document
 `docs/research-library/test-uploads/TEST-RESEARCH-LIBRARY-UPLOAD-20261024.md` into stage 1 of
@@ -155,7 +164,8 @@ the last step below is done by hand on the real phone.
 On the phone, over mobile data with the PC off:
 
 1. Open `https://kevincreedycars-debug.github.io/trading-agent-dashboard/`, open **Research Library**;
-2. the account block should read **SIGNED IN**; if it does not, type the owner email and password once;
+2. the account block should read **SIGNED IN**; if it does not, tap **Sign in with GitHub** and approve
+   once (the email and password underneath still work as the fallback);
 3. open the VIX chain (`F1 VIX level and risk regime`) and read stage 1: **Uploaded**, `d7b8eb40…` v1,
    sha256 `e4151937…`;
 4. tap **Download inputs** on stage 2 and confirm the file saves as `VIX_USD_Research_Report.md`

@@ -89,6 +89,14 @@ the run exits non-zero if anything fails, and the script deletes only the rows t
 own run plus the member account it created. The whole flow, the isolation rules and the two-minute check
 to repeat by hand on a real phone are in `docs/research-library/PAGE_CHECK_RUNBOOK.md`.
 
+The run of 2026-10-25 (phone-sized emulation, local service stopped, nothing listening on port 8791)
+read: every step PASS, from sign-in through the reload, the parent download, View and Download; the
+final chain still read `0/25` with the gate closed and no upload form offered, so a factor upload left
+the real gate exactly where it was; and the hosts contacted were the published site, the Supabase
+project and the two font hosts, so no loopback request was made and no page error was raised. The run
+removed its own row, object and account, leaving the store at one member and one document, the VIX
+report.
+
 The run of 2026-10-24 (phone-sized emulation, local service stopped, nothing listening on port 8791) read:
 signed in; the stage form held one `file` input and no model field; the pill went Not started → Uploaded
 and stayed UPLOADED across a reload with the same record id; stage 2 named that record as its input and
