@@ -573,6 +573,10 @@ Lane 2 stays **DISABLED** with the sentence that says it is parked rather than b
 a lane with no trader must not borrow one. Rows are stacked at phone width (one column under 560px) and the test
 holds a 390px viewport to no sideways overflow.
 
+The older strip on `workers/live-trading-20260929` is superseded by this one. That branch's copy was never
+merged and is not served; the next sync of the branch should take `main`'s, not keep two implementations of the
+same card drifting apart.
+
 ### 11.2 The self test could have armed the loop; it no longer can
 
 `-Arm -Test` used to pass the registration's own `--confirm-live` into the wrapper the self test ran, so proving
@@ -600,6 +604,12 @@ Read back on this PC at 2026-10-25T20:50Z: lane `ftmo-1`, **armed true**, `max_o
 `expire_minutes 30`, `settle_seconds 90`, `align true`, account `***614 / FTMO-Server` (heartbeat and lanes file
 agree), task `LiveTradingTraderTick019` Ready with `PT5M`, `IgnoreNew`, `PT10M`, and wrapper
 `49172f4e…755f9`. That document is the "before" side of the cutover comparison.
+
+The baseline kept for the cutover is `.local/live-trading-effective-before-20261025.json`, written at 21:24Z from
+commit `9ddb3853` on `DESKTOP-UD0L47I`. The wrapper hash `49172f4e…6755f9` and the task hash `2824d100…ece6ac`
+are the same values as the 20:50Z reading, which is what the scripts' own edits should look like: the code changed
+and production did not. Compare the host's reading against this file with `-Compare`; the two paths that will
+differ are the checkout and the state/log/lock/journal paths, and both must be named and accepted, not skipped.
 
 
 
@@ -634,7 +644,10 @@ copy taken after the stop is the one restored, and the manifest says so in `prov
   exits 0 (lanes 2, failing 0). The stale card cannot be produced live while the PC trades, so it is proved by
   fixture in the browser suite rather than by the published page.
 - **Not proved:** that the host trades correctly after a restore, that a reboot recovers with nobody logged in,
-  and that the PC stays off. Those need the host.
+  and that the PC stays off. Those need the host. The rollback is documented step by step and its two mechanical
+  parts are tested - the bundle that would be restored verifies byte for byte, and the registration script keeps
+  the wrapper it replaces - but the full stop/restore/arm cycle has not been rehearsed, because a rehearsal needs
+  the second host it is meant to protect.
 - **Yours:** the cart at ≈€16.20 / 1 month / UK / Desktop Experience, the IONOS quote, and the stop-and-arm at
   cutover. Nothing in this section changes what the PC is doing: one trader, one publisher, lane 2 disabled.
 
