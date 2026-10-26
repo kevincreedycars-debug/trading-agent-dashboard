@@ -830,3 +830,29 @@ to satisfy a check.
   the user asked for cannot start at that timestamp: it starts when the host trades, the PC is off and the
   monitor stays green across at least one scheduled daily signal. Durations will be reported from that moment,
   not from this one.
+### 12.6 Saved state at the end of this session (2026-10-26T09:10Z)
+
+The machine clock is UTC, so these stamps are comparable with the scheduled slots directly.
+
+- **Code:** the last commit this session wrote is `cd1f12cb`. `main` has moved past it with the live publisher's
+  data files (`9fd76026` at save time), which are not code and are not pulled by the host. Nothing in this
+  session is unpushed; the worktree is clean.
+- **Credential home:** refreshed from the repository with `create-local-secret-home.ps1 -ForceSync`, which also
+  fixed that script's own `-RepoRoot` default (it threw before copying anything when started with `-File` on
+  PowerShell 5.1). The local manifest now holds 12 names, and `validate-credentials.ps1 -Scope vps-host` lists
+  `VPS_HOST`, `VPS_RDP_PASSWORD` and `VPS_RDP_USER` as `missing` and exits 0 - the correct state before the
+  provisioning email. **No VPS value has been stored yet**, and no password has been seen, typed into this
+  session or written anywhere.
+- **Lane health at save time:** feed tick running (`267009`, still executing), trader tick last result `0` at
+  09:05:53Z, publish lanes last result `0` at 09:03:51Z, and `check-live-trading-publication.js` exiting `0`
+  with two lanes published, fresh, and owning the account the lanes document names.
+- **Still open, as before:** the daily slot at 11:07Z today is roughly two hours after this save and is still
+  only an attempt - record triggered-or-skipped, the webhook's HTTP code, `workflow-status.json` and the
+  artifact's `generated_at_utc`, kept apart from any manual dispatch. The reboot gap is unchanged: the PC's
+  trader task is logon type `Interactive`, so `lane_ftmo-1_trader_runs_without_logon` stays red until the host
+  takes the lane.
+- **Left alone on purpose:** three Playwright smoke processes from the research-library lane (pids 64436, 15284,
+  21724, started 2026-10-25 21:36-21:44Z) are still resident after their script finished. They are not
+  live-trading work and were not killed, because ending another lane's processes is not this session's call;
+  they are named here so they are not mistaken for the feed or trader when the task list is read next.
+
