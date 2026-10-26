@@ -438,3 +438,33 @@ workstream does not merge into `research/usd-session-20261013` and does not depl
    task and do not bypass the gate; coordinate stage-specific execution ids with the automation
    coordinator beneath `usd-final-asset-analysis`. While the 25-factor gate is unmet the chain stays
    locked and ineligible for execution, whatever an internal field says.
+
+## Where this stopped, 2026-10-25
+
+Nothing is half-written: the worktree is clean, `npm test` is 716 passing and 0 failing, and
+`node scripts/build_research_library.js verify` exits 0. The branch is
+`integration/astra-route-20261025` at the head of this note's commit, pushed to `origin`.
+
+What is saved and where:
+
+- `lib/research_hosted_store.js` and `tests/research_hosted_store.test.js` carry the hosted delivery
+  path and its fixture (upload, row, byte-identical read-back, duplicate adoption, loopback refusal,
+  orphan and wrong-hash parent refusal, tamper detection).
+- `lib/research_pipeline.js` and `scripts/research-pipeline.js` carry `deliver`, `adopt`, `deliveryPlan`
+  and the provider gate. `deliver` resolves the chain and the stage from the real catalogue, then
+  refuses with `hosted_not_configured` before writing anything while the worker credentials are absent.
+- The allowance snapshot in `.local/research-pipeline/` holds the imported reading (79 percent of 85
+  usable, 6 percent headroom, resets `2026-10-26T00:11:46Z`, stale after 90 minutes). It is local state
+  by design and is not committed, so a fresh checkout starts at `provider_disabled` again.
+- The F5 return stays where it was produced, `D:\trading-agent-dashboard-pilot\runs\20261025-dxy\research.md`
+  (47,576 bytes, sha256 `9048e897…`), registered in the pilot folder's own store with prompt
+  `dfdeea39…`. Nothing was moved, rewritten or adopted on the owner's behalf.
+- The canonical folder `D:\trading-agent-dashboard-codex` still holds the owner's own uncommitted work
+  on `research/usd-session-20261013` at `1e6ab197`. It was read only; the merge attempt happened in a
+  separate worktree and was aborted, so that folder is exactly as it was found.
+
+Two decisions open, both recorded above: which prompt lineage is canonical, and whether F5 adopts the
+existing return or re-runs stage 1 under v3.1.0 first. The resume commands are
+`node scripts/research-pipeline.js allowance --latest-rollout`,
+`node scripts/research-pipeline.js deliver <topic> research --chain usd-factor-live-f5-dxy-delta --file …`,
+and, once the lineage is chosen, the same merge into `origin/main` with that one side taken wholesale.
