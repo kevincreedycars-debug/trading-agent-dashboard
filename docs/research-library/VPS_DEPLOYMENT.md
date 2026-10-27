@@ -91,9 +91,17 @@ password in a command line.
 8. **Register the task**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-research-worker-task.ps1 -Test`,
    then the same command without `-Test`. The self test runs the launcher against a dry run in its own state root
    and checks that the production wrapper and task definition are unchanged by it.
-9. **The first bounded real pass**, by hand in front of the task, so the first carrier run is watched rather than
-   scheduled: `node scripts/research-worker.js --max-stages 1 --stage red_team --asset USD`. Its receipt, its
-   hosted row and its dashboard stage are the end-to-end proof; only then is the task left enabled.
+9. **The first reading, then the first bounded real pass.** A fresh host has no Codex rollout, so the provider
+   half of the allowance has nothing to read and a guarded pass would refuse before spending anything - correctly,
+   because it cannot know the window. Produce one reading on the host first:
+   `codex exec -m gpt-6-astra "reply with the single word ready"` (one short turn, its own rollout, no report),
+   then `node scripts/research-pipeline.js allowance --latest-rollout` to import it and
+   `node scripts/research-pipeline.js allowance --provider on --capacity-percent 75 --max-age-minutes 90` to turn
+   the gate on. `node scripts/research-pipeline.js allowance` has to answer `provider_ok` with both windows and
+   their reset times before a real pass is allowed to run. Then run one pass by hand, in front of the task, so the
+   first carrier run is watched rather than scheduled:
+   `node scripts/research-worker.js --max-stages 1 --stage red_team --asset USD`. Its receipt, its hosted row and
+   its dashboard stage are the end-to-end proof; only then is the task left enabled.
 
 
 ## 4. Unattended: what it does on its own, and what stops it
@@ -131,6 +139,12 @@ second pass skips instead of fighting over, and `recover()` for the claim a kill
   host, the carrier signs in with the ChatGPT plan account only, and the pipeline has no billing path at all. The
   rollout's `credits` block is recorded in the allowance state, so a balance that starts moving shows up in
   `status` rather than in an invoice.
+- **No fresh reading exists on this PC today.** The newest rollout here was written 2026-10-25T21:06:31Z and says
+  79% of the five-hour window (reset 2026-10-26T00:11:46Z) and 15% of the weekly one (reset 2026-11-01T11:07:00Z),
+  plan `plus`, with a purchased-credit balance of 144.7441982500 that this route has never spent. It is far older
+  than the 90-minute limit, so the gate refuses it rather than pretending it is current - which is why the first
+  reading for the host has to be produced on the host (build order, step 9), and why "next reset" cannot be stated
+  for the present window until that run exists.
 
 ## 6. Watching it, pausing it, and the honest gaps
 
