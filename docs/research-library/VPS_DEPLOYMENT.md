@@ -73,8 +73,10 @@ password in a command line.
    that is what the generated wrapper calls.
 3. **Carrier**: the Codex CLI build that answers `gpt-6-astra` - `npm i -g @openai/codex@0.164.0`, pinned, per
    [EXECUTION_ROUTE.md](../research/pipeline/EXECUTION_ROUTE.md) - then one sign-in **by the account the task will
-   run as**: `codex login`. The carrier reads `%USERPROFILE%\.codex\auth.json` and nothing else; no
-   `OPENAI_API_KEY` is set on the host, which is also what keeps the paid API out of the route.
+   run as**: `codex login`. The carrier reads `%USERPROFILE%\.codex\auth.json` and nothing else. No
+   `OPENAI_API_KEY` is set on the host, so the API-key route is absent - but that is not the same as "no paid
+   spend": the ChatGPT sign-in itself carries a purchased-credit balance the account may draw on once the included
+   allowance runs out (§5), which is what the credit baseline is for.
 4. **Checkout**: `git clone https://github.com/kevincreedy-debug/trading-agent-dashboard.git C:\astra-research`,
    then `git checkout research/hosted-worker-20261027`. One checkout per process: a publish must not move code
    under a running pass.
@@ -84,10 +86,24 @@ password in a command line.
 6. **The two secrets**, for the account the task runs as, typed at a no-echo prompt and never in a command line:
    `%USERPROFILE%\.trading-agent-dashboard\scripts\set-credential.ps1 -Name RESEARCH_WORKER_EMAIL`, then the same
    for `RESEARCH_WORKER_PASSWORD`, into the DPAPI store that account owns. Both names are in
-   `config/credential-manifest.json`. The wrapper then starts the pass through `load-credentials.ps1 -Name
-   RESEARCH_WORKER_EMAIL,RESEARCH_WORKER_PASSWORD -Command node -Arguments ...`, so the values exist only in the
-   pass's own process. The account named there must be a row in `public.research_members`, because the bucket and
-   table policies in `supabase/research-uploads.sql` admit members only.
+   `config/credential-manifest.json`; on the host, run `scripts\bootstrap-local-secrets.ps1` first, because the
+   private store keeps its own copy of the manifest and will refuse a name that copy does not list. The wrapper
+   then starts the pass through `load-credentials.ps1 -Name RESEARCH_WORKER_EMAIL,RESEARCH_WORKER_PASSWORD -Command
+   node -Arguments ...`, so the values exist only in the pass's own process.
+
+   **The account itself.** It is one Supabase auth user plus one row in `public.research_members`, created by the
+   owner's existing administration route - the project's service-role key, held only on this PC in the DPAPI store,
+   used for `POST /auth/v1/admin/users` and `POST /rest/v1/research_members` (the same two calls
+   `scripts/research_library_page_check.js --provision` makes for a throwaway account). The service-role key never
+   goes to the host, the dashboard, the repository or a log. Least privilege is structural, not a policy we wrote:
+   `supabase/research-uploads.sql` revokes everything on `research_documents`, `research_members` and the bucket
+   from `authenticated` and grants back only `select` and `insert` on documents, `select`/`insert` on the bucket's
+   objects, and `execute` on `is_research_member()`. A member cannot update or delete a row, cannot manage objects
+   it does not own, cannot add another member, and sees nothing at all until its row is in `research_members`. The
+   account is proved after creation by signing in with the publishable key the page already carries and checking
+   that a document read succeeds while a `research_members` insert and an admin call are both refused.
+   **Still missing on 2026-10-27: the address.** No address has been designated for this account, and one is not
+   invented here; once the owner names it, the creation, the membership row and both store entries are one sitting.
 7. **Prove it read-only, before any task exists**: `node scripts/research-pipeline.js status` (queue and
    allowance), then `node scripts/research-worker.js --dry-run --max-stages 1 --asset USD` (plans the next stage,
    spends nothing, imports no reading).
@@ -100,7 +116,10 @@ password in a command line.
    `codex exec -m gpt-6-astra "reply with the single word ready"` (one short turn, its own rollout, no report),
    then `node scripts/research-pipeline.js allowance --latest-rollout` to import it and
    `node scripts/research-pipeline.js allowance --provider on --capacity-percent 75 --max-age-minutes 90` to turn
-   the gate on. `node scripts/research-pipeline.js allowance` has to answer `provider_ok` with both windows and
+   the gate on. That import also records the reading's credit balance as the baseline; a later reading with a
+   lower balance answers `provider_credits_spent` and stops the pass until a person runs
+   `node scripts/research-pipeline.js allowance --rebaseline-credits`.
+   `node scripts/research-pipeline.js allowance` has to answer `provider_ok` with both windows and
    their reset times before a real pass is allowed to run. Then run one pass by hand, in front of the task, so the
    first carrier run is watched rather than scheduled:
    `node scripts/research-worker.js --max-stages 1 --stage red_team --asset USD`. Its receipt, its hosted row and
@@ -132,19 +151,33 @@ second pass skips instead of fighting over, and `recover()` for the claim a kill
 - The dispatch count (`limit 6`, `reserve 1`) is the operator's own budget. It is **not** the ChatGPT allowance
   and must never be read as one.
 - The provider half is the plan's own numbers, imported from a rollout the carrier wrote. `evaluateGate` refuses on
-  unreadable, missing, stale (older than 90 minutes), refused, or a window at or above the ceiling. The ceiling is
-  85% and the remaining 15% is the owner's.
-- The gate stops a run **from starting** at or above the ceiling. It cannot know what a run will consume, so a run
-  that starts at 84% can finish above 85%. Until that is measured, the unattended ceiling on the host is set
-  below 85 (`allowance --provider on --capacity-percent 75 --max-age-minutes 90`), which leaves roughly ten points
-  of room for the run itself and still 25 for the owner. It is a placeholder with a reason, not a proof.
-- Purchased-credit fallback is prevented by absence rather than by a switch: no `OPENAI_API_KEY` exists on the
-  host, the carrier signs in with the ChatGPT plan account only, and the pipeline has no billing path at all. The
-  rollout's `credits` block is recorded in the allowance state, so a balance that starts moving shows up in
-  `status` rather than in an invoice.
+  unreadable, missing, stale (older than 90 minutes), refused, a credit balance that has fallen, or any window at
+  or above the ceiling. **The ceiling is one number and it is applied to every window the reading carries** - the
+  five-hour `primary` and the weekly `secondary` alike - so `--capacity-percent 75` means 75% of the five-hour
+  window *and* 75% of the weekly one. There is no separate weekly threshold to set, and no window is excused.
+- The gate stops a run **from starting** at or above 75. It cannot know what a run will consume, so a pass that
+  starts at 74% can finish above 75. What bounds that is the shape of the pass rather than the gate: one stage per
+  pass (`--max-stages 1`), one pass at a time (`IgnoreNew`), a 6/1 dispatch count, and a reading imported before
+  every pass, so the next pass sees where the last one ended. The 25 points left to the owner are the point of
+  choosing 75 over 85 here; that choice was the owner's, and it is a start gate, not a measurement.
+- **Purchased credits are reachable on this route, and do not depend on `OPENAI_API_KEY`.** Verified from the
+  rollout this PC wrote on 2026-10-25: `auth_mode` is `chatgpt` and `OPENAI_API_KEY` is null, and the same
+  `rate_limits` event carries `credits { has_credits: true, unlimited: false, balance: "144.7441982500" }` with
+  `spend_control_reached: null`. `has_credits: true` is the provider saying a funded balance exists for this
+  account, and a balance that large is not the included allowance. So the fallback runs through the ChatGPT
+  sign-in, not through an API key: removing the key from the host removes the *API-key* route and proves nothing
+  about credits. It was not tested by exhausting the allowance, and it will not be.
+- What the pipeline does instead of claiming prevention: the first imported reading that carries a balance is
+  recorded as a **baseline**, and `evaluateGate` refuses with `provider_credits_spent` on any later reading whose
+  balance is lower. A reading never lowers the baseline - otherwise the evidence would erase itself - so the stop
+  survives until a person runs `allowance --rebaseline-credits` after looking at the number. The balance is also
+  kept per reading in `usage.provider.history` and in each run's receipt. The honest limit: this detects the
+  first spend, it does not prevent it, which is why the 25-point headroom matters and why the first host pass is
+  run by hand and watched.
 - **No fresh reading exists on this PC today.** The newest rollout here was written 2026-10-25T21:06:31Z and says
   79% of the five-hour window (reset 2026-10-26T00:11:46Z) and 15% of the weekly one (reset 2026-11-01T11:07:00Z),
-  plan `plus`, with a purchased-credit balance of 144.7441982500 that this route has never spent. It is far older
+  plan `plus`, with a purchased-credit balance of 144.7441982500 - and no later reading on this PC to compare that
+  balance against, so the most that can be said is that nothing here has observed it move. It is far older
   than the 90-minute limit, so the gate refuses it rather than pretending it is current - which is why the first
   reading for the host has to be produced on the host (build order, step 9), and why "next reset" cannot be stated
   for the present window until that run exists.
@@ -159,6 +192,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-research-wo
 node scripts/research-pipeline.js status                                                               # the same numbers without the task
 ```
 
+Those three switches are **deployment commands, not controls on a running thing**: no task has been registered on
+the host, so `-Show`, `-Pause` and `-Resume` are what the install will use once the task exists. The task state to
+report today is *absent* - there is no scheduled entry, no next run and no last run on that box.
+
 From anywhere, without a credential: the dashboard's Research Library lists each delivered stage as it is
 registered, with its version, size and hash, and that stage's download is the document itself.
 
@@ -167,7 +204,9 @@ registered, with its version, size and hash, and that stage's download is the do
 - **no pass has run on the host.** Not one stage has been dispatched there, so the carrier version, the sign-in,
   the scheduled task and the reboot behaviour are planned and locally tested, not proved on that box;
 - **hosted delivery is unproved end to end.** The store's backend answers correctly and every anonymous path is
-  refused, but no worker upload has been made with a member account, because no member account exists yet;
+  refused, but no worker upload has been made with a member account, because no member account exists yet: the
+  administration route is available and rehearsed in shape, and the one input it needs is an address the owner
+  designates (§3 step 6);
 - **the headroom rule is a setting, not a measurement** (§5);
 - **nothing here observes the host.** There is no agent on it by design. A silent task shows up only as a Research
   Library that stops gaining documents; `.github/workflows/live-trading-monitor.yml` watches the trader, not this;

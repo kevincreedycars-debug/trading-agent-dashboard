@@ -1,5 +1,38 @@
 # Session Notes
 
+2026-10-27 (host deployment pass) - third entry: the owner's answers on usage, credits and the worker account,
+and the one thing still missing. **Ceiling.** The owner fixed it at 75% for both windows, so the setting stops
+being a placeholder: `evaluateGate` applies one `capacity_percent` to every window in the reading, and a new test
+(`the host ceiling of 75% is one number applied to both windows`) holds 74% pass in both, 75% in the weekly window
+alone refused, and both windows reporting `capacity_percent: 75` with the 25 points left to the owner. Fresh
+reading, headroom, one pass at a time (`IgnoreNew`) and a pause on missing, stale or over-ceiling readings were
+already the behaviour; they are now stated as the policy rather than as defaults. **Credits.** The previous entry's
+sentence - that purchased-credit fallback is prevented by the absence of `OPENAI_API_KEY` - was wrong and has been
+removed from `VPS_DEPLOYMENT.md`. Read from the rollout this PC wrote on 2026-10-25: `auth_mode` is `chatgpt`,
+`OPENAI_API_KEY` is null, and the same rate-limit event carries `credits { has_credits: true, unlimited: false,
+balance: "144.7441982500" }` with `spend_control_reached: null`, which is a funded balance reachable through the
+sign-in rather than the API key. It was not tested by exhausting the allowance and will not be. What the pipeline
+does instead is stop on the first evidence: the first imported balance is recorded as
+`usage.provider.credits_baseline`, a later reading whose balance is lower answers `provider_credits_spent` and
+pauses the queue, a reading never lowers the baseline, and only a person lifts it with
+`allowance --rebaseline-credits` (which refuses without a reading, and refuses a reading with no readable
+balance). The balance is kept per reading in `usage.provider.history` and in each run's receipt. `research_pipeline`
+33/33 and `research_worker` 12/12 after the change; the CLI's refusal path was run against a throwaway state root
+and answered `provider_reading_missing`. **The worker account.** The owner authorised it; the administration route
+is ready (`SUPABASE_SERVICE_ROLE_KEY` present in the DPAPI store, and the two calls are the ones
+`scripts/research_library_page_check.js --provision` already makes: `POST /auth/v1/admin/users`, then the
+`research_members` row), and least privilege is the SQL's own grants rather than a new policy - `select`/`insert`
+on `research_documents`, `select`/`insert` on that bucket's objects, nothing on `research_members`, no update, no
+delete. No address has been designated for the account, so none was invented and the account was not created;
+that one answer is what the creation, the membership row and both DPAPI entries wait on, and the service-role key
+stays on this PC (never the host, the dashboard, the repository or a log). Note for the host: the private store
+keeps its own copy of `config/credential-manifest.json`, so `scripts/bootstrap-local-secrets.ps1` has to run there
+before `set-credential.ps1` will accept the two research names. **Host state, stated rather than implied.** Nothing
+of this lane is installed: TCP 22 on `158.220.87.240` is still refused while 3389 and 5986 answer, so the
+live-trader lane's `bootstrap-live-trading-vps-access.ps1` has not run and this lane still waits on that one
+route rather than adding a second. There is no `AstraResearchPassUSD` task, no next run and no last run, so
+`-Show`, `-Pause` and `-Resume` are deployment commands for the install, not controls on a running pass.
+
 2026-10-27 (host deployment pass) - handoff, second entry. The host was inspected before anything was planned for it, and the inspection is the finding: `158.220.87.240` answers ICMP, TCP 3389 is open, TCP 5986 answers TLS 1.3, and 22, 445, 80 and 443 are closed - so the box exists and RDP is reachable, but OpenSSH was never installed, which is the one marker that would show the one-time access block in `docs/live-trading/VPS_ACCESS_HANDOFF.md` §3 had run. The key pair `.local\vps-access\id_ed25519` is present and its public half is the one that block installs, and this PC's public address is still `46.208.115.96`, the `$from` that block narrows both doors to; `VPS_HOST` and `VPS_RDP_USER` are in the DPAPI store and `VPS_RDP_PASSWORD` is not, deliberately. So nothing of this lane is on the host, no pass has run there and no stage was dispatched: the single owner action the deployment waits on is pasting that block once over RDP, after which the whole build is driven from here over SSH. The live trader was read first and is unaffected: `ftmo-1` enabled, snapshot 694s of 900s, heartbeat 623s, armed, and still publishing from this PC.
 
 Two pieces were added that make the deployment safe to hand over rather than hopeful. `scripts/research-worker.js` now refuses to start a carrier while the hosted store is unconfigured (`deliverabilityGuard()`, `--allow-unconfigured-store` for the deliberate exception), because the worker's own refusal lands *after* the carrier has run: a task registered against an unconfigured store would have spent one unit of the owner's allowance per tick and registered nothing. Read on this PC, a real pass now answers `{"ok":false,"code":"hosted_not_configured","spent":0}` naming `RESEARCH_WORKER_EMAIL` and `RESEARCH_WORKER_PASSWORD`, and those two names are now in `config/credential-manifest.json` so the no-echo store accepts them. `scripts/register-research-worker-task.ps1` registers one task, `AstraResearchPassUSD`, with `IgnoreNew`, `StartWhenAvailable`, priority 8 below the trader's, a 45-minute limit past the 40-minute carrier timeout, and a wrapper written to `tmp\research-worker-run.cmd`; it refuses a repo path containing a space, a node below 18 and an unconfigured store, and `-Test` runs the launcher through a dry run in its own state and library roots and then proves the production wrapper and task definition are unchanged. Both were exercised here rather than described: the self test reached the runner and planned `usd-factor-live-f1-vix-level/red_team` while dispatching nothing, and a smoke registration carried `MultipleInstancesPolicy=IgnoreNew`, `Priority=8`, `PT45M` and a `PT30M` repetition before being removed.

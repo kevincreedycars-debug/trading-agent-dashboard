@@ -50,6 +50,21 @@ must read the exit code, not the stage count.
 The same record is appended to `.local/research-pipeline/worker/runs.jsonl`, and each attempted stage keeps its
 own receipt under `.local/research-pipeline/receipts/`.
 
+## The credit baseline
+
+The ChatGPT sign-in carries a purchased-credit balance of its own, independent of `OPENAI_API_KEY`, so "no key on
+the host" is not a spend control. The pipeline keeps the first balance it reads as a **baseline** and refuses with
+`provider_credits_spent` on any later reading whose balance is lower than it. A reading never lowers the baseline,
+so the refusal survives until a person looks at the number and accepts it:
+
+```powershell
+node scripts/research-pipeline.js allowance                      # provider.credits and provider.credits_baseline
+node scripts/research-pipeline.js allowance --rebaseline-credits # owner accepts the current balance
+```
+
+Re-baselining is an owner act for a known reason - the owner's own interactive Codex use of the same account, or a
+spend already investigated - and it is not something a pass or a scheduled task can do for itself.
+
 ## Scheduling on the host
 
 One task, one pass, no overlap - and the task is the lane's own, so it cannot disturb the trader:
@@ -76,6 +91,6 @@ The host build order, the isolation rules and the allowance settings for unatten
 
 `node --test tests/research_worker.test.js` runs the pass against a stub carrier: it covers a delivered stage,
 `search_not_observed`, `provider_disabled`, `provider_allowance_unknown`, `provider_allowance_exhausted`,
-`return_not_in_rollout`, `carrier_failed`, `carrier_timeout`, `hosted_not_configured`, the CLI's pre-dispatch
+`provider_credits_spent`, `return_not_in_rollout`, `carrier_failed`, `carrier_timeout`, `hosted_not_configured`, the CLI's pre-dispatch
 refusal of an unconfigured store (`deliverabilityGuard`), `dry_run`, a research then red-team pair, and the
 provider rollout read from the worker's own Codex home.

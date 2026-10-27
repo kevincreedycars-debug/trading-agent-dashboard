@@ -484,7 +484,11 @@ function rolloutText(options = {}) {
       window_minutes: 10080,
       resets_at: Math.floor(Date.parse(options.secondaryReset || SECONDARY_RESET) / 1000)
     },
-    credits: { has_credits: true, unlimited: false, balance: "144.7441982500" },
+    credits: {
+      has_credits: options.hasCredits === undefined ? true : options.hasCredits,
+      unlimited: false,
+      balance: options.creditsBalance === undefined ? "144.7441982500" : options.creditsBalance
+    },
     plan_type: "plus",
     rate_limit_reached_type: options.reached || null
   };
@@ -618,6 +622,67 @@ test("the gate stops at the configured capacity, names the window and its reset,
   const second = pipeline.importProviderUsage({ file: weekly });
   assert.equal(second.provider.code, "provider_allowance_exhausted");
   assert.match(second.provider.reason, /secondary window/);
+});
+
+test("the host ceiling of 75% is one number applied to both windows, not to the five-hour one alone", () => {
+  const fixture = buildFixture("provider-ceiling-75");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true }, now: () => new Date("2026-10-25T20:00:00Z") });
+  const policy = pipeline.setProviderPolicy({ enabled: true, capacity_percent: 75, max_age_minutes: 90 });
+  assert.equal(policy.provider.capacity_percent, 75);
+  assert.equal(policy.provider.owner_reserve_percent, 25);
+
+  // 74% in either window is inside the budget the owner set aside; each window reports the same ceiling.
+  const inside = pipeline.importProviderUsage({ file: writeRollout(fixture, "inside.jsonl", rolloutText({ primaryUsed: 74, secondaryUsed: 74 })) });
+  assert.equal(inside.provider.code, "provider_ok");
+  assert.deepEqual(inside.provider.windows.map(window => window.capacity_percent), [75, 75]);
+  assert.deepEqual(inside.provider.windows.map(window => window.remaining_percent), [1, 1]);
+
+  // The weekly window alone stops the pass, because 75 is the number it is measured against as well.
+  const weekly = pipeline.importProviderUsage({ file: writeRollout(fixture, "weekly-75.jsonl", rolloutText({ primaryUsed: 10, secondaryUsed: 75 })) });
+  assert.equal(weekly.provider.code, "provider_allowance_exhausted");
+  assert.match(weekly.provider.reason, /secondary window is at 75%/);
+  assert.match(weekly.provider.reason, /stops at 75%/);
+  assert.equal(weekly.queue.paused, true);
+});
+
+test("a credit balance that falls stops the pass, and only the owner's re-baseline lifts it", () => {
+  const fixture = buildFixture("provider-credits");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true }, now: () => new Date("2026-10-25T20:00:00Z") });
+  const first = pipeline.importProviderUsage({ file: writeRollout(fixture, "baseline.jsonl", rolloutText()) });
+  assert.equal(first.provider.code, "provider_ok");
+  assert.equal(first.provider.credits.has_credits, true, "the route carries a purchased-credit balance of its own");
+  assert.equal(first.provider.credits_baseline.balance, 144.74419825);
+  assert.equal(first.provider.credits_baseline.set_by, "first-reading");
+
+  // A later reading with a lower balance is the evidence that the included allowance ran out and the carrier
+  // drew on purchased credits. Nothing about that is inferred from an error message.
+  const spent = pipeline.importProviderUsage({ file: writeRollout(fixture, "spent.jsonl", rolloutText({ creditsBalance: "140.2441982500" })) });
+  assert.equal(spent.provider.ok, false);
+  assert.equal(spent.provider.code, "provider_credits_spent");
+  assert.match(spent.provider.reason, /fell from 144\.74419825 to 140\.24419825/);
+  assert.match(spent.provider.reason, /4\.5 spent/);
+  assert.match(spent.provider.reason, /--rebaseline-credits/);
+  assert.equal(spent.provider.credits_baseline.balance, 144.74419825, "a reading never lowers the baseline");
+  assert.equal(spent.queue.paused, true);
+  assert.throws(
+    () => pipeline.dispatch(fixture.topics[0].topic_id, "research"),
+    error => error.code === "pipeline_paused" && /credit balance fell/.test(error.message)
+  );
+
+  // The owner accepts the new balance deliberately; the gate then measures from it, and a further drop stops it.
+  const accepted = pipeline.setProviderPolicy({ rebaseline_credits: true, owner: "operator" });
+  assert.equal(accepted.provider.code, "provider_ok");
+  assert.equal(accepted.provider.credits_baseline.balance, 140.24419825);
+  assert.equal(accepted.provider.credits_baseline.set_by, "operator");
+  const again = pipeline.importProviderUsage({ file: writeRollout(fixture, "spent-again.jsonl", rolloutText({ creditsBalance: "139.0" })) });
+  assert.equal(again.provider.code, "provider_credits_spent");
+
+  // Re-baselining is an owner act with an input: without a reading there is nothing to take a balance from.
+  const empty = pipelineFor(buildFixture("provider-credits-empty"), { provider: { enabled: true } });
+  assert.throws(
+    () => empty.setProviderPolicy({ rebaseline_credits: true }),
+    error => error.code === "provider_reading_missing"
+  );
 });
 
 test("a reading taken before a window reset is stale, and only a fresh reading lifts the allowance pause", () => {

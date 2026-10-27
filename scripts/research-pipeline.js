@@ -18,6 +18,7 @@
 //   node scripts/research-pipeline.js allowance [--limit N] [--reserve N] [--reset]
 //   node scripts/research-pipeline.js allowance --from-rollout FILE | --latest-rollout
 //   node scripts/research-pipeline.js allowance --provider on|off [--capacity-percent N] [--max-age-minutes N]
+//   node scripts/research-pipeline.js allowance --rebaseline-credits
 //   node scripts/research-pipeline.js allowance --refusal MESSAGE [--refusal-type T] [--resets-at ISO]
 //
 // Every command prints JSON except `preview`, which prints the envelope itself, because the envelope is the
@@ -45,6 +46,7 @@ const USAGE = [
   'node scripts/research-pipeline.js allowance [--limit N] [--reserve N] [--reset]',
   'node scripts/research-pipeline.js allowance --from-rollout FILE | --latest-rollout [--capacity-percent N] [--max-age-minutes N]',
   'node scripts/research-pipeline.js allowance --provider on|off [--capacity-percent N] [--max-age-minutes N]',
+  'node scripts/research-pipeline.js allowance --rebaseline-credits',
   'node scripts/research-pipeline.js allowance --refusal MESSAGE [--refusal-type TYPE] [--resets-at ISO]'
 ].join('\n');
 
@@ -411,11 +413,12 @@ function run(argv, io = process) {
       return 0;
     }
 
-    if (providerFlag || capacity !== undefined || maxAge !== undefined) {
+    if (providerFlag || capacity !== undefined || maxAge !== undefined || flags['rebaseline-credits'] === true) {
       const result = pipeline.setProviderPolicy({
         enabled: providerFlag ? providerFlag === 'on' : undefined,
         capacity_percent: capacity,
         max_age_minutes: maxAge,
+        rebaseline_credits: flags['rebaseline-credits'] === true,
         owner: flagText(flags, 'owner', 'operator-cli')
       });
       emit(io, { ok: true, changed: true, provider: result.provider, allowance: result.budget, queue: result.queue });
