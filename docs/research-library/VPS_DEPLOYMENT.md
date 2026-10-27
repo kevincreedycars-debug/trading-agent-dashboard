@@ -23,8 +23,11 @@ Two consequences follow, and they are the whole reason nothing of this lane is o
 
 - **the host cannot be logged into from here.** OpenSSH is not installed there, so the keyed route in
   [VPS_ACCESS_HANDOFF.md](../live-trading/VPS_ACCESS_HANDOFF.md) §3 has not been run, and without the first-login
-  password there is no second route. That block is one elevated PowerShell pasted over RDP, and it is the single
-  owner action this deployment waits on.
+  password there is no second route. That step is the **live-trader lane's**, and on `vps/cutover-20261027` it has
+  become `scripts/bootstrap-live-trading-vps-access.ps1` (`-Status`, then `-ConfirmThumbprint <thumbprint read in
+  the Contabo console>`); that lane's notes record the same state from its side - nothing typed, nothing run. This
+  lane depends on that one route and deliberately installs no second one: the same key pair, `.local\vps-access\id_ed25519`,
+  and the same narrowed doors. Duplicating it would mean two mechanisms fighting over one `sshd_config`.
 - **a pass could not deliver even if it ran.** The worker refuses before it starts a carrier while the store is
   unconfigured, so the only difference between registering the task now and not registering it is a log full of
   the same refusal.
