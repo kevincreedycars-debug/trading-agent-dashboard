@@ -65,6 +65,16 @@ node scripts/research-pipeline.js allowance --rebaseline-credits # owner accepts
 Re-baselining is an owner act for a known reason - the owner's own interactive Codex use of the same account, or a
 spend already investigated - and it is not something a pass or a scheduled task can do for itself.
 
+The same is true of the reading itself: a pass reads the newest rollout and refuses when it is older than
+`max_age_minutes`, so after a gap longer than that - a paused task, an empty queue, a provider refusal, a reboot -
+the guard is correct and the pass stops before spending anything. The way back is one short turn under the task
+account, then an import; the pass never runs a probe turn of its own, because that is an unattended spend:
+
+```powershell
+codex exec -m gpt-6-astra "reply with the single word ready"
+node scripts/research-pipeline.js allowance --latest-rollout
+```
+
 ## Scheduling on the host
 
 One task, one pass, no overlap - and the task is the lane's own, so it cannot disturb the trader:

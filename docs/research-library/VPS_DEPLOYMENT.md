@@ -134,8 +134,10 @@ One pass, in this order, stopping at the first refusal:
    pass re-derives the queue from `data/research-library/documents.json` and continues, so a stage that was claimed
    but never delivered is retried rather than duplicated.
 2. the provider reading is imported from the newest rollout under the task account's Codex home. No rollout, an
-   unreadable one, a stale one, a refusal or a window at or above the ceiling pauses the queue instead of
-   dispatching into a spent allowance.
+   unreadable one, a stale one, a refusal, a fallen credit balance or a window at or above the ceiling pauses the
+   queue instead of dispatching into a spent allowance. After a gap longer than 90 minutes the guard is right and
+   the pass stops; the way back is the one-turn seed in §3 step 9, run by a person, never a probe turn the pass
+   gives itself.
 3. the hosted store is asked whether it is configured. Unconfigured means the pass stops **before** a carrier
    starts, so no allowance is spent on an answer the dashboard cannot serve.
 4. the next runnable stage is dispatched, the carrier runs, and the answer is verified against the run's own
