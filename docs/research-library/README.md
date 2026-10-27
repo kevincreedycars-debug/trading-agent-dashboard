@@ -211,7 +211,8 @@ asset-level chain: the hosted table has no column for the factor input package, 
 the row's `notes` behind `research-input-package:v1` and is read back against that version only. The
 loopback service above remains for anyone working offline. Where the bytes live, what signs in, how to
 keep a local copy and how to re-run the published-page check are in
-`docs/research-library/PAGE_CHECK_RUNBOOK.md`.
+`docs/research-library/PAGE_CHECK_RUNBOOK.md`. Running the stages unattended, one pass at a time, is in
+`docs/research-library/WORKER_RUNBOOK.md`.
 
 ## Status vocabulary, kept honest
 
