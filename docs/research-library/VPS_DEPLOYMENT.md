@@ -106,7 +106,12 @@ everything below can be driven from this PC over SSH, and none of it needs a pas
    account is proved after creation by signing in with the publishable key the page already carries and checking
    that a document read succeeds while a `research_members` insert and an admin call are both refused.
    **Still missing on 2026-10-27: the address.** No address has been designated for this account, and one is not
-   invented here; once the owner names it, the creation, the membership row and both store entries are one sitting.
+   invented here. The password half exists already: one was generated on this PC from
+   `System.Security.Cryptography.RandomNumberGenerator` - 28 characters, lower case, upper case, a digit and one of
+   `!@#%^*-_=+` all guaranteed - stored straight into the DPAPI store as `RESEARCH_WORKER_PASSWORD`, read back and
+   compared in the same process, never printed and never in a file. So naming the address is the remaining step:
+   create the user with that password, insert the membership row, store the address, and type the same password
+   into the host's store at step 6.
 7. **Prove it read-only, before any task exists**: `node scripts/research-pipeline.js status` (queue and
    allowance), then `node scripts/research-worker.js --dry-run --max-stages 1 --asset USD` (plans the next stage,
    spends nothing, imports no reading).

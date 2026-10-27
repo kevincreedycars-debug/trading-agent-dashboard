@@ -1,5 +1,26 @@
 # Session Notes
 
+2026-10-27 (host deployment pass) - fourth entry: the password is held, the address is not. The owner asked for it
+to be saved here rather than left to the host, so one was generated in place with
+`System.Security.Cryptography.RandomNumberGenerator` - 28 characters from a set that excludes the look-alikes,
+guaranteed to carry lower case, upper case, a digit and one of `!@#%^*-_=+` - and stored straight into
+`%USERPROFILE%\.trading-agent-dashboard\secrets\credentials.clixml` as `RESEARCH_WORKER_PASSWORD` through
+`scripts\set-credential.ps1`, which took its own timestamped backup (`credentials-20261027-162400.clixml`) before
+the write. The value never appeared in a command line, a file or this transcript: generation, storage and the
+read-back comparison ran in one process, and the proof is the comparison itself - `readback matches: True
+length: 28` with one character of each class present. `validate-credentials.ps1` now answers
+`RESEARCH_WORKER_PASSWORD: present` and `RESEARCH_WORKER_EMAIL: missing`, which is exactly the remaining gap.
+**A stale copy had to be repaired first.** The private store keeps its own `config/credential-manifest.json`, and
+that copy carried 12 names with no research entries, so it would have refused both. It was refreshed from this
+branch's manifest and then given back the one entry this line's manifest no longer carries - `DEEPSEEK_API_KEY`,
+whose value is still in the store and whose consumer, the coordinator, still asks for the name - leaving the
+private copy a union of 15 names rather than a narrowed one. No branch's manifest was edited; this is a local
+repair. Two consequences worth stating plainly: the private copy is now a superset no branch reproduces, so
+`bootstrap-local-secrets.ps1` has to run there without `-ForceSync` on this PC or the union collapses back to
+whichever branch runs it (the store keeps every value either way), and the address remains the only thing between
+an authorised account and its row in `research_members`.
+
+
 2026-10-27 (host deployment pass) - third entry: the owner's answers on usage, credits and the worker account,
 and the one thing still missing. **Ceiling.** The owner fixed it at 75% for both windows, so the setting stops
 being a placeholder: `evaluateGate` applies one `capacity_percent` to every window in the reading, and a new test
