@@ -26,13 +26,14 @@ const USAGE = [
   'node scripts/research-worker.js [--dry-run] [--max-stages N]',
   '  [--stage research|red_team|adjudication] [--asset USD] [--topic TOPIC]',
   '  [--model NAME] [--carrier PATH] [--codex-home DIR] [--timeout-minutes N] [--no-require-search]',
-  '  [--provider-reading FILE] [--no-provider-reading]',
+  '  [--provider-reading FILE] [--no-provider-reading] [--allow-unconfigured-store]',
   '  [--root DIR] [--state-root DIR] [--library-root DIR] [--catalog FILE] [--registry FILE]',
   '',
   'One pass: recover, read the provider rollout, read the allowance, run the next runnable stage, verify the',
   'run, deliver through the hosted store, write a receipt, stop. Nothing is dispatched without a provider reading.',
   'The reading is the newest rollout under --codex-home unless --provider-reading names one; a pass never switches',
-  'the provider half of the allowance on itself.'
+  'the provider half of the allowance on itself. A pass also refuses to start a carrier while the hosted store is',
+  'not configured, because an answer the dashboard cannot serve is one the owner paid for and cannot read.'
 ].join('\n');
 
 function text(flags, name, fallback = '') {
@@ -64,6 +65,43 @@ function pipelineFromFlags(flags) {
   return createPipeline(options);
 }
 
+// The store's own answer to "could a document be delivered right now": the same adapter the pass delivers
+// through, asked for its configuration only. Nothing is uploaded, registered or read back here.
+function configuredStoreStatus(pipeline) {
+  return require('../lib/research_hosted_store.js').create({ repoRoot: pipeline.paths.repo_root }).status();
+}
+
+// A scheduled pass must not pay for an answer it cannot deliver. The store is asked *before* the pipeline is
+// allowed to dispatch, because the worker's own refusal happens after the carrier has run: on 2026-10-27 this
+// PC's store reported RESEARCH_WORKER_EMAIL and RESEARCH_WORKER_PASSWORD missing, so a task registered ahead of
+// those values would have spent one unit of the owner's ChatGPT allowance per tick and registered nothing.
+//
+// --allow-unconfigured-store is the deliberate exception: a report is wanted even though it can only sit in
+// `.local/` until the store is configured. It is never what a scheduled task carries.
+function deliverabilityGuard(options = {}) {
+  if (options.dryRun) return { ok: true, skipped: 'dry_run' };
+  if (options.allowUnconfigured) return { ok: true, skipped: 'allow_unconfigured_store' };
+  let status;
+  try {
+    status = options.storeStatus();
+  } catch (error) {
+    return {
+      ok: false,
+      code: 'hosted_not_configured',
+      message: `the hosted research store could not be asked whether it is configured (${error && error.message ? error.message : String(error)}); the pass starts no carrier, so no allowance is spent on an answer the dashboard cannot serve`
+    };
+  }
+  const needed = Array.isArray(status && status.needed) ? status.needed : [];
+  if (!status || status.configured !== true) {
+    return {
+      ok: false,
+      code: 'hosted_not_configured',
+      message: `the hosted research store is not configured: set ${needed.join(', ') || 'the store settings'}; the pass starts no carrier, so no allowance is spent on an answer the dashboard cannot serve`
+    };
+  }
+  return { ok: true, host: status.host || null, bucket: status.bucket || null };
+}
+
 function fail(error, io) {
   const payload = {
     ok: false,
@@ -85,8 +123,21 @@ async function mainAsync(argv, io = process) {
       throw new Error(`the worker takes flags only, not "${positionals.join(' ')}"; run with --help for the list`);
     }
     const minutes = number(flags, 'timeout-minutes');
+    const dryRun = flags['dry-run'] === true;
+    const pipeline = pipelineFromFlags(flags);
+    // Asked before the worker exists, so a pass that cannot deliver never takes a claim or a unit of allowance.
+    const deliverability = deliverabilityGuard({
+      dryRun,
+      allowUnconfigured: flags['allow-unconfigured-store'] === true,
+      storeStatus: () => configuredStoreStatus(pipeline)
+    });
+    if (!deliverability.ok) {
+      const refused = { ok: false, code: deliverability.code, message: deliverability.message, spent: 0 };
+      io.stderr.write(`${JSON.stringify(refused, null, 2)}\n`);
+      return 1;
+    }
     const worker = createWorker({
-      pipeline: pipelineFromFlags(flags),
+      pipeline,
       model: text(flags, 'model'),
       carrierPath: text(flags, 'carrier'),
       codexHome: text(flags, 'codex-home'),
@@ -97,7 +148,7 @@ async function mainAsync(argv, io = process) {
       timeoutMs: minutes ? minutes * 60 * 1000 : undefined,
       requireSearch: flags['no-require-search'] === true ? false : undefined,
       providerReading: flags['no-provider-reading'] === true ? false : text(flags, 'provider-reading') || undefined,
-      dryRun: flags['dry-run'] === true,
+      dryRun,
       stdout: line => io.stdout.write(line)
     });
     const summary = await worker.run();
@@ -119,4 +170,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { USAGE, mainAsync };
+module.exports = { USAGE, mainAsync, deliverabilityGuard, configuredStoreStatus };

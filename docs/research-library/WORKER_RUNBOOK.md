@@ -13,12 +13,15 @@ refuse the answer unless the run's own record proves it, deliver through the hos
    leaves the allowance as it found it. A dry run imports nothing at all.
 3. `budget()` must be readable and not exhausted; `dispatch` is called with `require_provider`, so a missing,
    stale, refused or over-capacity reading pauses the queue instead of spending it.
-4. The carrier is a local `codex exec` process using its own `~/.codex/auth.json`. No key, token or hosted runner
+4. The hosted store is asked whether it is configured. If it is not, the pass stops **before** a carrier starts,
+   so no allowance is spent on an answer the dashboard cannot serve. `--allow-unconfigured-store` is the
+   deliberate exception and is never what a scheduled task carries.
+5. The carrier is a local `codex exec` process using its own `~/.codex/auth.json`. No key, token or hosted runner
    is involved.
-5. The answer is checked against the run before it is stored: same thread in the event stream and the rollout,
+6. The answer is checked against the run before it is stored: same thread in the event stream and the rollout,
    the model the runtime recorded, a completed `web_search` where the stage needs a source, and the exact bytes
    in the rollout's assistant messages.
-6. The hosted store is written and read back **before** the local registry records the same document. A pass that
+7. The hosted store is written and read back **before** the local registry records the same document. A pass that
    reports `hosted_not_configured` has delivered nothing and adopted nothing.
 
 ## Commands
@@ -49,19 +52,30 @@ own receipt under `.local/research-pipeline/receipts/`.
 
 ## Scheduling on the host
 
-One task, one pass, no overlap:
+One task, one pass, no overlap - and the task is the lane's own, so it cannot disturb the trader:
 
 ```powershell
-schtasks /Create /TN "Astra research pass" /SC MINUTE /MO 30 /TR "node D:\astra\scripts\research-worker.js --max-stages 1 --asset USD" /RU <account> /RP *
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-research-worker-task.ps1 -Test   # launcher reaches the runner, dry run only
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-research-worker-task.ps1         # register, start, report
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-research-worker-task.ps1 -Show   # state, next run, allowance, last line
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-research-worker-task.ps1 -Pause  # no new pass starts
 ```
 
-Set the task to *do not start a new instance* while one is running, and run under the account that owns the
-Codex sign-in so the carrier finds its own auth. A pass that finds another pass's live claim skips that stage
-rather than fighting over it.
+The script refuses to register while the hosted store is unconfigured, registers with `IgnoreNew` so a pass and
+its own repetition cannot overlap, `StartWhenAvailable` so a reboot picks the cadence back up, a priority below
+the trader's, and an execution limit five minutes past the carrier timeout. It also writes the wrapper, so the
+flags the scheduler runs are readable in `tmp\research-worker-run.cmd` rather than remembered.
+
+Run it under the account that owns the Codex sign-in, so the carrier finds its own auth without a key. A pass that
+finds another pass's live claim skips that stage rather than fighting over it.
+
+The host build order, the isolation rules and the allowance settings for unattended operation are in
+[VPS_DEPLOYMENT.md](VPS_DEPLOYMENT.md).
 
 ## Tests
 
 `node --test tests/research_worker.test.js` runs the pass against a stub carrier: it covers a delivered stage,
 `search_not_observed`, `provider_disabled`, `provider_allowance_unknown`, `provider_allowance_exhausted`,
-`return_not_in_rollout`, `carrier_failed`, `carrier_timeout`, `hosted_not_configured`, `dry_run`, a research then
-red-team pair, and the provider rollout read from the worker's own Codex home.
+`return_not_in_rollout`, `carrier_failed`, `carrier_timeout`, `hosted_not_configured`, the CLI's pre-dispatch
+refusal of an unconfigured store (`deliverabilityGuard`), `dry_run`, a research then red-team pair, and the
+provider rollout read from the worker's own Codex home.

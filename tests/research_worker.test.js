@@ -536,6 +536,41 @@ test("a pass whose hosted store is not configured does not adopt the document lo
   assert.deepEqual(registry.documents || [], [], "nothing is recorded locally that the dashboard cannot serve");
 });
 
+test("a scheduled pass refuses to start a carrier whose answer it could not deliver", async () => {
+  // The guard the scheduled task relies on: with the hosted store unconfigured, the CLI must stop before the
+  // pipeline takes a claim or a unit of allowance, because the answer would be paid for and then have nowhere to
+  // go. The web-search and carrier stubs are not reached at all.
+  const { deliverabilityGuard } = require("../scripts/research-worker.js");
+
+  const refused = deliverabilityGuard({
+    storeStatus: () => ({ configured: false, needed: ["RESEARCH_WORKER_EMAIL", "RESEARCH_WORKER_PASSWORD"] })
+  });
+  assert.equal(refused.ok, false);
+  assert.equal(refused.code, "hosted_not_configured");
+  assert.match(refused.message, /RESEARCH_WORKER_EMAIL, RESEARCH_WORKER_PASSWORD/);
+
+  const ready = deliverabilityGuard({
+    storeStatus: () => ({ configured: true, needed: [], host: "project.example", bucket: "research-documents" })
+  });
+  assert.equal(ready.ok, true);
+  assert.equal(ready.host, "project.example");
+
+  // A store that cannot be asked at all is a refusal rather than an assumption that it is fine.
+  const unreadable = deliverabilityGuard({
+    storeStatus: () => { throw new Error("script.js is unreadable"); }
+  });
+  assert.equal(unreadable.ok, false);
+  assert.match(unreadable.message, /script\.js is unreadable/);
+
+  // A dry run delivers nothing, so it is not asked to; and the deliberate escape hatch lets a report be produced
+  // for a store that is not configured yet, without ever being what a scheduled task carries.
+  assert.deepEqual(deliverabilityGuard({ dryRun: true, storeStatus: () => { throw new Error("must not be asked"); } }), { ok: true, skipped: "dry_run" });
+  assert.deepEqual(
+    deliverabilityGuard({ allowUnconfigured: true, storeStatus: () => ({ configured: false, needed: ["x"] }) }),
+    { ok: true, skipped: "allow_unconfigured_store" }
+  );
+});
+
 test("a dry run plans the next stage and starts nothing", async () => {
   const fixture = buildFixture("dry-run");
   writeStubConfig(fixture, { document: completeDocument("Fixture topic A research") });
