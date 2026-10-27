@@ -6,12 +6,19 @@
 //   node scripts/research-pipeline.js plan [--asset USD] [--topic TOPIC] [--runnable]
 //   node scripts/research-pipeline.js preview TOPIC STAGE [--chain CHAIN] [--out FILE] [--json]
 //   node scripts/research-pipeline.js dispatch TOPIC STAGE [--chain CHAIN] [--owner NAME]
+//   node scripts/research-pipeline.js deliver TOPIC STAGE --file FILE --model NAME [--chain CHAIN]
+//                                                  [--prompt-path P] [--prompt-sha SHA] [--prompt-bytes N]
+//                                                  [--catalog-version V] [--source TEXT]
 //   node scripts/research-pipeline.js submit TOPIC STAGE --file FILE --model NAME [--chain CHAIN] [--title T] [--note N]
 //                                                  [--open-finding TEXT ...]
+//                                                  [--rollout ROLLOUT.jsonl] [--envelope SHA256]
 //   node scripts/research-pipeline.js recover
 //   node scripts/research-pipeline.js pause --reason TEXT
 //   node scripts/research-pipeline.js resume
 //   node scripts/research-pipeline.js allowance [--limit N] [--reserve N] [--reset]
+//   node scripts/research-pipeline.js allowance --from-rollout FILE | --latest-rollout
+//   node scripts/research-pipeline.js allowance --provider on|off [--capacity-percent N] [--max-age-minutes N]
+//   node scripts/research-pipeline.js allowance --refusal MESSAGE [--refusal-type T] [--resets-at ISO]
 //
 // Every command prints JSON except `preview`, which prints the envelope itself, because the envelope is the
 // artifact a model is given. Nothing here calls a model, n8n, the dispatcher, Supabase, the live feed or
@@ -30,11 +37,15 @@ const USAGE = [
   'node scripts/research-pipeline.js plan [--asset USD] [--topic TOPIC] [--runnable]',
   'node scripts/research-pipeline.js preview TOPIC STAGE [--chain CHAIN] [--out FILE] [--json]',
   'node scripts/research-pipeline.js dispatch TOPIC STAGE [--chain CHAIN] [--owner NAME]',
-  'node scripts/research-pipeline.js submit TOPIC STAGE --file FILE --model NAME [--chain CHAIN] [--title T] [--note N] [--open-finding TEXT ...]',
+  'node scripts/research-pipeline.js deliver TOPIC STAGE --file FILE --model NAME [--chain CHAIN] [--source TEXT] [--prompt-path P] [--prompt-sha SHA] [--prompt-bytes N] [--catalog-version V] [--title T] [--note N]',
+  'node scripts/research-pipeline.js submit TOPIC STAGE --file FILE --model NAME [--chain CHAIN] [--title T] [--note N] [--open-finding TEXT ...] [--rollout FILE] [--exec-log FILE] [--require-search] [--envelope SHA256]',
   'node scripts/research-pipeline.js recover',
   'node scripts/research-pipeline.js pause --reason TEXT',
   'node scripts/research-pipeline.js resume',
-  'node scripts/research-pipeline.js allowance [--limit N] [--reserve N] [--reset]'
+  'node scripts/research-pipeline.js allowance [--limit N] [--reserve N] [--reset]',
+  'node scripts/research-pipeline.js allowance --from-rollout FILE | --latest-rollout [--capacity-percent N] [--max-age-minutes N]',
+  'node scripts/research-pipeline.js allowance --provider on|off [--capacity-percent N] [--max-age-minutes N]',
+  'node scripts/research-pipeline.js allowance --refusal MESSAGE [--refusal-type TYPE] [--resets-at ISO]'
 ].join('\n');
 
 // Flags are a small, explicit set, so the parser stays a loop rather than a dependency: `--name value` or a
@@ -117,6 +128,91 @@ function emit(io, payload) {
   io.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
 }
 
+// Delivery is the one command that touches the hosted store, so it is async and lives beside the sync command
+// table rather than inside it.
+//
+//   deliver TOPIC STAGE --file FILE --model NAME [--chain CHAIN] [--source TEXT]
+//                       [--prompt-path P] [--prompt-sha SHA] [--prompt-bytes N] [--catalog-version V]
+//                       [--title T] [--note N] [--skip-hosted]
+//
+// Order matters: the hosted store is written first and read back, and only then does the local registry record
+// the same document. A document that exists only in a local folder is not delivery, which is why --skip-hosted
+// is named for what it does and is refused by the operational supervisor.
+async function runDelivery(command, argv, io = process) {
+  const { positionals, flags } = parseArguments(argv);
+  needPositionals(command, positionals, 2, 'TOPIC and STAGE');
+  const [topicId, stageId] = positionals;
+  const file = flagText(flags, 'file');
+  if (!file) throw new Error(`${command} needs --file FILE, the Markdown document that was produced`);
+  const source = path.resolve(file);
+  if (!fs.existsSync(source)) throw new Error(`--file ${source} is not a file`);
+  const bytes = fs.readFileSync(source);
+  const pipeline = pipelineFromFlags(flags);
+  const chain = flagText(flags, 'chain');
+  const plan = pipeline.deliveryPlan(topicId, stageId, { chain });
+  const model = flagText(flags, 'model');
+  if (!model) throw new Error(`${command} needs --model NAME, the model or session that produced the document`);
+  const provenance = {
+    prompt_path: flagText(flags, 'prompt-path') || plan.provenance.prompt_path,
+    prompt_sha256: flagText(flags, 'prompt-sha') || plan.provenance.prompt_sha256,
+    prompt_bytes: flagNumber(flags, 'prompt-bytes'),
+    catalog_version: flagText(flags, 'catalog-version') || plan.provenance.catalog_version
+  };
+  const hostedStore = require('../lib/research_hosted_store.js');
+  const hosted = hostedStore.create({ repoRoot: pipeline.paths.repo_root });
+  const skipHosted = flags['skip-hosted'] === true;
+  let hostedReceipt = null;
+  if (!skipHosted) {
+    const status = hosted.status();
+    if (!status.configured) {
+      throw Object.assign(
+        new Error(`the hosted store is not configured for this command: set ${status.needed.join(', ')}; a document that sits only in a local folder is not delivery`),
+        { code: 'hosted_not_configured' }
+      );
+    }
+    hostedReceipt = await hosted.register({
+      topicId: plan.topicId,
+      stage: plan.stage,
+      title: flagText(flags, 'title') || plan.title,
+      kind: plan.kind,
+      notes: flagText(flags, 'note'),
+      model,
+      provenance,
+      parent: plan.parent,
+      filename: path.basename(source),
+      bytes
+    });
+    if (!hostedReceipt.ok) {
+      const error = new Error(hostedReceipt.message);
+      error.code = hostedReceipt.code || 'hosted_registration_failed';
+      if (hostedReceipt.storage_path) error.storage_path = hostedReceipt.storage_path;
+      throw error;
+    }
+  }
+  const result = pipeline.adopt(topicId, stageId, bytes, {
+    chain,
+    model,
+    title: flagText(flags, 'title'),
+    note: flagText(flags, 'note'),
+    open_findings: flagList(flags, 'open-finding'),
+    original_filename: path.basename(source),
+    provenance,
+    hosted: hostedReceipt,
+    hosted_required: !skipHosted,
+    source: flagText(flags, 'source')
+  });
+  emit(io, {
+    ok: true,
+    adopted: true,
+    registration: result.registration,
+    verification: result.verification,
+    hosted: result.hosted,
+    stage_after: result.stage_after,
+    topic_ready: Boolean(result.topic_progress && result.topic_progress.ready_for_synthesis)
+  });
+  return 0;
+}
+
 function run(argv, io = process) {
   const { positionals, flags } = parseArguments(argv);
   const command = positionals.shift() || 'status';
@@ -133,6 +229,7 @@ function run(argv, io = process) {
       paused: current.paused,
       pause_reason: current.pause_reason,
       paused_at: current.paused_at,
+      paused_by: current.paused_by,
       allowance: current.allowance,
       counts: current.counts,
       next: current.stages
@@ -205,7 +302,13 @@ function run(argv, io = process) {
   if (command === 'dispatch') {
     needPositionals(command, positionals, 2, 'TOPIC and STAGE');
     const [topicId, stageId] = positionals;
-    const result = pipeline.dispatch(topicId, stageId, { owner: flagText(flags, 'owner', 'operator-cli'), chain: flagText(flags, 'chain') });
+    const result = pipeline.dispatch(topicId, stageId, {
+      owner: flagText(flags, 'owner', 'operator-cli'),
+      chain: flagText(flags, 'chain'),
+      // The runner does not dispatch against a budget nobody read. --provider-optional exists for the guards
+      // and a scratch root; an operational dispatch carries a fresh provider reading.
+      require_provider: flags['provider-optional'] !== true
+    });
     emit(io, {
       ok: true,
       job_key: result.job.job_key,
@@ -230,13 +333,18 @@ function run(argv, io = process) {
       note: flagText(flags, 'note'),
       original_filename: path.basename(source),
       open_findings: flagList(flags, 'open-finding'),
-      chain: flagText(flags, 'chain')
+      chain: flagText(flags, 'chain'),
+      rollout: flagText(flags, 'rollout'),
+      exec_log: flagText(flags, 'exec-log'),
+      require_search: flags['require-search'] === true,
+      envelope_sha256: flagText(flags, 'envelope')
     });
     emit(io, {
       ok: true,
       duplicate: result.duplicate,
       registration: result.registration,
       verification: result.verification,
+      execution: result.execution,
       stage_after: result.stage_after,
       topic_ready: Boolean(result.topic_progress && result.topic_progress.ready_for_synthesis)
     });
@@ -267,6 +375,53 @@ function run(argv, io = process) {
     needPositionals(command, positionals, 0, 'no arguments');
     const limit = flagNumber(flags, 'limit');
     const reserve = flagNumber(flags, 'reserve');
+    const capacity = flagNumber(flags, 'capacity-percent');
+    const maxAge = flagNumber(flags, 'max-age-minutes');
+    const providerFlag = flagText(flags, 'provider').trim().toLowerCase();
+    if (providerFlag && providerFlag !== 'on' && providerFlag !== 'off') {
+      throw new Error('--provider takes on or off; it is the owner\'s switch for the provider half of the allowance');
+    }
+    const refusal = flagText(flags, 'refusal').trim();
+    const fromRollout = flagText(flags, 'from-rollout').trim();
+    const latest = flags['latest-rollout'] === true;
+
+    // A refusal the carrier saw is recorded as evidence, not inferred: the queue stops on it until a fresh
+    // reading or a manual resume after the reset.
+    if (refusal) {
+      const result = pipeline.recordProviderRefusal({
+        message: refusal,
+        type: flagText(flags, 'refusal-type', 'rate_limit'),
+        resets_at: flagText(flags, 'resets-at'),
+        at: flagText(flags, 'at')
+      });
+      emit(io, { ok: true, recorded: 'provider_refusal', provider: result.provider, allowance: result.budget, queue: result.queue });
+      return 0;
+    }
+
+    // Importing is the only way the provider numbers enter the budget, and the same command is the resume
+    // path: when the reading clears the gate, a pause this module set is lifted and the queue is untouched.
+    if (fromRollout || latest) {
+      const result = pipeline.importProviderUsage({
+        file: latest ? '' : fromRollout,
+        capacity_percent: capacity,
+        max_age_minutes: maxAge,
+        owner: flagText(flags, 'owner', 'operator-cli')
+      });
+      emit(io, { ok: true, imported: 'provider_reading', provider: result.provider, allowance: result.budget, queue: result.queue });
+      return 0;
+    }
+
+    if (providerFlag || capacity !== undefined || maxAge !== undefined) {
+      const result = pipeline.setProviderPolicy({
+        enabled: providerFlag ? providerFlag === 'on' : undefined,
+        capacity_percent: capacity,
+        max_age_minutes: maxAge,
+        owner: flagText(flags, 'owner', 'operator-cli')
+      });
+      emit(io, { ok: true, changed: true, provider: result.provider, allowance: result.budget, queue: result.queue });
+      return 0;
+    }
+
     const changed = limit !== undefined || reserve !== undefined || flags.reset === true;
     // Reading is the common case; a bare `allowance` reports the state without writing a file.
     const allowance = changed
@@ -283,20 +438,47 @@ function main(argv, io = process) {
   try {
     return run(argv, io);
   } catch (error) {
-    const payload = {
-      ok: false,
-      code: error && error.code ? String(error.code) : 'cli_error',
-      message: error && error.message ? error.message : String(error)
-    };
-    const extra = error && error.rejected_path ? { rejected_path: error.rejected_path } : {};
-    const problems = error && Array.isArray(error.problems) ? { problems: error.problems } : {};
-    io.stderr.write(`${JSON.stringify({ ...payload, ...problems, ...extra }, null, 2)}\n`);
-    return 1;
+    return fail(error, io);
   }
 }
 
-if (require.main === module) {
-  process.exitCode = main(process.argv.slice(2));
+function fail(error, io) {
+  const payload = {
+    ok: false,
+    code: error && error.code ? String(error.code) : 'cli_error',
+    message: error && error.message ? error.message : String(error)
+  };
+  const extra = {};
+  if (error && error.rejected_path) extra.rejected_path = error.rejected_path;
+  if (error && error.storage_path) extra.storage_path = error.storage_path;
+  const problems = error && Array.isArray(error.problems) ? { problems: error.problems } : {};
+  io.stderr.write(`${JSON.stringify({ ...payload, ...problems, ...extra }, null, 2)}\n`);
+  return 1;
 }
 
-module.exports = { USAGE, parseArguments, main, run };
+// The entry point: `deliver` and `adopt` are the two commands that wait on the hosted store, so they are run
+// here and everything else goes through the sync table unchanged.
+async function mainAsync(argv, io = process) {
+  const command = String(argv[0] || '');
+  if (command === 'deliver' || command === 'adopt') {
+    try {
+      return await runDelivery(command, argv.slice(1), io);
+    } catch (error) {
+      return fail(error, io);
+    }
+  }
+  return main(argv, io);
+}
+
+if (require.main === module) {
+  Promise.resolve(mainAsync(process.argv.slice(2)))
+    .then(code => {
+      if (typeof code === 'number') process.exitCode = code;
+    })
+    .catch(error => {
+      process.stderr.write(`${JSON.stringify({ ok: false, code: 'cli_error', message: String(error && error.message) }, null, 2)}\n`);
+      process.exitCode = 1;
+    });
+}
+
+module.exports = { USAGE, parseArguments, main, mainAsync, run, runDelivery };

@@ -464,6 +464,361 @@ test("the verifier rejects what a stopped or damaged answer looks like and passe
   assert.equal(verifyReturnDocument(Buffer.alloc(0)).ok, false);
 });
 
+// The provider half of the allowance. These tests never call a model: a rollout is a JSONL fixture written by
+// the test, shaped like the files `codex exec` leaves in ~/.codex/sessions.
+const ROLLOUT_OBSERVED = "2026-10-25T19:56:18.135Z";
+const PRIMARY_RESET = "2026-10-26T00:11:46.000Z";
+const SECONDARY_RESET = "2026-11-01T11:07:00.000Z";
+
+function rolloutText(options = {}) {
+  const observed = options.observedAt || ROLLOUT_OBSERVED;
+  const limits = {
+    limit_id: "codex",
+    primary: {
+      used_percent: options.primaryUsed === undefined ? 35 : options.primaryUsed,
+      window_minutes: 300,
+      resets_at: Math.floor(Date.parse(options.primaryReset || PRIMARY_RESET) / 1000)
+    },
+    secondary: {
+      used_percent: options.secondaryUsed === undefined ? 8 : options.secondaryUsed,
+      window_minutes: 10080,
+      resets_at: Math.floor(Date.parse(options.secondaryReset || SECONDARY_RESET) / 1000)
+    },
+    credits: { has_credits: true, unlimited: false, balance: "144.7441982500" },
+    plan_type: "plus",
+    rate_limit_reached_type: options.reached || null
+  };
+  const events = [
+    {
+      timestamp: "2026-10-25T19:55:05.911Z",
+      type: "session_meta",
+      payload: { id: options.threadId || "thread-fixture", cli_version: "0.164.0", model_provider: "openai", cwd: "C:/scratch" }
+    },
+    { timestamp: observed, type: "turn_context", payload: { model: options.model || "gpt-6-astra" } },
+    { timestamp: observed, type: "token_usage_record", payload: { usage: { input_tokens: 1200, output_tokens: 340, cached_input_tokens: 0 } } }
+  ];
+  (options.messages || []).forEach(text => events.push({
+    timestamp: observed,
+    type: "response_item",
+    payload: { type: "message", role: "assistant", content: [{ type: "output_text", text }] }
+  }));
+  if (options.includeLimits !== false) {
+    events.push({ timestamp: observed, type: "event_msg", payload: { type: "token_count", rate_limits: limits } });
+  }
+  if (options.refusalMessage) {
+    events.push({ timestamp: options.refusalAt || observed, type: "turn.failed", payload: { error: { message: options.refusalMessage } } });
+  }
+  return `${events.map(event => JSON.stringify(event)).join("\n")}\n`;
+}
+
+function writeRollout(fixture, name, text) {
+  const filePath = path.join(fixture.root, "sessions", name);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, text, "utf8");
+  return filePath;
+}
+
+// The carrier's captured `codex exec --json` stream, written the way PowerShell captures it on Windows:
+// UTF-16LE with a byte-order mark. One completed `web_search` item is one retrieval.
+function execLogText(threadId, searches = []) {
+  const events = [{ type: "thread.started", thread_id: threadId }];
+  searches.forEach((entry, index) => {
+    events.push({ type: "item.started", item: { id: `item_${index}`, type: "web_search", query: "" } });
+    events.push({
+      type: "item.completed",
+      item: {
+        id: `item_${index}`,
+        type: "web_search",
+        query: entry.query,
+        action: { type: "search", query: entry.query },
+        results: (entry.sources || []).map(url => ({ type: "text_result", url }))
+      }
+    });
+  });
+  events.push({ type: "item.completed", item: { id: "final", type: "agent_message", text: "done" } });
+  return `${events.map(event => JSON.stringify(event)).join("\r\n")}\r\n`;
+}
+
+function writeExecLog(fixture, name, text) {
+  const filePath = path.join(fixture.root, "sessions", name);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, "utf16le")]));
+  return filePath;
+}
+
+test("a wired-in provider allowance refuses to dispatch until a reading establishes it, and pauses as the allowance", () => {
+  const fixture = buildFixture("provider-missing");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true }, now: () => new Date("2026-10-25T20:00:00Z") });
+  assert.equal(pipeline.budget().provider.enforced, true);
+  assert.equal(pipeline.budget().provider.code, "provider_allowance_unknown");
+
+  assert.throws(
+    () => pipeline.dispatch(fixture.topics[0].topic_id, "research"),
+    error => error.code === "provider_allowance_unknown" && /reading/.test(error.message)
+  );
+  assert.equal(pipeline.budget().used, 0, "an unknown allowance spends nothing");
+  const state = pipeline.status();
+  assert.equal(state.paused, true);
+  assert.equal(state.paused_by, "allowance", "the queue stops on the allowance, not on an owner pause");
+  assert.match(state.pause_reason, /^allowance: /);
+  assert.throws(() => pipeline.resume(), error => error.code === "provider_allowance_unknown");
+});
+
+test("an imported rollout sets both windows, their reset times and the capacity kept for the owner", () => {
+  const fixture = buildFixture("provider-import");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true }, now: () => new Date("2026-10-25T20:00:00Z") });
+  const text = rolloutText();
+  const file = writeRollout(fixture, "fresh.jsonl", text);
+
+  const imported = pipeline.importProviderUsage({ file });
+  assert.equal(imported.provider.ok, true);
+  assert.equal(imported.provider.code, "provider_ok");
+  assert.equal(imported.provider.plan_type, "plus");
+  assert.equal(imported.provider.capacity_percent, 85);
+  assert.equal(imported.provider.owner_reserve_percent, 15);
+  assert.deepEqual(imported.provider.windows.map(window => [window.name, window.used_percent]), [["primary", 35], ["secondary", 8]]);
+  assert.equal(imported.provider.windows[0].resets_at, PRIMARY_RESET);
+  assert.equal(imported.provider.windows[1].resets_at, SECONDARY_RESET);
+  assert.equal(imported.queue.paused, false);
+
+  const dispatched = pipeline.dispatch(fixture.topics[0].topic_id, "research");
+  assert.equal(dispatched.allowance.used, 1);
+  assert.equal(dispatched.allowance.provider.code, "provider_ok");
+  // The imported reading is recorded with its own hash and thread, so the numbers can be traced to a run.
+  const usage = JSON.parse(fs.readFileSync(pipeline.paths.usage, "utf8"));
+  assert.equal(usage.provider.enabled, true);
+  assert.equal(usage.provider.snapshot.source.sha256, sha256(Buffer.from(text, "utf8")));
+  assert.equal(usage.provider.snapshot.source.thread_id, "thread-fixture");
+  assert.equal(usage.provider.history.length, 1);
+});
+
+test("the gate stops at the configured capacity, names the window and its reset, and spends nothing", () => {
+  const fixture = buildFixture("provider-capacity");
+  const pipeline = pipelineFor(fixture, {
+    provider: { enabled: true, capacity_percent: 30 },
+    now: () => new Date("2026-10-25T20:00:00Z")
+  });
+  const file = writeRollout(fixture, "busy.jsonl", rolloutText({ primaryUsed: 35 }));
+  const imported = pipeline.importProviderUsage({ file });
+  assert.equal(imported.provider.ok, false);
+  assert.equal(imported.provider.code, "provider_allowance_exhausted");
+  assert.match(imported.provider.reason, /primary window is at 35%/);
+  assert.match(imported.provider.reason, /keeping 70% for the owner/);
+  assert.ok(imported.provider.reason.includes(PRIMARY_RESET));
+  assert.equal(imported.queue.paused, true);
+
+  assert.throws(
+    () => pipeline.dispatch(fixture.topics[0].topic_id, "research"),
+    error => error.code === "pipeline_paused" && /primary window/.test(error.message)
+  );
+  assert.equal(pipeline.budget().used, 0);
+
+  // The weekly window on its own can stop the run as well.
+  const weekly = writeRollout(fixture, "weekly.jsonl", rolloutText({ primaryUsed: 10, secondaryUsed: 30 }));
+  const second = pipeline.importProviderUsage({ file: weekly });
+  assert.equal(second.provider.code, "provider_allowance_exhausted");
+  assert.match(second.provider.reason, /secondary window/);
+});
+
+test("a reading taken before a window reset is stale, and only a fresh reading lifts the allowance pause", () => {
+  const fixture = buildFixture("provider-stale");
+  let clock = new Date("2026-10-25T20:00:00Z");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true, max_age_minutes: 600 }, now: () => clock });
+  assert.equal(pipeline.importProviderUsage({ file: writeRollout(fixture, "evening.jsonl", rolloutText()) }).provider.ok, true);
+
+  clock = new Date("2026-10-26T00:20:00Z");
+  const stale = pipeline.budget().provider;
+  assert.equal(stale.code, "provider_allowance_stale");
+  assert.ok(stale.reason.includes(PRIMARY_RESET), "the reason names the window that reset");
+  assert.throws(() => pipeline.dispatch(fixture.topics[0].topic_id, "research"), error => error.code === "provider_allowance_stale");
+  assert.equal(pipeline.status().paused_by, "allowance");
+
+  // A run after the reset writes a new rollout; importing it is the documented resume path.
+  const fresh = writeRollout(fixture, "morning.jsonl", rolloutText({
+    observedAt: "2026-10-26T00:21:00.000Z",
+    primaryUsed: 4,
+    primaryReset: "2026-10-26T05:21:00.000Z"
+  }));
+  const refreshed = pipeline.importProviderUsage({ file: fresh });
+  assert.equal(refreshed.provider.ok, true);
+  assert.equal(refreshed.queue.paused, false, "the allowance pause is lifted by the new reading");
+  assert.equal(refreshed.budget.used, 0, "a pause and its lift spend nothing");
+  assert.equal(pipeline.dispatch(fixture.topics[0].topic_id, "research").allowance.used, 1);
+});
+
+test("a reading that is merely old is unknown permission, not permission", () => {
+  const fixture = buildFixture("provider-age");
+  let clock = new Date("2026-10-25T20:00:00Z");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true, max_age_minutes: 45 }, now: () => clock });
+  pipeline.importProviderUsage({ file: writeRollout(fixture, "old.jsonl", rolloutText()) });
+  clock = new Date("2026-10-25T21:30:00Z");
+  const gate = pipeline.budget().provider;
+  assert.equal(gate.code, "provider_allowance_stale");
+  assert.match(gate.reason, /minutes old and the limit is 45/);
+  assert.throws(() => pipeline.dispatch(fixture.topics[0].topic_id, "research"), error => error.code === "provider_allowance_stale");
+});
+
+test("a provider refusal stops the queue, blocks resume, and is cleared by a later reading", () => {
+  const fixture = buildFixture("provider-refusal");
+  let clock = new Date("2026-10-25T20:00:00Z");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true }, now: () => clock });
+  pipeline.importProviderUsage({ file: writeRollout(fixture, "before.jsonl", rolloutText()) });
+
+  const refused = pipeline.recordProviderRefusal({
+    message: "You've hit your usage limit. Try again at 3pm.",
+    resets_at: PRIMARY_RESET
+  });
+  assert.equal(refused.provider.code, "provider_refused");
+  assert.equal(refused.queue.paused, true);
+  assert.match(refused.provider.reason, /Try again at 3pm/);
+  assert.ok(refused.provider.reason.includes(PRIMARY_RESET));
+  assert.throws(() => pipeline.dispatch(fixture.topics[0].topic_id, "research"), error => error.code === "pipeline_paused");
+  assert.throws(() => pipeline.resume(), error => error.code === "provider_refused");
+  assert.equal(pipeline.budget().used, 0, "a refusal spends nothing");
+
+  clock = new Date("2026-10-26T00:30:00Z");
+  const after = writeRollout(fixture, "after.jsonl", rolloutText({
+    observedAt: "2026-10-26T00:29:00.000Z",
+    primaryUsed: 2,
+    primaryReset: "2026-10-26T05:29:00.000Z"
+  }));
+  const cleared = pipeline.importProviderUsage({ file: after });
+  assert.equal(cleared.provider.code, "provider_ok");
+  assert.equal(cleared.queue.paused, false);
+  assert.equal(pipeline.dispatch(fixture.topics[0].topic_id, "research").allowance.used, 1);
+});
+
+test("a refusal recorded inside the rollout is read, not inferred", () => {
+  const fixture = buildFixture("provider-rollout-refusal");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true }, now: () => new Date("2026-10-25T20:00:00Z") });
+  const file = writeRollout(fixture, "refused.jsonl", rolloutText({
+    reached: "primary",
+    refusalMessage: "You've hit your usage limit.",
+    refusalAt: "2026-10-25T19:57:00.000Z"
+  }));
+  const imported = pipeline.importProviderUsage({ file });
+  assert.equal(imported.provider.code, "provider_refused");
+  assert.match(imported.provider.refusal.message, /usage limit/);
+  assert.equal(imported.queue.paused, true);
+});
+
+test("recording a refusal switches the provider half on, because a refusal proves the limit applies", () => {
+  const fixture = buildFixture("provider-refusal-enables");
+  const pipeline = pipelineFor(fixture, { now: () => new Date("2026-10-25T20:00:00Z") });
+  assert.equal(pipeline.budget().provider.enforced, false);
+  const refused = pipeline.recordProviderRefusal({ message: "Usage limit reached for this account.", resets_at: PRIMARY_RESET });
+  assert.equal(refused.provider.enforced, true);
+  assert.equal(refused.provider.code, "provider_refused");
+  assert.equal(refused.queue.paused, true);
+});
+
+
+
+test("a return is registered only when the rollout records the same model, the same bytes and the dispatched envelope", () => {
+  const fixture = buildFixture("provider-receipt");
+  const pipeline = pipelineFor(fixture, { provider: { enabled: true }, now: () => new Date("2026-10-25T20:00:00Z") });
+  pipeline.importProviderUsage({ file: writeRollout(fixture, "baseline.jsonl", rolloutText()) });
+  const topicId = fixture.topics[0].topic_id;
+  const dispatched = pipeline.dispatch(topicId, "research");
+  const envelope = dispatched.envelope.sha256;
+  const document = completeDocument("Receipt report");
+  const bytes = Buffer.from(document, "utf8");
+
+  assert.throws(
+    () => pipeline.submit(topicId, "research", bytes, { model: "gpt-6-astra", envelope_sha256: "0".repeat(64) }),
+    error => error.code === "envelope_mismatch"
+  );
+  const wrongModel = writeRollout(fixture, "wrong-model.jsonl", rolloutText({ messages: [document] }));
+  assert.throws(
+    () => pipeline.submit(topicId, "research", bytes, { model: "gpt-5-codex", rollout: wrongModel, envelope_sha256: envelope }),
+    error => error.code === "model_mismatch" && /records gpt-6-astra/.test(error.message)
+  );
+  const otherAnswer = writeRollout(fixture, "other-answer.jsonl", rolloutText({ messages: ["A different document entirely."] }));
+  assert.throws(
+    () => pipeline.submit(topicId, "research", bytes, { model: "gpt-6-astra", rollout: otherAnswer, envelope_sha256: envelope }),
+    error => error.code === "return_not_in_rollout"
+  );
+  assert.equal(pipeline.documents().length, 0, "nothing refused by a receipt reaches the registry");
+
+  // The answer was emitted after a short preamble, which is how a real run writes it; the document is the
+  // second assistant message, and the receipt proves it came from this thread and model.
+  const real = writeRollout(fixture, "real.jsonl", rolloutText({
+    observedAt: "2026-10-25T20:05:00.000Z",
+    messages: ["I checked the sources before writing this up.", document]
+  }));
+  const registered = pipeline.submit(topicId, "research", bytes, {
+    model: "gpt-6-astra",
+    rollout: real,
+    envelope_sha256: envelope
+  });
+  assert.equal(registered.duplicate, false);
+  assert.equal(registered.registration.version, 1);
+  assert.equal(registered.execution.model, "gpt-6-astra");
+  assert.equal(registered.execution.thread_id, "thread-fixture");
+  assert.equal(registered.execution.envelope_sha256, envelope);
+  assert.equal(registered.execution.usage.input_tokens, 1200);
+  assert.ok(fs.existsSync(registered.execution.receipt_path));
+
+  const queue = JSON.parse(fs.readFileSync(pipeline.paths.queue, "utf8"));
+  assert.equal(queue.jobs[`${topicId}/research`].execution.model, "gpt-6-astra");
+  assert.equal(queue.jobs[`${topicId}/research`].execution.rollout.sha256, sha256(Buffer.from(fs.readFileSync(real))));
+  // The same run is also the freshest provider reading, so the allowance moves with the work.
+  assert.equal(pipeline.budget().provider.observed_at, "2026-10-25T20:05:00.000Z");
+  assert.equal(pipeline.budget().provider.code, "provider_ok");
+
+  // A retry of the same bytes is idempotent and does not spend or duplicate anything.
+  const retried = pipeline.submit(topicId, "research", bytes, { model: "gpt-6-astra", rollout: real });
+  assert.equal(retried.duplicate, true);
+  assert.equal(retried.registration.version, 1);
+  assert.equal(pipeline.budget().used, 1);
+});
+
+test("a receipt records the search the run actually made, and a required search is refused when it made none", () => {
+  const fixture = buildFixture("provider-search");
+  const pipeline = pipelineFor(fixture, { now: () => new Date("2026-10-25T20:00:00Z") });
+  const topicId = fixture.topics[0].topic_id;
+  const dispatched = pipeline.dispatch(topicId, "research");
+  const document = completeDocument("Search report");
+  const bytes = Buffer.from(document, "utf8");
+  const rollout = writeRollout(fixture, "run.jsonl", rolloutText({
+    observedAt: "2026-10-25T20:05:00.000Z",
+    messages: [document]
+  }));
+
+  const silent = writeExecLog(fixture, "silent.jsonl", execLogText("thread-fixture", []));
+  assert.throws(
+    () => pipeline.submit(topicId, "research", bytes, { model: "gpt-6-astra", rollout, exec_log: silent, require_search: true }),
+    error => error.code === "search_not_observed"
+  );
+
+  const otherThread = writeExecLog(fixture, "other-thread.jsonl", execLogText("thread-elsewhere", [
+    { query: "VIX and USD", sources: ["https://www.cboe.com/vix"] }
+  ]));
+  assert.throws(
+    () => pipeline.submit(topicId, "research", bytes, { model: "gpt-6-astra", rollout, exec_log: otherThread }),
+    error => error.code === "exec_log_mismatch"
+  );
+
+  const log = writeExecLog(fixture, "search.jsonl", execLogText("thread-fixture", [{
+    query: "VIX and USD direction",
+    sources: ["https://www.cboe.com/vix", "https://fred.stlouisfed.org/series/VIXCLS"]
+  }]));
+  const registered = pipeline.submit(topicId, "research", bytes, {
+    model: "gpt-6-astra",
+    rollout,
+    exec_log: log,
+    require_search: true,
+    envelope_sha256: dispatched.envelope.sha256
+  });
+  assert.equal(registered.registration.version, 1);
+  assert.equal(registered.execution.search.searches, 1);
+  assert.equal(registered.execution.search.thread_id, "thread-fixture");
+  assert.deepEqual(registered.execution.search.queries, ["VIX and USD direction"]);
+  assert.deepEqual(registered.execution.search.sources, ["https://www.cboe.com/vix", "https://fred.stlouisfed.org/series/VIXCLS"]);
+  assert.ok(fs.existsSync(registered.execution.receipt_path));
+});
+
+
 // The operator front end is guarded the same way as the library it drives: a status read, a preview and a
 // refusal are checked through the CLI, not only through the module, because the CLI is what an unattended
 // run and a human at the keyboard both actually call.
@@ -487,7 +842,13 @@ function cliHarness() {
   return (...argv) => {
     stdout.length = 0;
     stderr.length = 0;
-    const code = runCli(argv, io);
+    // These guards are about claims, envelopes and the registry. The allowance gate that needs a provider
+    // reading is exercised on its own below, so a dispatch here says --provider-optional out loud rather than
+    // leaning on the operational default.
+    const args = String(argv[0]) === "dispatch" && !argv.includes("--provider-required")
+      ? [...argv, "--provider-optional"]
+      : [...argv];
+    const code = runCli(args, io);
     const out = stdout.join("");
     const err = stderr.join("");
     return { code, out, err, json: readJsonOrNull(out), error: readJsonOrNull(err) };
@@ -693,3 +1054,194 @@ test("the CLI argument parser keeps repeated findings and refuses a flag given t
   assert.equal(parsed.flags.json, true);
   assert.throws(() => parseArguments(["status", "--file", "a.md", "--file", "b.md"]), /--file was given more than once/);
 });
+
+test("the CLI establishes the provider allowance from a rollout, records a refusal, and verifies a submit against the run", () => {
+  const fixture = buildFixture("cli-provider");
+  const cli = cliHarness();
+  const root = ["--root", fixture.root];
+  const topicId = fixture.topics[0].topic_id;
+  const observedAt = new Date().toISOString();
+  const primaryReset = new Date(Date.now() + 3600 * 1000).toISOString();
+  const secondaryReset = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+  const freshRollout = options => rolloutText({ observedAt, primaryReset, secondaryReset, ...options });
+
+  assert.equal(cli("allowance", ...root).json.allowance.provider.enforced, false, "the provider half stays off until the owner turns it on");
+  const enabled = cli("allowance", "--provider", "on", ...root);
+  assert.equal(enabled.code, 0);
+  assert.equal(enabled.json.provider.enforced, true);
+  const refused = cli("dispatch", topicId, "research", ...root);
+  assert.equal(refused.code, 1);
+  assert.equal(refused.error.code, "pipeline_paused");
+  assert.match(refused.error.message, /no provider reading has been imported/);
+  assert.equal(refused.json, null);
+
+  const reading = writeRollout(fixture, "cli.jsonl", freshRollout());
+  const imported = cli("allowance", "--from-rollout", reading, ...root);
+  assert.equal(imported.code, 0);
+  assert.equal(imported.json.provider.code, "provider_ok");
+  assert.match(imported.json.provider.reason, /primary window is at 35%/);
+  assert.equal(imported.json.queue.paused, false);
+
+  const dispatched = cli("dispatch", topicId, "research", ...root);
+  assert.equal(dispatched.code, 0);
+  const envelope = dispatched.json.envelope.sha256;
+
+  const document = completeDocument("CLI receipt report");
+  const file = path.join(fixture.root, "returns", "cli.md");
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, document, "utf8");
+
+  const wrongModel = writeRollout(fixture, "cli-wrong.jsonl", freshRollout({ messages: [document] }));
+  const mismatch = cli("submit", topicId, "research", "--file", file, "--model", "gpt-5-codex", "--rollout", wrongModel, ...root);
+  assert.equal(mismatch.code, 1);
+  assert.equal(mismatch.error.code, "model_mismatch");
+
+  const good = writeRollout(fixture, "cli-good.jsonl", freshRollout({ messages: [document] }));
+  const submitted = cli("submit", topicId, "research", "--file", file, "--model", "gpt-6-astra", "--rollout", good, "--envelope", envelope, ...root);
+  assert.equal(submitted.code, 0);
+  assert.equal(submitted.json.registration.version, 1);
+  assert.equal(submitted.json.execution.model, "gpt-6-astra");
+  assert.equal(submitted.json.execution.envelope_sha256, envelope);
+
+  const refusal = cli("allowance", "--refusal", "You've hit your usage limit.", "--resets-at", primaryReset, ...root);
+  assert.equal(refusal.code, 0);
+  assert.equal(refusal.json.provider.code, "provider_refused");
+  assert.equal(refusal.json.queue.paused, true);
+  assert.equal(cli("dispatch", topicId, "red_team", ...root).error.code, "pipeline_paused");
+  assert.equal(cli("resume", ...root).error.code, "provider_refused");
+});
+
+test("the delivery plan names the hosted owner, the stage number and the catalogued prompt provenance", () => {
+  const fixture = buildFixture("delivery-plan");
+  const pipeline = pipelineFor(fixture);
+  const topic = fixture.topics[0];
+
+  // On this fixture the topic carries its own stages, so the owner id is the topic. On the committed catalogue
+  // a topic is a display group and the owner is the factor chain id, which is the same value the page uploads
+  // under; either way it is derived from the catalogue, never typed.
+  const plan = pipeline.deliveryPlan(topic.topic_id, "research");
+  assert.equal(plan.topicId, topic.topic_id);
+  assert.equal(plan.group_topic_id, topic.topic_id);
+  assert.equal(plan.stage, 1);
+  assert.equal(plan.stage_id, "research");
+  assert.equal(plan.kind, "report");
+  assert.equal(plan.parent, null);
+  assert.equal(plan.provenance.prompt_path, topic.stages[0].prompt_path);
+  assert.equal(plan.provenance.prompt_sha256, topic.stages[0].prompt_sha256);
+
+  assert.throws(
+    () => pipeline.deliveryPlan(topic.topic_id, "red_team"),
+    error => error.code === "parent_missing"
+  );
+});
+
+test("a document produced elsewhere is adopted, read back and shown as the delivered stage", () => {
+  const fixture = buildFixture("adopt");
+  const pipeline = pipelineFor(fixture);
+  const topic = fixture.topics[0];
+  const chain = fixture.catalog.factor_chains[0];
+  const bytes = Buffer.from(completeDocument("adopted research report"), "utf8");
+  const hostedPath = `${topic.topic_id}/1/v1-${sha256(bytes)}.md`;
+
+  const result = pipeline.adopt(topic.topic_id, "research", bytes, {
+    model: "gpt-6-astra",
+    source: "D:/trading-agent-dashboard-pilot/runs/20261025-dxy/research.md",
+    provenance: {
+      prompt_path: "prompts/earlier-research.md",
+      prompt_sha256: "a".repeat(64),
+      prompt_bytes: 9109,
+      catalog_version: "research-prompt-v3.1.0"
+    },
+    hosted: {
+      ok: true,
+      sha256: sha256(bytes),
+      row_id: "row-1",
+      storage_path: hostedPath,
+      version: 1,
+      duplicate: false,
+      readback: { ok: true, sha256: sha256(bytes), bytes: bytes.length }
+    }
+  });
+
+  assert.equal(result.registration.document_id, stageDocumentId(topic.topic_id, "research"));
+  assert.equal(result.registration.sha256, sha256(bytes));
+  assert.equal(result.hosted.row_id, "row-1");
+  assert.equal(result.hosted.storage_path, hostedPath);
+  assert.equal(pipeline.budget().used, 0, "an adoption spends no allowance unit");
+  assert.deepEqual(pipeline.jobs(), {}, "an adoption claims no dispatch");
+
+  const stored = pipeline.store.readObject(result.registration.document_id, 1);
+  assert.equal(sha256(stored.bytes), sha256(bytes));
+  const document = pipeline.documents().find(entry => entry.document_id === result.registration.document_id);
+  assert.match(document.versions[0].note, /no dispatch in this queue is claimed and no allowance unit was spent/);
+  assert.match(document.versions[0].note, /prompts\/earlier-research\.md sha256 a{64} \(9109 bytes\)/);
+  assert.match(document.versions[0].note, /row-1/);
+
+  const entry = pipeline.plan({ topicId: topic.topic_id }).find(candidate => candidate.stage === "research");
+  assert.equal(entry.page_state, "delivered");
+  assert.equal(entry.runnable, false);
+
+  // With the research stage delivered, the hosted plan for the review names the exact version it judges.
+  const review = pipeline.deliveryPlan(topic.topic_id, "red_team");
+  assert.equal(review.stage, 2);
+  assert.deepEqual(review.parent, { stage_number: 1, version: 1, sha256: sha256(bytes), research_version: 1 });
+});
+
+test("an adoption is refused when the hosted row does not carry the bytes it would record", () => {
+  const fixture = buildFixture("adopt-mismatch");
+  const pipeline = pipelineFor(fixture);
+  const topic = fixture.topics[0];
+  const bytes = Buffer.from(completeDocument("adopted research report"), "utf8");
+
+  assert.throws(
+    () => pipeline.adopt(topic.topic_id, "research", bytes, {
+      model: "gpt-6-astra",
+      hosted: { ok: true, sha256: "b".repeat(64), row_id: "row-2", storage_path: "x/1/v1-b.md", version: 1 }
+    }),
+    error => error.code === "hosted_readback_mismatch"
+  );
+  assert.throws(
+    () => pipeline.adopt(topic.topic_id, "research", bytes, {
+      model: "gpt-6-astra",
+      hosted_required: true
+    }),
+    error => error.code === "hosted_not_configured"
+  );
+  assert.equal(fs.existsSync(fixture.registryPath), false, "a refused adoption records nothing");
+});
+
+test("a dispatch without a provider reading is paused instead of spending an allowance unit", () => {
+  const fixture = buildFixture("provider-gate");
+  const topicId = fixture.topics[0].topic_id;
+  const off = pipelineFor(fixture);
+  assert.throws(() => off.dispatch(topicId, "research", { require_provider: true }), error => error.code === "provider_disabled");
+  assert.equal(off.budget().used, 0);
+  assert.equal(off.status().paused, true, "a missing reading pauses the queue");
+  assert.throws(() => off.dispatch(topicId, "research", { require_provider: true }), error => error.code === "pipeline_paused");
+
+  const unknownFixture = buildFixture("provider-gate-unknown");
+  const enabled = pipelineFor(unknownFixture, { provider: { enabled: true } });
+  assert.throws(
+    () => enabled.dispatch(unknownFixture.topics[0].topic_id, "research", { require_provider: true }),
+    error => error.code === "provider_allowance_unknown"
+  );
+  assert.equal(enabled.budget().used, 0);
+});
+
+test("the CLI dispatch refuses a missing provider reading, and still refuses once the provider half is on", () => {
+  const fixture = buildFixture("cli-provider");
+  const cli = cliHarness();
+  const root = ["--root", fixture.root];
+  const topicId = fixture.topics[0].topic_id;
+
+  const refused = cli("dispatch", topicId, "research", "--provider-required", ...root);
+  assert.equal(refused.code, 1);
+  assert.equal(refused.error.code, "provider_disabled");
+  assert.equal(cli("allowance", ...root).json.allowance.used, 0);
+
+  assert.equal(cli("allowance", "--provider", "on", ...root).code, 0);
+  const stillRefused = cli("dispatch", topicId, "research", "--provider-required", ...root);
+  assert.equal(stillRefused.code, 1, "switching the provider half on without a reading still pauses dispatch");
+  assert.ok(["provider_allowance_unknown", "pipeline_paused"].includes(stillRefused.error.code), stillRefused.error.code);
+});
+
