@@ -62,8 +62,11 @@ Rules that make that table true rather than decorative:
 
 ## 3. Build order on the host
 
-After the §3 access block has run, everything below can be driven from this PC over SSH, and none of it needs a
-password in a command line.
+Step 0 is not this lane's: the live-trader lane's `scripts/bootstrap-live-trading-vps-access.ps1` (branch
+`vps/cutover-20261027`) turns one typed password into key-only access - `-Status` first, then
+`-ConfirmThumbprint <thumbprint read in the Contabo console>`. This lane runs no access step of its own and installs
+no second mechanism; it reuses that key pair, that pin and that sshd configuration. After that block has run,
+everything below can be driven from this PC over SSH, and none of it needs a password in a command line.
 
 1. **Read what the box is**, before changing it:
    `ssh -i .local\vps-access\id_ed25519 Administrator@158.220.87.240 "hostname; Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, WindowsInstallationType; Test-Path $env:SystemRoot\explorer.exe"`
