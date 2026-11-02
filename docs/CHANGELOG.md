@@ -17,6 +17,10 @@
   `20261102-research-download-v7` and `20261102-research-download-v1`) and the two upload test files (33 tests).
   Nothing in storage, the registry, the v3.2.0 prompts or the 25 chains changed: `research-library:check` reports
   catalogue, registry, repo hashes, chains and chain prompts ok.
+- Closed 2026-11-02 after the owner accepted the structural fix: the chain card stays the only place a document is
+  downloaded from, nothing is added to the registry record, and the implementation is kept as it is. The live
+  read-back on the published page is recorded in `docs/research-library/UPLOAD_BACKEND.md`; the owner's own device
+  check is the only open item and would start new work only if it fails.
 
 ## 2026-10-25 (integration lane) - Every factor asks its own questions: `research-prompt-v3.1.0` on `main`
 
