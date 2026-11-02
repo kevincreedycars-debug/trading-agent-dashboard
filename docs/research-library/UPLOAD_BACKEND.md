@@ -75,6 +75,8 @@ A record whose bytes live in the store downloads through the store even when the
 - “The file could not be stored…” means no object was committed; nothing was recorded.
 - “The file is stored, but its library record could not be saved…” means the bytes reached private storage but the row did not; retry registration reuses the same path, and an object already in the bucket is finished off rather than refused.
 - “A private download link could not be created…” means the session expired or access was refused. Sign in again.
+- “This record's file is not in the private store…” means the row describes a file whose bytes were never stored here,
+  so the page cannot serve it; registering that return on the page stores the bytes and makes it downloadable.
 - “That email address and password were not accepted…” means the credentials are wrong; nothing is stored.
 
 ## Verify the provisioning
@@ -94,6 +96,19 @@ then read the parent document the next stage names and download it. Every step p
 the run exits non-zero if anything fails, and the script deletes only the rows that appeared during its
 own run plus the member account it created. The whole flow, the isolation rules and the two-minute check
 to repeat by hand on a real phone are in `docs/research-library/PAGE_CHECK_RUNBOOK.md`.
+
+The run of 2026-11-02 (desktop and phone-sized emulation, published site, the local service stopped) read: every step
+PASS from sign-in through the upload, the reload, the parent hand-back, View and Download, with no loopback request and
+no page error, on top of `35023d8b`. The published page was read back against that commit: `script.js`,
+`lib/research_upload_client.js` and `lib/research_upload_adapter.js` were byte-identical to it and the page served the
+`20261102-research-download-v7`/`-v1` bundles. One isolated round trip on `usd-factor-live-f10-equity-versus-usd`
+stage 1 uploaded `TEST-RESEARCH-LIBRARY-UPLOAD-20261024.md` (554 bytes, `e2308b55cafa`), which reached the private
+store as row `7f8506e8-…`, read `UPLOADED` with that same record id after two separate refreshes, and downloaded twice
+with the original sha256 both times while the browser stayed signed in. The existing VIX report (`d7b8eb40-…`, 84,056
+bytes, `e4151937`) and the f5 DXY report (`1b64468d-…`, 47,576 bytes, `9048e897`) downloaded from their stage cards
+with the recorded sha256, each served from the private signed link itself rather than from a blob held by the page. The
+run removed its own rows, objects and member, and the store was read back afterwards at two documents, two objects and
+one member, both objects matching their recorded hashes.
 
 The run of 2026-10-25 (phone-sized emulation, local service stopped, nothing listening on port 8791)
 read: every step PASS, from sign-in through the reload, the parent download, View and Download; the
