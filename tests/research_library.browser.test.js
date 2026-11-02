@@ -323,8 +323,13 @@ async function main() {
     assert.ok(researchPrompt.includes("**A potentially useful input or interaction**"), "a positive finding is an allowed conclusion");
     assert.ok(researchPrompt.includes(VIX_TOPIC), "the topic is named");
     assert.ok(researchPrompt.includes("05:00 Europe/London"), "the cutoff is stated");
-    assert.ok(researchPrompt.length > 12000 && researchPrompt.length < 20000,
-      `one stage must be copied, not the brief's four, saw ${researchPrompt.length} characters`);
+    const savedResearchStage = JSON.parse(fs.readFileSync(catalogPath, "utf8")).factor_chains
+      .find(chain => chain.factor_id === "live.f1-vix-level").stages.find(stage => stage.stage === "research");
+    // Windows clipboard conversion may change LF to CRLF; compare complete text with only that conversion normalised.
+    assert.equal(researchPrompt.replace(/\r\n/g, "\n"), fs.readFileSync(path.join(rootDir, savedResearchStage.prompt_path), "utf8").replace(/\r\n/g, "\n"),
+      "copy must deliver the entire canonical stage prompt, without truncation or appended legacy stages");
+    assert.equal((researchPrompt.match(/^## Responsibility of this stage\r?$/gm) || []).length, 1);
+    assert.doesNotMatch(researchPrompt, /^#{1,3} Step [1-4]\b/gm);
     const a3Prompt = ResearchLibrary.taskById(JSON.parse(fs.readFileSync(catalogPath, "utf8")), "USD-SESSION-A3").prompt;
     assert.equal(researchPrompt.includes(a3Prompt.slice(0, 60)), false, "stage 1 must not copy the legacy reviewer task");
 
