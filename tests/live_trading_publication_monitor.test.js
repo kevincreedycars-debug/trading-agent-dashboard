@@ -27,10 +27,10 @@ function feedAt({ generatedAt = isoAgo(5), masked = "***614", windowSeconds = 90
   };
 }
 
-function lanesDocument({ heartbeat = "data/live-trading-trader.ftmo-1.json", masked = "***614" } = {}) {
+function lanesDocument({ heartbeat = "data/live-trading-trader.ftmo-1.json", masked = "***614", documentAt = isoAgo(5) } = {}) {
   return {
     schema_version: "live-trading-lanes-v1",
-    generated_at_utc: isoAgo(5),
+    generated_at_utc: documentAt,
     lanes: [
       {
         id: "ftmo-1",
@@ -145,6 +145,41 @@ test("a snapshot past its own window fails, and the report says by how much", as
     assert.match(lane1.problems.join(" "), /past the 900s window it declares/);
   } finally {
     await server.close();
+  }
+});
+
+// Both of these are exit 1 and both read as "the snapshot is old", but one means nothing is being published at
+// all and the other means publishing works and the snapshot it carries is frozen. A person woken by the email
+// acts on that difference, so the report states it instead of leaving it to be worked out from git history.
+test("a stale snapshot says whether publication stopped or the snapshot itself did", async () => {
+  const stopped = await serve({
+    "/data/live-trading-lanes.json": lanesDocument({ documentAt: isoAgo(3 * 60 * 60) }),
+    "/data/live-trading.json": feedAt({ generatedAt: isoAgo(3 * 60 * 60 + 200) }),
+    "/data/live-trading-trader.ftmo-1.json": statusAt()
+  });
+  try {
+    const result = await runMonitor(stopped.base);
+    assert.equal(result.status, 1);
+    const report = JSON.parse(result.stdout.trim());
+    const lane1 = report.lanes.find((row) => row.id === "ftmo-1");
+    assert.match(lane1.notes.join(" "), /publication has stopped rather than fallen behind/);
+    assert.ok(report.lanes_document.age_seconds >= 3 * 60 * 60, "the lanes document's own age is in the report");
+  } finally {
+    await stopped.close();
+  }
+
+  const lateSnapshot = await serve({
+    "/data/live-trading-lanes.json": lanesDocument({ documentAt: isoAgo(5) }),
+    "/data/live-trading.json": feedAt({ generatedAt: isoAgo(3 * 60 * 60) }),
+    "/data/live-trading-trader.ftmo-1.json": statusAt()
+  });
+  try {
+    const result = await runMonitor(lateSnapshot.base);
+    assert.equal(result.status, 1, "a late snapshot is still a failure: the wording changes, not the alarm");
+    const lane1 = JSON.parse(result.stdout.trim()).lanes.find((row) => row.id === "ftmo-1");
+    assert.match(lane1.notes.join(" "), /a publish did happen; the snapshot it carries is the part that is late/);
+  } finally {
+    await lateSnapshot.close();
   }
 });
 
