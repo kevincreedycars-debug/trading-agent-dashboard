@@ -7,6 +7,11 @@
 //   freshness  how old is that snapshot, against the window the snapshot itself declares?
 //   heartbeat  is a trader beating behind it, how old is that beat, and is it armed?
 //
+// A stale snapshot gets a fourth answer, because "stale" alone sends a person to the wrong machine: the lanes
+// document is rewritten in the same commit as the snapshot, so its own age says whether publication stopped at
+// the host (nothing is being published) or the publisher is still publishing and the snapshot it carries is the
+// part that stopped advancing (the terminal or the feed). Same exit code, different sentence.
+//
 //   node scripts/check-live-trading-publication.js [--base <url>] [--json]
 //
 // Read-only. It issues GET requests and writes nothing; nothing here reads a credential, opens a broker
@@ -112,6 +117,28 @@ function ageSecondsOf(stamp, nowMs) {
   const at = Date.parse(stamp || "");
   if (Number.isNaN(at)) return null;
   return Math.round((nowMs - at) / 1000);
+}
+
+// Which of the two faults a stale snapshot is. The lanes document travels in the same commit as the snapshot, so
+// its stamp is the publisher's own heartbeat: as old as the snapshot's window means nothing has been published
+// for longer than a full window, and younger means a publish did happen and the snapshot it carried is the part
+// that is late. The exit code does not move either way; only the sentence a person acts on does.
+function explainStaleSnapshot(row, documentAgeSeconds) {
+  if (documentAgeSeconds === null) {
+    row.notes.push(
+      "the lanes document states no generated_at_utc, so a stopped publisher cannot be told from a late snapshot"
+    );
+    return;
+  }
+  if (documentAgeSeconds > row.feed.window_seconds) {
+    row.notes.push(
+      `the lanes document has not been rewritten for ${documentAgeSeconds}s either, and it is rewritten on every publish, so publication has stopped rather than fallen behind`
+    );
+  } else {
+    row.notes.push(
+      `the lanes document was rewritten ${documentAgeSeconds}s ago, so a publish did happen; the snapshot it carries is the part that is late`
+    );
+  }
 }
 
 async function checkLane(lane, options, deps) {
@@ -236,13 +263,28 @@ async function main(argv = process.argv.slice(2), deps = {}) {
     return 2;
   }
   const lanes = Array.isArray(documentRead.body?.lanes) ? documentRead.body.lanes : [];
+  const documentAgeSeconds = ageSecondsOf(documentRead.body?.generated_at_utc, nowMs);
   const rows = [];
   for (const lane of lanes) rows.push(await checkLane(lane, options, deps));
+  // Only a lane that failed on the snapshot's age gets the explanation: an unreadable stamp or a missing file is
+  // already its own answer, and saying why it might be stale would be noise on top of the answer.
+  for (const row of rows) {
+    const stale =
+      row.enabled &&
+      row.feed.age_seconds !== null &&
+      Number.isFinite(row.feed.window_seconds) &&
+      row.feed.age_seconds > row.feed.window_seconds;
+    if (stale) explainStaleSnapshot(row, documentAgeSeconds);
+  }
   const failures = rows.filter((row) => row.status === "fail");
   const report = {
     at_utc: new Date(nowMs).toISOString(),
     base: options.base,
-    lanes_document: { url: documentUrl, generated_at_utc: documentRead.body?.generated_at_utc ?? null },
+    lanes_document: {
+      url: documentUrl,
+      generated_at_utc: documentRead.body?.generated_at_utc ?? null,
+      age_seconds: documentAgeSeconds
+    },
     lanes: rows,
     verdict: failures.length ? "attention" : "ok"
   };
@@ -269,7 +311,12 @@ async function main(argv = process.argv.slice(2), deps = {}) {
       for (const problem of row.problems) process.stdout.write(`    problem: ${problem}\n`);
       for (const note of row.notes) process.stdout.write(`    note:    ${note}\n`);
     }
-    process.stdout.write(`\nlanes ${rows.length}, failing ${failures.length}, base ${options.base}\n`);
+    process.stdout.write(
+      documentAgeSeconds === null
+        ? "\nthe lanes document states no generated_at_utc\n"
+        : `\nthe lanes document was rewritten ${documentAgeSeconds}s ago, and it is rewritten on every publish\n`
+    );
+    process.stdout.write(`lanes ${rows.length}, failing ${failures.length}, base ${options.base}\n`);
     process.stdout.write(
       failures.length
         ? "ATTENTION: one or more enabled lanes is stale, mismatched or missing a heartbeat.\n"
