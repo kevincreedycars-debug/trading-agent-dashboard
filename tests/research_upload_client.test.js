@@ -50,6 +50,31 @@ test("storage path naming is exact", () => {
     `usd-vix/2/v7-${"a".repeat(64)}.md`
   );
 });
+test("a private link carries the name the reader uploaded, and a name is never used as a path", async () => {
+  configure(async url => {
+    if (url.includes("/storage/v1/object/sign/")) {
+      return jsonResponse(200, { signedURL: "/object/sign/research-documents/usd-vix/1/v1-abc.md?token=xyz" });
+    }
+    return jsonResponse(404, {});
+  });
+  const named = await ResearchUpload.signedUrl({ storage_path: "usd-vix/1/v1-abc.md" }, 600, { download: "VIX report.md" });
+  assert.equal(named.ok, true);
+  assert.equal(named.download_name, "VIX report.md");
+  assert.equal(
+    named.url,
+    "https://example.supabase.co/storage/v1/object/sign/research-documents/usd-vix/1/v1-abc.md?token=xyz&download=VIX%20report.md",
+    "the name travels in the private link so the browser saves the file itself"
+  );
+
+  const plain = await ResearchUpload.signedUrl({ storage_path: "usd-vix/1/v1-abc.md" }, 600);
+  assert.equal(plain.url, "https://example.supabase.co/storage/v1/object/sign/research-documents/usd-vix/1/v1-abc.md?token=xyz");
+  assert.equal(plain.download_name, "");
+
+  assert.equal(ResearchUpload.downloadName("a/b\\c.md"), "a-b-c.md");
+  assert.equal(ResearchUpload.downloadName("  two   spaces.md "), "two spaces.md");
+  assert.equal(ResearchUpload.downloadName("x".repeat(200)).length, 120);
+});
+
 
 test("a refused anonymous write surfaces a plain message", async () => {
   configure(async () => jsonResponse(500, {}), {

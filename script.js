@@ -7204,6 +7204,30 @@ function researchLibraryDownloadBytes(filename, bytes, mime = "application/octet
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
+// A private store link that already carries the download disposition is handed to the browser as it is:
+// the file streams straight to the reader's download folder, under the name they uploaded, without the
+// page holding the bytes or keeping a blob alive. That is the path that survives a phone and a slow link.
+function researchLibraryDownloadLink(filename, url) {
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  if (filename) anchor.download = filename;
+  anchor.rel = "noopener";
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
+// A registry record and a stored record describe the same file when their bytes hash the same. The stored
+// record owns the download, because it is the one that names a private object and a version number the
+// store understands; the registry version number is only a label. Returns null when nothing stored matches.
+function researchLibraryStoredMirror(entry, version) {
+  const adapter = researchLibraryHostedClient();
+  if (!adapter || typeof adapter.mirrorOf !== "function") return null;
+  return adapter.mirrorOf(entry, researchLibraryDocumentList(), version);
+}
+
+
 async function researchLibraryCopyPrompt(taskId) {
   const lib = researchLibraryLib();
   const task = lib ? lib.taskById(researchLibraryData || {}, taskId) : null;
@@ -7494,10 +7518,26 @@ function setupResearchLibraryControls() {
       if (hostedControl) {
         const isView = !!target.closest("[data-rl-view]");
         const documentId = isView ? hostedControl.dataset.rlView : hostedControl.dataset.rlDownload;
+        const version = hostedControl.dataset.rlVersion;
         const stored = researchLibraryDocumentList().find(entry => String(entry.document_id) === String(documentId));
+        // A record registered before the private store existed names the same file as a stored record when
+        // the bytes hash the same. Resolving it here is what makes those records downloadable from the
+        // published page instead of only from the machine that registered them.
+        const mirror = stored && !stored.hosted ? researchLibraryStoredMirror(stored, version) : null;
         if (stored && stored.hosted) {
-          hostedAdapter.openDocument(stored, hostedControl.dataset.rlVersion, isView ? "view" : "download")
+          hostedAdapter.openDocument(stored, version, isView ? "view" : "download")
             .then(result => researchLibraryMessage(result.message));
+          return;
+        }
+        if (mirror) {
+          hostedAdapter.openDocument(mirror.document, mirror.version, isView ? "view" : "download")
+            .then(result => researchLibraryMessage(result.message));
+          return;
+        }
+        if (stored && stored.storage === "library_object" && !researchLibraryState.serviceToken) {
+          // The optional local service is not configured, so there is nothing left to read the bytes from:
+          // say that plainly rather than reporting a request to a machine that is not part of this page.
+          researchLibraryMessage(`${stored.title || stored.document_id} is recorded, but its file is not in the private store, so this page cannot download it. Register the return again here to store the bytes.`);
           return;
         }
       }

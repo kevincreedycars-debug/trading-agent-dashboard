@@ -1,4 +1,23 @@
 # Changelog
+## 2026-11-02 - Research Library: Download streams the stored file instead of a page-held blob
+
+- What was wrong: a saved download was built in page memory (`Blob` + `URL.createObjectURL` + an anchor) and the
+  object URL was revoked seconds later, so a phone or a slow link could lose the file after the click; and any
+  `library_object` record that the page had not merged from the store - the committed VIX report, an input-package
+  entry named by registry id - fell through to the loopback service at `127.0.0.1:8791`, which a reader on the
+  published page does not have.
+- The private link now carries `download=<the name the reader uploaded>`, which the store answers with
+  `Content-Disposition: attachment`. The page reads the bytes once, re-checks the recorded sha256, then hands the
+  link to the browser, which streams the original file itself: nothing is held in page memory and no timer can cut
+  the download short.
+- A registry record and a stored record are resolved to each other by exact sha256, so a document registered before
+  the store existed downloads from the store rather than failing at the local service; when its bytes are genuinely
+  not in the store the page says so instead of reporting a request to a machine it never contacted.
+- Files: `lib/research_upload_client.js`, `lib/research_upload_adapter.js`, `script.js`, `index.html` (cache-busters
+  `20261102-research-download-v7` and `20261102-research-download-v1`) and the two upload test files (33 tests).
+  Nothing in storage, the registry, the v3.2.0 prompts or the 25 chains changed: `research-library:check` reports
+  catalogue, registry, repo hashes, chains and chain prompts ok.
+
 ## 2026-10-25 (integration lane) - Every factor asks its own questions: `research-prompt-v3.1.0` on `main`
 
 - `d6cff707` from `workstream/c-research-programme` was ported onto the deployed builder rather than merged or

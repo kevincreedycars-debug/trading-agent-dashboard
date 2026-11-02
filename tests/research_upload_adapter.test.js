@@ -391,6 +391,51 @@ test('an upload without a signed-in session is refused in plain words', async ()
   assert.match(result.message, /Sign in with your email/);
 });
 
+test('a registry record is resolved to the stored record that holds the same bytes, so it can still be downloaded', () => {
+  const stored = {
+    document_id: 'stored-row-1',
+    hosted: true,
+    title: 'F1 VIX level and risk regime - live.f1-vix-level - Research',
+    storage: 'library_object',
+    versions: [
+      { version: 1, sha256: 'a'.repeat(64), storage_path: 'usd-factor-live-f1-vix-level/1/v1-' + 'a'.repeat(64) + '.md', original_filename: 'VIX_USD_Research_Report.md' }
+    ]
+  };
+  const documents = [
+    { document_id: 'usd-baseline-audit-01-vix-usd-report', hosted: false, storage: 'library_object', versions: [{ version: 1, sha256: 'a'.repeat(64) }] },
+    { document_id: 'some-repo-brief', hosted: false, storage: 'repo_path', versions: [{ version: 2, sha256: 'b'.repeat(64) }] },
+    stored
+  ];
+
+  const mirror = adapter.mirrorOf(documents[0], documents, 1);
+  assert.equal(mirror.document, stored, 'the stored record owns the download');
+  assert.equal(mirror.version, 1, 'the stored version holding those bytes is the one handed over');
+  assert.equal(adapter.mirrorOf(documents[0], documents, 2), null, 'a version whose bytes are not stored stays unresolved');
+  assert.equal(adapter.mirrorOf(documents[1], documents, 2), null, 'a published file is never turned into a store download');
+  assert.equal(adapter.mirrorOf(documents[0], documents).version, 1, 'with no version named, the stored bytes still resolve');
+});
+
+
+test('a download is handed to the browser as the private link itself, under the uploaded name', async () => {
+  harness({ signedIn: true });
+  const file = stageFile('# Link download\n\nBody.\n');
+  await adapter.uploadStage({ topic: topic(), stage: redTeamStage(), file, title: 'Link download', parents: { researchRef: 'usd-baseline-audit-01-vix-usd-report' } });
+
+  let documents = { documents: [] };
+  await adapter.refresh(TOPIC, () => documents, next => { documents = next; });
+  const handed = [];
+  globalThis.researchLibraryDownloadLink = (name, url) => handed.push({ name, url });
+  const result = await adapter.openDocument(documents.documents[0], 1, 'download');
+  delete globalThis.researchLibraryDownloadLink;
+
+  assert.equal(result.ok, true, result.message);
+  assert.equal(handed.length, 1, 'the page is given one link, not a blob it has to keep alive');
+  assert.equal(handed[0].name, 'red-team-return.md', 'the saved file keeps the name the reader uploaded');
+  assert.match(handed[0].url, /^https:\/\/demo-project\.supabase\.co\/storage\/v1\/object\/sign\/research-documents\//);
+  assert.match(handed[0].url, /[?&]download=red-team-return\.md$/, 'the link asks the store for a download, so the browser streams it');
+  assert.match(result.message, /fingerprint checked/, 'the bytes are still checked before the link is handed over');
+});
+
 test('a later stage records the registered parent it follows and refuses an upload without one', async () => {
   const world = harness({ signedIn: true });
   const file = stageFile('# Stage two\n\nA finding.\n');

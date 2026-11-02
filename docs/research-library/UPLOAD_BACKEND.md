@@ -61,6 +61,12 @@ insert into public.research_members (user_id, note) values ('<uuid>', 'who this 
 - Final-stage rows are named in the `kind` column (`final_analysis`, `final_red_team`, `final_adjudication`) because stage numbers 1 to 3 are shared with the factor chains.
 - Refusals appear inside the upload form, with the chosen file and typed details left in place. Nothing is called registered until the store has answered with the stored row, and no refusal writes anything.
 
+## Download
+
+**View result** opens the stored bytes in a new tab from an ephemeral blob, which is read once and dropped. **Download result**, **Download inputs** and the input-package buttons hand the browser the private link itself, which carries `download=<the name the reader uploaded>` and is answered with `Content-Disposition: attachment`, so the file streams into the reader's own download folder. The page reads the bytes once before that and re-checks the recorded sha256, so a download is still refused when the stored file and the record disagree. Nothing stays in page memory after the click, which is what makes the same button work on a phone and on a slow connection; a blob held by the page was the part that failed there.
+
+A record whose bytes live in the store downloads through the store even when the record was registered before the store existed: a registry row and a stored row are the same file when their sha256 matches, and the stored row is the one that names the private object and the version the store understands. A record whose bytes are not in the store says so ("its file is not in the private store") instead of asking `127.0.0.1:8791` for them, which no published page can reach.
+
 ## Messages a reader may see
 
 - “Sign in with your email and password…” means no session exists in this browser.
