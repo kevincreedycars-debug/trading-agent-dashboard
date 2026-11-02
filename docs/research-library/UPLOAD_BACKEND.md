@@ -108,7 +108,10 @@ with the original sha256 both times while the browser stayed signed in. The exis
 bytes, `e4151937`) and the f5 DXY report (`1b64468d-…`, 47,576 bytes, `9048e897`) downloaded from their stage cards
 with the recorded sha256, each served from the private signed link itself rather than from a blob held by the page. The
 run removed its own rows, objects and member, and the store was read back afterwards at two documents, two objects and
-one member, both objects matching their recorded hashes.
+one member, both objects matching their recorded hashes. In the same run an isolated red-team return was stored on
+stage 2 of that chain, the adjudication card named it as the document it follows, and **Download inputs** there
+returned those bytes exactly, so the parent a red-team or adjudication stage needs is reachable from the published
+page without the local service.
 
 The run of 2026-10-25 (phone-sized emulation, local service stopped, nothing listening on port 8791)
 read: every step PASS, from sign-in through the reload, the parent download, View and Download; the
