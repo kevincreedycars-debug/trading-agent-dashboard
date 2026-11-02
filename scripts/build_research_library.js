@@ -31,11 +31,17 @@ const TODAY = '2026-10-13';
 // One version string identifies the wording of every generated prompt. It is stamped into each stage's
 // prompt_source and into the prompt file itself, so the page's Copy prompt path and the automated
 // dispatcher can prove they hand over the same words.
-const PROMPT_TEMPLATE_VERSION = 'research-prompt-v3.1.0';
+const PROMPT_TEMPLATE_VERSION = 'research-prompt-v3.2.0';
+const NORTH_STAR_CONTRACT = {
+  version: '2.0',
+  repo_path: 'docs/research-library/USD_North_Star_Model_Contract_v2.md',
+  sha256: 'e39e13098829fd2f61e53a8430277bcbf04ba103b8ef9f93b914847c19e8369f'
+};
 
 const SESSION_OBJECTIVE =
-  'One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session '
-  + '(the endpoint is the next local date), from factors whose value is observable at the cutoff, '
+  'One directional USD call per eligible local date over 05:00 Europe/London to 05:00 Europe/London '
+  + 'on the following local calendar date, resolving each endpoint separately with the IANA zone, '
+  + 'from factors whose value is published and obtainable at the cutoff, '
   + 'with the label instrument and quote source declared.';
 
 const STORAGE = {
@@ -1006,8 +1012,8 @@ const FACTOR_STAGE_META = {
 
 // The session every stage is written for. It is repeated in every prompt because a prompt has to stand alone.
 const FACTOR_SESSION_BLOCK = [
-  '- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.',
-  '- **Starts and ends**: a session starts on a Monday-to-Friday London local date only. A Saturday or Sunday start is never a session; the Saturday start is the only one that can contain a London daylight-saving transition, which is why every eligible session is exactly 24 hours (`backtester/lib/usd_session_engine_interface.js`, `SESSION_CONTRACT`, `session_start_rule`). A Friday session therefore ends at the 05:00 London endpoint on the Saturday. When the endpoint value does not exist, record the session as not evaluable and leave the value missing: never fill it from a Friday close, a Monday open, an interpolation or a later revision, and never quote a number whose window you cannot name.',
+  '- **Session**: 05:00 Europe/London to 05:00 Europe/London on the following local calendar date. Resolve each endpoint separately using the IANA zone `Europe/London`, record both UTC timestamps and offsets, and derive elapsed hours from those endpoints. Never implement the endpoint as a fixed UTC offset or by adding 24 elapsed hours. References below to a 24-hour or London-to-London session are shorthand for this local-date contract, not a fixed-duration rule. The North Star v2.0 contract pinned above governs this research; `docs/research/usd-session/v1/session_contract_v1.json` describes the earlier study.',
+  '- **Starts and ends**: the earlier study and `backtester/lib/usd_session_engine_interface.js` use Monday-to-Friday starts. That eligibility rule is provisional for this v2 research, not a universal requirement supplied by North Star v2.0. Declare and freeze eligible starts, holidays and quote handling before evaluation; do not silently broaden or narrow the sample. A Friday start ends on Saturday at 05:00 London, never Monday. Resolve DST even when the selected weekday sample contains no transition. When either endpoint quote is missing, retain the scheduled endpoints and report a data exclusion with coverage loss, never fill from a Friday close, Monday open, interpolation or later revision. Distinguish those unscorable observations from model abstentions on evaluable sessions, which remain in coverage and no-call reporting.',
   '- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.',
   '- **The deployed engine is not this window, and its timing is read from the code that defines it, never from memory or from a document**: the stored live calls were attached to the window resolved by the repository\'s own Phase 1 contract - a 09:30 America/New_York open on the call date to the 16:00 America/New_York close of the next date that has a value, sliding up to three days when the scheduled close has none (`getPhase1OutcomeWindow` in `backtester/lib/timeframe_windows.js`, applied in `backtester/lib/usd24h/outcomes.js`, whose own note calls it a nominal 24-hour horizon rather than 24 elapsed hours and which records `measured_elapsed_hours` per row). The "median 30.5 elapsed hours" figure is a measurement on the closed study\'s own 583 evaluable rows, recorded under `contract_vs_deployed_engine` in `docs/research/usd-session/v1/session_contract_v1.json`: it is a property of that study, not a declared property of the live engine, and it must be attributed that way every time it is quoted. The same block measures the overlap of that study\'s interval with this session as 14.5 hours on 528 rows and 15.5 hours on 55 rows - the two weeks a year when New York has changed and London has not - and the session\'s first 9.5 hours (8.5 in those weeks) as uncovered. Those figures are measured and date-dependent: they are not to be derived by subtracting a fixed London-to-New-York offset, and any comparison of a London-anchored window with a New-York-anchored one must be resolved per date from declared transitions. The archive\'s "next valid trading session" means the next date with an available value, not a holiday-aware exchange calendar, and the engine does not model market holidays. If the code and a document disagree about the live engine\'s timing, the code is the authority; report the disagreement rather than repeating the document.'
 ];
@@ -1020,6 +1026,8 @@ const FACTOR_PROHIBITIONS = [
   'State effects that are already in the price at the cutoff rather than counting them again as predictive.',
   'Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.',
   'Name the instrument a claim is really about. Never present another instrument as DXY.',
+  'Do not invent numeric parameters to complete a specification. Retain a supported candidate value with provenance, or use a named unresolved parameter, the evidence needed to choose it and a fail-closed blocker; mark all unvalidated choices explicitly.',
+  'Do not spend paid API credits, purchase data, enable overages or change order execution. A paywall is a reported evidence gap, not permission to buy access. Preserve original reports, prompt lineage, input snapshots and forecasts.',
   'Recommending data the collector should record and a treatment a future engine should apply is required content, not a change being made. No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, none may be carried out now, and none may be reported as done or as agreed.'
 ];
 
@@ -1080,7 +1088,7 @@ function chainQuestion(factorId, factor) {
   const gate = /gate/i.test(String(factor.role || ''));
   return gate
     ? `Chain question: what should \`${factorId}\` - ${factor.label} - change about the call, given that it is a ${factor.role} rather than a directional input? ${factor.brief}`
-    : `Chain question: does \`${factorId}\` - ${factor.label} - carry information about the next 24-hour dollar move, and in which quantity? ${factor.brief}`;
+    : `Chain question: does \`${factorId}\` - ${factor.label} - carry information about the next defined London-to-London dollar move, and in which quantity? ${factor.brief}`;
 }
 
 // Stages 2 and 3 re-ask the factor's own questions, so a question cannot stop at stage 1. The chain
@@ -1115,13 +1123,48 @@ function promptFrontmatter(chain, stageId, extraLines = []) {
       : `- This is the asset-level synthesis chain: it reads every factor-chain adjudication and is not itself a factor result. It opens only through the gate, never because a prompt was copied.`,
     '- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.',
     `- Prompt template \`${PROMPT_TEMPLATE_VERSION}\`; \`data/research-library/catalog.json\` carries this file's sha256, and both the dashboard copy and the dispatcher verify it.`,
+    `- Governing research contract: USD North Star v${NORTH_STAR_CONTRACT.version}, \`${NORTH_STAR_CONTRACT.repo_path}\`, sha256 \`${NORTH_STAR_CONTRACT.sha256}\`. Read the supplied contract when available; its substantive requirements are repeated below so this prompt remains self-contained. Report a missing or mismatched copy, do not invent having read or verified it.`,
+    '- Earlier briefs and implementation notes remain historical evidence. Apply the v2 contract to this assignment without rewriting their history, changing live behaviour or treating a later requirement as something an earlier author already met.',
     ...extraLines,
-    ''
+    '',
+    stageResponsibilitySection(stageId)
   ].join('\n');
 }
 
 function sessionSection() {
-  return ['## The session this is written for', '', ...FACTOR_SESSION_BLOCK, ''].join('\n');
+  return ['## The session this is written for', '', ...FACTOR_SESSION_BLOCK, '', northStarEvidenceSection(), ''].join('\n');
+}
+
+function stageResponsibilitySection(stageId) {
+  const duties = {
+    research: 'Develop comprehensive primary-source research and falsifiable conditional hypotheses, with measurement definitions, competing mechanisms, strongest supporting and opposing evidence, availability and a proposed rejection test. Literature review and test design are this stage; running a new backtest is not required or authorised. Lack of exact-session measurements limits the conclusion, not the ability to return honest research.',
+    red_team: 'Independently re-fetch primary sources for load-bearing claims and search for omitted or contradictory primary evidence beyond the report bibliography. Test alternative explanations, causal identification, pre-cutoff availability, revisions, instrument/horizon mismatch, regime selection and multiple testing across transformations, signs, horizons and related chains. Record the search and sources actually reached, including unsuccessful searches; inherited quotations are not independently verified evidence. Propose decisive tests rather than running new backtests.',
+    adjudication: 'Trace every material claim and objection to a decision: retained conditional hypothesis, exclusion, regime-only finding, insufficient evidence or no incremental value. Record claim/issue ids, parent document versions, source passages, reasons, surviving conditions and the evidence needed to settle unresolved points. Do not manufacture a positive result or promote an unmeasured hypothesis into a validated rule. Distinguish a newly required v2 coverage gap in an older report from a false claim made by that report.',
+    final_analysis: 'Synthesise all 25 adjudications at their supported strength. Build a cross-factor map of shared data, overlapping transformations, common causes, mediating variables and proposed interactions; propose ablations and conditional comparisons against simple baselines to test incremental value. Complete the macro-regime and event coverage audit below before recommending any additional chain. Missing evidence can require a supplement, not a fabricated factor or result.',
+    final_red_team: 'Independently challenge the synthesis and its underlying primary sources, including a search for omitted contrary evidence. Audit cross-factor dependence, correlated votes, mediation and alternative causal explanations; multiplicity across the whole research programme; retrospective regimes; economic-event omissions; and leakage between development, validation and holdout periods. Test whether proposed portfolio consistency would improperly couple independent Layer 1 agents. Record source-access and search limitations, and do not manufacture objections or empirical results.',
+    final_adjudication: 'Resolve each material final objection with claim/issue ids, parent versions, source evidence, reasons and surviving conditions; preserve exclusions, regime-only findings, insufficient evidence and no incremental value as valid outcomes. Close the cross-factor, macro-regime, event and downstream consistency audits. A complete candidate specification may contain explicit unresolved parameters and fail-closed blockers: if the evidence cannot support an executable candidate, say so, retain the requested specification section and do not invent numbers to make it executable.'
+  };
+  const finalCoverage = stageId.startsWith('final_')
+    ? 'For every macro regime and named release below, map coverage to the relevant factor ids and adjudicated claims, distinguishing supported conditional findings, rejected claims, missing evidence and justified non-applicability. Audit interacting channels and correlated inputs, not just mention counts. State downstream portfolio exposure, common-shock and cross-asset consistency checks without transferring USD signs/weights to another asset or feeding peer calls back into Layer 1. The coverage audit and any proposed supplement belong in this one document.'
+    : '';
+  return ['## Responsibility of this stage', '', duties[stageId], '', finalCoverage, '',
+    'Return a coverage checklist inside the same Markdown document: each required section and factor question addressed, partial, not applicable with reason, or blocked with missing evidence. A truncated or missing required section is not a complete return. Source-access gaps must remain visible; a fully reported negative finding is a valid result.', ''].join('\n');
+}
+
+function northStarEvidenceSection() {
+  return [
+    '## North Star evidence and evaluation requirements',
+    '',
+    '- **Source standard**: use primary publications, official series methodology, original research and release records for load-bearing claims; trace secondary summaries to originals where reachable. Record source title, publisher, URL, publication/version date, access date, relevant passage or pinpoint reference, instrument, sample and horizon. Separate what you fetched from inherited citations. Give the strongest supporting and opposing evidence and explain conflicts by identification, definitions, timing, sample or regime; inaccessible evidence remains unverified.',
+    '- **Point-in-time ledger**: for every proposed input distinguish observation/reference time, scheduled and actual release time, first publicly obtainable time, vendor dissemination time, local ingestion time and vintage/revision time. An observation date is not an availability timestamp; ingestion is not proof of earliest public availability. Only data published and obtainable by the cutoff qualify, and an operational replay must also respect when the system actually possessed them. Record time zones, source evidence, missing timestamps, staleness, consensus as-of time and first-print versus later-vintage values; never substitute revised history for the original snapshot.',
+    '- **Conditional regimes**: consider inflation, growth, labour, monetary-policy expectations, relative international policy, liquidity/funding stress, risk appetite and crisis regimes. For this factor, identify the material channels and cutoff-observable regime definitions, sign changes, already-priced effects and falsifiers; mark other regimes not applicable with a reason or unsupported, without inventing a new factor. Do not define a predictive regime using its subsequent outcome.',
+    '- **Economic events**: explicitly assess relevance of CPI, PCE, NFP, FOMC, GDP, retail sales, ISM and ECB decisions, plus other material releases supported by sources. Give proportionate detail: direct macro/calendar factors need release-level treatment; other factors need the relevant event-conditioned channel or a reason for no direct relation. Distinguish the pre-cutoff calendar, consensus, prior and revisions already known from actual/realised surprise and revisions released later; cover expected versus realised surprise, release timing, positioning and conditional policy/risk effects. Future actuals never enter the original cutoff forecast. Unscheduled shocks are a separate uncertainty class, not a claim that all shocks can be predicted.',
+    '- **Immutable forecasts and separate cohorts**: a proposed forecast record preserves issue time, target end time, input snapshot/version, model and prompt versions, evidence, direction or abstention and confidence. The original 05:00 call is immutable. Alternative horizons and post-release shadow reforecasts need separate issue/expiry times, snapshots and scored cohorts; never overwrite original calls, pool their outcomes or retroactively improve reported performance.',
+    '- **Event infrastructure boundary**: where this factor needs event data or a reassessment, inventory and reuse existing n8n/API collection from authorised inputs. Verify the event-to-snapshot-to-model chain in code before claiming automatic reruns or a manual-only limitation; otherwise mark that status unverified. A shadow proposal must address selective event eligibility, complete source data, consensus/revision integrity, as-of timestamps, deduplication/idempotency, cooldowns, rate limits, market hours, stale-input rejection and fail-closed handling. These are design requirements, not instructions to build a duplicate calendar, trigger a workflow or change trades.',
+    '- **Downstream tests**: propose falsifiable tests with frozen instrument/source, session eligibility, label/flat-band and missing-quote/abstention rules; time-ordered walk-forward and out-of-sample splits, an untouched holdout, simple baselines, overlap-aware ablations, uncertainty and a multiple-testing plan. Record previously exposed periods and candidate variants so a reused holdout is never called unseen. Parameters and regime definitions must be chosen on development data only. Do not run new experiments in these research stages or claim an unmeasured gain.',
+    '- **Separate outcomes**: distinguish directional accuracy, coverage, abstention, skipped-correct sessions and confidence calibration where applicable from downstream L2L performance under its own declared execution/outcome contract, costs and risk assumptions. Do not infer either outcome from the other. Compare abstention to always calling and to coverage-matched baselines; report data exclusions separately. Backtesting and portfolio-wide consistency remain downstream: independent Layer 1 agents must not read other agents\' calls or shared conclusions to manufacture agreement.',
+    ''
+  ].join('\n');
 }
 
 function prohibitionsSection() {
@@ -1203,7 +1246,7 @@ function returnSection(chain, stageId) {
     lines.push('Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
     lines.push('```');
     lines.push('- End the document with a section headed `## Complete candidate Layer 1 logic for isolated backtesting`. It must be complete enough for another person to implement without going back to the analysis, and it must be explicitly a candidate, not a deployed rule.');
-    lines.push('- Inside that section, give: the rule identity and version; every input with its series, transformation, sign and timing; every threshold, weight, lookback and interaction with its units; the abstention and missing-data rules; the score construction and any tie-break; deterministic pseudocode; the parameter table marking each parameter measured or unvalidated; the isolated-backtest plan, sample and metrics; and the data requirements and blockers.');
+    lines.push('- Inside that section, give: the rule identity and version; every input with its series, transformation, sign and timing; every threshold, weight, lookback and interaction with its units; the abstention and missing-data rules; the score construction and any tie-break; deterministic pseudocode; the parameter table marking each parameter measured or unvalidated; the isolated-backtest plan, sample and metrics; and the data requirements and blockers. Unsupported numeric choices stay named unresolved parameters, and pseudocode must fail closed until those blockers are resolved. Completeness means every decision and gap is explicit, not that an executable positive result must exist.');
     lines.push('- Mark every parameter that has not been measured as `unvalidated`. Do not present a candidate number as a live threshold, and do not include a production change or a performance claim.');
   } else {
     lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:');
@@ -1226,8 +1269,8 @@ function returnSection(chain, stageId) {
 
 function researchPrompt(chain) {
   const dispatchLine = chain.dispatch && chain.dispatch.state === 'dispatched'
-    ? `- The programme has already dispatched the research behind this chain: task \`${chain.dispatch.task_id}\`, brief ${chain.dispatch.brief_version || '1.0.0'}, pack version ${chain.dispatch.pack_version}, context version ${chain.dispatch.context_version}. That brief is the record of what was asked; this prompt is what this stage is judged against.`
-    : '- This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.';
+    ? `- The programme has already dispatched the research behind this chain: task \`${chain.dispatch.task_id}\`, brief ${chain.dispatch.brief_version || '1.0.0'}, pack version ${chain.dispatch.pack_version}, context version ${chain.dispatch.context_version}. That brief is the immutable record of what was asked; this version governs new work and identifies later coverage gaps without rewriting the earlier assignment or return.`
+    : '- This is a versioned research assignment. Check the registry for existing returns before scheduling new work; preserve prior evidence and request a versioned supplement where needed. A generated prompt is not proof that this chain has never been dispatched.';
   const sections = [
     promptFrontmatter(chain, 'research', [dispatchLine]),
     '## What this stage is for',
@@ -1269,7 +1312,7 @@ function researchPrompt(chain) {
       '',
       'The brief was written for a four-step programme: report, red team, research cards, then a backtest handoff. This chain replaced that with three stages - research, red team, adjudication - so anything the brief says about step numbers, research cards, card schemas or a per-card hypothesis limit belongs to a workflow this chain does not use and does not constrain this report. This stage returns one report, stage 2 attacks it claim by claim, and stage 3 decides what, if anything, enters central USD synthesis.',
       '',
-      'Two requirements of the brief are kept here because the rest of this prompt does not say them:',
+      'Two requirements of the brief remain particularly relevant to this chain:',
       '',
       '- Prefer primary sources - the exchange, the index provider, the Federal Reserve, the paper itself - over summaries, and say when only a summary was reachable. Where sources disagree, give both and say which you find better identified, and why.',
       '- Follow the same channel into its cross-asset carriers - equities, credit, gold, rates and crypto - labelling every instrument and window the same way, and condition the window on the event and release calendar, including the timing of the Federal Reserve H.10 release.',
@@ -1433,7 +1476,7 @@ function finalAnalysisPrompt(chain) {
     ]),
     '## What this stage is for',
     '',
-    'Read every factor-chain adjudication for the asset and produce the best-supported asset-level conclusion. The adjudications are the evidence; this stage synthesises them, resolves what conflicts between factor chains, and states plainly what the whole body of work does and does not support.',
+    'Read every factor-chain adjudication for the asset and produce the best-supported asset-level conclusion. The adjudications are the input findings, not substitutes for the primary evidence they cite; this stage traces them to that evidence, resolves what conflicts between factor chains, and states plainly what the whole body of work does and does not support.',
     '',
     '## Which documents you are reading',
     '',
@@ -1602,150 +1645,175 @@ const FACTOR_PROBES = {
     "How stale is the VIXCLS observation at the 05:00 London cutoff, and what does that staleness do to a claim that the level is a cutoff-time regime read?",
     "Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and which observable at the cutoff separates them from a common hidden driver?",
     "Does the VIX level still carry information once the cross-asset risk state, gold and the credit spread are in the model, or is it the same risk factor counted twice?",
+    "Do inflation-driven equity stress and a liquidity/funding crisis imply different USD signs for the same VIX level, and which pre-cutoff observations identify the distinction around CPI and FOMC sessions?",
   ],
   "risk.vix-level-and-change-at-cutoff": [
     "What does the VIX level at the cutoff add to the level the deployed F1 rule already uses, and is a second chain carrying the same variable a duplication the synthesis has to resolve?",
     "Is the informative quantity the level, the one-day change, the five-day change, or the change between the last US close and the cutoff, and how stale is the observation at 05:00 London?",
     "Is the mechanism a safe-haven demand for dollars, a funding or liquidity squeeze, or a risk-appetite shock, and what observable separates them?",
     "Does the VIX change add information beyond the cross-asset risk state and the equity move, and is its sign the same in a calm and a stressed regime?",
+    "Can a pre-cutoff VIX change be separated from a scheduled-event volatility premium and from an unscheduled crisis shock, without using the subsequent release or volatility outcome?",
   ],
   "live.f2-us-2y-delta": [
     "Is the informative quantity the five-day change, the level or a same-session change, and does the deployed five-day window measure anything inside the 24-hour session?",
-    "Is the FRED DGS2 value at the cutoff the previous US close, and what vintage or revision risk attaches to a series read that way two business days after the fact?",
+    "Which DGS2 observation was first published and obtainable by the cutoff, what was its actual age, and what publication, dissemination and revision evidence supports that timing rather than an assumed fixed lag?",
     "Does a 2Y move carry policy expectations, growth news or a term-premium and liquidity component, and which observable at the cutoff separates a growth shock from a policy shock?",
     "Does the 2Y delta survive once the 10Y real yield, the US-DE spread and the curve slope are in the same model, and does the same-day dollar reaction leave anything for the following 24 hours?",
+    "How does the policy reaction to CPI, PCE, NFP and FOMC news differ across inflation and labour regimes, and which parts of a pre-cutoff yield move versus a future release can enter this forecast?",
   ],
   "live.f3-us-de-2y-spread-delta": [
     "Is the spread built from two series with different publication lags and market calendars, and what does that mismatch do to a five-day change computed at the cutoff?",
     "Is the informative part the US leg, the German leg or the difference, and can the two legs be separated with data observable at 05:00 London?",
     "Are Bund yields available on the same date and vintage as DGS2, and what happens to the spread when one leg misses a session or is republished?",
     "Does the relative 2Y spread add anything beyond the US 2Y delta and the broad dollar index, or is its weight the US leg counted twice?",
+    "How do divergent Fed and ECB policy expectations change the spread-to-USD mechanism, and can FOMC and ECB decision sessions be compared with both legs aligned to their actual pre-cutoff availability?",
   ],
   "live.f4-real-yield-delta": [
     "Is the informative quantity the TIPS real yield change, the nominal-minus-breakeven split, or the level, and how much of the change comes from the breakeven measurement itself?",
     "How stale is DFII10 at the cutoff, and do TIPS liquidity and off-the-run pricing contaminate the measured change enough to matter for a five-day window?",
     "Is the mechanism a real discount-rate story for the dollar or a growth story, and what observable separates a real-rate rise that helps the dollar from one that hurts it?",
     "Does the real yield add information beyond the nominal 10Y and the front-end delta, and would the evidence support the deployed five-day change over a shorter window?",
+    "Can inflation repricing after CPI/PCE be distinguished from growth repricing and TIPS liquidity stress, using only information available before the forecast cutoff?",
   ],
   "rates.us-front-end-delta": [
     "Do the 2Y and 3M series share a publication lag and a market calendar, and is a change computed from a stale 3M print comparable to one computed from the 2Y?",
     "Is the informative quantity the 3M bill, the 2Y note, their difference, or a policy-expectation measure implied by them, and does the 3M bill carry a flight-to-quality distortion?",
     "Does a front-end change reflect expected policy, term premium, or a liquidity and collateral effect, and what observable at the cutoff separates them?",
     "Does this chain duplicate the live F2 and F3 chains, and if so what does it add - the 3M leg, the policy-cycle conditioning, or nothing?",
+    "Which inflation, labour and FOMC conditions change the policy-expectations channel, and do bill collateral effects create a different channel from the 2Y response?",
   ],
   "rates.relative-front-end-delta": [
     "Which foreign front end is used, from which source, and is it observable at 05:00 London on the same date and vintage as the US leg?",
     "Is a bilateral differential the right object, or should the dollar basket weights determine a weighted differential against several front ends?",
     "Does the relative move reflect divergent policy expectations, a common global factor, or a currency-specific risk premium?",
     "Does the differential add information beyond the US front end and the dollar index, and is a German leg a proxy for the euro rather than for the relative factor?",
+    "Which Fed, ECB and other relevant central-bank decision comparisons match the declared USD instrument, and when do common global shocks defeat an interpretation based on policy divergence?",
   ],
   "rates.real-yield-delta": [
     "Is the real yield measured from TIPS, from a nominal-minus-survey-expectations decomposition, or from a model, and which of them is available at the cutoff?",
     "Does the move come from the nominal leg or the breakeven, and how reliable is the breakeven when both inflation swaps and TIPS liquidity are imperfect?",
     "Is the mechanism a discount-rate channel for the dollar, a growth channel, or a risk-premium channel, and what evidence separates those cases?",
     "Does this chain duplicate live F4, and does a 5Y real yield add anything to the 10Y that the deployed chain already uses?",
+    "Do CPI/PCE inflation shocks, growth news and crisis liquidity alter the real-yield channel differently across maturities, and are survey/model vintages actually available at the cutoff?",
   ],
   "rates.term-premium-and-curve": [
     "Is the informative object the slope level, its change, or a term-premium estimate, and can a term premium be estimated with the data named here rather than asserted?",
     "Is a curve slope observable at 05:00 London from previous closes, and how does a stale slope interact with a session that contains a US data release?",
     "Does the slope carry growth expectations, inflation compensation, or a term-premium and duration-demand story, and what observable separates them?",
     "Does the slope add information beyond the levels of its two legs, each of which already carries its own chain, and is it a regime variable or a direction?",
+    "Can GDP, retail sales and ISM growth conditions be separated from policy and term-premium effects, and does a model-estimated term premium use revised or full-sample information unavailable then?",
   ],
   "rates.credit-spread-delta": [
     "Which credit series measures the spread the claim is about, at what rating and maturity, and how stale is it at the cutoff?",
     "Is the informative quantity the spread level, a one-day change, or a change over several days, and does a spread change lag the equity move it is meant to signal?",
     "Is the mechanism a growth signal, a risk-appetite signal, or a funding and default-risk signal, and does the sign for the dollar differ between the default story and the risk story?",
     "Does the credit spread add information beyond the VIX level, the equity move and the risk state, or is it a slower restatement of the same risk factor?",
+    "Do growth deterioration, default risk and a funding crisis imply different USD effects, and how would GDP/ISM news and unscheduled credit shocks be classified without future outcomes?",
   ],
   "live.f5-dxy-delta": [
     "Is the stored DTWEXBGS the broad trade-weighted index rather than DXY, and what does calling it the dollar index do to every claim that quotes it?",
     "Is a one-day change of a daily H.10 index observable at 05:00 London given its publication lag, and what does the d1 to d5 to d20 fallback ladder do to the horizon of the signal?",
     "Is the informative content own-session momentum, mean reversion after a large move, or slow trend, and which of them can a 24-hour session capture at all?",
     "Does the index delta predict the next session, or is it an accounting identity against the bilateral pairs that the label instrument is meant to measure?",
+    "How do H.10 publication timing and constituent exposures affect apparent responses to US and ECB news, and does an as-of broad-index delta remain distinct from the proposed DXY label?",
   ],
   "live.f6-gold-delta": [
     "Is gold read as an inverse dollar proxy, a real-rate hedge or a safe-haven asset, and how would the sign differ between those three readings?",
-    "Is the Coinbase XAU-USD spot quote the same instrument, venue and window as the gold the literature measures, and how does a 24/7 crypto-venue quote behave against a 05:00 London cutoff?",
+    "Can the claimed Coinbase XAU-USD source, instrument identity, trading hours and quote actually be verified, and does the retrieved instrument match the gold the literature measures at 05:00 London? Do not infer 24/7 spot-gold availability from the provider name.",
     "Is a five-day gold change the right transformation, and does the one-day fallback change the meaning of the signal rather than only its horizon?",
     "Does gold add information beyond the real yield, the VIX level and the cross-asset risk state, or is its apparent dollar relation a restatement of real rates?",
+    "When do inflation news, real-rate repricing, liquidity liquidation and safe-haven demand make gold and USD move together rather than inversely, and which regime is identifiable at cutoff?",
   ],
   "live.f9-dollar-smile": [
     "Is the dollar smile a measured relation in this window or a descriptive story, and what observation would falsify it?",
     "The deployed reading uses the VIX 25/16 pair and the bias string: are those the right variables, and does the smile need a third state such as global growth or funding stress that neither captures?",
     "Is the smile a regime variable that should switch other factors signs, or a separate directional factor, and can those two roles be told apart with session data?",
     "Does the smile add anything to the VIX level and the cross-asset risk state it is computed from, and is the rulebook weight of 12 defensible against the coded 1?",
+    "Can US growth exceptionalism, relative global weakness and crisis dollar demand be separately identified from pre-cutoff growth/labour, relative policy and funding observations rather than labelled after the USD outcome?",
   ],
   "live.f10-equity-versus-usd": [
     "The stored input is a QQQ ETF quote: what is the difference between the Nasdaq-100 index, the NQ future and the ETF for a 24-hour London session, and which one does a claim actually need?",
     "Is the QQQ quote a regular-hours close with gaps, a pre-market price or a delayed snapshot at the cutoff, and what do the ETF premium to net asset value and its distributions do to a one-day change?",
     "Is the equity-dollar relation a risk-appetite channel, a rate channel or a growth channel, and is its sign stable across regimes or does it flip with the VIX gate?",
     "Does the equity move add information beyond the VIX level and the cross-asset risk state, or is it the same risk appetite counted a third time?",
+    "Do inflation/FOMC discount-rate shocks and GDP/ISM growth shocks reverse the equity-USD relation, and could common news explain both prices without equity predicting USD?",
   ],
   "live.f7-economic-surprise": [
-    "What is a surprise here, and can any consensus or first-print vintage published before the release be reached, or is the stored usd_signal an unversioned derived value whose input cannot be recovered?",
+    "What is a surprise here, and can the consensus archived before the release and the actual first print published at release be reached, or is the stored usd_signal an unversioned derived value whose inputs cannot be recovered?",
     "Is the release outcome observable before the 05:00 London cutoff, and what does the signal do on a session whose releases land inside the window rather than before it?",
     "Is the mechanism an immediate repricing of rate expectations, a risk-premium change or a growth surprise, and does the direction depend on the policy reaction function in force?",
     "Does a surprise signal add information beyond the front-end rate change that follows it, and how much of the surprise reaction is already in the dollar by the next cutoff?",
+    "For CPI, PCE, NFP, GDP, retail sales and ISM, which headline, components, prior revisions and consensus vintages define the shock, and how do inflation/labour regimes change its USD sign? Treat FOMC and ECB policy shocks separately from numeric release surprises.",
   ],
   "live.f8-fed-bias": [
     "Is a bias string a measurement or an interpretation, and can the same words be turned into a reproducible, dated, pre-cutoff value?",
     "No vintage of the string is retained: does the deployed read measure a change, a level, or a revision introduced after the fact, and what would a versioned series look like?",
     "Does the bias label carry information beyond the front-end rate change and the release surprise that ostensibly produce it?",
     "If the string cannot be versioned, what is the honest Layer 1 role: a documented input, a documented exclusion, or no incremental value?",
+    "Can official FOMC statements, projections, minutes and speeches identify a dated change relative to prior expectations, with release-time provenance and inflation/labour conditions, rather than a timeless hawkish/dovish label?",
   ],
   "macro.release-surprise-at-first-print": [
     "What is the surprise - the first print minus the consensus published before the release - and can any such pair be reached without a paid vintage archive?",
     "At which moment does the surprise become observable, and how much of the reaction is already inside the dollar by the next 05:00 London cutoff?",
     "Is the mechanism a policy-expectation repricing or a risk-premium change, and does the sign depend on the state of the policy cycle and on where the policy rate sits?",
     "Does the surprise add information beyond the front-end rate change and the equity move that follow the print, and what is the honest conclusion if no vintage source is reachable at all?",
+    "For CPI, PCE, NFP, GDP, retail sales and ISM, preserve consensus as-of time, first actual, prior/revisions and any normalisation fitted only to earlier data; which shocks occurred before cutoff and which belong solely to a separate post-release cohort?",
   ],
   "fx.usd-session-momentum": [
     "Momentum in which instrument, over which lookback, and is a trailing one-day or five-day move in the label instrument observable at 05:00 London when that instrument has no verified intraday source?",
     "Is the trailing move measured on the same instrument and quote source as the label, or on a proxy that introduces a basis the signal cannot separate from momentum?",
     "Is the mechanism continuation under gradual information diffusion, or mean reversion after a liquidity-driven move, and what measurable condition separates them?",
     "Is session momentum distinct from the dollar index delta and the overnight range position, and does it survive the bid-ask bounce of a 24-hour window?",
+    "Does continuation differ after already-released CPI/NFP/FOMC news versus before a known release, and can policy divergence or crisis funding explain it without using the future event result?",
   ],
   "fx.usd-overnight-range-position": [
     "Where in its own range is the dollar at the cutoff, measured over which lookback, and does the answer depend on where the range window starts relative to the 05:00 London boundary?",
     "Is the range computed from the same quote source as the label instrument, and how do missing prints or a thin overnight session distort the measured position?",
     "Is range position a state variable that bounds the expected session move, a breakout signal, or an artefact of the range window itself?",
     "Is it distinct from session momentum and the volatility regime, or can its information be recovered from those two?",
+    "Does range position behave differently ahead of CPI/NFP/FOMC, in thin liquidity or during funding stress, and can the range and regime be frozen before cutoff rather than extended with future prices?",
   ],
   "fx.usd-session-volatility-regime": [
     "Is realised volatility measured from the label instrument, from a proxy, or from an implied measure, and over which window is it observable at the cutoff?",
     "Does the regime change the expected direction, the expected dispersion, or only whether a call should be made at all?",
     "Is the abstention value of a volatility regime separable from a data-quality gate, and what threshold would be a measured quantity rather than a convention?",
     "Does the volatility regime interact with the VIX level and the risk state, or does it restate them in dollar terms?",
+    "Does the gate distinguish scheduled CPI/NFP/FOMC event risk from crisis volatility, and what accuracy, coverage and skipped-correct-session tests against always calling and coverage-matched baselines could falsify its abstention value?",
   ],
   "risk.usd-safe-haven-demand": [
     "What observation distinguishes the dollar being bought as insurance from the dollar being bought for carry, and can that distinction be measured at the cutoff?",
     "Is safe-haven demand a separate factor or the residual of the risk state, the VIX level and the rate differentials, and is there an instrument that isolates it, such as cross-currency basis or FX-implied volatility skew?",
     "Does the relation hold symmetrically in risk-off and risk-on, and is the sign stable across funding-stress episodes?",
     "Does safe-haven demand add incremental information beyond the risk state and the VIX, and what data would have to be bought before it can be tested?",
+    "How do global funding crises, US-specific confidence shocks and relative policy carry change the safe-haven sign, and are basis/skew measures obtainable before cutoff rather than inferred from later USD strength?",
   ],
   "risk.risk-on-off-cross-asset-state": [
     "Which assets define the risk state, at what cutoff, and do their quotes share one window, or is the state assembled from instruments that are closed at 05:00 London?",
     "Is one composite state justified, or does the evidence support separate equity, credit and commodity channels with different signs for the dollar?",
     "How much does the state overlap the VIX level, gold and the equity-dollar relation, and which single chain should own the risk factor?",
     "Does the risk state carry directional information at all, or is it a conditioning variable that changes the sign of other factors?",
+    "Can growth optimism, inflation stress and a liquidity crisis generate different cross-asset patterns around GDP/ISM, CPI and policy news, and how are asynchronous observations prevented from creating a false composite state?",
   ],
   "calendar.known-releases-between-cutoff-and-endpoint": [
     "Which releases fall inside the session, how are their timestamps verified before the cutoff, and what happens when a release time is scheduled but its consensus is unavailable?",
     "Does a known-but-unreleased event change the expected direction, the expected dispersion, or only the confidence in a call, and how can that be measured rather than assumed?",
     "Can the event be used without using its outcome, and is a pre-release positioning effect distinguishable from the post-release reaction that the next session will contain?",
     "What is the honest treatment of a session whose dominant event is a release the collector cannot date reliably: abstain, widen, or call with a stated caveat?",
+    "For CPI, PCE, NFP, FOMC, GDP, retail sales, ISM and ECB decisions, can the existing calendar supply pre-cutoff schedule, consensus and prior/revision versions, and what separate shadow reassessment design would handle the later actual without altering the original call?",
   ],
   "calendar.days-since-and-until-high-impact-events": [
     "Is distance from a high-impact date a meaningful state variable, and does the evidence support drift before a release, after it, or neither?",
     "Which events count as high impact, and does the answer depend on a classification that is itself hindsight-defined?",
     "Is the mechanism positioning, hedging demand, or pre-announcement drift, and what observable at the cutoff separates it from ordinary seasonality?",
     "Is the distance measure distinct from the release-window factor and from a volatility regime, and does it carry any information beyond them?",
+    "How do rescheduled CPI/PCE/NFP, FOMC, GDP, retail sales, ISM and ECB events, time-zone changes and prior-release revisions affect distance as known at cutoff, and is positioning measured independently of the later price response?",
   ],
   "data.quality-gate-for-abstention": [
     "Which data states should force abstention - missing, stale, revised, or unreachable at the cutoff - and how is each state detected without an as-of check in the live collector?",
     "Does the gate improve directional accuracy on the sessions it does trade, and what does it cost in coverage and in skipped sessions that would have been called correctly?",
-    "How are skipped sessions counted - as errors, as excluded observations, or as a separate coverage figure - and what benchmark makes abstention comparable to always calling?",
+    "How are missing-label data exclusions kept separate from model abstentions on evaluable sessions, and what coverage-matched comparisons and comparisons against always calling prevent selectively skipping difficult sessions from masquerading as accuracy?",
     "Which sessions does the gate skip in practice, and are they the sessions where a call was least likely to be right, or simply the sessions with the most missing inputs?",
+    "How are first availability, dissemination, ingestion and revision timestamps checked across prices and event payloads, and would incomplete consensus/revisions or a duplicate/stale event fail closed in a proposed shadow reassessment?",
   ],
 };
 
@@ -1830,7 +1898,7 @@ const TOPIC_MAP = [
     pack_factor_ids: ['live.f7-economic-surprise', 'live.f8-fed-bias', 'macro.release-surprise-at-first-print'],
     probes: [
       'Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?',
-      'Is the first print the only honest vintage, and what does the revision history of the tested series look like?'
+      'Which vintage was actually available at each forecast cutoff, including revisions published by then, and how are first-release surprise tests kept distinct from later revision-news tests?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
@@ -1919,6 +1987,7 @@ function buildCatalog() {
     prompt_template: {
       version: PROMPT_TEMPLATE_VERSION,
       generated_by: 'scripts/build_research_library.js',
+      governing_contract: { ...NORTH_STAR_CONTRACT },
       note: 'Every stage prompt is rendered by this builder at this version; each stage records the version and the file hash it was rendered to, and both the dashboard copy and the automated dispatch verify that hash before use.'
     },
     storage: STORAGE,
@@ -2146,6 +2215,12 @@ function publicChain(chain) {
 function buildChains() {
   const problems = [];
   const files = [];
+  const contractPath = path.join(root, NORTH_STAR_CONTRACT.repo_path);
+  if (!fs.existsSync(contractPath)) {
+    problems.push(`governing contract missing: ${NORTH_STAR_CONTRACT.repo_path}`);
+  } else if (hashFile(contractPath).sha256 !== NORTH_STAR_CONTRACT.sha256) {
+    problems.push(`governing contract sha256 mismatch: ${NORTH_STAR_CONTRACT.repo_path}`);
+  }
   const briefByFactor = new Map(BRIEF_DOCUMENTS.map(entry => [entry.factor_id, entry]));
   const factorById = new Map(USD_ASSET.factors.map(factor => [factor.factor_id, factor]));
   const sha256Of = text => crypto.createHash('sha256').update(text, 'utf8').digest('hex');
@@ -2365,6 +2440,8 @@ function chainsCommand(flag) {
 }
 
 function catalogCommand(flag) {
+  const built = buildChains();
+  if (!report('chains', built.problems)) return 1;
   const rendered = render(buildCatalog());
   if (!report('catalog validation', ResearchLibrary.validateCatalog(JSON.parse(rendered)))) return 1;
   if (flag === '--write') {
@@ -2372,8 +2449,6 @@ function catalogCommand(flag) {
     fs.writeFileSync(catalogPath, rendered);
     console.log(`catalog written: ${path.relative(root, catalogPath)}`);
     // The prompt files are written with the catalogue they are hashed into, so the two cannot disagree.
-    const built = buildChains();
-    if (!report('chains', built.problems)) return 1;
     writePromptFiles(built);
     console.log(`chain prompts written: ${built.files.length} files under ${FACTOR_DIR} and ${FINAL_DIR}`);
     return 0;

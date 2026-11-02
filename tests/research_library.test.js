@@ -689,7 +689,10 @@ test("the VIX factor chain's research prompt is the dispatched assignment, not t
     false,
     "the brief is cited, not reproduced: the prompt already carries the report's required coverage"
   );
-  assert.ok(Buffer.byteLength(text, "utf8") < 20000, "the prompt carries one stage, not the brief's four steps as well");
+  assert.equal((text.match(/^## Responsibility of this stage$/gm) || []).length, 1,
+    "the prompt carries one stage responsibility, including the expanded North Star requirements");
+  assert.doesNotMatch(text, /^#{1,3} Step [1-4]\b/gm,
+    "the legacy four-step brief must not be embedded as another workflow");
   assert.ok(
     text.includes("## Five kinds of evidence that must not be mixed") &&
       text.includes("**A potentially useful input or interaction**"),
@@ -1060,7 +1063,7 @@ test("every factor chain owns its questions and carries them through all three s
   // group-level inheritance: seven chains repeated questions written for another factor, and stages 2 and 3
   // dropped every question, so an assignment could be closed without answering the one it was written for.
   const version = catalog.prompt_template?.version;
-  assert.equal(version, "research-prompt-v3.1.0", "the catalogue names the prompt template version");
+  assert.equal(version, "research-prompt-v3.2.0", "the catalogue names the prompt template version");
   const chains = ResearchLibrary.listFactorChains(catalog, "USD");
   assert.equal(chains.length, 25);
   const questionTopics = new Map();
