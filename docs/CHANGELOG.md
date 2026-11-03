@@ -36,6 +36,12 @@
   no key 401, binary bytes 415, stage 2 with no parent 400, a path outside the object pattern 400, existing
   bytes 409. Store unchanged: two rows, two objects, one member, both objects matching their recorded hashes.
   No factor status, weight, threshold, prompt, chain association, registry hash or live call moved.
+- Closed by the owner on 2026-11-03 and preserved as it stands, with these decisions not to be revisited
+  without the owner: keep the gateway architecture; the browser gateway key is public by design and is not
+  an authentication secret; keep the server-side validation, append-only storage, upload limits and private
+  bucket; add no run-time key fetching, since it would not buy meaningful secrecy; leave the hidden sign-in
+  code untouched for now; and do no further work in this lane unless a security or functionality issue is
+  identified. Research execution is the priority from here.
 
 ## 2026-11-03 - Research Library: a stored document never asks the local machine for its bytes
 

@@ -41,6 +41,8 @@ What it enforces, and what it cannot:
 - Append-only: no operation can update or delete a stored row or object, so a junk upload cannot damage an existing record, though it can add a new version that the stage card then shows.
 - Attribution: rows carry `uploaded_by` set to the library's owner account (the first row of `research_members`), so an upload made without a sign-in is still attributable.
 
+The owner accepted this on 2026-11-03 and closed the task. The decisions are not to be revisited without them: the gateway stays as it is; the browser key is public by design and is not an authentication secret; the validation, append-only storage, upload limits and private bucket are all kept; no run-time key fetching is added, because it would not buy meaningful secrecy; the hidden sign-in code is left untouched for now; and no further work is done here unless a security or functionality issue is identified. Nothing in this section needs doing again; `npm run research-library:deploy` after a function change and `supabase secrets set RESEARCH_LIBRARY_KEY=…` plus one line in `script.js` to rotate the key are the only recurring operations.
+
 ## Sign in (optional, still supported)
 
 The sign-in block is no longer shown while the access gateway is configured: the header carries one line saying no sign-in is needed. The account block the page used to draw is still in the code, and it comes back if the gateway address or its key is ever removed from the page.
