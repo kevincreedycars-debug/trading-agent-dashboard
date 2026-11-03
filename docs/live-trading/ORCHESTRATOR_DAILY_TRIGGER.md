@@ -178,4 +178,26 @@ calls the webhook, writes `data/workflow-status.json` and publishes valid artifa
 the cron exists and its guard answers. Two separate records must be kept apart in any handoff - a manual
 `workflow_dispatch` success (today's 40203054555) and a scheduled skip (40220928984) are neither of them proof
 of an automatic trading day.
+## 2026-11-03: the 06:00 UTC slot, fired from the host
+
+The dashboard's own **Run Refresh** button and the daily slot call the same thing -
+`https://silver17.app.n8n.cloud/webhook/master-orchestrator-dashboard-refresh`, the webhook in
+`data/workflow-control.json` - so the daily slot is one POST and nothing more. Since 2026-11-03 the host runs it:
+
+- Task `LiveTradingRefresh0600` on `158.220.87.240`, daily at **06:00** in the host's clock, which is UTC.
+  It runs `C:\live-trading\logs\trigger-refresh-0600.ps1`, which POSTs the webhook, appends one line to
+  `C:\live-trading\logs\refresh-0600.log`, and exits 0 or 1 so the scheduler records the outcome.
+- Tested by running the task itself at 13:13:41Z on 2026-11-03: `posted status=200`. Next run `2026-11-04 06:00:00`.
+- It holds no token and no key, because the webhook the public page already calls is the one it calls.
+
+This is a host task, not an n8n **Schedule Trigger** node. The n8n-native version is the better end state - it fires
+whether or not the host is up - and it needs either an API key (which would live in a gitignored file beside
+`config/live-trading-lanes.local.json`, never in a commit) or one edit in the n8n UI: add **Schedule Trigger**
+(Trigger Interval: Days, Hour 6, Minute 0, Timezone GMT) wired to the existing webhook path node's successor, then
+remove `LiveTradingRefresh0600` so the refresh is not fired twice.
+
+A separate GitHub Actions cron over the same webhook still exists (the table above). Two schedulers and one webhook
+means two runs on a day both fire; that was already true before today and is worth settling in favour of one of
+them.
+
 

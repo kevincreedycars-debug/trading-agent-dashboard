@@ -897,3 +897,100 @@ What this does not claim: a root that is named correctly is not the same as a ta
 observed writing a heartbeat. Naming the root only removes the reason the publisher refused; the registration and
 the observation are still owed, and are recorded where they happen.
 
+## 14. 2026-11-03: the host took the lane, and the four faults it met before it could
+
+The PC is out of the loop. Its three tasks are `Disabled` (`LiveTradingFeedTick019`,
+`LiveTradingPublishLanes019`, `LiveTradingTraderTick019`), and the host at `158.220.87.240` runs the same three
+steps plus the terminal and the daily refresh.
+
+### 14.1 What runs on the host
+
+| Task | Cadence | Runs | Writes |
+| --- | --- | --- | --- |
+| `LiveTradingTerminalStartup` | at logon, +45 s | `terminal64.exe /config:C:\live-trading\terminal\startup.ini` | the terminal's own state |
+| `LiveTradingLane-ftmo1` | 5 min | `run-live-trading-feed.js --once --align` in `C:\live-trading\runtime` | `runtime\data\live-trading.json`, `tmp\live-trading-feed.log` |
+| `LiveTradingTraderTick019` | 5 min | `run-live-trading-trader.js --once --align --confirm-live --lane ftmo-1 --published C:\live-trading\publisher` | `tmp\live-trading-trader.log`, `tmp\live-trading-trader-status.json`, `tmp\live-trading-orders.log` |
+| `LiveTradingPublishLanes019` | 10 min | `publish-live-trading-lanes.js --checkout C:\live-trading\publisher` | one commit and one push, `data/live-trading*.json` |
+| `LiveTradingRefresh0600` | daily 06:00 UTC | `logs\trigger-refresh-0600.ps1` | a line in `logs\refresh-0600.log`, and the orchestrator's own run |
+
+All five run as `Administrator` at `Highest`. The host's clock is UTC, so "06:00" on that task is 06:00 UTC.
+
+`C:\live-trading\terminal\startup.ini` carries `[Experts] Enabled=1`, `AllowLiveTrading=1`, `AllowDllImport=0`, no
+`[Common]` credentials and no `[StartUp]` section. A restart *through the logon task* was the test: the terminal came
+back as a new process (pid 7060, 12:21:13Z), connected, and the probe read `trade_allowed True` on both the terminal
+and the account. Automated trading therefore survives a restart without a password being written anywhere.
+
+
+
+### 14.2 The four faults, in the order they appeared
+
+1. **The lane root.** Covered in §13: `config/live-trading-lanes.local.json` on the publisher names
+   `ftmo-1 -> C:\live-trading\runtime`, and both the publisher and the prepare report read it.
+2. **The tasks could not write their own files.** Every scheduled run failed with
+   `PermissionError: [Errno 13] Permission denied: 'C:\live-trading\runtime\data\live-trading.json'` while the same
+   script run over ssh succeeded. The cause is the integrity level: a task registered without `-RunLevel` runs at
+   `Limited`, and an unelevated administrator's token carries `BUILTIN\Administrators` as *deny-only*, so the tree's
+   `BUILTIN\Users: ReadAndExecute, Synchronize` ACE is the only one that applies - read yes, write no. The PC never
+   met this because its tree is owned by `A17` and its tasks run as `A17`. Fixed with `-RunLevel Highest` on the
+   three data tasks (the terminal task already had it); the first clean run after that was 13:00:20Z, `status: ok`.
+3. **The trader read a tree that did not exist.** It resolves the published checkout as
+   `<canonical root>/.local/live-trading-feed-publish`, which exists only where the publisher runs; on this host
+   that is nowhere, so every tick refused with `ENOENT ... layer1.json`. `register-live-trading-trader-task.ps1` now
+   takes `-Published <path>` and writes `--published` into the wrapper (commit `af5cddf9`); the host's wrapper
+   carries `--published "C:\live-trading\publisher"` and the loop reads all eight ACTIVE calls from it.
+4. **The publisher could not commit, and then could not push.** Three faults in a row, each with its own evidence:
+   no git identity, so the three copied files sat *staged* and uncommitted; Git Credential Manager, set in Git's own
+   system config (`C:/Program Files/Git/etc/gitconfig`, which outranks the global file), cannot work headless
+   (`unable to persist credentials with the 'wincredman' credential store`, then it reaches for a tty); and the store
+   helper's Windows path lost its backslashes, because git runs a helper through `sh -c`, so
+   `C:\live-trading\.git-credentials` arrived as `C:live-trading.git-credentials`. Fixed with the identity the PC's
+   commits already carry (`Codex <codex@local.invalid>`), the manager helper replaced at both config levels by
+   `store --file C:/live-trading/.git-credentials` (forward slashes survive the shell), and the token in
+   `C:\live-trading\.git-credentials`, outside every checkout and never printed. The PC's stored credential was
+   copied across for this; the FTMO password rotation in §3 is unrelated and still owed.
+
+### 14.3 What the lane did once it was running
+
+- **Feed:** `status: ok` at 12:30:20, 13:00:20, 13:05:20 and 13:10:20 - four instruments, live ticks, `m5_stale 0`,
+  `positions_open 0`, `closed_trades 10`.
+- **Trader, armed:** the 13:31:30Z run placed two buy limits, each with the rule's own 5R geometry and the smallest
+  size the symbol accepts:
+  - `EURUSD` 0.01 @ 1.11887, stop 1.118028, target 1.12308 (`l2l-rule-eur`, ticket `304933103`)
+  - `BTCUSD` 0.01 @ 77294.18, stop 77003.206, target 78749.05 (`l2l-rule-btc`, ticket `304933132`)
+
+  Both came back `TRADE_RETCODE_DONE`, and both were read back from the terminal afterwards as resting orders.
+- **Publisher:** commit `7dda7314` was pushed *from this host* (`d7ac278f..7dda7314 HEAD -> main`) at 13:11:38Z, and
+  `origin/main` was then exactly that commit. The served `data/live-trading.json` carries the 13:10:20 snapshot. The
+  artifact's own `host` block is empty - the producer does not fill it - so provenance is read from the pushed commit
+  rather than from the file.
+- **The trader's logon type:** the loop was switched to `S4U` at 13:30 and placed those two tickets from that
+  context, so the IPC to the console-session terminal crosses sessions on this host. That is what clears
+  `lane_ftmo-1_trader_runs_without_logon` instead of leaving it to auto-logon.
+- **The 06:00 refresh:** `LiveTradingRefresh0600` posted the webhook and read `status=200` at 13:13:41Z; its next run
+  is `2026-11-04 06:00:00` local, which is UTC.
+
+
+
+### 14.4 What `-Mode Verify` says, and what it cannot say
+
+The run recorded in `logs\verify-steady-state.json` came back **`result = host_ready`, `blocking_failures = 0`**:
+`heartbeat_fresh` 13s, `feed_fresh` 84s, `trader_runs_without_logon` `S4U`, `probe_reachable` build 6296 connected,
+`account_matches_terminal` `***614 on FTMO-Server`, `permissions` true on all three readings, and `symbols_tradable`
+- all four instruments `full`.
+
+Two things had to change for that, and both are facts about this host rather than about the code. The trader task
+was `Interactive` and became `S4U`; `symbols_tradable` failed first because three of the four instruments were not in
+the terminal's Market Watch, and `mt5.symbol_select` for `XAUUSD`, `US100.cash` and `BTCUSD` fixed that inside the
+terminal, which persists the selection itself.
+
+The four checkout checks are named as skipped in that run, and the reason is structural rather than convenient: once
+the loop is live, `data/live-trading.json` in the runtime tree is the file the feed rewrites every five minutes, and
+the publisher's checkout is reset to `origin/main` on every publish, so it advances with each data commit. "Pinned
+to one commit" and "nothing changed" describe the moment before the tasks start - which is what they were written
+for, and what the pre-cutover run measured. In steady state the equivalent evidence is the lane's own: heartbeat
+age, feed age, probe permissions, symbol tradability, and the publisher's pushed commit.
+
+What this section does not claim: that either resting limit fills, that a 5R target is reached, or that a full
+machine reboot has been run since the cutover. The terminal was restarted through its own logon task and armed
+itself; a whole-host reboot is the next thing to watch, and the auto-logon in §3 means it lands on a logged-in
+desktop.
