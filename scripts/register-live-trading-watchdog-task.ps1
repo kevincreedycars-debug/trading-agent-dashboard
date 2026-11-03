@@ -26,7 +26,7 @@
 param(
   [string] $TaskName = "LiveTradingWatchdog",
   [int] $IntervalMinutes = 10,
-  [string] $Watchdog = "C:\live-trading\logs\run-live-trading-watchdog.ps1",
+  [string] $Watchdog = "C:\live-trading\runtime\scripts\run-live-trading-watchdog.ps1",
   [string] $Log = "C:\live-trading\logs\live-trading-watchdog.log",
   [switch] $NoStart,
   [switch] $Remove,
