@@ -1178,4 +1178,20 @@ times in three runs with a *different* test each time and is a timing flake on t
 three live-trading files are 13 of 13 on their own.
 
 
+## 16. 2026-11-03, later: the second lane, written down as a review
+
+Asked what a second account on the **0.5 L2L** variant would take, the answer was written rather than built:
+[SECOND_LANE_HALF_L2L_REVIEW.md](SECOND_LANE_HALF_L2L_REVIEW.md). It states the live trader end to end (§1), what the
+parked `ftmo-2` lane in `config/live-trading-lanes.json` already carries (§2), and then the decision that has to come
+before any code: half the target with the stop kept at one fifth of the **full** distance (2.5R, measurable from bars
+already published) versus half the target with the 5R stop halved (a different strategy, and not something the recorded
+99.1% reach figure can judge).
+
+Nothing in that document is built: no `--target-mode`, no lane 2 terminal, no account, no FTMO answer. Three facts from
+the live lane constrain it and are repeated there - the lanes file already has a parked second lane and one publisher
+for both, the page reads exactly one chart feed so lane 2's snapshot would be published and not drawn, and the watchdog
+is registered per terminal and needs a second instance rather than a change.
+
+
+
 

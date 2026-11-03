@@ -2971,4 +2971,25 @@ Published as `38341c2f` and `d456bce0`; the live page then read `live` - `Live t
 as of 17:16Z`, tooltip `4m before the publisher read it, inside the 15 minute window`, page copy 18m old - checked in a
 headless browser against the published site, not against a fixture.
 
+### 2026-11-03, later: the second lane asked for, as a review rather than a build
+
+The user asked what a second account running the **0.5 L2L** variant would take, to review with an external model. No
+code was written for it and no account is bought: the answer is a new document,
+[SECOND_LANE_HALF_L2L_REVIEW.md](SECOND_LANE_HALF_L2L_REVIEW.md), which states the live trader end to end (host, tasks,
+the rule, the publisher, the lamps), what the parked `ftmo-2` lane already carries, and then separates the one decision
+that makes "0.5 L2L" a strategy from the plumbing that would run it.
+
+The load-bearing point is that "0.5 L2L" is not one rule but two: half the target with the stop kept at one fifth of the
+**full** distance is 2.5R and measurable from bars already published, while half the target with the stop kept at 5R
+halves the stop itself and cannot be judged by a reach figure. The recorded 99.1% half-L2L reach
+(`data/backtest-engine.json`) is reach only, its underlying research artifacts are not in this checkout, and the
+qualification gate in that same file says `not qualified` - so the review document says so rather than quoting the number
+as evidence.
+
+Also recorded there: two simultaneous variants need two accounts (one login, one daily-loss limit, one ticket per pair),
+two accounts are not two samples because they trade the same calls, the same host is the right home because one
+publisher is what keeps the page's two account blocks from coming from different reads, and the first stage costs no
+money - a plan-only shadow lane for two to four weeks.
+
+
 
