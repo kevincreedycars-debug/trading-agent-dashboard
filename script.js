@@ -48,6 +48,12 @@ const researchLibraryUrl = "./data/research-library/catalog.json?v=20261025-rese
 const researchLibraryDocumentsUrl = "./data/research-library/documents.json?v=20261013-research-library-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
+// The hosted access gateway: the one address that reads and writes the private research store for a reader
+// who is not signed in. The project's service key stays inside that function, so nothing privileged is in
+// this page; the key below reaches nothing but the function's four operations, and rotating it is a new
+// function secret plus this one line.
+const researchLibraryGatewayUrl = "https://eaolqbrlywczinfordvg.supabase.co/functions/v1/research-library";
+const researchLibraryAccessKey = "91f9a081f591aea8a9e82e058e9dc084497f2373cee7eee3d4eb536c22a45cc9";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
 const layer2PairLogicLib = globalThis.Layer2PairLogic;
 const economicEventRefreshLib = globalThis.EconomicEventRefresh;
@@ -7065,8 +7071,9 @@ function researchLibraryServiceClient() {
   });
 }
 
-// The private hosted store, when this page has it. The page keeps no secret of its own: the reader
-// signs in once with an email and password, or with an email link, and the module uses that session from then on.
+// The private hosted store, when this page has it. The page holds no Supabase credential: it calls the
+// access gateway, which runs on the project's service key, so a reader who is not signed in can still
+// upload and download. A signed-in reader keeps the same store through the same gateway.
 function researchLibraryHostedClient() {
   const adapter = globalThis.ResearchUploadDashboard;
   if (!adapter || typeof adapter.isConfigured !== "function" || !adapter.isConfigured()) return null;
@@ -7076,14 +7083,28 @@ function researchLibraryHostedClient() {
 function researchLibraryConfigureHostedUpload() {
   const adapter = globalThis.ResearchUploadDashboard;
   if (!adapter || typeof adapter.configure !== "function") return null;
-  adapter.configure({ url: String(researchSupabaseUrl || "").replace("/rest/v1", ""), key: researchSupabaseKey });
+  adapter.configure({
+    url: String(researchSupabaseUrl || "").replace("/rest/v1", ""),
+    key: researchSupabaseKey,
+    gateway: researchLibraryGatewayUrl,
+    accessKey: researchLibraryAccessKey
+  });
   return researchLibraryHostedClient();
+}
+
+// Whether the store is reachable right now: through the access gateway with no sign-in, or through a
+// session a reader chose to start. Every upload, download and store read asks this once.
+function researchLibraryStoreAvailable(adapter) {
+  const target = adapter || researchLibraryHostedClient();
+  if (!target) return false;
+  if (typeof target.available === "function") return Boolean(target.available());
+  return Boolean(target.signedIn && target.signedIn());
 }
 
 async function researchLibraryMergeHosted(chainId, options = {}) {
   const adapter = researchLibraryHostedClient();
   const id = String(chainId || "").trim();
-  if (!adapter || !adapter.signedIn() || !id) return 0;
+  if (!adapter || !researchLibraryStoreAvailable(adapter) || !id) return 0;
   if (!options.force && researchLibraryState.hostedChains.has(id)) return 0;
   researchLibraryState.hostedChains.add(id);
   const merged = await adapter.refresh(id, () => researchLibraryDocuments, next => { researchLibraryDocuments = next; });
@@ -7091,14 +7112,14 @@ async function researchLibraryMergeHosted(chainId, options = {}) {
   return merged;
 }
 
-// The whole private store is read once per signed-in session. Factor chains, the asset-level final chain
-// and its gate all read the same registry view, so without this read a stored adjudication would only
-// appear once its own chain had been opened, and a chain that was never opened would leave the final
-// chain reading locked however much had been stored. It records evidence only: the gate still reads the
-// registry, and no factor status, weight, threshold or live call is touched.
+// The whole private store is read once per visit. Factor chains, the asset-level final chain and its gate
+// all read the same registry view, so without this read a stored adjudication would only appear once its
+// own chain had been opened, and a chain that was never opened would leave the final chain reading locked
+// however much had been stored. It records evidence only: the gate still reads the registry, and no factor
+// status, weight, threshold or live call is touched.
 async function researchLibraryLoadHostedLibrary(options = {}) {
   const adapter = researchLibraryHostedClient();
-  if (!adapter || !adapter.signedIn()) return -1;
+  if (!adapter || !researchLibraryStoreAvailable(adapter)) return -1;
   if (researchLibraryState.hostedLibraryLoading) return -1;
   if (!options.force && researchLibraryState.hostedLibraryLoaded) return -1;
   researchLibraryState.hostedLibraryLoading = true;
@@ -7132,7 +7153,7 @@ async function researchLibraryLoadHostedLibrary(options = {}) {
 
 function maybeLoadHostedResearchLibrary(options = {}) {
   const adapter = researchLibraryHostedClient();
-  if (!adapter || !adapter.signedIn()) return;
+  if (!adapter || !researchLibraryStoreAvailable(adapter)) return;
   if (researchLibraryState.hostedLibraryLoading || researchLibraryState.hostedLibraryLoaded) return;
   if (researchLibraryState.hostedLibraryError && !options.force) return;
   researchLibraryLoadHostedLibrary(options);
@@ -7260,8 +7281,8 @@ async function researchLibraryOpenStored(documentId, version, asView) {
     researchLibraryMessage(`${name} is kept in the private research store, which this page could not load. Reload the page and try again.`);
     return;
   }
-  if (!adapter.signedIn()) {
-    researchLibraryMessage(`${name} is kept in the private research store. Sign in with your research account in the panel above, then download it again.`);
+  if (!researchLibraryStoreAvailable(adapter)) {
+    researchLibraryMessage(`${name} is kept in the private research store, and this page could not reach it. Reload the page and try the download again.`);
     return;
   }
   let mirror = document ? researchLibraryStoredMirror(document, version) : null;
@@ -7271,7 +7292,7 @@ async function researchLibraryOpenStored(documentId, version, asView) {
     mirror = document ? researchLibraryStoredMirror(document, version) : null;
   }
   if (!mirror) {
-    researchLibraryMessage(`${name} is in the private store, but this page could not read that copy. Reload the library and try again; if the sign-in has expired, sign in again first.`);
+    researchLibraryMessage(`${name} is in the private store, but this page could not read that copy. Reload the page and try again.`);
     return;
   }
   const result = await adapter.openDocument(mirror.document, mirror.version, asView ? "view" : "download");
@@ -8058,11 +8079,14 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
       role: entry.role,
       role_stage: entry.role_stage
     }));
-    // A signed-in reader uploads every stage straight to the private store, the asset-level final chain
-    // included: the final chain's return carries its whole factor input package, which the page records with
-    // the return so a reviewer can still check it against the evidence it actually judged. The local service
-    // is used only when the page has no signed-in private store.
-    if (hostedUpload && hostedUpload.signedIn()) {
+    // Every stage goes to the private store, the asset-level final chain included: the final chain's return
+    // carries its whole factor input package, which the page records with the return so a reviewer can still
+    // check it against the evidence it actually judged. No sign-in is involved: the store is reached through
+    // the access gateway. The one exception is a page served from this machine that has its own local
+    // service token: that is the offline developer path, with its own registry and object store, and it keeps
+    // working exactly as before.
+    const localServiceWanted = researchLibraryIsLocalPage() && Boolean(researchLibraryState.serviceToken);
+    if (hostedUpload && researchLibraryStoreAvailable(hostedUpload) && !localServiceWanted) {
       const stageById = id => progress.stages.find(entry => entry.stage === id) || null;
       const researchStage = stageById(isFinalChain ? "final_analysis" : "research");
       const redTeamStage = stageById(isFinalChain ? "final_red_team" : "red_team");
@@ -8313,7 +8337,7 @@ function researchLibraryStageUploadForm(lib, chain, stage) {
   // Both chains store through the private store when a member is signed in. The final chain's return
   // carries its whole factor input package, which the page records with the return, so the final chain is
   // not kept back for the local service.
-  const canRegister = researchLibraryState.serviceState === "connected" || (hosted && researchLibraryHostedClient()?.signedIn());
+  const canRegister = researchLibraryState.serviceState === "connected" || (hosted && researchLibraryStoreAvailable());
   const key = researchLibraryStageKey(chain, stage.stage);
   const open = researchLibraryState.uploadStage === key;
   const defaultId = stage.document_id || researchLibraryStageDocumentId(chain, stage.stage);
@@ -8341,7 +8365,7 @@ function researchLibraryStageUploadForm(lib, chain, stage) {
         <p class="rl-muted">Document id ${escapeHtml(defaultId)}${stage.parent_stage ? `, attached to ${escapeHtml(stage.parent_document_id || "the parent stage")} v${escapeHtml(String(stage.parent_version))}` : ""}${inputCount ? `, with its ${inputCount}-document input package recorded` : ""}. Uploading records evidence: it is not an approval and it moves no factor status.</p>
         <div class="rl-document-actions">
           <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister && !inputsMissing ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
-          ${canRegister ? "" : `<span class="rl-muted">${hosted ? "sign in above before a document can be stored" : "the upload store is not available in this page"}</span>`}
+          ${canRegister ? "" : `<span class="rl-muted">${hosted ? "the private store is not reachable from this page" : "the upload store is not available in this page"}</span>`}
           ${inputsMissing ? `<span class="rl-muted">the input package is incomplete, so nothing can be registered against it yet</span>` : ""}
         </div>
       ` : ""}
@@ -8487,7 +8511,7 @@ function researchLibraryFactorStage(lib, chain, stage) {
   const hostedResult = Boolean(resultDocument && resultDocument.hosted);
   const inputBlocked = Boolean(stage.parent_stage) && !hasInputs;
   const hosted = Boolean(researchLibraryHostedClient());
-  const canRegister = researchLibraryState.serviceState === "connected" || (hosted && researchLibraryHostedClient()?.signedIn());
+  const canRegister = researchLibraryState.serviceState === "connected" || (hosted && researchLibraryStoreAvailable());
   const findings = stage.stage === "adjudication" || stage.stage === "final_adjudication";
   const resultLabel = hasResult ? `Download ${stage.document_id} v${stage.version}` : "No result registered";
   const draft = researchLibraryUploadDraft(key);
@@ -8522,7 +8546,7 @@ function researchLibraryFactorStage(lib, chain, stage) {
           <p class="rl-muted" data-rl-upload-status hidden></p>
           <p class="rl-message rl-message-error" data-rl-upload-error role="alert" hidden></p>
           <button class="inspect-button rl-mini" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister ? "" : " disabled"}>Upload ${escapeHtml(stage.label)} result</button>
-          <p class="rl-muted rl-inline-note">${canRegister ? "One Markdown file. The file name, time, factor, stage and version are recorded for you; evidence only, no status moves." : "Sign in above before a document can be stored."}</p>
+          <p class="rl-muted rl-inline-note">${canRegister ? "One Markdown file. The file name, time, factor, stage and version are recorded for you; evidence only, no status moves." : "The private store is not reachable from this page, so nothing can be stored. Reload the page and try again."}</p>
         </div>
       ` : ""}
     </article>

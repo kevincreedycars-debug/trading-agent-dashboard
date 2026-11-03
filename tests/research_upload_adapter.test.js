@@ -63,6 +63,55 @@ function harness(options) {
     const target = String(url);
     const method = String((init && init.method) || 'GET').toUpperCase();
     calls.push(`${method} ${target}`);
+    // The access gateway, faked the way the deployed function behaves: it is the only writer, it assigns the
+    // version, it stores the bytes and it mints the private link. Everything below this block is the direct
+    // signed-in path the gateway replaced for readers without a session.
+    if (target.includes('/functions/v1/research-library')) {
+      const params = new URL(target).searchParams;
+      const op = params.get('op');
+      const given = String((init && init.headers && init.headers['x-research-key']) || '');
+      if (settings.accessKey && given !== settings.accessKey) return jsonResponse({ ok: false, message: 'This page is not allowed to reach the research store' }, 401);
+      if (op === 'documents') {
+        const wanted = params.get('topic_id') || '';
+        return jsonResponse({ ok: true, rows: rows.filter(row => !wanted || row.topic_id === wanted) });
+      }
+      if (op === 'sign') {
+        const objectPath = params.get('path') || '';
+        const download = params.get('download');
+        const link = `${PROJECT_URL}/storage/v1/object/sign/research-documents/${objectPath}?token=demo${download ? `&download=${encodeURIComponent(download)}` : ''}`;
+        return jsonResponse({ ok: true, url: link, download_name: download || '' });
+      }
+      if (op === 'upload' && method === 'POST') {
+        const payload = JSON.parse(init.body);
+        if (settings.uploadFails) return jsonResponse({ ok: false, message: 'The file could not be stored' }, 502);
+        const bytes = Buffer.from(String(payload.content_base64 || ''), 'base64');
+        const sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
+        const version = rows
+          .filter(row => row.topic_id === payload.topic_id && Number(row.stage) === Number(payload.stage))
+          .reduce((highest, row) => Math.max(highest, Number(row.version) || 0), 0) + 1;
+        const objectPath = `${payload.topic_id}/${payload.stage}/v${version}-${sha256}.md`;
+        objects.set(objectPath, bytes);
+        const row = {
+          id: `gateway-row-${rows.length + 1}`,
+          uploaded_at: '2026-11-03T00:00:00.000Z',
+          topic_id: payload.topic_id,
+          stage: payload.stage,
+          version,
+          title: payload.title,
+          kind: payload.kind,
+          sha256,
+          bytes: bytes.length,
+          storage_path: objectPath,
+          original_filename: payload.original_filename,
+          notes: payload.notes || '',
+          parent_research_ref: (payload.parents && payload.parents.research_ref) || '',
+          parent_red_team_ref: (payload.parents && payload.parents.red_team_ref) || ''
+        };
+        rows.push(row);
+        return jsonResponse({ ok: true, row }, 201);
+      }
+      return jsonResponse({ ok: false, message: 'This library endpoint has no such operation' }, 404);
+    }
     if (target.includes('/auth/v1/otp')) return jsonResponse({}, 200);
     if (target.includes('/auth/v1/token?grant_type=password')) {
       const payload = JSON.parse(init.body);
@@ -108,7 +157,14 @@ function harness(options) {
   };
 
   const seed = settings.signedIn === false ? {} : { [STORAGE_KEY]: JSON.stringify({ access_token: fakeJwt(USER_ID), user_id: USER_ID }) };
-  adapter.configure({ url: PROJECT_URL, key: PUBLISHABLE_KEY, fetch: fetchImpl, storage: fakeStorage(seed) });
+  adapter.configure({
+    url: PROJECT_URL,
+    key: PUBLISHABLE_KEY,
+    fetch: fetchImpl,
+    storage: fakeStorage(seed),
+    gateway: settings.gateway,
+    accessKey: settings.accessKey
+  });
   assert.equal(adapter.signedIn(), settings.signedIn !== false, 'the seeded session state must be recognised');
   return { rows, objects, calls, fetchImpl };
 }
@@ -510,8 +566,9 @@ test('nextVersion continues the version sequence for one topic stage only', () =
 
 // The page used to keep the final chain's upload for the local service, because only that service recorded
 // the factor input package. The page now hands every stage, the final chain included, to the same adapter, so
-// these guards keep the local service from creeping back into that path.
-test('the page offers the final chain upload to a signed-in member and sends its whole input package', () => {
+// these guards keep the local service from creeping back into that path. The adapter is reached whenever the
+// store is reachable at all, which now includes the access gateway with no sign-in.
+test('the page offers the final chain upload whenever the store is reachable and sends its whole input package', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'script.js'), 'utf8');
   const bodyOf = (start, end) => {
     const from = source.indexOf(start);
@@ -524,12 +581,14 @@ test('the page offers the final chain upload to a signed-in member and sends its
   const form = bodyOf('function researchLibraryStageUploadForm(', '\nfunction researchLibraryChainStageCard(');
   assert.doesNotMatch(form, /!\s*finalChain/, 'the final chain is not held back from the private store');
   assert.doesNotMatch(form, /needs the local library service/, 'no note sends the reader to the local service');
-  assert.match(form, /hosted && researchLibraryHostedClient\(\)\?\.signedIn\(\)/, 'a signed-in member can register either chain');
+  assert.match(form, /hosted && researchLibraryStoreAvailable\(\)/, 'the store is reachable without a sign-in, so either chain can register');
 
   const upload = bodyOf('async function researchLibraryStageUpload(', '\nfunction researchLibraryStagePromptBlock(');
-  const hostedBranch = upload.indexOf('if (hostedUpload && hostedUpload.signedIn())');
+  const hostedBranch = upload.indexOf('if (hostedUpload && researchLibraryStoreAvailable(hostedUpload) && !localServiceWanted)');
   const localFallback = upload.indexOf('if (!client)');
   assert.ok(hostedBranch >= 0 && localFallback > hostedBranch, 'the private store is offered before the local service');
+  assert.match(upload, /const localServiceWanted = researchLibraryIsLocalPage\(\) && Boolean\(researchLibraryState\.serviceToken\)/,
+    'a page served from this machine with its own service token keeps the offline developer path');
   assert.match(upload, /inputPackage: isFinalChain \? \{ documents: inputDocumentList/, 'the final chain sends its input package');
 });
 
@@ -587,5 +646,92 @@ test('a refused GitHub return is shown in the account bar instead of a blank sig
     globalThis.location = previousLocation;
     globalThis.history = previousHistory;
   }
+});
+
+// The reader no longer signs in: the page reaches the store through the access gateway, so the account bar
+// says so and the whole round trip runs with no session at all.
+const GATEWAY = `${PROJECT_URL}/functions/v1/research-library`;
+
+test('without a sign-in the access gateway carries the upload, the store read and the download', async () => {
+  const world = harness({ signedIn: false, gateway: GATEWAY, accessKey: 'library-key-value' });
+  assert.equal(adapter.signedIn(), false, 'there is no session');
+  assert.equal(adapter.openAccess(), true, 'the gateway is configured');
+  assert.equal(adapter.available(), true, 'the store is still reachable');
+  assert.deepEqual(adapter.status(), { configured: true, signedIn: false, openAccess: true, available: true, blocked: '' });
+
+  const bar = adapter.accountBarHtml();
+  assert.match(bar, /data-rl-account="open"/);
+  assert.match(bar, /Open access/);
+  assert.doesNotMatch(bar, /data-rl-account-password/, 'no password field is offered when none is needed');
+
+  const file = stageFile('# Research return\n\nThe VIX report.\n');
+  const stored = await adapter.uploadStage({
+    topic: topic(),
+    chainId: TOPIC,
+    stage: { stage: 'research', label: 'Research', document_type: 'report' },
+    file,
+    title: 'VIX research return'
+  });
+  assert.equal(stored.ok, true, stored.message);
+  assert.equal(world.rows.length, 1, 'the gateway recorded one row');
+  assert.equal(world.rows[0].topic_id, TOPIC);
+  assert.equal(world.rows[0].version, 1, 'the gateway assigned the first version');
+  assert.equal(world.rows[0].sha256, crypto.createHash('sha256').update(file.bytes).digest('hex'), 'the stored fingerprint is the file');
+
+  let documents = { documents: [] };
+  assert.equal(await adapter.refreshAll(() => documents, next => { documents = next; }), 1, 'one read sees the row');
+  const handed = [];
+  globalThis.researchLibraryDownloadLink = (name, url) => handed.push({ name, url });
+  const download = await adapter.openDocument(documents.documents[0], 1, 'download');
+  delete globalThis.researchLibraryDownloadLink;
+
+  assert.equal(download.ok, true, download.message);
+  assert.equal(handed.length, 1, 'the browser is handed the private link itself');
+  assert.equal(handed[0].name, 'red-team-return.md', 'the saved file keeps the name the reader uploaded');
+  assert.match(handed[0].url, /\/storage\/v1\/object\/sign\/research-documents\//);
+  assert.match(handed[0].url, /[?&]download=red-team-return\.md$/);
+  assert.match(download.message, /fingerprint checked/, 'the bytes are still checked before the link is handed over');
+  assert.ok(
+    world.calls.some(call => call.includes('POST ') && call.includes('/functions/v1/research-library?op=upload')),
+    'the file went to the gateway, not to the store directly'
+  );
+  assert.ok(
+    !world.calls.some(call => call.startsWith('POST ') && /\/storage\/v1\/object\/research-documents\//.test(call)),
+    'the page never writes to the bucket itself'
+  );
+  assert.ok(
+    !world.calls.some(call => /\/rest\/v1\/research_documents/.test(call) && call.startsWith('POST ')),
+    'the page never inserts a row itself'
+  );
+});
+
+test('a gateway refusal reaches the reader in plain words and records nothing', async () => {
+  const world = harness({ signedIn: false, gateway: GATEWAY, accessKey: 'library-key-value', uploadFails: true });
+  const result = await adapter.uploadStage({
+    topic: topic(),
+    chainId: TOPIC,
+    stage: { stage: 'research', label: 'Research', document_type: 'report' },
+    file: stageFile('# refused\n'),
+    title: 'refused'
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.message, /could not be stored/);
+  assert.doesNotMatch(result.message, /\b50[0-9]\b/);
+  assert.equal(world.rows.length, 0, 'a refusal records nothing');
+});
+
+test('the page carries the gateway and its own small key, never the service role key', () => {
+  const root = path.join(__dirname, '..');
+  const page = fs.readFileSync(path.join(root, 'script.js'), 'utf8');
+  assert.match(page, /functions\/v1\/research-library/);
+  assert.match(page, /gateway: researchLibraryGatewayUrl/);
+  assert.match(page, /accessKey: researchLibraryAccessKey/);
+  assert.doesNotMatch(page, /service_role|SUPABASE_SERVICE_ROLE_KEY/, 'no privileged Supabase credential is in the page');
+
+  const fn = fs.readFileSync(path.join(root, 'supabase', 'functions', 'research-library', 'index.ts'), 'utf8');
+  assert.match(fn, /SUPABASE_SERVICE_ROLE_KEY/, 'the service key lives inside the function');
+  assert.match(fn, /RESEARCH_LIBRARY_KEY/, 'the function refuses a caller without the library key');
+  assert.doesNotMatch(fn, /"x-upsert":\s*"true"/, 'the function never overwrites a stored document');
+  assert.match(fn, /MAX_UPLOADS_PER_HOUR/, 'uploads are capped, so a public page cannot flood the store');
 });
 

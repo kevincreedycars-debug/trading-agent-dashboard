@@ -498,3 +498,138 @@ test("a provider sign-in that comes back refused is reported in plain words", ()
   }
 });
 
+// The access gateway is how a reader who never signs in reaches the private store. These tests pin the
+// whole contract of that path: no session, no Supabase credential in the request, one call per operation,
+// and the same file name and fingerprint the signed-in path uses.
+function configureGateway(fetchImpl) {
+  const result = ResearchUpload.configure({
+    url: "https://example.supabase.co",
+    key: "publishable-test-value",
+    gateway: "https://example.supabase.co/functions/v1/research-library",
+    accessKey: "library-access-value",
+    fetch: fetchImpl,
+    storage: { getItem: () => null, setItem: () => {}, removeItem: () => {} }
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.openAccess, true);
+  assert.equal(ResearchUpload.openAccess(), true);
+  assert.equal(ResearchUpload.session(), null, "the gateway never invents a sign-in");
+}
+
+test("with the access gateway the store is read in one call, with no session and no Supabase credential", async () => {
+  const calls = [];
+  configureGateway(async (url, init) => {
+    calls.push({ url: String(url), headers: Object.assign({}, init && init.headers), method: String((init && init.method) || "GET") });
+    return jsonResponse(200, {
+      ok: true,
+      rows: [
+        { id: "row-1", topic_id: "usd-factor-live-f1-vix-level", stage: 1, version: 1, sha256: "a".repeat(64), bytes: 12, storage_path: `usd-factor-live-f1-vix-level/1/v1-${"a".repeat(64)}.md` }
+      ]
+    });
+  });
+
+  const listed = await ResearchUpload.listAll();
+  assert.equal(listed.ok, true);
+  assert.equal(listed.rows.length, 1);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].url, /\/functions\/v1\/research-library\?op=documents$/);
+  assert.equal(calls[0].method, "GET");
+  assert.equal(calls[0].headers["x-research-key"], "library-access-value");
+  assert.equal(calls[0].headers.apikey, "publishable-test-value", "the publishable key names the project, nothing more");
+  assert.equal(calls[0].headers.Authorization, undefined, "no bearer token is sent: there is no session to send");
+
+  const byTopic = await ResearchUpload.listByTopic("usd-factor-live-f1-vix-level");
+  assert.equal(byTopic.ok, true);
+  assert.match(calls[1].url, /op=documents&topic_id=usd-factor-live-f1-vix-level$/);
+});
+
+test("an upload through the access gateway sends the file once and the record it belongs to", async () => {
+  const calls = [];
+  const text = "# Red-team return\n\nOne finding.\n";
+  const bytes = Buffer.from(text, "utf8");
+  const expectedSha = require("node:crypto").createHash("sha256").update(bytes).digest("hex");
+  configureGateway(async (url, init) => {
+    const payload = JSON.parse(init.body);
+    calls.push({ url: String(url), payload, headers: Object.assign({}, init.headers) });
+    return jsonResponse(201, {
+      ok: true,
+      row: {
+        id: "row-9",
+        topic_id: payload.topic_id,
+        stage: payload.stage,
+        version: 2,
+        sha256: payload.sha256,
+        bytes: Buffer.from(payload.content_base64, "base64").length,
+        storage_path: `${payload.topic_id}/${payload.stage}/v2-${payload.sha256}.md`,
+        original_filename: payload.original_filename
+      }
+    });
+  });
+
+  const result = await ResearchUpload.upload({
+    topicId: "usd-factor-live-f1-vix-level",
+    stage: 2,
+    title: "VIX red-team return",
+    kind: "review",
+    originalFilename: "red-team-return.md",
+    notes: "one finding",
+    parents: { researchRef: "usd-baseline-audit-01-vix-usd-report" },
+    file: { name: "red-team-return.md", type: "text/markdown", arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) }
+  });
+
+  assert.equal(result.ok, true, result.message);
+  assert.equal(calls.length, 1, "one request stores the file and its record");
+  assert.match(calls[0].url, /op=upload$/);
+  assert.equal(calls[0].payload.topic_id, "usd-factor-live-f1-vix-level");
+  assert.equal(calls[0].payload.stage, 2);
+  assert.equal(calls[0].payload.kind, "review");
+  assert.equal(calls[0].payload.sha256, expectedSha);
+  assert.equal(Buffer.from(calls[0].payload.content_base64, "base64").toString("utf8"), text, "the bytes travel once, unchanged");
+  assert.equal(calls[0].payload.parents.research_ref, "usd-baseline-audit-01-vix-usd-report");
+  assert.equal(calls[0].payload.parents.red_team_ref, "");
+  assert.equal(result.storagePath, `usd-factor-live-f1-vix-level/2/v2-${expectedSha}.md`);
+  assert.equal(result.row.version, 2, "the gateway assigns the version");
+});
+
+test("a download link through the access gateway keeps the name the reader uploaded", async () => {
+  const calls = [];
+  configureGateway(async url => {
+    calls.push(String(url));
+    return jsonResponse(200, {
+      ok: true,
+      url: "https://example.supabase.co/storage/v1/object/sign/research-documents/usd-vix/1/v1-abc.md?token=xyz&download=VIX%20report.md",
+      download_name: "VIX report.md"
+    });
+  });
+
+  const link = await ResearchUpload.signedUrl({ storage_path: "usd-vix/1/v1-abc.md" }, 600, { download: "VIX report.md" });
+  assert.equal(link.ok, true);
+  assert.equal(link.download_name, "VIX report.md");
+  assert.match(calls[0], /op=sign&path=usd-vix%2F1%2Fv1-abc\.md&seconds=600&download=VIX\+report\.md$/);
+  assert.match(link.url, /download=VIX%20report\.md$/, "the private link carries the attachment name");
+});
+
+test("a gateway refusal is shown in the words it sent, not as a status code", async () => {
+  configureGateway(async () => jsonResponse(409, {
+    ok: false,
+    message: "These exact file contents are already stored for this chain and stage. Open the existing version instead"
+  }));
+  const result = await ResearchUpload.upload({
+    topicId: "usd-vix",
+    stage: 1,
+    title: "VIX report",
+    kind: "report",
+    file: { name: "vix.md", arrayBuffer: async () => new TextEncoder().encode("body").buffer }
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.message, "These exact file contents are already stored for this chain and stage. Open the existing version instead.");
+  assert.doesNotMatch(result.message, /\b409\b/);
+});
+
+test("a gateway that cannot be reached is reported as a connection problem", async () => {
+  configureGateway(async () => { throw new TypeError("Failed to fetch"); });
+  const listed = await ResearchUpload.listAll();
+  assert.equal(listed.ok, false);
+  assert.match(listed.message, /could not be reached/);
+});
+

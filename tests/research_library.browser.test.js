@@ -181,6 +181,7 @@ async function main() {
 
   const externalRequests = [];
   const externalAfterPanelOpened = [];
+  const externalBaselineHosts = new Set();
   let auditPhase = "baseline";
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -189,14 +190,26 @@ async function main() {
     permissions: ["clipboard-read", "clipboard-write"]
   });
   const page = await context.newPage();
+  // The panel reaches the private store through the hosted access gateway when it can, and this suite
+  // drives the local service path with a temporary registry. The gateway is refused here so a test run can
+  // never read or write the live store, and so the local-service assertions below stay meaningful.
+  const refuseGateway = async target => {
+    await target.route("**/functions/v1/research-library**", route => route.abort());
+  };
+  await refuseGateway(page);
   page.on("request", request => {
     const url = request.url();
     const allowed = url.startsWith(checkoutBase) || url.startsWith(serviceBase) || url.startsWith("data:") || url.startsWith("blob:");
     if (allowed) return;
     externalRequests.push(url);
     // The dashboard already talks to Supabase research views and Google Fonts before this panel is opened;
-    // what must stay true is that opening and using the panel adds no new external destination.
+    // what must stay true is that opening and using the panel adds no new external destination. The private
+    // store's gateway is on the same project host the research views already use, so the comparison is by
+    // host, and any host the dashboard did not already contact still fails this audit.
+    let host = "";
+    try { host = new URL(url).hostname; } catch (_) { host = ""; }
     if (auditPhase === "library") externalAfterPanelOpened.push(url);
+    else if (host) externalBaselineHosts.add(host);
   });
   const pageErrors = [];
   page.on("pageerror", error => pageErrors.push(error.message));
@@ -358,9 +371,10 @@ async function main() {
     audit.attachHashMatches = true;
 
     // The published dashboard is not served from this machine, so the local service is not reachable from
-    // it at all. A stored record must then be answered by the private store: a reader who is not signed in
-    // is asked to sign in, and nothing is asked of the local service. This run is served from 127.0.0.1, so
-    // the published-origin rule is exercised by making the page report itself as a published origin.
+    // it at all. A stored record is answered by the private store and nothing else. This run serves the page
+    // from 127.0.0.1, so the published-origin rule is exercised by making the page report itself as a
+    // published origin. The store is refused in this suite, so the page must say plainly that it could not
+    // read the copy instead of reaching for loopback, which is what produced "Failed to fetch".
     const serviceAsked = [];
     const watchService = request => {
       if (request.url().startsWith(serviceBase)) serviceAsked.push(request.url());
@@ -372,19 +386,21 @@ async function main() {
     });
     await page.click(`[data-rl-stage='research'] [data-rl-download='${VIX_RESEARCH_DOCUMENT}']`);
     await page.waitForFunction(
-      () => /kept in the private research store/.test(document.querySelector("[data-rl-message]")?.textContent || ""),
+      () => /could not read that copy|could not reach it/.test(document.querySelector("[data-rl-message]")?.textContent || ""),
       null,
       { timeout: 10000 }
     );
     const publishedMessage = await page.$eval("[data-rl-message]", node => node.textContent.trim());
-    assert.match(publishedMessage, /Sign in with your research account/, "a stored record on a published page asks the reader to sign in");
+    assert.match(publishedMessage, /private store/, "a stored record on a published page is answered by the private store");
+    assert.doesNotMatch(publishedMessage, /Sign in with your research account/, "no sign-in is asked for: the store is reached without one");
+    assert.doesNotMatch(publishedMessage, /Failed to fetch/, "the reader is never shown a raw network failure");
     assert.equal(serviceAsked.length, 0, "a published page never asks 127.0.0.1 for a stored record, which is what produced Failed to fetch");
     await page.evaluate(() => {
       window.researchLibraryIsLocalPage = window.__researchLibraryLocalPage;
       delete window.__researchLibraryLocalPage;
     });
     page.off("request", watchService);
-    audit.publishedPageAsksLocalStore = true;
+    audit.publishedPageUsesStoreOnly = true;
 // CHUNK-END-3
 
     // One Markdown upload for stage 2. The page writes the topic, the stage and the version judged.
@@ -476,6 +492,7 @@ async function main() {
     // document from one whose bytes need the service, and it never offers an upload it cannot perform.
     const publicContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     const publicPage = await publicContext.newPage();
+    await refuseGateway(publicPage);
     await publicPage.goto(checkoutBase, { waitUntil: "networkidle" });
     await publicPage.getByRole("button", { name: "Research Library" }).click();
     await publicPage.waitForSelector("[data-rl-factor='live.f1-vix-level']", { timeout: 20000 });
@@ -489,14 +506,17 @@ async function main() {
       "the published page reads the same registry record");
     await publicPage.click("[data-rl-stage='red_team'] [data-rl-upload-toggle]");
     await publicPage.waitForSelector("[data-rl-stage='red_team'] [data-rl-stage-upload]");
-    // The published page carries the private store's sign-in block, and refuses to offer registration until a
-    // session exists: the reader is told to sign in rather than being handed a button that cannot work.
-    assert.ok(await publicPage.$("[data-rl-account-card]"), "the published page carries the private-store sign-in block");
-    assert.match(await publicPage.$eval("[data-rl-account-card]", node => node.textContent), /Sign in/);
-    assert.equal(await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-stage-upload]", node => node.disabled), true,
-      "a signed-out reader is asked to sign in before a register control is offered");
+    // The published page carries the private store's account block and, since the access gateway arrived,
+    // offers registration with no sign-in at all: the reader is handed a control that works rather than a
+    // password form. The gateway is refused in this suite, so nothing here can reach the live store.
+    assert.ok(await publicPage.$("[data-rl-account-card]"), "the published page carries the private-store account block");
+    const publicAccount = await publicPage.$eval("[data-rl-account-card]", node => node.textContent.replace(/\s+/g, " "));
+    assert.match(publicAccount, /Open access/, "the published page says no sign-in is needed");
+    assert.doesNotMatch(publicAccount, /Password/, "no password field is offered when none is needed");
+    assert.equal(await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-stage-upload]", node => node.disabled), false,
+      "a reader with no account can still register a stage");
     const publicNote = await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-upload-form]", node => node.textContent.replace(/\s+/g, " "));
-    assert.ok(publicNote.includes("Sign in above"), "and the form says where to sign in");
+    assert.ok(publicNote.includes("One Markdown file"), "and the form asks only for the file");
     // View and Download sit next to the stage: the reader can open a stored file before saving it. A stage
     // with no result has both controls disabled rather than hidden, so the row does not move as results land.
     assert.equal(await publicPage.$$eval("[data-rl-view]", nodes => nodes.length), 3,
@@ -593,8 +613,12 @@ async function main() {
     assert.equal(audit.narrowShellColumns.trim().split(/\s+/).length, 1, "below 1181px the panel must be one column");
     await page.setViewportSize({ width: 1440, height: 1000 });
 
-    // The panel reached nothing but this checkout and the local service, and the live feed is untouched.
-    assert.deepEqual(externalAfterPanelOpened, [], `the panel must add no external destination, saw: ${externalAfterPanelOpened.join(", ")}`);
+    // The panel reached nothing but this checkout, the local service and the project host the dashboard
+    // already reads its research views from, and the live feed is untouched.
+    const newHosts = externalAfterPanelOpened
+      .map(entry => { try { return new URL(entry).hostname; } catch (_) { return ""; } })
+      .filter(host => host && !externalBaselineHosts.has(host));
+    assert.deepEqual(newHosts, [], `the panel must add no new external host, saw: ${externalAfterPanelOpened.join(", ")}`);
     const liveFeedRequests = checkoutRequests.filter(entry => entry.includes("layer1.json") || entry.includes("layer2.json"));
     assert.ok(liveFeedRequests.length >= 1, "the live layer1 feed the dashboard already asks for must still be requested");
     audit.liveFeedRequests = liveFeedRequests;
@@ -618,6 +642,7 @@ async function main() {
     const staleBase = `http://127.0.0.1:${stalePort}`;
     const staleContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
     const stalePage = await staleContext.newPage();
+    await refuseGateway(stalePage);
     const staleErrors = [];
     stalePage.on("pageerror", error => staleErrors.push(error.message));
     try {
