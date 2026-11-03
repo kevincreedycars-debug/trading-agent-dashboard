@@ -255,7 +255,7 @@ test("a heartbeat that was fresh when it was published stays active while the co
     assert.match(state.text, /^Live trader active/, `the lamp must lead with the state, saw "${state.text}"`);
     assert.match(state.text, /as of \d{2}:\d{2}Z/, `the lamp must date the record rather than imply it is current, saw "${state.text}"`);
     assert.equal(/no run for/i.test(state.text), false, "a record inside its window at publish must not read as silence");
-    assert.match(state.title, /4m ago before the publisher read it/, `the tooltip must say the record was fresh when it was copied, saw "${state.title}"`);
+    assert.match(state.title, /4m before the publisher read it/, `the tooltip must say the record was fresh when it was copied, saw "${state.title}"`);
   } finally {
     await harness.close();
   }
