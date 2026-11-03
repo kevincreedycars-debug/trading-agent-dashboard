@@ -257,6 +257,77 @@ async function main() {
     assert.equal(factorRows.every(entry => entry.expanded === "false"), true, "every factor starts closed");
     assert.equal(await page.$$eval("[data-rl-factor-stages]", nodes => nodes.length), 0, "no stage list is open before a row is clicked");
     audit.factorRows = { count: factorRows.length, complete: factorRows.filter(entry => entry.complete === "true").length };
+    // The table reads across, not down: no heading, status pill or weight breaks a word over two lines. This is
+    // the guard for the defect the restyle fixed - "READ Y", "PEND ING", "NOT TESTE D" and "RESEAR CH" all came
+    // from cells that were allowed to wrap anywhere, and they must not come back.
+    audit.columnBreaks = await page.evaluate(() => {
+      const broken = [];
+      const check = node => {
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+        let textNode = walker.nextNode();
+        while (textNode) {
+          const value = textNode.nodeValue || "";
+          const words = /\S+/g;
+          let match = words.exec(value);
+          while (match) {
+            const range = document.createRange();
+            range.setStart(textNode, match.index);
+            range.setEnd(textNode, match.index + match[0].length);
+            const lines = new Set(Array.from(range.getClientRects()).map(rect => Math.round(rect.top)));
+            if (lines.size > 1) broken.push(match[0]);
+            match = words.exec(value);
+          }
+          textNode = walker.nextNode();
+        }
+      };
+      document.querySelectorAll("[data-rl-factor-table] th, [data-rl-factor-table] .rl-pill, [data-rl-factor-table] .rl-cell-weight strong")
+        .forEach(check);
+      const table = document.querySelector("[data-rl-factor-table]");
+      return {
+        brokenWords: broken,
+        headings: Array.from(table.querySelectorAll("thead th")).map(node => node.textContent.trim()),
+        pills: table.querySelectorAll(".rl-pill").length,
+        columnWidths: Array.from(table.querySelectorAll("thead th")).map(node => Math.round(node.getBoundingClientRect().width)),
+        narrowestColumn: Math.min(...Array.from(table.querySelectorAll("thead th")).map(node => Math.round(node.getBoundingClientRect().width)))
+      };
+    });
+    assert.deepEqual(audit.columnBreaks.brokenWords, [],
+      `no heading, pill or weight may break inside a word, saw: ${audit.columnBreaks.brokenWords.join(", ")}`);
+    assert.ok(audit.columnBreaks.pills >= factorRows.length * 3,
+      `the status pills must still be rendered, one per factor stage, saw ${audit.columnBreaks.pills}`);
+    assert.ok(audit.columnBreaks.narrowestColumn >= 78,
+      `every column keeps a readable width, narrowest is ${audit.columnBreaks.narrowestColumn}px`);
+    assert.deepEqual(audit.columnBreaks.headings,
+      ["Factor", "Family", "Role", "Live weight", "Research", "Review", "Backtest", "Document", "Blockers and dependencies"],
+      "the nine column headings keep their wording and their order");
+
+    // The head card is a caption, not a second article: the explanation is folded into one disclosure that
+    // starts shut, and every sentence it holds is still in the page. The open blockers stay on screen.
+    const headCard = await page.evaluate(() => {
+      const card = document.querySelector("[data-rl-head='true']");
+      const about = card.querySelector("[data-rl-about='true']");
+      return {
+        aboutOpen: about ? about.open : null,
+        aboutSummary: about ? about.querySelector("summary").textContent.trim() : "",
+        aboutText: about ? about.textContent.replace(/\s+/g, " ").trim() : "",
+        blockers: card.querySelectorAll(".rl-blocker-panel li").length,
+        blockerPanelVisible: Boolean(card.querySelector(".rl-blocker-panel")?.getClientRects().length),
+        heading: (card.querySelector("h3")?.textContent || "").trim()
+      };
+    });
+    audit.headCard = headCard;
+    assert.equal(headCard.aboutOpen, false, "the long explanation must start folded so the factor rows are not pushed down");
+    assert.equal(headCard.aboutSummary, "How this library works");
+    assert.match(headCard.aboutText, /Next step: /, "the folded explanation still carries the next step, word for word");
+    const catalogScopeNote = String(JSON.parse(fs.readFileSync(catalogPath, "utf8")).scope_note || "").replace(/\s+/g, " ").trim();
+    assert.ok(catalogScopeNote && headCard.aboutText.includes(catalogScopeNote),
+      "the folded explanation still carries the catalog's own scope note, word for word");
+    assert.equal(headCard.blockerPanelVisible, true, "the open blockers stay on screen");
+    assert.ok(headCard.blockers >= 1, "one entry per recorded blocker, none dropped");
+    assert.equal(headCard.heading, "One chain per factor, three stages each, and a gated asset-level final analysis",
+      "the panel heading is untouched");
+
+
 
     // Clicking a factor opens that factor's three stages directly underneath its row.
     await openFactor("live.f1-vix-level");

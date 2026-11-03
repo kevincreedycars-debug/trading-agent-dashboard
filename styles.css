@@ -8752,10 +8752,38 @@ body {
 .rl-table-card { grid-column: 1 / -1; }
 @media (max-width: 1180px) { .rl-shell { grid-template-columns: minmax(0, 1fr); } }
 .rl-head-card, .rl-service-card, .rl-filter-card, .rl-table-card, .rl-tasks-card, .rl-engine-card, .rl-detail-card { padding: 18px 20px; min-width: 0; }
+
+/* The head card reads as a caption rather than a second article: one heading row with the long explanation
+   folded into a single disclosure, then the open blockers. Every sentence the catalog carries is still in the
+   page, word for word; it just no longer stands between the reader and the factor rows. */
+.rl-head-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px 24px; }
+.rl-head-title { min-width: 0; }
+.rl-head-title .eyebrow { margin: 0; }
+.rl-head-title h3 { margin: 4px 0 0; font-size: 1.15rem; line-height: 1.35; overflow-wrap: break-word; }
+.rl-about { min-width: 0; justify-self: end; }
+.rl-about > summary {
+  cursor: pointer; padding: 4px 0; color: var(--ink-mid);
+  font-size: 0.78rem; letter-spacing: 0.02em; white-space: nowrap;
+}
+.rl-about > summary:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.rl-about > summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+.rl-about[open] > summary { color: var(--text); }
+.rl-about[open] { grid-column: 1 / -1; justify-self: stretch; }
+.rl-about-body {
+  display: grid; gap: 8px; margin-top: 10px; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 10px; background: rgba(9, 14, 22, 0.35); min-width: 0;
+}
+.rl-about-body .research-panel-copy { max-width: none; font-size: 0.82rem; }
+@media (max-width: 1180px) {
+  .rl-head-top { grid-template-columns: minmax(0, 1fr); align-items: start; gap: 4px; }
+  .rl-about { justify-self: start; }
+  .rl-about > summary { white-space: normal; }
+}
 .rl-standfirst { margin: 6px 0; color: var(--ink-mid); font-size: 0.98rem; overflow-wrap: anywhere; }
 .rl-muted { color: var(--ink-muted); font-size: 0.82rem; overflow-wrap: anywhere; }
 .rl-inline-note { font-size: 0.7rem; }
-.rl-blocker-panel { border: 1px solid rgba(255, 91, 110, 0.3); background: rgba(255, 91, 110, 0.07); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+.rl-blocker-panel { border: 1px solid rgba(255, 91, 110, 0.3); background: rgba(255, 91, 110, 0.07); border-radius: 10px; padding: 10px 14px 12px; margin: 14px 0 0; }
+.rl-blocker-panel .eyebrow { margin: 0; }
 .rl-message { border-left: 3px solid var(--blue); background: rgba(94, 161, 255, 0.08); border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; overflow-wrap: anywhere; }
 .rl-message-error { border-left-color: var(--red); background: rgba(255, 91, 110, 0.1); color: var(--text); }
 .rl-message-error[hidden], [data-rl-upload-status][hidden] { display: none; }
@@ -8787,10 +8815,29 @@ body {
 .rl-asset-chip.active { border-color: rgba(94, 161, 255, 0.6); background: rgba(29, 53, 85, 0.55); }
 
 .rl-table-scroll { overflow-x: auto; }
-.rl-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-.rl-table th, .rl-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+/* Nine columns of short facts around one long sentence, so the columns are set rather than left to the browser:
+   the eight narrow ones hold one fact each and the blocker sentence takes what is left. No short cell is allowed
+   to break a word ("READ Y", "PEND ING", "RESEAR CH"), and the table keeps a floor wide enough for its own pills,
+   below which it scrolls inside its own frame instead of crushing the panel. */
+.rl-table { width: 100%; min-width: 1080px; table-layout: fixed; border-collapse: collapse; font-size: 0.82rem; }
+.rl-table th, .rl-table td {
+  text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line);
+  vertical-align: middle; overflow-wrap: normal; word-break: normal; hyphens: none;
+}
 .rl-table th { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); }
-.rl-cell-factor strong { display: block; }
+.rl-table th:nth-child(1) { width: 190px; }
+.rl-table th:nth-child(2) { width: 86px; }
+.rl-table th:nth-child(3) { width: 78px; }
+.rl-table th:nth-child(4) { width: 102px; }
+.rl-table th:nth-child(5) { width: 94px; }
+.rl-table th:nth-child(6) { width: 94px; }
+.rl-table th:nth-child(7) { width: 106px; }
+.rl-table th:nth-child(8) { width: 150px; }
+.rl-cell-factor strong { display: block; overflow-wrap: break-word; }
+.rl-cell-doc .rl-muted { font-family: var(--mono); font-size: 0.7rem; white-space: nowrap; }
+.rl-cell-weight .rl-muted { display: block; font-size: 0.6rem; letter-spacing: 0.02em; }
+.rl-cell-weight strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rl-cell-flags { overflow-wrap: break-word; }
 .rl-factor-row { cursor: pointer; }
 .rl-factor-row:hover, .rl-factor-row:focus-visible { background: rgba(94, 161, 255, 0.09); outline: none; }
 .rl-factor-row.is-complete td { background: rgba(24, 212, 139, 0.09); }
@@ -8816,13 +8863,13 @@ body {
 .rl-factor-stage-upload { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, 220px) auto; gap: 8px; align-items: center; min-width: 0; padding-top: 10px; }
 .rl-factor-stage-upload textarea, .rl-factor-stage-upload .rl-inline-note { grid-column: 1 / -1; margin: 0; }
 .rl-factor-stage-upload input[type="file"] { min-width: 0; max-width: 100%; }
-.rl-factor-id { display: block; font-family: var(--mono); font-size: 0.7rem; color: var(--ink-faint); overflow-wrap: anywhere; }
+.rl-factor-id { display: block; font-family: var(--mono); font-size: 0.7rem; color: var(--ink-faint); overflow-wrap: break-word; }
 .rl-flag { display: block; font-size: 0.72rem; color: var(--ink-muted); }
 .rl-flag-blocker { color: #ffc3cb; }
 
 .rl-pill {
   display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; border: 1px solid transparent;
-  font-size: 0.66rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; white-space: normal;
+  font-size: 0.66rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
 }
 .rl-tone-ok { color: var(--green); border-color: rgba(24, 212, 139, 0.4); background: rgba(24, 212, 139, 0.1); }
 .rl-tone-active { color: var(--blue); border-color: rgba(94, 161, 255, 0.4); background: rgba(94, 161, 255, 0.1); }
@@ -8830,7 +8877,10 @@ body {
 .rl-tone-idle { color: var(--ink-muted); border-color: var(--line); background: rgba(255, 255, 255, 0.03); }
 
 .rl-list { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 0.84rem; overflow-wrap: anywhere; }
-.rl-blocker-list li { color: #ffc3cb; }
+/* The blocker sentences are the one list on this panel that is long enough to read better in two columns. */
+.rl-blocker-list { display: block; columns: 2; column-gap: 28px; margin-top: 4px; font-size: 0.8rem; line-height: 1.5; }
+.rl-blocker-list li { color: #ffc3cb; break-inside: avoid; margin-bottom: 4px; }
+@media (max-width: 1180px) { .rl-blocker-list { columns: 1; } }
 .rl-gap-list li { color: var(--ink-muted); }
 .rl-history-list li { color: var(--ink-mid); }
 

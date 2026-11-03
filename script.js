@@ -8864,23 +8864,31 @@ function renderResearchLibrary() {
   researchLibraryState.asset = asset.asset;
   const factors = asArray(asset.factors);
 
+  // The head card is the panel's reading page, not a second article in front of the table: the heading and
+  // the open blockers stay on screen, and the long explanation sits behind one collapsed disclosure so the
+  // factor rows start higher up. Every word the catalog carries is still in the page, word for word.
   const head = `
     <article class="detail-panel wide-panel rl-head-card" data-rl-head="true">
-      <div class="research-section-head">
-        <div>
+      <div class="rl-head-top">
+        <div class="rl-head-title">
           <p class="eyebrow">Research Library - ${escapeHtml(asset.label || asset.asset)}</p>
           <h3>One chain per factor, three stages each, and a gated asset-level final analysis</h3>
         </div>
-        <p class="research-panel-copy">${escapeHtml(catalog.scope_note || "")}</p>
+        <details class="rl-about" data-rl-about="true">
+          <summary>How this library works</summary>
+          <div class="rl-about-body">
+            <p class="rl-standfirst">${escapeHtml(asset.standfirst || "")}</p>
+            <p class="rl-muted">Next step: ${escapeHtml(asset.next_step || "not stated")}</p>
+            <p class="research-panel-copy">${escapeHtml(catalog.scope_note || "")}</p>
+            ${asset.note ? `<p class="rl-muted">${escapeHtml(asset.note)}</p>` : ""}
+          </div>
+        </details>
       </div>
-      <p class="rl-standfirst">${escapeHtml(asset.standfirst || "")}</p>
-      <p class="rl-muted">Next step: ${escapeHtml(asset.next_step || "not stated")}</p>
       ${asArray(asset.blockers).length ? `
         <div class="rl-blocker-panel">
           <p class="eyebrow">Open blockers</p>
           <ul class="rl-list rl-blocker-list">${asArray(asset.blockers).map(blocker => `<li>${escapeHtml(blocker)}</li>`).join("")}</ul>
         </div>` : ""}
-      ${asset.note ? `<p class="rl-muted">${escapeHtml(asset.note)}</p>` : ""}
     </article>
   `;
   const message = researchLibraryState.message
