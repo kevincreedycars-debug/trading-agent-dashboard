@@ -293,6 +293,26 @@ test("accepts a stale M5 series that states its lag instead of hiding it", () =>
   assert.deepEqual(validateLiveTradingFeed(feed), []);
 });
 
+test("the producer subscribes its own symbols before reading them", () => {
+  const source = fs.readFileSync(producerPath, "utf8");
+  // A terminal that has just started quotes only what the account holds a ticket on; on 2026-11-03 a reboot
+  // left XAUUSD and US100.cash with no tick and no history, and the snapshot was refused as invalid. The
+  // subscribe step is what lets a cold start settle by itself, so its presence and its order are asserted.
+  assert.match(source, /^SYMBOL_SUBSCRIBE_ATTEMPTS = \d+$/m);
+  assert.match(source, /def subscribe_symbol\(symbol\):/);
+  assert.match(source, /mt5\.symbol_select\(symbol, True\)/);
+  assert.match(source, /def wait_for_tick\(symbol\):/);
+  const subscribeAt = source.indexOf("def subscribe_symbol");
+  const buildAt = source.indexOf("def build_instrument");
+  assert.ok(subscribeAt > 0 && buildAt > subscribeAt, "the subscription must be defined before the instrument read");
+  assert.match(source, /info = subscribe_symbol\(symbol\)/);
+  assert.match(source, /tick = wait_for_tick\(symbol\)/);
+  // Every published instrument is subscribed before the server offset is measured from a tick.
+  const primeAt = source.indexOf("for symbol, _ in INSTRUMENTS:");
+  const offsetAt = source.indexOf("offset_symbol, offset_seconds = detect_server_offset()");
+  assert.ok(primeAt > 0 && offsetAt > primeAt, "the four must be subscribed before the offset is measured");
+});
+
 test("the producer records the M5 freshness proof and retries the terminal sync", () => {
   const source = fs.readFileSync(producerPath, "utf8");
   assert.match(source, /"bar_age_seconds": bar_age/);
@@ -330,6 +350,11 @@ test("the producer touches only read-only MT5 functions", () => {
     "account_info",
     "symbol_info",
     "symbol_info_tick",
+    // A cold terminal serves only the symbols the account holds a ticket on, so the producer subscribes the
+    // four it publishes before reading them. `symbol_select` is a Market Watch subscription - it starts the
+    // quote stream and the history sync, changes nothing about the account and cannot send anything - which
+    // is why it belongs on a read-only list beside `symbol_info` rather than beside the order functions.
+    "symbol_select",
     "copy_rates_from_pos",
     "positions_get",
     "orders_get",

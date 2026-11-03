@@ -990,7 +990,62 @@ to one commit" and "nothing changed" describe the moment before the tasks start 
 for, and what the pre-cutover run measured. In steady state the equivalent evidence is the lane's own: heartbeat
 age, feed age, probe permissions, symbol tradability, and the publisher's pushed commit.
 
-What this section does not claim: that either resting limit fills, that a 5R target is reached, or that a full
-machine reboot has been run since the cutover. The terminal was restarted through its own logon task and armed
-itself; a whole-host reboot is the next thing to watch, and the auto-logon in §3 means it lands on a logged-in
-desktop.
+### 14.5 2026-11-03, 14:00Z: the whole host was rebooted, and the lane came back by itself
+
+The one thing §14.4 left unproven was a full reboot. It was run at 14:00:02Z, with two tickets live on the account.
+
+| Moment (UTC) | What the host did |
+| --- | --- |
+| 13:59:24 | `shutdown /r /t 8 /f` issued over ssh |
+| 14:00:02 | boot |
+| 14:00:36 | `LiveTradingLane-ftmo1` fired on its cadence |
+| 14:00:55 | `LiveTradingPublishLanes019` fired and exited 0 |
+| 14:01:15 | `LiveTradingTerminalStartup` fired through its logon trigger, +45 s after the logon |
+| 14:01:29 | terminal initialized from `startup.ini` |
+| 14:01:39 | `'511428614': authorized on FTMO-Server` |
+| 14:01:40 | `synchronized ... 1 positions, 1 orders, 166 symbols`, `trading has been enabled - hedging mode` |
+| 14:05:02 | `LiveTradingTraderTick019` ran as `S4U` and reviewed both tickets |
+
+`qwinsta` after the boot read `console  Administrator  1  Active` and no `rdp-tcp#0` session: auto-logon had put the
+trading account on the console, and `terminal64` (pid 3136) started **in that session**, not in a remote one. Before
+the reboot the same terminal ran in `rdp-tcp#0` session 2, which is the arrangement that depends on the operator.
+
+**What that means for leaving it alone.** Disconnecting a Remote Desktop window keeps its session, and this host's
+`RDP-Tcp` settings are the default `MaxDisconnectionTime 0` / `MaxIdleTime 0`, so a disconnected session never
+expires and an `Interactive` task in it keeps running. Signing out is different: it ends the session, and with it the
+terminal and every `Interactive` task in it. After this boot the lane no longer sits in a remote session at all, so
+neither act touches it; what remains is the case where a future session is signed out and the console session goes
+with it.
+
+**`LiveTradingWatchdog`** covers that case, and nothing else. `scripts/run-live-trading-watchdog.ps1` runs as `SYSTEM`
+every 10 minutes and at startup and asks one question: is `terminal64` running? If it is, it writes one line and
+exits. If it is not and somebody is signed on, it starts `LiveTradingTerminalStartup` and gives it 45 seconds. If it
+is not and nobody is, it reboots the host so auto-logon restores the desktop. A reboot is attempted at most once
+every 30 minutes, recorded in `logs\live-trading-watchdog-last-reboot.txt`, so a host whose auto-logon broke cannot be
+pushed into a tight reboot loop by its own watchdog. It touches no order, no position, no terminal config and no
+credential; the first run at 14:05:07Z read `ok terminal running pid=3136 session=1`.
+
+**Two facts the reboot produced that were not in any document.** Both are the sort of thing a cold start does and a
+warm restart does not:
+
+1. **The second limit filled on the restart gap.** The terminal re-synced at 14:01:40 with one position and one
+   order; at 14:02:23 the market filled the working `BTCUSD` buy limit, `deal #285141123 buy 0.01 BTCUSD at 77280.55`
+   against an entry of 77294.18 - through the level rather than at it. Both pairs now carry a position, each with the
+   stop and target it was placed with (`EURUSD` sl 1.11803 tp 1.12308, `BTCUSD` sl 77003.21 tp 78749.05). A restart
+   does not cancel a working order: the broker holds it.
+2. **A cold terminal serves only what the account holds a ticket on.** The 14:05:20Z feed run wrote
+   `status: invalid`, `error_count 8`, `Instrument XAUUSD requires a quote object`, the same for `US100.cash` -
+   the two symbols with no position came back with no tick and no history, while `EURUSD` and `BTCUSD` quoted
+   normally. MT5 quotes the symbols in its own Market Watch; the hand selection §14.4 made through
+   `mt5.symbol_select` did not survive a forced shutdown, and nothing in the producer had ever asked for a symbol
+   it was not already given. The fix is in
+   `tools/mt5-bridge/live-trading-snapshot.py`: `subscribe_symbol()` and `wait_for_tick()` subscribe the four
+   published instruments before anything is measured, and `symbol_select` is now on the read-only allowlist in
+   `tests/live_trading_feed.test.js` with the reason written beside it - it starts a quote stream and a history sync,
+   and cannot send. Without it, a power cut would leave the dashboard showing a refused snapshot and the publisher
+   refusing to publish it, indefinitely, with nothing in the UI saying why.
+
+The reboot also re-answered §3's auto-logon question from the host's own behaviour rather than from a registry
+reading: `AutoAdminLogon=1`, `DefaultUserName=Administrator`, a stored password, and a session on the console one
+minute after boot.
+

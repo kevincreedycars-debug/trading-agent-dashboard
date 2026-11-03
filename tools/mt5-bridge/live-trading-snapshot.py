@@ -113,6 +113,23 @@ H4_BAR_STALE_SECONDS = 28800
 M5_REFRESH_ATTEMPTS = 6
 M5_REFRESH_WAIT_SECONDS = 2.0
 
+# MT5 quotes and back-fills the symbols in its own Market Watch, and nothing else. A terminal that has just
+# started serves the symbols the account already holds a position or an order on - which is why the four the
+# dashboard publishes quote normally on an ordinary run - and a reboot can leave the rest unsubscribed: after
+# the host's 2026-11-03 14:00 reboot, XAUUSD and US100.cash came back with no tick and no history while
+# EURUSD and BTCUSD, each holding a position, read normally, and the snapshot was refused as invalid for the
+# absence rather than published as a read of a quiet market. Subscribing the symbol before reading it is what
+# makes a cold start settle by itself. It is a read-side subscription - it starts the quote stream and the
+# history sync, changes nothing about the account and cannot send anything - so the read-only guarantee in
+# tests/live_trading_feed.test.js still holds, and `symbol_select` is allowlisted there beside `symbol_info`.
+SYMBOL_SUBSCRIBE_ATTEMPTS = 5
+SYMBOL_SUBSCRIBE_WAIT_SECONDS = 1.0
+# A symbol that has just been subscribed needs a moment before its first tick arrives. Waiting a bounded few
+# seconds is the difference between "not quoting yet" and "not quoting", and only the second is a real answer.
+SYMBOL_TICK_ATTEMPTS = 5
+SYMBOL_TICK_WAIT_SECONDS = 1.0
+
+
 # The blocks a snapshot publishes, in dashboard order. `m5` is what the 5m close-beyond-level trigger
 # reads; `h1` and `h4` are the wider views that carry a marked L2L ladder.
 TIMEFRAME_KEYS = ("m5", "h1", "h4")
@@ -141,6 +158,39 @@ def resolve_path(path):
     if candidate.is_dir():
         return str(candidate / "terminal64.exe")
     return path
+
+
+def subscribe_symbol(symbol):
+    """Put one symbol in the terminal's Market Watch and wait for it to be visible.
+
+    Returns the symbol's info, or None when the broker does not serve it. `symbol_select` on a symbol that
+    is already subscribed returns immediately, so the ordinary run pays nothing for this; a cold terminal
+    pays a second or two and gets a quote stream instead of an empty instrument row.
+    """
+    info = mt5.symbol_info(symbol)
+    if info is not None and info.visible:
+        return info
+    mt5.symbol_select(symbol, True)
+    for attempt in range(1, SYMBOL_SUBSCRIBE_ATTEMPTS + 1):
+        info = mt5.symbol_info(symbol)
+        if info is not None and info.visible:
+            return info
+        if attempt < SYMBOL_SUBSCRIBE_ATTEMPTS:
+            time.sleep(SYMBOL_SUBSCRIBE_WAIT_SECONDS)
+    return info
+
+
+def wait_for_tick(symbol):
+    """The instrument's tick, re-asked a bounded few times while a fresh subscription settles."""
+    tick = mt5.symbol_info_tick(symbol)
+    if tick is not None and tick.bid:
+        return tick
+    for attempt in range(1, SYMBOL_TICK_ATTEMPTS + 1):
+        time.sleep(SYMBOL_TICK_WAIT_SECONDS)
+        tick = mt5.symbol_info_tick(symbol)
+        if tick is not None and tick.bid:
+            return tick
+    return tick
 
 
 def detect_server_offset():
@@ -304,7 +354,7 @@ def build_timeframe_block(key, symbol, timeframe, offset_seconds, candle_count, 
 
 
 def build_instrument(symbol, dashboard_asset, offset_seconds, plan, now_utc):
-    info = mt5.symbol_info(symbol)
+    info = subscribe_symbol(symbol)
     if info is None:
         return {
             "symbol": symbol,
@@ -313,7 +363,7 @@ def build_instrument(symbol, dashboard_asset, offset_seconds, plan, now_utc):
             "note": "Symbol not served by this terminal.",
         }
 
-    tick = mt5.symbol_info_tick(symbol)
+    tick = wait_for_tick(symbol)
     point = float(info.point)
     row = {
         "symbol": symbol,
@@ -708,7 +758,13 @@ def main():
         return 1
 
     try:
+        # Subscribe the four before anything is measured. The offset read and the bar reads both need the
+        # terminal to be serving them, and a terminal that has just started serves only the symbols the
+        # account holds a ticket on, so on a cold start this is what stops two of the four coming back empty.
+        for symbol, _ in INSTRUMENTS:
+            subscribe_symbol(symbol)
         offset_symbol, offset_seconds = detect_server_offset()
+
         plan = timeframe_plan({
             "m5": args.candles,
             "h1": args.h1_candles,
