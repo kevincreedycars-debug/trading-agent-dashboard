@@ -16098,6 +16098,16 @@ function liveTradingPrice(value, digits) {
 // was told, not that it is running, so the age is drawn beside it and a stale card says so at the top rather
 // than in a footnote. `armed` and the freshness of the record are therefore two fields, never one badge.
 const LIVE_TRADING_HEARTBEAT_MIN_WINDOW_SECONDS = 900;
+// The copy on this page moves on the publisher's clock, not on the loop's. The publisher ticks every ten
+// minutes and its own interval gate is ten minutes too, so a tick that lands a few seconds early is sent to
+// the next one and a healthy host has been putting a commit out every twenty minutes; one commit carries the
+// snapshot, this document and every lane's heartbeat, and the CDN may serve that commit for a few minutes
+// more. Judging a heartbeat against "now" therefore turned a running loop amber for a quarter of every cycle,
+// which is how a lamp stops being read. The two facts are separated instead: the heartbeat's age *when it was
+// published* is what says whether a loop was running, and the copy's own age is what says whether the page is
+// still being told anything. An hour - three of the slowest publishes plus cache - is where silence about the
+// copy becomes the headline rather than a footnote about the record.
+const LIVE_TRADING_COPY_CEILING_SECONDS = 3600;
 
 function liveTradingMillisecondsSince(stamp) {
   const at = Date.parse(stamp || "");
@@ -16126,14 +16136,18 @@ function liveTradingLaneHeartbeat(lane) {
     return {
       present: false,
       stale: false,
+      staleReason: null,
       unknownAge: false,
       ageSeconds: null,
+      ageAtPublishSeconds: null,
+      copyAgeSeconds: null,
       windowSeconds: LIVE_TRADING_HEARTBEAT_MIN_WINDOW_SECONDS,
       armed: false,
       status: null,
       reason: null,
       host: null,
-      writtenAt: null
+      writtenAt: null,
+      publishedAt: null
     };
   }
   // Three missed ticks is the window, and no less than fifteen minutes: the loop runs on the M5 clock, so a
@@ -16143,8 +16157,27 @@ function liveTradingLaneHeartbeat(lane) {
     ? Math.max(LIVE_TRADING_HEARTBEAT_MIN_WINDOW_SECONDS, Math.round(interval * 3))
     : LIVE_TRADING_HEARTBEAT_MIN_WINDOW_SECONDS;
   const writtenAt = facts.written_at_utc || facts.at_utc || null;
+  const writtenMs = Date.parse(writtenAt || "");
   const ageSecondsRaw = liveTradingMillisecondsSince(writtenAt);
   const ageSeconds = ageSecondsRaw === null ? null : Math.max(0, Math.round(ageSecondsRaw / 1000));
+  // When the copy on this page was made. The document and every lane's heartbeat ride in one commit, so the
+  // document's own `generated_at_utc` is the instant the publisher read those files; a heartbeat written after
+  // it (a fixture, or a copy assembled by hand) counts as new at publish rather than as negative age.
+  const publishedAt = typeof liveTradingLanes.document?.generated_at_utc === "string"
+    ? liveTradingLanes.document.generated_at_utc
+    : null;
+  const publishedMs = Date.parse(publishedAt || "");
+  const copyAgeSeconds = Number.isNaN(publishedMs) ? null : Math.max(0, Math.round((Date.now() - publishedMs) / 1000));
+  const ageAtPublishSeconds = Number.isNaN(publishedMs) || Number.isNaN(writtenMs)
+    ? null
+    : Math.max(0, Math.round((publishedMs - writtenMs) / 1000));
+  // Two ways for this record to be unable to say a loop is running: it was already outside the window when the
+  // publisher read it, or the copy the page holds is so old that nothing can be said about now. Without a
+  // readable publish time the clock is all there is, which is the stricter of the two readings.
+  const staleAtPublish = ageAtPublishSeconds === null
+    ? ageSeconds === null || ageSeconds > windowSeconds
+    : ageAtPublishSeconds > windowSeconds;
+  const copyStale = copyAgeSeconds !== null && copyAgeSeconds > LIVE_TRADING_COPY_CEILING_SECONDS;
   return {
     present: true,
     armed: facts.armed === true,
@@ -16154,12 +16187,16 @@ function liveTradingLaneHeartbeat(lane) {
       ? facts.host.computer
       : typeof facts.host === "string" ? facts.host : null,
     writtenAt,
+    publishedAt,
     ageSeconds,
+    ageAtPublishSeconds,
+    copyAgeSeconds,
     windowSeconds,
     unknownAge: ageSeconds === null,
     // A heartbeat with no readable time cannot be shown to be current, so it is treated as stale rather than
     // as healthy: silence is the one thing this card may not present as a running loop.
-    stale: ageSeconds === null ? true : ageSeconds > windowSeconds
+    stale: staleAtPublish || copyStale,
+    staleReason: staleAtPublish ? "loop" : copyStale ? "copy" : null
   };
 }
 
@@ -16181,18 +16218,26 @@ function liveTradingLaneCard(lane) {
   const tone = !enabled ? "parked" : loadError ? "error" : !snapshot ? "waiting" : stale ? "stale" : "live";
   const badge = !enabled
     ? "DISABLED"
-    : loadError ? "UNREADABLE" : !snapshot ? "NO SNAPSHOT" : stale ? "HEARTBEAT STALE" : "LIVE";
+    : loadError
+      ? "UNREADABLE"
+      : !snapshot
+        ? "NO SNAPSHOT"
+        : stale
+          ? heartbeat.staleReason === "copy" ? "COPY STALE" : "HEARTBEAT STALE"
+          : "LIVE";
 
   const traderValue = !heartbeat.present
     ? "no heartbeat published"
     : heartbeat.stale
-      ? `${heartbeat.armed ? "armed" : "not armed"} when last seen - no run since`
+      ? heartbeat.staleReason === "copy"
+        ? `${heartbeat.armed ? "armed" : "not armed"} when published - no new copy since`
+        : `${heartbeat.armed ? "armed" : "not armed"} when last seen - no run since`
       : heartbeat.armed ? "armed" : "not armed";
   const heartbeatValue = !heartbeat.present
     ? "none"
     : heartbeat.unknownAge
       ? "no readable time"
-      : `${liveTradingAgeLabel(heartbeat.ageSeconds)} - ${heartbeat.writtenAt}`;
+      : `${liveTradingAgeLabel(heartbeat.ageSeconds)} - ${heartbeat.writtenAt}${heartbeat.copyAgeSeconds === null ? "" : `, copied ${liveTradingAgeLabel(heartbeat.copyAgeSeconds)}`}`;
   const resultValue = !heartbeat.present
     ? "none recorded"
     : `${heartbeat.status || "unknown"}${heartbeat.unknownAge ? "" : ` (${liveTradingAgeLabel(heartbeat.ageSeconds)})`}`;
@@ -16207,21 +16252,28 @@ function liveTradingLaneCard(lane) {
     : displayDash();
 
   // The alert is the part that must be impossible to miss: an old armed record drawn as a healthy card is the
-  // exact mistake this strip exists to prevent, so it is a sentence above the rows, not a colour.
+  // exact mistake this strip exists to prevent, so it is a sentence above the rows, not a colour. A record that
+  // was already old when the publisher read it and a copy nobody has republished for an hour are two different
+  // silences, and the sentence says which one this is.
   const alert = stale
     ? `<p class="live-trading-lane-alert">${escapeHtml(
         heartbeat.unknownAge
           ? "The last heartbeat carries no readable time, so nothing here shows a loop running. Whatever it says about arming is a record of a run, not a state."
-          : `No heartbeat for ${liveTradingAgeLabel(heartbeat.ageSeconds)} - past the ${Math.round(heartbeat.windowSeconds / 60)}m window. It was ${heartbeat.armed ? "armed" : "not armed"} when it last wrote; nothing here shows a loop running now.`
+          : heartbeat.staleReason === "copy"
+            ? `No new copy of this lane for ${liveTradingAgeLabel(heartbeat.copyAgeSeconds)} - past the ${Math.round(LIVE_TRADING_COPY_CEILING_SECONDS / 60)}m ceiling for publishes. The record it carries was ${heartbeat.ageAtPublishSeconds === null ? "of unknown age" : liveTradingAgeLabel(heartbeat.ageAtPublishSeconds)} old when it was published and reported ${heartbeat.status || "unknown"}; nothing here shows a loop running now.`
+            : `No heartbeat for ${liveTradingAgeLabel(heartbeat.ageSeconds)} - past the ${Math.round(heartbeat.windowSeconds / 60)}m window. It was ${heartbeat.armed ? "armed" : "not armed"} when it last wrote; nothing here shows a loop running now.`
       )}</p>`
     : "";
 
+  const copyClause = heartbeat.present && heartbeat.copyAgeSeconds !== null
+    ? ` This page's copy of that record is ${liveTradingAgeLabel(heartbeat.copyAgeSeconds)} old: it moves with each publish, not with each tick.`
+    : "";
   const note = !enabled
     ? "Parked in config/live-trading-lanes.json: this lane is not deployed, so nothing is published for it and no loop trades it. Flipping it to \"enabled\": true - or deleting the line, since enabled is the default - is the whole switch-on, and its snapshot appears here on the next publish."
     : heartbeat.present
       ? heartbeat.stale
-        ? `The last run${heartbeat.host ? ` on ${heartbeat.host}` : ""} reported ${heartbeat.status || "nothing"}. The arming row above is history until a fresh heartbeat replaces it.`
-        : heartbeat.reason || `The loop last ran ${liveTradingAgeLabel(heartbeat.ageSeconds)}${heartbeat.host ? ` on ${heartbeat.host}` : ""} and reported ${heartbeat.status || "unknown"}.`
+        ? `The last run${heartbeat.host ? ` on ${heartbeat.host}` : ""} reported ${heartbeat.status || "nothing"}. The arming row above is history until a fresh heartbeat replaces it.${copyClause}`
+        : `${heartbeat.reason || `The loop last ran ${liveTradingAgeLabel(heartbeat.ageSeconds)}${heartbeat.host ? ` on ${heartbeat.host}` : ""} and reported ${heartbeat.status || "unknown"}.`}${copyClause}`
       : "No trader heartbeat has been published for this lane, so this page can say what the account holds but not whether a loop is watching it.";
 
   const rows = [
@@ -16367,11 +16419,23 @@ function liveTraderStatusState() {
   const host = heartbeat.host ? ` on ${heartbeat.host}` : "";
   const result = String(heartbeat.status || "unknown").replace(/_/g, " ");
   if (heartbeat.stale) {
+    // Two silences, and they are not the same fact: a record that was already outside the window when the
+    // publisher read it is a loop that was not running, and a copy nobody has republished for an hour is a page
+    // that is not being told anything. Each says which it is rather than sharing one amber sentence.
+    if (heartbeat.staleReason === "copy") {
+      const copyAge = liveTradingAgeLabel(heartbeat.copyAgeSeconds);
+      return {
+        tone: "stale",
+        label: "Live trader",
+        detail: `no publish for ${copyAge.replace(/ ago$/, "")}`,
+        title: `The copy of ${laneId}'s heartbeat on this page is ${copyAge}, past the ${Math.round(LIVE_TRADING_COPY_CEILING_SECONDS / 60)} minute ceiling for publishes. The record it carries was ${heartbeat.ageAtPublishSeconds === null ? "of unknown age" : liveTradingAgeLabel(heartbeat.ageAtPublishSeconds)} old when it was published and reported ${result}, but nothing on this page says what the loop is doing now.`
+      };
+    }
     return {
       tone: "stale",
       label: "Live trader",
       detail: `no run for ${sinceLabel}`,
-      title: `The last heartbeat${host} carries ${heartbeat.unknownAge ? "no readable time" : ageLabel}, past the ${Math.round(heartbeat.windowSeconds / 60)} minute window. It was ${heartbeat.armed ? "armed" : "not armed"} when it last wrote and reported ${result}; nothing here shows a loop running now.`
+      title: `The last heartbeat${host} carries ${heartbeat.unknownAge ? "no readable time" : ageLabel}, past the ${Math.round(heartbeat.windowSeconds / 60)} minute window${heartbeat.ageAtPublishSeconds === null ? "" : ` as it was already ${liveTradingAgeLabel(heartbeat.ageAtPublishSeconds)} old when the publisher read it`}. It was ${heartbeat.armed ? "armed" : "not armed"} when it last wrote and reported ${result}; nothing here shows a loop running now.`
     };
   }
   if (!heartbeat.armed) {
@@ -16385,8 +16449,8 @@ function liveTraderStatusState() {
   return {
     tone: "live",
     label: "Live trader active",
-    detail: `${laneId} ${result} - ${ageLabel}`,
-    title: `The ${laneId} loop ran ${ageLabel}${host}, armed, and reported ${result}. This lamp turns amber once the heartbeat is older than three ticks (${Math.round(heartbeat.windowSeconds / 60)} minutes).`
+    detail: `${laneId} ${result} - as of ${liveTradingTimestampLabel(heartbeat.writtenAt)}`,
+    title: `The ${laneId} loop ran${host} and reported ${result}, armed, ${heartbeat.ageAtPublishSeconds === null ? "inside the window" : `${liveTradingAgeLabel(heartbeat.ageAtPublishSeconds)} before the publisher read it, inside the ${Math.round(heartbeat.windowSeconds / 60)} minute window`}. This lamp turns amber when the record was outside that window at publish, or when the page's own copy${heartbeat.copyAgeSeconds === null ? "" : ` (${liveTradingAgeLabel(heartbeat.copyAgeSeconds)} old)`} passes ${Math.round(LIVE_TRADING_COPY_CEILING_SECONDS / 60)} minutes without a new one.`
   };
 }
 

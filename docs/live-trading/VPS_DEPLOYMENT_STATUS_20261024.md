@@ -1139,5 +1139,41 @@ The worst case a bad boot can now cost is one extra reboot: the watchdog restore
 logs in. `LiveTradingWatchdog` is registered `AtStartup` as `SYSTEM`, so that run does not wait for the ten-minute
 cadence.
 
+### 15.3 The lamp's false amber: publishing is slower than the loop
+
+The first afternoon the lamp was live it went amber with `no run for 22m` on a trader that was running: the trader
+ticked at 17:06, 17:11 and 17:16 while the page still held a heartbeat written at 16:36. Nothing was wrong with the
+lane. The fault was the lamp's own threshold, and it was visible in the timestamps of the last six publish commits
+(`... 15:00:58, 15:20:58, 15:40:59, 16:00:57, 16:20:57, 16:40:57, 17:00:58, 17:20:57`).
+
+The heartbeat does not travel on the loop's clock; it travels on the publisher's. The publisher's task ticks every ten
+minutes and its own interval gate is `min_interval_seconds: 600`, so a tick that lands a few seconds early is sent to
+the next one and the effective cadence is twenty minutes; the commit lands a minute or two later and the CDN may serve
+it for a few minutes more. A lamp that judged the heartbeat against "now" with a fifteen-minute window therefore showed
+a healthy loop as silent for a quarter of every cycle - and a lamp that cries wolf on a schedule is a lamp nobody
+reads, which defeats the one thing it exists to do.
+
+The fix keeps the strictness and drops the false alarm by separating two facts that had been collapsed into one:
+
+- **the record's age when the publisher read it** - `lanes.generated_at_utc` minus `written_at_utc` - is what says a
+  loop was running, and it is judged against the same three-tick window (15 minutes) as before;
+- **the copy's own age** - now minus `lanes.generated_at_utc` - is what says the page is still being told anything. It
+  is judged against `LIVE_TRADING_COPY_CEILING_SECONDS = 3600`, three of the slowest publishes plus cache, and past
+  that the lamp says `no publish for 1h 4m` rather than blaming the trader.
+
+So the legend is now: **green** `Live trader active` with `as of 16:36Z` - the record was inside the window at publish
+and the page is being refreshed; **amber** `no run for 2h 14m` - the record was already outside the window when the
+publisher read it, which is a loop that was not running; **amber** `no publish for 1h 4m` - the copy has stopped
+arriving; **amber** `not armed - 4m ago`; **amber** `<lane> no heartbeat`; **grey** `<lane> disabled`; **grey** `status
+unknown`. A document with no readable publish time falls back to the old clock rule, which is the stricter of the two.
+The accounts strip draws the same distinction: badge `HEARTBEAT STALE` or `COPY STALE`, heartbeat row
+`22m ago - 2026-11-03T16:36:32.161Z, copied 20m ago`, and an alert sentence that names which silence it is.
+
+`tests/live_trading_status_bar.browser.test.js` grew two cases for exactly this - a heartbeat 24 minutes old in a copy
+20 minutes old still reads active with its date, and a copy 65 minutes old reads `no publish for 1h` without the word
+active - and `tests/live_trading_accounts.browser.test.js` stamps its fixture's publish time rather than reusing the
+shipped one, so neither file depends on when it is run. Local suite: 763 tests, 760 pass, the same 3 pre-existing reds
+as §15.2.
+
 
 

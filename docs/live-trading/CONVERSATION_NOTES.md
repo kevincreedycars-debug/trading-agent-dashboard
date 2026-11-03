@@ -2946,3 +2946,24 @@ fails for a missing `.local/research-library/objects` store on this workstation 
 checkout pulled to `1964d63f` and confirmed to carry `subscribe_symbol`, so the reboot fix is still the code the cadence
 runs.
 
+**The first afternoon the lamp was read, it lied by accident.** Asked why the corner was amber on `no run for 22m` while
+the trader was plainly running, the timestamps said publishing, not trading: the trader ticked at 17:06, 17:11 and 17:16
+while the page held a 16:36 heartbeat, because a heartbeat only reaches the page inside a publish commit and those land
+every twenty minutes - the publisher ticks on ten and its `min_interval_seconds` gate is ten, so an early tick loses to
+the next one. The lamp judged that record with a fifteen-minute window against the clock, so a healthy lane read as
+silent for a quarter of every cycle. The threshold was the bug, not the lane.
+
+**The fix separates two facts that had been one.** The record's age *when the publisher read it* (document
+`generated_at_utc` minus the heartbeat's `written_at_utc`, judged against the same 15-minute window) now answers "was a
+loop running"; the copy's own age answers "is the page still being told anything", against a new one-hour ceiling. The
+legend is green `Live trader active ... as of 16:36Z`; amber `no run for 2h 14m` when the record was already stale at
+publish; amber `no publish for 1h 4m` when nothing has been republished; then not armed / no heartbeat / disabled /
+status unknown as before. The accounts strip carries the same split - `HEARTBEAT STALE` against `COPY STALE` - and its
+heartbeat row now names the copy's age too, because `22m ago` beside a green card is the number that started this.
+
+**Evidence.** `tests/live_trading_status_bar.browser.test.js` 7 of 7 (two new: a 24-minute record in a 20-minute copy
+still reads active with its date; a 65-minute copy reads `no publish for 1h` and never the word active),
+`live_trading_accounts` 4 of 4 with its publish time stamped by the fixture instead of borrowed from the shipped
+document. Local suite 763 tests, 760 pass, the same three pre-existing reds as above.
+
+

@@ -36,8 +36,13 @@ function heartbeat({ writtenAtMs, armed = true, status = "nothing_to_place", hos
   };
 }
 
-function lanesWith(trader) {
+// The document's own `generated_at_utc` is the publish instant: the heartbeat and this document travel in one
+// commit, so the strip judges the record by its age *when that commit was made*, and the commit's own age is a
+// separate fact. Every case here is a publish that just happened carrying whatever the loop last wrote, which is
+// the ordinary state of a page between publishes.
+function lanesWith(trader, publishedAgeSeconds = 30) {
   const document = JSON.parse(JSON.stringify(lanesDocument));
+  document.generated_at_utc = new Date(Date.now() - publishedAgeSeconds * 1000).toISOString();
   const primary = document.lanes.find((lane) => lane.id === "ftmo-1");
   primary.trader = trader;
   return document;

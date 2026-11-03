@@ -32,9 +32,18 @@ function contentType(filePath) {
 
 // One heartbeat the page reads twice: as the lane's own artifact and as the summary the lanes publisher copied
 // into the row. Both say the same thing here, so a disagreement between the two readers cannot hide behind the
-// fixture.
-function heartbeatFixture({ armed = true, status = "nothing_to_place", ageSeconds = 20, host = "vmi3697641" } = {}) {
+// fixture. The document's own `generated_at_utc` is the publish instant, which is a separate fact from when the
+// loop wrote: the publisher puts out a commit every twenty minutes or so, and the heartbeat rides in it, so the
+// age of the record on the page is the age it had when that commit was made plus the age of the commit itself.
+function heartbeatFixture({
+  armed = true,
+  status = "nothing_to_place",
+  ageSeconds = 20,
+  publishedAgeSeconds = 15,
+  host = "vmi3697641"
+} = {}) {
   const writtenAt = new Date(Date.now() - ageSeconds * 1000).toISOString();
+  const publishedAt = new Date(Date.now() - publishedAgeSeconds * 1000).toISOString();
   const artifact = {
     schema_version: "live-trading-trader-v1",
     at_utc: writtenAt,
@@ -47,7 +56,7 @@ function heartbeatFixture({ armed = true, status = "nothing_to_place", ageSecond
   };
   const lanes = {
     schema_version: "live-trading-lanes-v1",
-    generated_at_utc: writtenAt,
+    generated_at_utc: publishedAt,
     publisher: "scripts/publish-live-trading-lanes.js",
     lanes: [{
       id: "ftmo-1",
@@ -224,6 +233,50 @@ test("a fresh heartbeat that is not armed says so instead of looking active", as
     assert.match(state.className, /\bwaiting\b/, `an unarmed loop must read as waiting, saw "${state.className}"`);
     assert.match(state.text, /not armed/, `the lamp must say the loop is not armed, saw "${state.text}"`);
     assert.doesNotMatch(state.text, /active/i, "an unarmed loop must never read as active");
+  } finally {
+    await harness.close();
+  }
+});
+
+test("a heartbeat that was fresh when it was published stays active while the copy ages", async () => {
+  const harness = await createHarness();
+  try {
+    // The state the lamp spent its first afternoon in: the loop ran at 16:36, the publisher read it at 16:40 and
+    // put the commit out, and this page looked at 17:00. The record is 24 minutes old and the copy 20, but at
+    // publish the loop was four minutes inside its window - a running trader, drawn amber, is a false alarm the
+    // lamp cannot afford.
+    const fixture = heartbeatFixture({ armed: true, ageSeconds: 1440, publishedAgeSeconds: 1200 });
+    harness.setFile(LANES_PATH, fixture.lanes);
+    harness.setFile(TRADER_PATH, fixture.artifact);
+    const { page } = await harness.open();
+    const state = await lamp(page);
+
+    assert.match(state.className, /\blive\b/, `a record fresh at publish must read as live, saw "${state.className}"`);
+    assert.match(state.text, /^Live trader active/, `the lamp must lead with the state, saw "${state.text}"`);
+    assert.match(state.text, /as of \d{2}:\d{2}Z/, `the lamp must date the record rather than imply it is current, saw "${state.text}"`);
+    assert.equal(/no run for/i.test(state.text), false, "a record inside its window at publish must not read as silence");
+    assert.match(state.title, /4m ago before the publisher read it/, `the tooltip must say the record was fresh when it was copied, saw "${state.title}"`);
+  } finally {
+    await harness.close();
+  }
+});
+
+test("a copy nobody has republished for an hour says so instead of reading as active", async () => {
+  const harness = await createHarness();
+  try {
+    // Publishing stopping is not the same failure as the loop stopping, and it is the one the reader can act on:
+    // the record was two minutes old when the last commit was made, and that commit is now an hour and a bit old.
+    const fixture = heartbeatFixture({ armed: true, ageSeconds: 4000, publishedAgeSeconds: 3900 });
+    harness.setFile(LANES_PATH, fixture.lanes);
+    harness.setFile(TRADER_PATH, fixture.artifact);
+    const { page } = await harness.open();
+    const state = await lamp(page);
+
+    assert.match(state.className, /\bstale\b/, `a copy past the publish ceiling must read as stale, saw "${state.className}"`);
+    assert.doesNotMatch(state.text, /active/i, `a copy nobody is refreshing must not wear the active word, saw "${state.text}"`);
+    assert.match(state.text, /no publish for 1h/, `the lamp must say the silence is in publishing, saw "${state.text}"`);
+    assert.equal(/no run for/i.test(state.text), false, "publishing silence must not be blamed on the loop");
+    assert.match(state.title, /nothing on this page says what the loop is doing now/, "the tooltip must not present the old copy as a report on now");
   } finally {
     await harness.close();
   }
