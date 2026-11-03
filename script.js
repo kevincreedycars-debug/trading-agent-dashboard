@@ -7228,6 +7228,56 @@ function researchLibraryStoredMirror(entry, version) {
 }
 
 
+// A record whose bytes live in the private store can only be downloaded from that store. The local
+// service is a developer tool that runs on the reader's own machine, so it is only ever asked from a page
+// that is itself served from that machine: a published page asking 127.0.0.1 fails with "Failed to fetch"
+// on the reader's screen and reads like a broken document, which is exactly what one reported download did.
+function researchLibraryIsLocalPage() {
+  try {
+    const place = globalThis.location || {};
+    if (["file:", "blob:"].includes(String(place.protocol || ""))) return true;
+    return /^(localhost|127\.0\.0\.1|\[::1\]|::1)$/i.test(String(place.hostname || ""));
+  } catch (_) {
+    return false;
+  }
+}
+
+// Whether a record's bytes were registered into the private store rather than published in this checkout.
+function researchLibraryStoreBacked(document) {
+  if (!document) return false;
+  if (String(document.storage || "") === "library_object") return true;
+  return Boolean(String(document.object_sha256 || "")) && !String(document.repo_path || "");
+}
+
+// Download or view a registered record from the private store, which is the only place its bytes exist.
+// The store may not have been read yet in this session (a reload, a slow read, a read that failed), so a
+// signed-in reader gets one fresh read before the page says anything is missing.
+async function researchLibraryOpenStored(documentId, version, asView) {
+  const adapter = researchLibraryHostedClient();
+  const document = researchLibraryDocumentList().find(entry => String(entry.document_id) === String(documentId));
+  const name = (document && (document.title || document.document_id)) || documentId;
+  if (!adapter) {
+    researchLibraryMessage(`${name} is kept in the private research store, which this page could not load. Reload the page and try again.`);
+    return;
+  }
+  if (!adapter.signedIn()) {
+    researchLibraryMessage(`${name} is kept in the private research store. Sign in with your research account in the panel above, then download it again.`);
+    return;
+  }
+  let mirror = document ? researchLibraryStoredMirror(document, version) : null;
+  if (!mirror) {
+    researchLibraryMessage(`${name}: reading the private store.`);
+    await researchLibraryLoadHostedLibrary({ force: true });
+    mirror = document ? researchLibraryStoredMirror(document, version) : null;
+  }
+  if (!mirror) {
+    researchLibraryMessage(`${name} is in the private store, but this page could not read that copy. Reload the library and try again; if the sign-in has expired, sign in again first.`);
+    return;
+  }
+  const result = await adapter.openDocument(mirror.document, mirror.version, asView ? "view" : "download");
+  researchLibraryMessage(result.message);
+}
+
 async function researchLibraryCopyPrompt(taskId) {
   const lib = researchLibraryLib();
   const task = lib ? lib.taskById(researchLibraryData || {}, taskId) : null;
@@ -7532,6 +7582,14 @@ function setupResearchLibraryControls() {
         if (mirror) {
           hostedAdapter.openDocument(mirror.document, mirror.version, isView ? "view" : "download")
             .then(result => researchLibraryMessage(result.message));
+          return;
+        }
+        if (stored && researchLibraryStoreBacked(stored) && !researchLibraryIsLocalPage()) {
+          // The bytes are in the private store, so the store is where they have to come from. A page that is
+          // not served from this machine cannot reach the local service at all; asking it anyway is what
+          // turned a stored report into "Failed to fetch" on a reader's screen. The store read is retried
+          // here, so a session whose first read was slow or refused still downloads.
+          researchLibraryOpenStored(documentId, version, isView);
           return;
         }
         if (stored && stored.storage === "library_object" && !researchLibraryState.serviceToken) {

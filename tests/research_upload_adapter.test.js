@@ -93,6 +93,7 @@ function harness(options) {
       return jsonResponse({ signedURL: `/object/sign/research-documents/${objectPath}?token=demo` });
     }
     if (target.includes('/storage/v1/object/sign/') && method === 'GET') {
+      if (settings.readFails) throw new TypeError('Failed to fetch');
       const objectPath = decodeURIComponent(target.split('/storage/v1/object/sign/research-documents/')[1].split('?')[0]);
       if (settings.corruptDownload) return byteResponse(Buffer.from('tampered bytes'), 200);
       const stored = objects.get(objectPath);
@@ -382,6 +383,43 @@ test('a tampered stored file fails its fingerprint check and is not handed over'
   assert.match(result.message, /fingerprint check/);
   assert.equal(saved.length, 0);
   assert.ok(world.objects.size >= 1);
+});
+
+test('a download whose read-back fails still hands the browser the private link', async () => {
+  // The page's own read is a fingerprint check, not the download. When only that read fails (a blocked
+  // request, a proxy, a slow link) the reader still gets the file from the link the store signed.
+  harness({ signedIn: true, readFails: true });
+  const file = stageFile('# Read-back fails\n\nBody.\n');
+  await adapter.uploadStage({ topic: topic(), stage: redTeamStage(), file, title: 'Read-back fails', model: 'session', parents: { researchRef: 'usd-baseline-audit-01-vix-usd-report' } });
+
+  let documents = { documents: [] };
+  await adapter.refresh(TOPIC, () => documents, next => { documents = next; });
+  const handed = [];
+  globalThis.researchLibraryDownloadLink = (name, url) => handed.push({ name, url });
+  const result = await adapter.openDocument(documents.documents[0], 1, 'download');
+  delete globalThis.researchLibraryDownloadLink;
+
+  assert.equal(result.ok, true, result.message);
+  assert.equal(handed.length, 1, 'the browser is given the link, so a failed page-side read is not the end of the download');
+  assert.match(handed[0].url, /\/storage\/v1\/object\/sign\/research-documents\//);
+  assert.match(result.message, /could not be re-checked/, 'the message says the fingerprint was not re-checked here');
+});
+
+test('a view whose read-back fails shows nothing, because nothing was read or checked', async () => {
+  harness({ signedIn: true, readFails: true });
+  const file = stageFile('# Read-back fails\n');
+  await adapter.uploadStage({ topic: topic(), stage: redTeamStage(), file, title: 'Read-back fails', model: 'session', parents: { researchRef: 'usd-baseline-audit-01-vix-usd-report' } });
+
+  let documents = { documents: [] };
+  await adapter.refresh(TOPIC, () => documents, next => { documents = next; });
+  const opened = [];
+  globalThis.open = (url) => opened.push(url);
+  const result = await adapter.openDocument(documents.documents[0], 1, 'view');
+  delete globalThis.open;
+
+  assert.equal(result.ok, false, 'a view that could not be read must not be shown');
+  assert.match(result.message, /could not be reached/);
+  assert.equal(opened.length, 0);
 });
 
 test('an upload without a signed-in session is refused in plain words', async () => {

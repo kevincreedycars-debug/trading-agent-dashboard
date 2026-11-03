@@ -356,6 +356,35 @@ async function main() {
     await (await attachWait).saveAs(attachPath);
     assert.equal(sha256(fs.readFileSync(attachPath)), VIX_RESEARCH_SHA, "the attached research version must be the registered v1");
     audit.attachHashMatches = true;
+
+    // The published dashboard is not served from this machine, so the local service is not reachable from
+    // it at all. A stored record must then be answered by the private store: a reader who is not signed in
+    // is asked to sign in, and nothing is asked of the local service. This run is served from 127.0.0.1, so
+    // the published-origin rule is exercised by making the page report itself as a published origin.
+    const serviceAsked = [];
+    const watchService = request => {
+      if (request.url().startsWith(serviceBase)) serviceAsked.push(request.url());
+    };
+    page.on("request", watchService);
+    await page.evaluate(() => {
+      window.__researchLibraryLocalPage = window.researchLibraryIsLocalPage;
+      window.researchLibraryIsLocalPage = () => false;
+    });
+    await page.click(`[data-rl-stage='research'] [data-rl-download='${VIX_RESEARCH_DOCUMENT}']`);
+    await page.waitForFunction(
+      () => /kept in the private research store/.test(document.querySelector("[data-rl-message]")?.textContent || ""),
+      null,
+      { timeout: 10000 }
+    );
+    const publishedMessage = await page.$eval("[data-rl-message]", node => node.textContent.trim());
+    assert.match(publishedMessage, /Sign in with your research account/, "a stored record on a published page asks the reader to sign in");
+    assert.equal(serviceAsked.length, 0, "a published page never asks 127.0.0.1 for a stored record, which is what produced Failed to fetch");
+    await page.evaluate(() => {
+      window.researchLibraryIsLocalPage = window.__researchLibraryLocalPage;
+      delete window.__researchLibraryLocalPage;
+    });
+    page.off("request", watchService);
+    audit.publishedPageAsksLocalStore = true;
 // CHUNK-END-3
 
     // One Markdown upload for stage 2. The page writes the topic, the stage and the version judged.
