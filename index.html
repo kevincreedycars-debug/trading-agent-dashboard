@@ -133,6 +133,18 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 }
 </style>
 <!-- SHARED-NAV:END -->
+<!-- The live trader's lamp. It sits outside the shared-nav block on purpose: the nav is copied byte for byte
+     into the evidence pages, and this lamp speaks only for the trading lane, so it belongs to this page. It
+     reads the same heartbeat the Live Trading tab reads and states one of exactly six things - active, stale,
+     not armed, no heartbeat, disabled, unknown - so a corner that says nothing is never mistaken for a loop
+     that is running. It carries no control: it is a read of published files, not an order path. -->
+<div
+  id="liveTraderStatus"
+  class="live-trader-status"
+  role="status"
+  aria-live="polite"
+  hidden
+></div>
 
     <main class="shell">
     <section class="hero">

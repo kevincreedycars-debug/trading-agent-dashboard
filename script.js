@@ -16203,6 +16203,100 @@ async function loadLiveTradingLanes() {
     if (status.present) liveTradingLanes.statuses[lane.id] = status;
     else if (status.error) liveTradingLanes.errors[lane.id] = liveTradingLanes.errors[lane.id] || status.error;
   }));
+  // The lamp in the corner is repainted from the same read, so it cannot show a fresher or a friendlier state
+  // than the strip this tab draws.
+  renderLiveTraderStatus();
+}
+
+// The corner lamp in the top right: one line that answers "is the live trader running" without opening a tab.
+// It reads the same heartbeat the accounts strip reads, so the two cannot disagree, and it inherits that
+// strip's rule rather than inventing a friendlier one: a fresh heartbeat that is armed is the only state that
+// reads as active. A stale record, a missing one, a parked lane and an unreadable lanes document each say what
+// they are, because a corner that stays silent when the loop dies would be the worst possible design - the
+// whole point of the lamp is that it is the one thing on the page somebody glances at.
+const LIVE_TRADER_STATUS_REFRESH_MS = 15000;
+
+function liveTradingLampLane() {
+  const rows = liveTradingLaneRows();
+  if (!rows.length) return null;
+  // The primary lane is the one this page's own snapshot belongs to, so the lamp speaks for that account even
+  // if a second lane is ever added beside it.
+  return rows.find(row => row.id === DEFAULT_LIVE_TRADING_LANE) || rows[0];
+}
+
+function liveTraderStatusState() {
+  const lane = liveTradingLampLane();
+  if (!lane) {
+    const why = liveTradingLanes.error
+      ? `data/live-trading-lanes.json could not be read (${liveTradingLanes.error}).`
+      : liveTradingLanes.present
+        ? "data/live-trading-lanes.json carries no lanes."
+        : "data/live-trading-lanes.json is not published yet.";
+    return {
+      tone: "unknown",
+      label: "Live trader",
+      detail: "status unknown",
+      title: `${why} Nothing on this page shows a loop running.`
+    };
+  }
+  const laneId = String(lane.id);
+  if (!liveTradingLaneEnabled(lane)) {
+    return {
+      tone: "disabled",
+      label: "Live trader",
+      detail: `${laneId} disabled`,
+      title: `${laneId} is parked in config/live-trading-lanes.json, so nothing is published for it and no loop trades it.`
+    };
+  }
+  const heartbeat = liveTradingLaneHeartbeat(lane);
+  if (!heartbeat.present) {
+    return {
+      tone: "waiting",
+      label: "Live trader",
+      detail: `${laneId} no heartbeat`,
+      title: `No trader heartbeat has been published for ${laneId}, so this page can say what the account holds but not whether a loop is watching it.`
+    };
+  }
+  const ageLabel = heartbeat.unknownAge ? "no readable time" : liveTradingAgeLabel(heartbeat.ageSeconds);
+  const sinceLabel = heartbeat.unknownAge ? "no readable time" : ageLabel.replace(/ ago$/, "");
+  const host = heartbeat.host ? ` on ${heartbeat.host}` : "";
+  const result = String(heartbeat.status || "unknown").replace(/_/g, " ");
+  if (heartbeat.stale) {
+    return {
+      tone: "stale",
+      label: "Live trader",
+      detail: `no run for ${sinceLabel}`,
+      title: `The last heartbeat${host} carries ${heartbeat.unknownAge ? "no readable time" : ageLabel}, past the ${Math.round(heartbeat.windowSeconds / 60)} minute window. It was ${heartbeat.armed ? "armed" : "not armed"} when it last wrote and reported ${result}; nothing here shows a loop running now.`
+    };
+  }
+  if (!heartbeat.armed) {
+    return {
+      tone: "waiting",
+      label: "Live trader",
+      detail: `not armed - ${ageLabel}`,
+      title: `The ${laneId} loop ran ${ageLabel}${host} and is not armed, so it places nothing until that changes.`
+    };
+  }
+  return {
+    tone: "live",
+    label: "Live trader active",
+    detail: `${laneId} ${result} - ${ageLabel}`,
+    title: `The ${laneId} loop ran ${ageLabel}${host}, armed, and reported ${result}. This lamp turns amber once the heartbeat is older than three ticks (${Math.round(heartbeat.windowSeconds / 60)} minutes).`
+  };
+}
+
+function renderLiveTraderStatus() {
+  const node = document.getElementById("liveTraderStatus");
+  if (!node) return;
+  const state = liveTraderStatusState();
+  node.className = `live-trader-status ${state.tone}`;
+  node.title = state.title;
+  node.innerHTML = [
+    '<span class="live-trader-dot" aria-hidden="true"></span>',
+    `<span class="live-trader-label">${escapeHtml(state.label)}</span>`,
+    `<span class="live-trader-detail">${escapeHtml(state.detail)}</span>`
+  ].join("");
+  node.hidden = false;
 }
 
 function liveTradingSigned(value, digits) {
@@ -20381,3 +20475,6 @@ loadWorkflowControl().then(async () => {
 loadDashboard();
 setInterval(loadDashboard, 60000);
 setInterval(loadWorkflowStatus, 60000);
+// The corner lamp ages with its own timer rather than with the sixty-second reload, so a heartbeat that stops
+// arriving starts reading older within one refresh instead of up to a minute late.
+setInterval(renderLiveTraderStatus, LIVE_TRADER_STATUS_REFRESH_MS);

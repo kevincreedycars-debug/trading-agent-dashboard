@@ -8354,6 +8354,27 @@ body {
 .live-trading-lane-row.is-muted dd { color: #9fb1c6; }
 .live-trading-lanes-note { margin: 0; color: #93a7bf; font: 500 11px/1.55 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-lane-card.parked .live-trading-lanes-note { color: #b9c8d9; }
+/* The live trader's lamp, the one thing in the corner. It is fixed under the sticky nav rather than inside it,
+   because the nav is shared with the evidence pages and this lamp speaks only for the trading lane. It borrows
+   the accounts strip's palette so a green corner and a green card always mean the same thing, and it is a
+   status readout, not a control: no button, no link, nothing to press. */
+.live-trader-status { position: fixed; top: 68px; right: 22px; z-index: 30; display: inline-flex; align-items: center; gap: 8px; max-width: min(420px, calc(100vw - 44px)); padding: 7px 13px; border: 1px solid #35485f; border-radius: 999px; background: rgba(7, 11, 17, .94); box-shadow: 0 12px 26px rgba(0, 0, 0, .38); backdrop-filter: blur(10px); color: #cfdcec; font: 700 10px 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.live-trader-status[hidden] { display: none; }
+.live-trader-dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.live-trader-label { flex: 0 0 auto; white-space: nowrap; }
+.live-trader-detail { min-width: 0; overflow: hidden; color: #93a7bf; font-weight: 500; letter-spacing: .02em; text-overflow: ellipsis; text-transform: none; white-space: nowrap; }
+.live-trader-status.live { color: #7ef0c4; border-color: #2b6b57; background: rgba(9, 26, 22, .94); }
+.live-trader-status.live .live-trader-dot { box-shadow: 0 0 0 4px rgba(126, 240, 196, .16); animation: live-trader-pulse 2.6s ease-in-out infinite; }
+.live-trader-status.waiting { color: #f0c274; border-color: #7a5a24; }
+.live-trader-status.stale { color: #ffcf8a; border-color: #b4742a; background: rgba(28, 22, 10, .94); }
+.live-trader-status.error { color: #ff9aa4; border-color: #7a3a44; }
+.live-trader-status.disabled { color: #93a7bf; border-color: #35485f; }
+.live-trader-status.unknown { color: #b9c8d9; border-color: #35485f; }
+@keyframes live-trader-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(126, 240, 196, .16); } 50% { box-shadow: 0 0 0 8px rgba(126, 240, 196, .04); } }
+@media (prefers-reduced-motion: reduce) { .live-trader-status.live .live-trader-dot { animation: none; } }
+/* On a narrow screen the sticky nav becomes a wrapped static bar, so the lamp moves to the bottom right rather
+   than sitting on top of the links. It stays out of the grid by staying fixed at every width. */
+@media (max-width: 980px) { .live-trader-status { top: auto; bottom: 12px; right: 12px; max-width: calc(100vw - 24px); } .live-trader-detail { white-space: normal; } }
 @media (max-width: 560px) {
   .live-trading-lane-card { padding: 10px; }
   .live-trading-lane-card header { flex-wrap: wrap; }
