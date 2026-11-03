@@ -912,8 +912,10 @@ steps plus the terminal and the daily refresh.
 | `LiveTradingTraderTick019` | 5 min | `run-live-trading-trader.js --once --align --confirm-live --lane ftmo-1 --published C:\live-trading\publisher` | `tmp\live-trading-trader.log`, `tmp\live-trading-trader-status.json`, `tmp\live-trading-orders.log` |
 | `LiveTradingPublishLanes019` | 10 min | `publish-live-trading-lanes.js --checkout C:\live-trading\publisher` | one commit and one push, `data/live-trading*.json` |
 | `LiveTradingRefresh0600` | daily 06:00 UTC | `logs\trigger-refresh-0600.ps1` | a line in `logs\refresh-0600.log`, and the orchestrator's own run |
+| `LiveTradingWatchdog` | at startup, then 10 min | `runtime\scripts\run-live-trading-watchdog.ps1`, as `SYSTEM` | `logs\live-trading-watchdog.log` |
 
-All five run as `Administrator` at `Highest`. The host's clock is UTC, so "06:00" on that task is 06:00 UTC.
+The first five run as `Administrator` at `Highest`; the watchdog runs as `SYSTEM` because the case it exists for is a
+host with nobody signed on. The host's clock is UTC, so "06:00" on that task is 06:00 UTC.
 
 `C:\live-trading\terminal\startup.ini` carries `[Experts] Enabled=1`, `AllowLiveTrading=1`, `AllowDllImport=0`, no
 `[Common]` credentials and no `[StartUp]` section. A restart *through the logon task* was the test: the terminal came
