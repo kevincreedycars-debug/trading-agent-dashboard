@@ -7845,6 +7845,21 @@ function researchLibraryStageDocumentId(chain, stageId) {
   return `${slug}-${String(stageId || "stage").replace(/_/g, "-")}`;
 }
 
+// A stage card can name a record that is not the stored row holding those bytes: the committed register and
+// the private store describe the same file under different ids. The store links documents by row id, so a
+// parent reference is translated to the row that holds the same bytes whenever one is in the list.
+function researchLibraryHostedRef(documentId, sha256) {
+  const id = String(documentId || "");
+  if (!id) return "";
+  const summaries = researchLibraryDocumentSummaries();
+  const named = summaries.find(entry => String(entry.document_id) === id);
+  if (named && named.hosted) return id;
+  const wanted = String(sha256 || "").toLowerCase();
+  if (!wanted) return id;
+  const mirror = summaries.find(entry => entry.hosted && String(entry.latest_sha256 || "").toLowerCase() === wanted);
+  return mirror ? String(mirror.document_id) : id;
+}
+
 function researchLibraryStageLabel(lib, stageId) {
   const id = String(stageId || "");
   return (lib.FINAL_STAGE_LABELS && lib.FINAL_STAGE_LABELS[id])
@@ -8092,9 +8107,15 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
       const redTeamStage = stageById(isFinalChain ? "final_red_team" : "red_team");
       const parents = {};
       if (stage.parent_stage) {
-        parents.researchRef = (researchStage && researchStage.document_id) || (isFinalChain ? "" : stage.parent_document_id) || "";
+        parents.researchRef = researchLibraryHostedRef(
+          (researchStage && researchStage.document_id) || (isFinalChain ? "" : stage.parent_document_id) || "",
+          (researchStage && researchStage.sha256) || stage.parent_sha256 || ""
+        );
         if (stage.stage === "adjudication" || stage.stage === "final_adjudication") {
-          parents.redTeamRef = (redTeamStage && redTeamStage.document_id) || stage.parent_document_id || "";
+          parents.redTeamRef = researchLibraryHostedRef(
+            (redTeamStage && redTeamStage.document_id) || stage.parent_document_id || "",
+            (redTeamStage && redTeamStage.sha256) || stage.parent_sha256 || ""
+          );
         }
       }
       researchLibraryStageNotice(form, `Uploading ${file.name} as stage ${stage.order} (${stage.label}) of ${chain.title} to the private store...`, "status");
@@ -8505,6 +8526,16 @@ function researchLibraryFactorStage(lib, chain, stage) {
   const parentStorage = parentDocument?.storage || "library_object";
   const hasInputs = Boolean(stage.parent_document_id);
   const hasResult = Boolean(stage.document_id);
+  // A later factor stage judges every earlier return, not only its parent: the adjudication prompt asks for the
+  // research report and the red-team review together, so every earlier document is offered here for download.
+  const earlierDocuments = lib.chainStages(chain)
+    .filter(entry => Number(entry.order) < Number(stage.order))
+    .map(entry => {
+      const document = lib.chainStageDocument({ documents: researchLibraryDocumentSummaries() }, chain, entry.stage);
+      return document ? { label: entry.label || researchLibraryStageLabel(lib, entry.stage), stage: entry.stage, document } : null;
+    })
+    .filter(Boolean);
+  const otherInputs = earlierDocuments.filter(entry => String(entry.document.document_id) !== String(stage.parent_document_id));
   const resultDocument = hasResult
     ? researchLibraryDocumentList().find(entry => String(entry.document_id) === String(stage.document_id))
     : null;
@@ -8535,6 +8566,7 @@ function researchLibraryFactorStage(lib, chain, stage) {
         <button class="inspect-button rl-mini" type="button" data-rl-copy-stage-prompt="${escapeHtml(key)}">Copy prompt</button>
         <a class="inspect-button rl-mini" href="./${escapeHtml(stage.prompt_path)}" download data-rl-download-prompt="${escapeHtml(stage.stage)}">Download prompt</a>
         <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.parent_document_id)}" data-rl-version="${stage.parent_version === null ? "" : escapeHtml(stage.parent_version)}" data-rl-storage="${escapeHtml(parentStorage)}"${hasInputs ? "" : " disabled title=\"No earlier result to download\""}>Download inputs</button>
+        ${otherInputs.map(entry => `<button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(String(entry.document.document_id))}" data-rl-version="${escapeHtml(String(entry.document.latest_version))}" data-rl-storage="${escapeHtml(entry.document.storage || "library_object")}" title="Download ${escapeHtml(entry.label)} v${escapeHtml(String(entry.document.latest_version))}">Download ${escapeHtml(entry.label)}</button>`).join("")}
         <button class="inspect-button rl-mini" type="button" data-rl-upload-toggle="${escapeHtml(key)}"${inputBlocked ? " disabled title=\"The earlier stage has no registered result\"" : ""}>Upload result</button>
         <button class="inspect-button rl-mini" type="button" data-rl-view="${escapeHtml(stage.document_id)}" data-rl-version="${stage.version === null ? "" : escapeHtml(String(stage.version))}"${hasResult ? ` title="${escapeHtml(resultLabel)}"` : " disabled"}>View result</button>
         <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.document_id)}" data-rl-version="${stage.version === null ? "" : escapeHtml(stage.version)}" data-rl-storage="${escapeHtml(stage.storage)}"${hasResult ? ` title="${escapeHtml(resultLabel)}"` : " disabled"}>Download result</button>
