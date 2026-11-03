@@ -104,3 +104,22 @@ Both uploaded documents and the adjudication keep their bytes, ids, versions and
 added or removed; nothing was re-run. No factor status, weight, threshold, prompt, chain association or live
 call moved, and the register is still the committed file - the store's rows are layered over it in the page
 only, never written back into it.
+
+## Owner acceptance and closure
+
+The owner accepted `f2951330` as the fix and closed the lane on 2026-11-03. Two consequences are recorded
+here so a later reader does not reopen them:
+
+- The hosted store stays authoritative for uploaded results and the committed register stays the historical
+  fallback. The store's rows are **not** mirrored into `data/research-library/documents.json`; nothing in this
+  repair writes store state back into the committed file, and that is now the intended design rather than an
+  outstanding question.
+- The owner runs one final phone check of the three VIX stages after a background refresh. That check is the
+  owner's; nothing further changes unless it reports a fault.
+
+Still open with the owner, untouched by this repair: whether the register's review column flips to delivered
+after adjudication.
+
+No code, asset, cache-buster or store row was touched to close the lane. The fix, the guard runs and the live
+verification recorded above stand as deployed, and the next lane - stage 1 research on
+`usd-factor-live-f2-us-2y-delta` - is recorded in `docs/CURRENT_TASK.md` and `docs/SESSION_NOTES.md`.
