@@ -1,4 +1,36 @@
 # Changelog
+## 2026-11-03 - Research Library: a stored document never asks the local machine for its bytes
+
+- What was wrong: the download repaired on 2026-11-02 still fell back to the local service at
+  `127.0.0.1:8791` for a record whose bytes are in the private store when the click did not resolve to a
+  stored row. A browser that had used the local service earlier keeps its endpoint and token, so the
+  published page believed a service existed and asked it. The owner's device showed the committed VIX
+  report failing with "... could not be downloaded: Failed to fetch"; reproduced here against the
+  published page, where the click asked `http://127.0.0.1:8791/health` and
+  `http://127.0.0.1:8791/documents/usd-baseline-audit-01-vix-usd-report/versions/1`, both
+  `net::ERR_CONNECTION_REFUSED`.
+- The rule now: a page that is not served from this machine never asks the loopback service for a stored
+  record. A signed-in reader gets one fresh store read when the rows were missing, and the stored record
+  holding the same sha256 is downloaded through the store; a reader who is not signed in is asked to sign
+  in; a store that cannot be read says so. The loopback path stays for a page served from `localhost`,
+  `127.0.0.1` or a file, so the local workflow is unchanged.
+- A download whose page-side read-back fails now still hands the browser the signed link, which carries
+  the file itself; a view keeps the strict read-and-check path.
+- Files: `script.js`, `lib/research_upload_adapter.js`, `index.html` (cache-busters
+  `20261102-research-download-v2` and `20261102-research-download-v8`),
+  `tests/research_upload_adapter.test.js` (18 tests) and `tests/research_library.browser.test.js`, which
+  now proves a published page makes no loopback request for a stored record.
+- Deployed as `40533e0e`. Live verification on the published page, every step PASS: with a stale endpoint
+  and token in place the click shows the sign-in message and makes no loopback request; signed in with a
+  throwaway member the VIX report downloads as `VIX_USD_Research_Report.md`, 84,056 bytes, sha256
+  `e4151937411e`, again after a refresh in the same browser, and again through the red-team stage's
+  **Download inputs**; a store read that is refused returns an honest message and still no loopback. The
+  store is unchanged: two rows (`d7b8eb40-...` VIX 84,056 `e4151937`, `1b64468d-...` f5 DXY 47,576
+  `9048e897`), one member, no row or object added or altered, and the throwaway account removed.
+- The local suite passes except one pre-existing failure, in
+  `tests/live_trading_levels_visibility.browser.test.js` ("NQ draws 1 marked lines below its bars"), which
+  fails identically at `44e4c070` with none of this work applied.
+
 ## 2026-11-02 - Research Library: Download streams the stored file instead of a page-held blob
 
 - What was wrong: a saved download was built in page memory (`Blob` + `URL.createObjectURL` + an anchor) and the
