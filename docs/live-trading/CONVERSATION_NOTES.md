@@ -2900,3 +2900,49 @@ and `data/live-trading.json` not at all. The record stays on the lane, which is 
 `STRATEGY_LIVE.md`; what is still unpublished is the loop's own scripts and the module work of sections 43 and 44.
 The tab is a statement of the rule; it is not a signal and not evidence the rule makes money, which is what it says
 on its own caution card.
+
+## 2026-11-03 (the lamp in the corner, and the password that stopped being plaintext)
+
+**What you asked.** Two things, in that order: make sure the host never has a gap, and put a live-trader status bar in
+the top right of the dashboard that confirms the trader is active. A third came with it - yes to moving the auto-logon
+password out of the registry.
+
+**The gap, first.** Nothing was restarted to do any of this. The lane read at 16:43Z: console session 1 active, one
+`terminal64` (pid 3136, the process that came up at the 14:00 boot), snapshot `2026-11-03T16:40:20Z` with all four
+instruments quoting (EURUSD 3.9 s tick age, XAUUSD / US100.cash / BTCUSD 0.9 s), `BTCUSD` long 0.01 from 77280.55 with
+sl 77003.21 / tp 78749.05, two working orders, balance 10005.62. The same pid and the same session were still there
+after the credential work.
+
+**The lamp.** `#liveTraderStatus` in `index.html`, drawn by `renderLiveTraderStatus()` from the same lanes-and-heartbeat
+read the accounts strip uses, so the corner cannot disagree with the card. Six states and no seventh: active, not
+armed, stale (`no run for 2h 14m`), no heartbeat, disabled lane, status unknown. It repaints on every dashboard read
+and on a 15-second timer, sits outside the `SHARED-NAV` block so the evidence pages are untouched, is fixed at every
+width so it never lands in the dashboard grid or over the nav, and carries no control at all - a corner you could press
+would be the first order path on a read-only page. `tests/live_trading_status_bar.browser.test.js` is five cases:
+active, stale (an armed record 2h 15m old may not wear the word active), not armed, unpublished, parked, plus the
+right-edge/top geometry at 1440x1000 and zero interactive nodes inside it.
+
+**The password.** It was in `HKLM\...\Winlogon\DefaultPassword` in plain text, and Microsoft's own article on the
+feature says that key "can be remotely read by the Authenticated Users group". `scripts/harden-live-trading-autologon.ps1`
+moves it to the LSA secret Winlogon reads instead, in an order that cannot strand a boot: prove the value with
+`LogonUser`, store the secret, read it back, write a rollback copy, and only then delete the registry value and re-read
+the registry to prove it is gone. Run as SYSTEM at 16:53Z: registry `DefaultPassword` 12 chars → gone; LSA secret 12
+chars, read back; rollback copy under `state\`; `AutoAdminLogon=1` still set. It also replaced an 8-character secret
+the image had left under the same name, which nothing was using - the host logged in at 14:00 with the plaintext still
+present.
+
+**What is not proved, and the net under it.** That Winlogon reads the secret at the next boot. The only evidence is a
+boot, so the change is dormant until one happens. `run-live-trading-watchdog.ps1` gained one gated action: a boot after
+the hardening that produces a console session retires the rollback copy, and one that produces none restores the
+plaintext, checks the registry, and reboots - so a bad boot costs one extra reboot and needs nobody at the keyboard.
+With no rollback copy present the task behaves exactly as it did in §14.5.
+
+**Evidence.** New file 5 of 5. `live_trading_dashboard` 5 of 5, `live_trading_accounts` 6 of 6,
+`site_nav_consistency` 5 of 5. Whole browser suite: 86 pass, 3 fail - the rule-panel "close beyond a marked level" case
+and the chart-level case (both already red on `main`, recorded in §14), and `research_library.browser.test.js`, which
+fails for a missing `.local/research-library/objects` store on this workstation rather than for anything in the tree.
+
+**Published.** `dfabb61a` (the lamp) and `1964d63f` (the script and the watchdog net) on `origin/main`; the runtime
+checkout pulled to `1964d63f` and confirmed to carry `subscribe_symbol`, so the reboot fix is still the code the cadence
+runs.
+

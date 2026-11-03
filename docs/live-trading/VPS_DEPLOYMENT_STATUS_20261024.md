@@ -1051,3 +1051,93 @@ The reboot also re-answered §3's auto-logon question from the host's own behavi
 reading: `AutoAdminLogon=1`, `DefaultUserName=Administrator`, a stored password, and a session on the console one
 minute after boot.
 
+## 15. 2026-11-03, evening: the corner lamp, and the password that stopped being plaintext
+
+Two things were asked for after §14: no gap in the lane, and one line in the top right that says whether the live
+trader is running without opening the Live Trading tab. A third followed from the first: the auto-logon password was
+still sitting in the registry in plain text, which is the one part of "it survives a cold boot" that depended on a
+secret nobody had hardened.
+
+### 15.1 The lamp: what it reads, and the one thing it may not say
+
+`index.html` now carries `#liveTraderStatus`, a fixed pill under the sticky nav at the top right of every tab. It is
+drawn by `renderLiveTraderStatus()` in `script.js` from the *same* read of `data/live-trading-lanes.json` and
+`data/live-trading-trader.ftmo-1.json` that the accounts strip uses, so the corner and the card cannot disagree about
+a heartbeat. It repaints on every dashboard read and then on its own 15-second timer, so an age that stops advancing
+is visible within a refresh rather than up to a minute late.
+
+It states one of six things and has no seventh: `Live trader active` (fresh heartbeat, armed - green), `not armed`
+(fresh, but the trader would place nothing - amber), `no run for 2h 14m` (an armed record past three ticks - amber),
+`<lane> no heartbeat` (nothing published), `<lane> disabled` (parked in the lanes document), and `status unknown`
+(the lanes document is unreadable or not published yet). The rule is §14's rule, unchanged: a heartbeat records that a
+loop ran, and only a *fresh* one is evidence that it is running now. The tooltip carries the long sentence - host,
+last result, the three-tick window - and the pill carries the fact.
+
+Three deliberate constraints. It sits **outside** the `SHARED-NAV` block, because that block is copied byte for byte
+into the evidence pages and this lamp speaks only for the trading lane; it is `position: fixed` at every width, so it
+is never a grid item in `.dashboard-frame` and never covers the nav (on a phone it moves to the bottom right instead);
+and it holds **no control** - no button, no link, no field - because the Live Trading section is read-only and a corner
+that could be pressed would be the first order path on this page. `tests/live_trading_status_bar.browser.test.js`
+holds all of that: five cases (active, stale, not armed, unpublished, parked), the right-edge and top-of-window
+geometry at 1440x1000, zero interactive nodes inside it, and no page error while it paints.
+
+### 15.2 The auto-logon password: moved, with a net under the move
+
+Windows logs an unattended host in from four values under `Winlogon`, and the fourth - `DefaultPassword` - is plain
+text. Microsoft's own article on the feature says so and adds the sentence that decides it: the key "can be remotely
+read by the Authenticated Users group". Winlogon also accepts the same password as an **LSA secret** named
+`DefaultPassword` when the registry value is absent; that is what Sysinternals Autologon writes, and what
+`scripts/harden-live-trading-autologon.ps1` (new) now writes.
+
+The script's order is the whole argument, and it is why this was a script rather than a registry edit:
+
+1. read the plaintext, then prove it with `LogonUser(LOGON32_LOGON_INTERACTIVE)` - a value that does not log the
+   account on is refused here, before anything has moved;
+2. store the secret with `LsaStorePrivateData`, then read it back with `LsaRetrievePrivateData` and compare;
+3. write `C:\live-trading\state\autologon-rollback.json` (SYSTEM full control, local Administrators read), so a
+   failure at the next boot can be undone with nobody present;
+4. only then delete the registry value, re-read the registry to prove it is gone, and re-assert `AutoAdminLogon=1`
+   and the absence of `AutoLogonCount`.
+
+It runs as `SYSTEM` or not at all: the `SECURITY` hive and the LSA policy are SYSTEM's, and as Administrator it
+refuses instead of half-working. It never reboots and never touches the session, the terminal or the lane.
+
+**What was run, as SYSTEM, at 16:53Z**, through one-shot scheduled tasks created and deleted by
+`.local/vps-access/host-build/host-harden-autologon.ps1`:
+
+| Moment (UTC) | What it said |
+| --- | --- |
+| 16:53:26 | `verify` before: `AutoAdminLogon=1`, `user=Administrator`, registry `DefaultPassword` present (12 chars), LSA secret present (8 chars), no rollback copy |
+| 16:53:52 | `validated`, `stored` (12 chars read back), `rollback` written, `hardened` - registry value removed, `AutoAdminLogon=1` |
+| 16:54:33 | `verify` after: registry `DefaultPassword` present `False`, LSA secret present (12 chars), rollback copy present, `state = hardened` |
+| 16:54:33 | read back over ssh as Administrator: `DefaultPasswordSet = False`; `terminal64` still pid 3136 in console session 1; snapshot still moving |
+
+The 8-character secret that was there before the run is worth naming: the image (or an earlier trial) had already
+stored *something* under that name, with a different length from the real password. It has been replaced by a secret
+that was proved against the account. Nothing depended on the old one, or the host would not have logged in at 14:00
+with the plaintext still sitting in the registry.
+
+**What is proved, and what is not.** Proved: the value in the secret is the account's password (it logged on); the
+secret reads back through the LSA; the registry no longer carries it; the running session, the terminal and the feed
+were untouched. Not proved: that Winlogon reads it at the next boot. The only evidence for that is a boot, which is
+why the change is deliberately dormant until one happens - and why nothing was rebooted to produce one while this host
+was mid-session with a position open.
+
+**The net, so that a failed boot does not need a human.** `scripts/run-live-trading-watchdog.ps1` gained exactly one
+action, gated on the rollback copy existing:
+
+- a boot **after** the hardening that produces a console session is the proof: the task retires the rollback copy and
+  says so in `logs\live-trading-watchdog.log`;
+- a boot **after** the hardening that produces **no** session is the failure: the task runs the hardening script with
+  `-Restore`, checks that the registry carries `DefaultPassword` again, deletes the rollback copy and reboots, so the
+  next boot logs in the old way. If the restore itself fails it does **not** reboot and says so, because a reboot with
+  no session would only repeat the failure;
+- with no rollback copy present - before the hardening, and after a boot has proved it - the task behaves exactly as
+  §14.5 described, and `-WhatIfAction` still changes nothing.
+
+The worst case a bad boot can now cost is one extra reboot: the watchdog restores at boot, reboots, and the plaintext
+logs in. `LiveTradingWatchdog` is registered `AtStartup` as `SYSTEM`, so that run does not wait for the ten-minute
+cadence.
+
+
+
