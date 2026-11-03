@@ -309,6 +309,15 @@ const researchLibraryState = {
   topicId: "",
   chainId: "",
   hostedChains: new Set(),
+  // The private store's own rows, kept apart from the page's registry copy. The store is the authority for
+  // uploaded results, so a registry read at any moment - the first load, the 60-second refresh, an upload's
+  // follow-up read - can only add the historical record underneath these rows, never replace them.
+  hostedDocuments: new Map(),
+  hostedDocumentReads: new Map(),
+  hostedReads: new Map(),
+  hostedReadSeq: 0,
+  documentsReadSeq: 0,
+  documentsAppliedSeq: 0,
   hostedLibraryLoaded: false,
   hostedLibraryLoading: false,
   hostedLibraryError: "",
@@ -6951,10 +6960,93 @@ function researchLibraryStatusPill(kind, value) {
   return `<span class="rl-pill ${researchLibraryTone(value)}" data-rl-status="${escapeHtml(kind)}">${escapeHtml(label)}</span>`;
 }
 
+// The store's rows, in the registry's own shape. They live in their own map rather than inside the page's
+// registry copy, because that copy is replaced whole every time the dashboard reloads its artifacts - which
+// it does on a 60-second timer - and a stored return has to outlive every one of those reads.
+function researchLibraryHostedDocuments() {
+  return [...researchLibraryState.hostedDocuments.values()];
+}
+
+function researchLibraryNextDocumentsRead() {
+  researchLibraryState.documentsReadSeq += 1;
+  return researchLibraryState.documentsReadSeq;
+}
+
+// Layer the store's rows over the registry copy this page holds right now. Used by every path that has
+// just read the store: it adds rows without putting back the registry copy the read was taken from, which
+// is what a read that settles after a newer registry load must not do.
+function researchLibraryLayerHostedDocuments() {
+  const lib = researchLibraryLib();
+  const hosted = researchLibraryHostedDocuments();
+  const registry = asArray(researchLibraryDocuments?.documents).filter(document => document && !document.hosted);
+  const documents = hosted.length && lib && typeof lib.mergeDocumentLayers === "function"
+    ? lib.mergeDocumentLayers(registry, hosted)
+    : registry;
+  researchLibraryDocuments = { ...(researchLibraryDocuments || {}), documents };
+  return documents;
+}
+
+// One writer for the page's registry copy. Reads can settle out of order - a slow file read is not allowed
+// to replace what a newer read already answered - so each read takes the next number and only a read at
+// least as new as the last applied one may write. The store's rows are layered back on every time.
+function researchLibraryApplyDocuments(payload, options = {}) {
+  const read = options.read === undefined ? researchLibraryNextDocumentsRead() : Number(options.read);
+  if (Number.isFinite(read) && read < researchLibraryState.documentsAppliedSeq) return false;
+  if (Number.isFinite(read)) researchLibraryState.documentsAppliedSeq = read;
+  const base = payload && typeof payload === "object" ? payload : { documents: [] };
+  researchLibraryDocuments = base;
+  researchLibraryLayerHostedDocuments();
+  return true;
+}
+
+function researchLibraryTakeHostedRead(scope) {
+  researchLibraryState.hostedReadSeq += 1;
+  const read = researchLibraryState.hostedReadSeq;
+  researchLibraryState.hostedReads.set(String(scope || "*"), read);
+  return read;
+}
+
+function researchLibraryHostedReadIsCurrent(scope, read) {
+  return (researchLibraryState.hostedReads.get(String(scope || "*")) || 0) === read;
+}
+
+// Record one read of the store. A row is kept with the read that returned it, so a read that settles late
+// cannot displace a row a newer read already recorded, and a row is only dropped - because the store no
+// longer names it - when the read that would have named it is the newest read of that topic.
+function researchLibraryAbsorbHostedDocuments(documents, options = {}) {
+  const read = Number(options.read) || researchLibraryState.hostedReadSeq;
+  const scope = String(options.scope || "*");
+  const list = asArray(documents).filter(document => document && document.hosted);
+  const seen = new Set();
+  list.forEach(document => {
+    const id = String(document.document_id || "");
+    if (!id) return;
+    seen.add(id);
+    researchLibraryState.hostedDocuments.set(id, document);
+    researchLibraryState.hostedDocumentReads.set(id, read);
+  });
+  const covered = scope === "*" ? null : new Set([scope]);
+  [...researchLibraryState.hostedDocuments.keys()].forEach(id => {
+    if (seen.has(id)) return;
+    const document = researchLibraryState.hostedDocuments.get(id);
+    if (covered && !covered.has(String(document.topic_id || ""))) return;
+    if ((researchLibraryState.hostedDocumentReads.get(id) || 0) > read) return;
+    researchLibraryState.hostedDocuments.delete(id);
+    researchLibraryState.hostedDocumentReads.delete(id);
+  });
+  researchLibraryLayerHostedDocuments();
+  return list.length;
+}
+
 function researchLibraryDocumentList() {
-  // The page's registry copy plus whatever the service reports. They are kept as separate inputs so an
-  // initial load that settles later cannot erase what the service has already answered.
-  return researchLibraryMergeDocuments(asArray(researchLibraryDocuments?.documents), researchLibraryServiceDocuments);
+  // The page's registry copy plus whatever the service reports, plus the store's own rows layered on top:
+  // a stored return reads as delivered here even when the copy of the registry this page was served is
+  // older than the store.
+  const merged = researchLibraryMergeDocuments(asArray(researchLibraryDocuments?.documents), researchLibraryServiceDocuments);
+  const lib = researchLibraryLib();
+  const hosted = researchLibraryHostedDocuments();
+  if (!hosted.length || !lib || typeof lib.mergeDocumentLayers !== "function") return merged;
+  return lib.mergeDocumentLayers(merged, hosted);
 }
 
 function researchLibraryLatestEntry(document) {
@@ -7107,7 +7199,13 @@ async function researchLibraryMergeHosted(chainId, options = {}) {
   if (!adapter || !researchLibraryStoreAvailable(adapter) || !id) return 0;
   if (!options.force && researchLibraryState.hostedChains.has(id)) return 0;
   researchLibraryState.hostedChains.add(id);
-  const merged = await adapter.refresh(id, () => researchLibraryDocuments, next => { researchLibraryDocuments = next; });
+  // The rows a store read returns are recorded in the store's own map and then layered over whatever the
+  // registry copy says now, so this read cannot restore a registry copy that a newer load has replaced.
+  const hostedRead = researchLibraryTakeHostedRead(id);
+  const merged = await adapter.refresh(id, () => researchLibraryDocuments, next => {
+    if (!researchLibraryHostedReadIsCurrent(id, hostedRead)) return;
+    researchLibraryAbsorbHostedDocuments(asArray(next && next.documents), { read: hostedRead, scope: id });
+  });
   if (merged) renderResearchLibrary();
   return merged;
 }
@@ -7124,8 +7222,12 @@ async function researchLibraryLoadHostedLibrary(options = {}) {
   if (!options.force && researchLibraryState.hostedLibraryLoaded) return -1;
   researchLibraryState.hostedLibraryLoading = true;
   let merged = -1;
+  const hostedRead = researchLibraryTakeHostedRead("*");
   try {
-    merged = await adapter.refreshAll(() => researchLibraryDocuments, next => { researchLibraryDocuments = next; });
+    merged = await adapter.refreshAll(() => researchLibraryDocuments, next => {
+      if (!researchLibraryHostedReadIsCurrent("*", hostedRead)) return;
+      researchLibraryAbsorbHostedDocuments(asArray(next && next.documents), { read: hostedRead, scope: "*" });
+    });
     if (merged < 0) {
       // A store that could not be read is retried on the next sign-in, not on every redraw: the chains
       // still read their own records when a stage card is opened.
@@ -7163,13 +7265,14 @@ function maybeLoadHostedResearchLibrary(options = {}) {
 // without touching the committed registry or the local service's records.
 function researchLibraryForgetHosted() {
   researchLibraryState.hostedChains.clear();
+  researchLibraryState.hostedDocuments.clear();
+  researchLibraryState.hostedDocumentReads.clear();
+  researchLibraryState.hostedReads.clear();
+  researchLibraryState.hostedReadSeq = 0;
   researchLibraryState.hostedLibraryLoaded = false;
   researchLibraryState.hostedLibraryError = "";
-  const list = researchLibraryDocumentList();
-  if (!list.some(document => document.hosted)) return;
-  researchLibraryDocuments = Object.assign({}, researchLibraryDocuments || {}, {
-    documents: list.filter(document => !document.hosted)
-  });
+  const list = researchLibraryDocumentList().filter(document => !document.hosted);
+  researchLibraryDocuments = Object.assign({}, researchLibraryDocuments || {}, { documents: list });
 }
 
 async function probeResearchLibraryService(options = {}) {
@@ -7455,11 +7558,13 @@ function researchLibraryDownloadInputPackage(chainId, stageId) {
 }
 
 async function researchLibraryRefreshDocuments() {
+  // A read taken now is newer than any read still in flight, so its answer wins even if it settles later.
+  const read = researchLibraryNextDocumentsRead();
   let pageDocuments = null;
   try {
     const refreshed = await fetchLocalJson(researchLibraryDocumentsUrl);
     if (refreshed) {
-      researchLibraryDocuments = refreshed;
+      researchLibraryApplyDocuments(refreshed, { read });
       pageDocuments = asArray(refreshed.documents);
     }
   } catch (err) {
@@ -7527,7 +7632,7 @@ async function researchLibraryUpload(taskId) {
         context_version: task.context_version,
         note: "registered by the local service; awaiting the committed registry"
       };
-      researchLibraryDocuments = {
+      researchLibraryApplyDocuments({
         ...(researchLibraryDocuments || {}),
         documents: [...researchLibraryDocumentList(), {
           document_id: registration.document_id,
@@ -7543,7 +7648,7 @@ async function researchLibraryUpload(taskId) {
           object_sha256: registration.sha256,
           versions: [version]
         }]
-      };
+      });
     }
     researchLibraryState.uploadTaskId = "";
     researchLibraryMessage(`${file.name} registered as ${registration.document_id} version ${registration.version} (sha256 ${String(registration.sha256).slice(0, 12)}). An upload is not an approval: the review status stays pending until a review is recorded.`);
@@ -8031,7 +8136,7 @@ function researchLibraryRememberRegistration(document) {
       .sort((left, right) => Number(left.version) - Number(right.version));
     next[index] = { ...next[index], ...document, versions };
   }
-  researchLibraryDocuments = { ...(researchLibraryDocuments || {}), documents: next };
+  researchLibraryApplyDocuments({ ...(researchLibraryDocuments || {}), documents: next });
 }
 
 // One stage, one Markdown file. The dashboard writes the chain, the factor, the stage, the document type and
@@ -20184,6 +20289,9 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
+  // The registry read below is numbered before it starts, so a load that finishes late cannot replace the
+  // documents a newer load (or an upload's own follow-up read) already applied.
+  const documentsRead = researchLibraryNextDocumentsRead();
   const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, liveTradingResult, liveTradingLevelsResult, liveTradingCloseResult, researchLibraryResult, researchLibraryDocumentsResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
@@ -20319,14 +20427,17 @@ async function loadDashboard() {
   }
 
   if (researchLibraryDocumentsResult.status === "fulfilled") {
-    researchLibraryDocuments = researchLibraryDocumentsResult.value;
+    // The private store is the authority for uploaded results: this write layers the store's rows back
+    // over the file it just read, so a completed stage cannot revert because a background load replaced
+    // the page's copy of the registry.
+    researchLibraryApplyDocuments(researchLibraryDocumentsResult.value, { read: documentsRead });
   } else {
     console.error(researchLibraryDocumentsResult.reason);
-    researchLibraryDocuments = {
+    researchLibraryApplyDocuments({
       schema_version: "research-library-documents-v1",
       meta: { error: researchLibraryDocumentsResult.reason?.message || String(researchLibraryDocumentsResult.reason) },
       documents: []
-    };
+    }, { read: documentsRead });
   }
 
   if (factorEdgeLabResult.status === "fulfilled") {

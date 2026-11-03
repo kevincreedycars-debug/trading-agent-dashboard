@@ -738,6 +738,171 @@ async function main() {
       await new Promise(resolve => staleServer.close(resolve));
     }
 
+    // A background reload must not revert a chain the private store has completed.
+    //
+    // This reproduces a reported reversion exactly. The store holds all three VIX stages; the panel reads
+    // them as Uploaded; then the dashboard's own 60-second refresh replaces the page's copy of the committed
+    // registry - which knows only the historical stage-1 report - with the file it was served. Before the
+    // store's rows were held apart from that copy, stage 1 fell back to the legacy record and stages 2 and 3
+    // read "awaiting upload" and "not started" until the reader reloaded the page by hand.
+    const storedRows = [
+      {
+        id: "d7b8eb40-ce08-48c3-9d2c-5bf94b7618bc",
+        topic_id: "usd-factor-live-f1-vix-level",
+        stage: 1,
+        version: 1,
+        title: "VIX level and risk regime - research",
+        kind: "report",
+        notes: "Stage 1 research return | Model or session: Astra deep research",
+        sha256: "e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d",
+        bytes: 84056,
+        uploaded_at: "2026-11-03T09:10:00.000Z",
+        storage_path: "usd-factor-live-f1-vix-level/stage-1/d7b8eb40.md",
+        original_filename: "VIX_USD_Research_Report.md"
+      },
+      {
+        id: "5d51a6ac-669d-4c7a-9244-8605508553e9",
+        topic_id: "usd-factor-live-f1-vix-level",
+        stage: 2,
+        version: 1,
+        title: "VIX level and risk regime - red team",
+        kind: "review",
+        notes: "Stage 2 red-team review",
+        sha256: "fa7e5f43602db1b1ceb0fa7d24847e718ef07e48867e8a8ad931a1c231c36f31",
+        bytes: 55367,
+        uploaded_at: "2026-11-03T09:20:00.000Z",
+        storage_path: "usd-factor-live-f1-vix-level/stage-2/5d51a6ac.md",
+        original_filename: "vix-red-team-review.md",
+        parent_research_ref: "d7b8eb40-ce08-48c3-9d2c-5bf94b7618bc"
+      },
+      {
+        id: "60494b47-b2e7-448c-86f4-7aeaae625d04",
+        topic_id: "usd-factor-live-f1-vix-level",
+        stage: 3,
+        version: 1,
+        title: "VIX level and risk regime - adjudication",
+        kind: "adjudication",
+        notes: "Stage 3 end-to-end adjudication",
+        sha256: sha256("vix-end-to-end-adjudication"),
+        bytes: 41000,
+        uploaded_at: "2026-11-03T09:30:00.000Z",
+        storage_path: "usd-factor-live-f1-vix-level/stage-3/60494b47.md",
+        original_filename: "vix-adjudication.md",
+        parent_research_ref: "d7b8eb40-ce08-48c3-9d2c-5bf94b7618bc",
+        parent_red_team_ref: "5d51a6ac-669d-4c7a-9244-8605508553e9"
+      }
+    ];
+
+    const revertContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
+    const revertPage = await revertContext.newPage();
+    const revertErrors = [];
+    revertPage.on("pageerror", error => revertErrors.push(error.message));
+    // The store answers as if it were the live one: the page's own client does the mapping, only the read
+    // that would cross the network is replaced. Nothing is written and nothing is uploaded.
+    await revertPage.addInitScript(rows => {
+      window.__storedRows = rows;
+      const patch = () => {
+        const api = window.ResearchUpload;
+        if (!api) return;
+        api.listAll = async () => ({ ok: true, rows: window.__storedRows });
+        api.listByTopic = async () => ({ ok: true, rows: window.__storedRows });
+      };
+      Object.defineProperty(window, "ResearchUpload", {
+        configurable: true,
+        get() { return window.__researchUploadApi; },
+        set(value) { window.__researchUploadApi = value; patch(); }
+      });
+    }, storedRows);
+
+    const revertStages = () => revertPage.$$eval("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage]", nodes => nodes.map(node => ({
+      stage: node.getAttribute("data-rl-stage"),
+      state: node.getAttribute("data-rl-stage-state"),
+      pill: (node.querySelector("[data-rl-stage-pill]")?.textContent || "").trim(),
+      document: node.getAttribute("data-rl-stage-document") || "",
+      version: node.getAttribute("data-rl-stage-version") || "",
+      hash: node.getAttribute("data-rl-stage-hash") || "",
+      input: node.getAttribute("data-rl-stage-input") || "",
+      inputVersion: node.getAttribute("data-rl-stage-input-version") || ""
+    })));
+
+    const expectedStages = [
+      { stage: "research", state: "delivered", pill: "Uploaded", document: storedRows[0].id, version: "1", hash: storedRows[0].sha256, input: "", inputVersion: "" },
+      { stage: "red_team", state: "delivered", pill: "Uploaded", document: storedRows[1].id, version: "1", hash: storedRows[1].sha256, input: storedRows[0].id, inputVersion: "1" },
+      { stage: "adjudication", state: "delivered", pill: "Uploaded", document: storedRows[2].id, version: "1", hash: storedRows[2].sha256, input: storedRows[1].id, inputVersion: "1" }
+    ];
+
+    const openStoredChain = async target => {
+      await target.getByRole("button", { name: "Research Library" }).click();
+      await target.waitForSelector("[data-rl-shell='true']", { timeout: 20000 });
+      const row = target.locator("[data-rl-factor='live.f1-vix-level']");
+      await row.waitFor({ timeout: 20000 });
+      if ((await row.getAttribute("aria-expanded")) !== "true") await row.click();
+      await target.waitForSelector("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='adjudication']", { timeout: 20000 });
+      await target.waitForFunction(() => document.querySelector("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='adjudication']")
+        ?.getAttribute("data-rl-stage-state") === "delivered", null, { timeout: 30000 });
+    };
+
+    try {
+      await revertPage.goto(checkoutBase, { waitUntil: "networkidle" });
+      await openStoredChain(revertPage);
+      const afterStoreRead = await revertStages();
+      assert.deepEqual(afterStoreRead, expectedStages, "all three stages must read Uploaded from the private store");
+      audit.storedChain = afterStoreRead.map(entry => ({ stage: entry.stage, document: entry.document, hash: entry.hash.slice(0, 12) }));
+
+      // The dashboard's own 60-second refresh runs exactly this function. This is the step that reverted.
+      await revertPage.evaluate(() => loadDashboard().then(() => true));
+      await revertPage.waitForFunction(() => Boolean(
+        document.querySelector("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='research']")?.getAttribute("data-rl-stage-document")
+      ), null, { timeout: 20000 });
+      await revertPage.waitForTimeout(400);
+      const afterBackgroundLoad = await revertStages();
+      assert.deepEqual(afterBackgroundLoad, afterStoreRead, "a background load must not revert any of the three stages");
+      audit.survivedBackgroundLoad = true;
+
+      // A second background load, to catch a state that only reverts once the fresh registry copy is in place.
+      await revertPage.evaluate(() => loadDashboard().then(() => true));
+      await revertPage.waitForTimeout(400);
+      assert.deepEqual(await revertStages(), afterStoreRead, "a second background load must keep all three stages");
+
+      // Navigation between assets and back reads the store again and must show the same three rows. The asset
+      // chips sit in the storage panel a reader opens, so the panel is opened the way a reader opens it.
+      const selectAsset = async asset => {
+        await revertPage.evaluate(() => {
+          const panel = document.querySelector("[data-rl-technical]");
+          if (panel) panel.open = true;
+        });
+        await revertPage.click(`[data-rl-asset='${asset}']`);
+      };
+      await selectAsset("EUR");
+      await revertPage.waitForTimeout(300);
+      await selectAsset("USD");
+      await openStoredChain(revertPage);
+      assert.deepEqual(await revertStages(), afterStoreRead, "switching assets and back must keep all three stages");
+      audit.survivedAssetNavigation = true;
+
+      // A full refresh of the page reads the registry and the store from scratch.
+      await revertPage.reload({ waitUntil: "networkidle" });
+      await openStoredChain(revertPage);
+      const afterRefresh = await revertStages();
+      assert.deepEqual(afterRefresh, afterStoreRead, "a refresh must read the same three stored stages");
+      assert.deepEqual(afterRefresh.map(entry => entry.document), storedRows.map(row => row.id), "with the same document ids");
+
+      // Stage 3 judged both parents, and both are still offered to a reader.
+      const stage3Parents = await revertPage.$$eval(
+        "[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='adjudication'] [data-rl-download]",
+        nodes => nodes.map(node => node.getAttribute("data-rl-download"))
+      );
+      assert.deepEqual(
+        [storedRows[0].id, storedRows[1].id].filter(id => !stage3Parents.includes(id)),
+        [],
+        `stage 3 must still offer both parent documents, saw ${stage3Parents.join(", ")}`
+      );
+      audit.stage3Parents = stage3Parents;
+      assert.deepEqual(revertErrors, [], `revert-page errors: ${revertErrors.join(" | ")}`);
+    } finally {
+      await revertContext.close();
+    }
+
     // Every upload in this run went to a temporary registry and object store: the committed evidence
     // records, and their hashes, are exactly what they were.
     assert.equal(sha256(fs.readFileSync(committedRegistryPath)), committedRegistryHash, "the committed registry must not change");

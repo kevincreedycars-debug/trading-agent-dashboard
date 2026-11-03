@@ -1174,3 +1174,174 @@ test("the catalogue says which assets can dispatch and keeps the other seven pro
   assert.equal(gate.factor_count, 25);
 });
 
+// ---------------------------------------------------------------------------------------------
+// The private store is the authority for uploaded research results
+//
+// The dashboard reloads its artifacts on a 60-second timer, and every reload replaces the page's copy of
+// the committed registry with the file it was served. Holding the store's rows apart from that copy is what
+// stops a completed stage from reverting to the legacy record: the store is layered back over every read,
+// a stored record naming a newer version is never replaced by an older registry record, and a merge never
+// drops a document the newer layer does not mention.
+// ---------------------------------------------------------------------------------------------
+
+const VIX_CHAIN_ID = "usd-factor-live-f1-vix-level";
+const VIX_TOPIC_ID = "usd-topic-vix-level-and-risk-regime";
+
+function storedDocument(options) {
+  return {
+    document_id: options.id,
+    topic_id: VIX_TOPIC_ID,
+    chain_id: VIX_CHAIN_ID,
+    stage: options.stage,
+    title: `VIX ${options.stage}`,
+    origin: "hosted_upload",
+    storage: "library_object",
+    public_download: false,
+    hosted: true,
+    hosted_path: `${VIX_CHAIN_ID}/${options.id}.md`,
+    parent_document_id: options.parent ? options.parent.document_id : null,
+    parent_version: options.parent ? options.parent.versions[0].version : null,
+    parent_sha256: options.parent ? options.parent.versions[0].sha256 : "",
+    open_findings: [],
+    versions: [{
+      version: options.version || 1,
+      sha256: options.sha256,
+      bytes: options.bytes,
+      registered_at: options.registered_at || "2026-11-03T09:10:00.000Z",
+      storage_path: `${VIX_CHAIN_ID}/${options.id}.md`,
+      original_filename: options.filename || `${options.id}.md`,
+      note: "stored in the private research store"
+    }]
+  };
+}
+
+function storedVixChain() {
+  const research = storedDocument({
+    id: "d7b8eb40-ce08-48c3-9d2c-5bf94b7618bc",
+    stage: "research",
+    sha256: "e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d",
+    bytes: 84056,
+    filename: "VIX_USD_Research_Report.md"
+  });
+  const redTeam = storedDocument({
+    id: "5d51a6ac-669d-4c7a-9244-8605508553e9",
+    stage: "red_team",
+    sha256: "fa7e5f43602db1b1ceb0fa7d24847e718ef07e48867e8a8ad931a1c231c36f31",
+    bytes: 55367,
+    parent: research,
+    filename: "vix-red-team-review.md"
+  });
+  const adjudication = storedDocument({
+    id: "60494b47-b2e7-448c-86f4-7aeaae625d04",
+    stage: "adjudication",
+    sha256: sha256("vix-end-to-end-adjudication"),
+    bytes: 41000,
+    parent: redTeam,
+    filename: "vix-adjudication.md"
+  });
+  return [research, redTeam, adjudication];
+}
+
+test("a stored record survives a registry layer that does not name it, so a background reload cannot revert it", () => {
+  // The background load merges the committed registry under the store's rows. It never subtracts: a
+  // document only the store knows is still there afterwards, which is what "delivered" depends on.
+  const stored = storedVixChain();
+  const first = ResearchLibrary.mergeDocumentLayers(registry.documents, stored);
+  const second = ResearchLibrary.mergeDocumentLayers(registry.documents, stored);
+  const ids = list => list.map(document => document.document_id).sort();
+  assert.deepEqual(ids(second), ids(first), "reading the registry again must not change the merged set");
+  stored.forEach(document => {
+    assert.ok(second.some(entry => entry.document_id === document.document_id), `${document.document_id} must survive the registry layer`);
+  });
+  assert.ok(second.some(entry => entry.document_id === "usd-baseline-audit-01-vix-usd-report"), "the historical registry record stays as history");
+});
+
+test("an older registry record never replaces a stored record naming a newer version", () => {
+  // Same document id on both sides: the registry holds version 1 from before the store existed, the store
+  // holds version 2. A registry read that lands last must not be able to put version 1 back in front.
+  const registryRecord = {
+    document_id: "usd-baseline-audit-01-vix-usd-report",
+    asset: "USD",
+    topic_id: VIX_TOPIC_ID,
+    stage: "research",
+    storage: "repo_path",
+    public_download: true,
+    repo_path: "research-library/usd/vix/USD_VIX_report.md",
+    versions: [{
+      version: 1,
+      sha256: "e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d",
+      bytes: 84056,
+      registered_at: "2026-10-15",
+      original_filename: "VIX_USD_Research_Report.md"
+    }]
+  };
+  const storedRecord = {
+    document_id: "usd-baseline-audit-01-vix-usd-report",
+    asset: "USD",
+    topic_id: VIX_TOPIC_ID,
+    stage: "research",
+    hosted: true,
+    storage: "library_object",
+    public_download: false,
+    repo_path: "",
+    versions: [
+      registryRecord.versions[0],
+      {
+        version: 2,
+        sha256: sha256("revised VIX research report"),
+        bytes: 86120,
+        registered_at: "2026-11-03T09:10:00.000Z",
+        storage_path: `${VIX_CHAIN_ID}/usd-baseline-audit-01-vix-usd-report.md`,
+        original_filename: "VIX_USD_Research_Report.md"
+      }
+    ]
+  };
+
+  const layered = ResearchLibrary.mergeDocumentLayers([registryRecord], [storedRecord]);
+  assert.equal(layered.length, 1, "one document id stays one record");
+  const merged = layered[0];
+  assert.equal(ResearchLibrary.latestVersion(merged).version, 2, "the stored version 2 must stay in front");
+  assert.equal(ResearchLibrary.latestVersion(merged).sha256, sha256("revised VIX research report"));
+  assert.equal(merged.hosted, true, "the row is still known to be the store's");
+  assert.equal(merged.versions.length, 2, "both versions are kept and listed");
+  assert.equal(merged.repo_path, "research-library/usd/vix/USD_VIX_report.md", "the history keeps the registry's own path");
+
+  // A stale registry layer merged in afterwards cannot undo it either: the newer version wins on its
+  // version, not on the order the layers arrive in.
+  const again = ResearchLibrary.mergeDocumentLayers(layered, [registryRecord])[0];
+  assert.equal(ResearchLibrary.latestVersion(again).version, 2, "a late stale read must not replace the stored version");
+  assert.equal(again.hosted, true);
+  assert.equal(again.versions.length, 2);
+});
+
+test("the VIX chain reads three delivered stages from the store after a background load and a read of the old registry", () => {
+  const chain = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
+  assert.ok(chain, "the VIX chain exists");
+  const stored = storedVixChain();
+
+  // What the page shows after its first read of the store.
+  const documents = { documents: ResearchLibrary.mergeDocumentLayers(registry.documents, stored) };
+  const first = ResearchLibrary.chainProgress(chain, documents, catalog);
+  assert.deepEqual(first.stages.map(stage => stage.state), ["delivered", "delivered", "delivered"], "all three stages read delivered");
+  assert.deepEqual(first.stages.map(stage => stage.document_id), stored.map(document => document.document_id), "each stage shows the stored document");
+  assert.equal(first.stages[1].reviewed_document_id, stored[0].document_id, "stage 2 judged the stored stage 1");
+  assert.equal(first.stages[2].reviewed_document_id, stored[1].document_id, "stage 3 judged the stored stage 2");
+
+  // The 60-second reload: the page's registry copy is replaced by the committed file, then the store's rows
+  // are layered back on. The reported revert came from a write that skipped that second step.
+  const afterBackgroundLoad = {
+    documents: ResearchLibrary.mergeDocumentLayers(registry.documents, documents.documents.filter(document => document.hosted))
+  };
+  const second = ResearchLibrary.chainProgress(chain, afterBackgroundLoad, catalog);
+  assert.deepEqual(second.stages.map(stage => stage.state), ["delivered", "delivered", "delivered"], "a background reload must not revert a completed chain");
+  assert.deepEqual(second.stages.map(stage => stage.document_id), stored.map(document => document.document_id), "and must show the same three stored documents");
+  assert.deepEqual(
+    second.stages.map(stage => stage.sha256),
+    stored.map(document => document.versions[0].sha256),
+    "with the fingerprints the store recorded"
+  );
+  assert.equal(second.stages[2].parent_document_id, stored[1].document_id, "stage 3 still names the review it judged");
+});
+
+
+
