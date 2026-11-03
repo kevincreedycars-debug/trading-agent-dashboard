@@ -195,6 +195,84 @@ test("two lanes may not share an id, publish to one file, or come without an id"
   assert.throws(() => lanes.loadLanes(missing), /could not be read/);
 });
 
+// A machine can hold two checkouts: the one a lane's cadence trades in and the one that publishes. The committed
+// lanes file cannot say which is which, because its roots are relative to whichever checkout reads them, so a host
+// names the moved lane beside the file it ships with. These three tests hold that answer: it moves the read, it
+// leaves the shared file alone, and a bad line refuses rather than resolving somewhere unexpected.
+test("a lane root named on this machine moves the read without touching the shared lanes file", () => {
+  const space = workspace();
+  const moved = path.join(space.dir, "runtime-tree");
+  fs.mkdirSync(path.join(moved, "data"), { recursive: true });
+  const localPath = path.join(space.dir, "live-trading-lanes.local.json");
+  fs.writeFileSync(localPath, JSON.stringify({ lane_roots: { "ftmo-1": moved } }, null, 2));
+
+  const file = lanes.loadLanes(space.configPath);
+
+  assert.equal(file.lanes[0].root, moved);
+  assert.equal(file.lanes[1].root, space.second.rootDir, "a lane not named here keeps its own root");
+  assert.equal(file.rootOverrides.present, true);
+  assert.equal(file.rootOverrides.path, localPath);
+  assert.deepEqual(file.rootOverrides.lanes, ["ftmo-1"]);
+  assert.equal(
+    JSON.parse(fs.readFileSync(space.configPath, "utf8")).lanes[0].root,
+    space.first.rootDir,
+    "the shared file the PC and the host both read is not rewritten"
+  );
+});
+
+test("with no machine-local file every root is the shared file's own, as before", () => {
+  const space = workspace();
+  const file = lanes.loadLanes(space.configPath);
+
+  assert.equal(file.lanes[0].root, space.first.rootDir);
+  assert.equal(file.rootOverrides.present, false);
+  assert.deepEqual(file.rootOverrides.lanes, []);
+});
+
+test("the publisher reads the snapshot from the machine-local root, not from the shared one", () => {
+  const space = workspace();
+  const moved = path.join(space.dir, "runtime-tree");
+  fs.mkdirSync(path.join(moved, "data"), { recursive: true });
+  const movedAt = NOW_MS - 30000;
+  fs.writeFileSync(
+    path.join(moved, "data", "live-trading.json"),
+    JSON.stringify(laneFeed({ generatedAtMs: movedAt }), null, 2)
+  );
+  fs.writeFileSync(
+    path.join(space.dir, "live-trading-lanes.local.json"),
+    JSON.stringify({ lane_roots: { "ftmo-1": moved } }, null, 2)
+  );
+  const git = fakeGit();
+
+  const result = lanes.publishLanes(optionsFor(space), deps(git));
+
+  assert.equal(result.action, "published");
+  assert.match(result.lanes[0].artifact, /runtime-tree/);
+  const published = JSON.parse(fs.readFileSync(path.join(space.checkout, "data", "live-trading.json"), "utf8"));
+  assert.equal(published.generated_at_utc, new Date(movedAt).toISOString());
+});
+
+test("a machine-local root that is relative, empty or names an unknown lane is a refusal", () => {
+  const write = (space, body) =>
+    fs.writeFileSync(path.join(space.dir, "live-trading-lanes.local.json"), JSON.stringify(body));
+
+  const relative = workspace();
+  write(relative, { lane_roots: { "ftmo-1": path.join("..", "runtime") } });
+  assert.throws(() => lanes.loadLanes(relative.configPath), /not absolute/);
+
+  const empty = workspace();
+  write(empty, { lane_roots: { "ftmo-1": "   " } });
+  assert.throws(() => lanes.loadLanes(empty.configPath), /gives lane ftmo-1 no path/);
+
+  const stale = workspace();
+  write(stale, { lane_roots: { "ftmo-9": path.join(stale.dir, "elsewhere") } });
+  assert.throws(() => lanes.loadLanes(stale.configPath), /names lane ftmo-9, which .* does not/);
+
+  const shapeless = workspace();
+  write(shapeless, { roots: {} });
+  assert.throws(() => lanes.loadLanes(shapeless.configPath), /must carry a lane_roots object/);
+});
+
 test("a lane with no configured identity publishes and says the check did not run", () => {
   const lane = { id: "ftmo-1", label: "FTMO account 1", account_login_masked: null, account_server: null };
   const check = lanes.identityCheck(lane, { account: { login_masked: "***614", server: "FTMO-Server" } });

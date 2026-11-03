@@ -686,6 +686,7 @@ copy taken after the stop is the one restored, and the manifest says so in `prov
 
 ## 12. 2026-10-25, later: the host is bought, and every host-side claim is now checkable
 
+
 ### 12.1 The purchase, and the correction it forced on this record
 
 Contabo order **15592634**, **EUR 17.46 paid**, Cloud VPS Core 4 (4 vCPU, 8 GB RAM, 100 GB SSD), Windows Server,
@@ -855,4 +856,44 @@ The machine clock is UTC, so these stamps are comparable with the scheduled slot
   21724, started 2026-10-25 21:36-21:44Z) are still resident after their script finished. They are not
   live-trading work and were not killed, because ending another lane's processes is not this session's call;
   they are named here so they are not mistaken for the feed or trader when the task list is read next.
+
+## 13. 2026-11-02: the lane root that meant two trees at once, and the file that settles it
+
+`config/live-trading-lanes.json` says `root: "."` for `ftmo-1`, and `.` is resolved against the checkout that reads
+it. That is correct on the PC, where one tree feeds, publishes and trades. On the host it is two trees: the trader
+writes its snapshot and heartbeat into `C:\live-trading\runtime`, while the publisher reads `publisher`'s own
+directory, finds nothing there, and refuses the lane - or, on a day the file exists in both, publishes the
+publisher's stale copy under the live account's name.
+
+The shared lanes file is not the place to fix that: its roots are identical on both machines only because they are
+relative. The answer is a second file, `config/live-trading-lanes.local.json`, ignored by git and read from beside
+the shared file when present:
+
+```json
+{
+  "schema_version": 1,
+  "note": "This host only. The lane's cadence runs in the runtime checkout; the publisher runs in publisher.",
+  "lane_roots": { "ftmo-1": "C:\\live-trading\\runtime" }
+}
+```
+
+- Both readers of the lanes file honour it, so the report and the publisher cannot disagree:
+  `scripts/publish-live-trading-lanes.js` (`loadLaneRootOverrides`, applied to the artifact read and to the
+  heartbeat read alike) and `scripts/prepare-live-trading-host.ps1` (`lane_roots_override` in its `paths`, and a
+  `lane_roots` line in the Verify output).
+- It is strict on purpose. A relative path, an empty path, a missing `lane_roots` object, a file that is not JSON,
+  or a lane id the shared file does not carry is a refusal with a reason: each of those is a root that silently
+  resolves to the wrong tree, which is the fault the file exists to remove.
+- A new blocking check, `lane_<id>_root_not_publisher`, fails when a lane's root resolves to the publisher
+  checkout. That is the two-trees-one-root shape stated as a check instead of a paragraph.
+- Registration is unaffected: `register-live-trading-trader-task.ps1` already takes `-Lane <id>` and `-RepoRoot
+  <path>`, so the host's trader is registered against `C:\live-trading\runtime` by argument rather than inferred
+  from `.`.
+- Tests: `tests/live_trading_lanes_publish.test.js` holds four new cases - the override moves the read and leaves
+  the shared file unchanged, a host with no override behaves exactly as before, the publish carries the moved
+  snapshot's own timestamp, and each malformed override is refused. `npm run test:unit` is 659/659 green with them.
+
+What this does not claim: a root that is named correctly is not the same as a task that is registered, armed and
+observed writing a heartbeat. Naming the root only removes the reason the publisher refused; the registration and
+the observation are still owed, and are recorded where they happen.
 

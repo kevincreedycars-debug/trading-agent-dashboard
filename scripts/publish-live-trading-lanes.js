@@ -11,6 +11,11 @@
 //
 //   node scripts/publish-live-trading-lanes.js [--config config/live-trading-lanes.json] [--dry-run]
 //
+// Where each lane's checkout lives is the lanes file's `root`, resolved against this checkout - unless this machine
+// carries `config/live-trading-lanes.local.json` (ignored by git) beside it, which names absolute roots for the lanes
+// it moves. A host that trades in one checkout and publishes from another needs that file; without it the publisher
+// looks for the snapshot under itself and refuses a lane that is running in the tree next door.
+//
 // Nothing here reads a password or a token. The lanes file carries account labels and paths, never a credential.
 // A lane may carry `"enabled": false` while its terminal is not deployed yet: it is reported as disabled and skipped,
 // so one account publishing is not stopped by the other being absent. Enabled is the default.
@@ -24,6 +29,13 @@ const publisher = require("./publish-live-trading-feed.js");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_CONFIG = "config/live-trading-lanes.json";
+// A machine-local answer to "where does each lane's checkout live", read from beside the lanes file and ignored by
+// git. The committed `root` is relative to the checkout that reads it, which is right when one tree both trades and
+// publishes and wrong on a host that runs the publisher in one checkout and the lane's own cadence in another: there
+// the publisher looks for the snapshot under itself and refuses a lane that is running quite happily in the tree next
+// door. Naming the lane's root here moves that lane's reads only, and leaves the lanes file - which the PC and the
+// host share - untouched.
+const LOCAL_ROOT_OVERRIDES = "live-trading-lanes.local.json";
 // The document the page reads: one row per account, written here and published beside the snapshots. Its shape
 // is versioned because the page decides from it which lanes exist and which are deployed.
 const LANES_SCHEMA_VERSION = "live-trading-lanes-v1";
@@ -117,6 +129,43 @@ function parseArgs(argv) {
   return options;
 }
 
+// The per-machine lane roots, or none. Strict on purpose: a mistyped lane id or a relative path would otherwise be a
+// root that silently resolves to the wrong tree, which is the fault the lanes file exists to prevent, so both are a
+// refusal here rather than a warning.
+function loadLaneRootOverrides(configPath) {
+  const overridePath = path.join(path.dirname(configPath), LOCAL_ROOT_OVERRIDES);
+  if (!fs.existsSync(overridePath)) return { path: overridePath, present: false, roots: new Map() };
+  let parsed = null;
+  try {
+    parsed = JSON.parse(fs.readFileSync(overridePath, "utf8"));
+  } catch (error) {
+    throw new UsageError(
+      `the machine-local lanes override ${overridePath} could not be read: ${String(error.message || error)}`
+    );
+  }
+  const roots = parsed?.lane_roots;
+  if (!roots || typeof roots !== "object" || Array.isArray(roots)) {
+    throw new UsageError(
+      `the machine-local lanes override ${overridePath} must carry a lane_roots object of lane id to absolute path`
+    );
+  }
+  const map = new Map();
+  for (const [rawId, rawValue] of Object.entries(roots)) {
+    const id = String(rawId).trim();
+    const value = typeof rawValue === "string" ? rawValue.trim() : "";
+    if (!value) throw new UsageError(`the machine-local lanes override ${overridePath} gives lane ${id} no path`);
+    if (!path.isAbsolute(value)) {
+      throw new UsageError(
+        `the machine-local lanes override ${overridePath} gives lane ${id} the path ${JSON.stringify(
+          value
+        )}, which is not absolute; a relative root would move with whichever checkout asks for it, which is the one thing this file is for`
+      );
+    }
+    map.set(id, value);
+  }
+  return { path: overridePath, present: true, roots: map };
+}
+
 // The lanes file, read and checked before any artifact is opened: a lane with no id, a path that is not a path,
 // or two lanes publishing to the same file is a configuration fault, and a fault here would either publish one
 // account's read under another's name or overwrite a lane silently.
@@ -129,6 +178,7 @@ function loadLanes(configPath) {
   }
   const lanes = Array.isArray(parsed?.lanes) ? parsed.lanes : [];
   if (!lanes.length) throw new UsageError(`the lanes file ${configPath} names no lanes`);
+  const overrides = loadLaneRootOverrides(configPath);
 
   const ids = new Set();
   const targets = new Set();
@@ -146,7 +196,9 @@ function loadLanes(configPath) {
     return {
       id,
       label: typeof lane.label === "string" && lane.label.trim() ? lane.label.trim() : id,
-      root: typeof lane.root === "string" && lane.root.trim() ? lane.root.trim() : ".",
+      // The checkout this lane's cadence writes in: the lanes file's own line, unless this machine moved it. An
+      // absolute override makes the artifact and heartbeat reads below independent of the tree the publisher runs in.
+      root: overrides.roots.get(id) || (typeof lane.root === "string" && lane.root.trim() ? lane.root.trim() : "."),
       feed,
       published,
       // The loop's own heartbeat, written by that lane's trader on every run and carried to the page beside the
@@ -171,8 +223,21 @@ function loadLanes(configPath) {
     };
   });
 
+  // A lane named in the override that the lanes file does not have is a stale line, and a stale line is a lane whose
+  // reads the operator believes are moved and are not: the id is refused here rather than silently ignored.
+  for (const id of overrides.roots.keys()) {
+    if (!ids.has(id)) {
+      throw new UsageError(
+        `the machine-local lanes override ${overrides.path} names lane ${id}, which ${configPath} does not`
+      );
+    }
+  }
+
   return {
-    minIntervalSeconds: Number.isFinite(parsed?.publish?.min_interval_seconds)
+    // Which roots came from the machine-local file rather than from the shared lanes file, so a run can be read back
+    // and the two answers told apart.
+    rootOverrides: { path: overrides.path, present: overrides.present, lanes: [...overrides.roots.keys()] },
+    minIntervalSeconds: Number.isFinite(parsed?.publish.min_interval_seconds)
       ? parsed.publish.min_interval_seconds
       : null,
     state:

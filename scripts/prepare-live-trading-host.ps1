@@ -191,6 +191,27 @@ $lanesPath = Join-Path $publisherRoot "config\live-trading-lanes.json"
 $lanesDocument = Read-JsonFile $lanesPath
 $laneRows = if ($lanesDocument -and $lanesDocument.lanes) { @($lanesDocument.lanes) } else { @() }
 
+# The machine-local lane roots, read from beside the lanes file and honoured exactly as the publisher honours them:
+# a host that runs the publisher in one checkout and a lane's own cadence in another names that lane's root here,
+# and this report then measures the tree the lane actually trades in rather than the publisher's own directory. A
+# relative or empty path is a fault, not a fallback, for the same reason the publisher refuses one: it would
+# resolve against whichever tree happened to ask.
+$laneRootsPath = Join-Path $publisherRoot "config\live-trading-lanes.local.json"
+$laneRootOverrides = @{}
+if (Test-Path -LiteralPath $laneRootsPath) {
+  $laneRootsDocument = Read-JsonFile $laneRootsPath
+  if (-not ($laneRootsDocument -and $laneRootsDocument.lane_roots)) {
+    throw "$laneRootsPath must carry a lane_roots object of lane id to absolute path"
+  }
+  foreach ($property in $laneRootsDocument.lane_roots.PSObject.Properties) {
+    $value = [string]$property.Value
+    if (-not $value -or -not [System.IO.Path]::IsPathRooted($value)) {
+      throw "$laneRootsPath gives lane $($property.Name) the path '$value', which is not absolute"
+    }
+    $laneRootOverrides[$property.Name] = $value
+  }
+}
+
 # The scheduled tasks this lane knows about, read from the scheduler rather than from the lanes file: a name
 # in a file is an intention, a registered task is a fact.
 $taskNames = New-Object System.Collections.ArrayList
@@ -236,6 +257,7 @@ $now = (Get-Date).ToUniversalTime()
 $laneFacts = @()
 foreach ($row in $laneRows) {
   $laneRoot = $row.root
+  if ($laneRootOverrides.ContainsKey([string]$row.id)) { $laneRoot = $laneRootOverrides[[string]$row.id] }
   if (-not $laneRoot) { $laneRoot = "." }
   if (-not [System.IO.Path]::IsPathRooted([string]$laneRoot)) {
     $laneRoot = [System.IO.Path]::GetFullPath((Join-Path $publisherRoot ([string]$laneRoot)))
@@ -446,6 +468,12 @@ foreach ($lane in $laneFacts) {
   $state = if ($lane.enabled) { "enabled" } else { "parked (enabled: false)" }
 
   Add-Check "${prefix}_root_present" ([bool]$lane.root_exists) $severity "root '$($lane.root)', $state"
+  # The publisher checkout is where publishes land, never where a lane's cadence runs: a lane whose root resolves to
+  # it is the two-trees-one-root fault, where the publisher would read the very file it is about to write and the
+  # trader's own artifacts, if any, would be written into the tree the commits come from.
+  $rootIsPublisher = [string]$lane.root -eq $publisherRoot
+  Add-Check "${prefix}_root_not_publisher" (-not $rootIsPublisher) $severity `
+    ("root '$($lane.root)' against publisher '$publisherRoot'" + $(if ($rootIsPublisher) { " - a lane root must be the checkout its cadence runs in" } else { "" }))
   Add-Check "${prefix}_terminal_present" ([bool]$lane.terminal_present) $severity "terminal '$($lane.terminal)'"
   $wrapperDetail = if ($lane.wrapper.present) {
     "wrapper '$($lane.wrapper.path)', armed: $($lane.wrapper.armed)"
@@ -556,6 +584,12 @@ $advisories = @($checks | Where-Object { -not $_.ok -and $_.severity -eq "adviso
 Write-Output "host              = $env:COMPUTERNAME ($($currentVersion.ProductName), build $buildNumber, '$installationType')"
 Write-Output "runtime_root      = $runtimeRoot"
 Write-Output "publisher_root    = $publisherRoot"
+$laneRootsText = if ($laneRootOverrides.Count) {
+  "present: " + (($laneRootOverrides.GetEnumerator() | ForEach-Object { $_.Key + " -> " + $_.Value }) -join "; ")
+} else {
+  "absent: every lane root is read from the lanes file"
+}
+Write-Output "lane_roots        = $laneRootsPath ($laneRootsText)"
 Write-Output "pinned_commit     = $(if ($PinnedCommit) { $PinnedCommit } else { '<not set>' })"
 Write-Output "lanes             = $(@($laneFacts | ForEach-Object { $_.id + $(if ($_.enabled) { '' } else { ' (parked)' }) }) -join ', ')"
 Write-Output ""
@@ -586,7 +620,7 @@ $document = [ordered]@{
     rdp               = [ordered]@{ enabled = [bool]$rdpEnabled; nla = [bool]$rdpNla }
     sshd              = if ($sshd) { [string]$sshd.Status } else { $null }
   }
-  paths            = [ordered]@{ runtime_root = $runtimeRoot; publisher_root = $publisherRoot; pinned_commit = $PinnedCommit }
+  paths            = [ordered]@{ runtime_root = $runtimeRoot; publisher_root = $publisherRoot; pinned_commit = $PinnedCommit; lane_roots_override = $laneRootsPath; lane_roots_override_lanes = @($laneRootOverrides.Keys) }
   runtime          = $runtimeVersions
   tasks            = $taskFacts
   lanes            = $laneFacts
