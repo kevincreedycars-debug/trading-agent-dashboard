@@ -807,6 +807,48 @@ test("a stage that judged an earlier version of its parent is flagged rather tha
   assert.equal(stillLocked.pending.length, 24);
 });
 
+test("a stage whose parent is named by the register's own id reads current when the bytes are the same", () => {
+  const chain = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
+  const reportBytes = "a".repeat(64);
+  const reviewBytes = "c".repeat(64);
+  // The live shape: the committed register carries the report under a registry id, the private store carries
+  // the same bytes under a row id, and the red-team was uploaded naming the registry id. The store records no
+  // parent version for that name, so a missing version must stay unknown instead of becoming version zero.
+  const documents = { documents: [
+    { document_id: "registry-vix-report", chain_id: chain.chain_id, factor_id: chain.factor_id, topic_id: chain.topic_id, stage: "research", asset: "USD", document_type: "report", storage: "library_object", versions: [{ version: 1, sha256: reportBytes, bytes: 84056, registered_at: "2026-10-15" }] },
+    { document_id: "store-vix-report", chain_id: chain.chain_id, stage: "research", asset: "USD", storage: "library_object", hosted: true, versions: [{ version: 1, sha256: reportBytes, bytes: 84056, registered_at: "2026-10-20T19:25:28.825673+00:00" }] },
+    { document_id: "store-vix-red-team", chain_id: chain.chain_id, stage: "red_team", storage: "library_object", hosted: true, parent_document_id: "registry-vix-report", parent_version: null, versions: [{ version: 1, sha256: reviewBytes, bytes: 55367, registered_at: "2026-11-03T13:50:46.628298+00:00" }] }
+  ] };
+  const progress = ResearchLibrary.chainProgress(chain, documents);
+  const redTeam = progress.stages.find(stage => stage.stage === "red_team");
+  assert.equal(redTeam.state, "delivered");
+  assert.equal(redTeam.state_label, "Uploaded");
+  assert.equal(redTeam.stale_parent_version, false);
+  assert.equal(redTeam.parent_unresolved, false);
+  // The version and the fingerprint the review is credited with are the ones the register holds for the bytes.
+  assert.equal(redTeam.reviewed_version, 1);
+  assert.equal(redTeam.reviewed_sha256, reportBytes);
+  assert.equal(redTeam.parent_document_id, "store-vix-report");
+  assert.deepEqual(progress.flagged_for_reassessment, []);
+  assert.equal(progress.delivered_stages, 2);
+  assert.equal(progress.next_stage, "adjudication");
+
+  // A parent whose bytes moved is still flagged, whichever name the stage used for it.
+  const moved = JSON.parse(JSON.stringify(documents));
+  moved.documents[1].versions.push({ version: 2, sha256: "b".repeat(64), bytes: 84056, registered_at: "2026-11-04T00:00:00.000Z" });
+  const movedRedTeam = ResearchLibrary.chainProgress(chain, moved).stages.find(stage => stage.stage === "red_team");
+  assert.equal(movedRedTeam.state, "reassessment_required");
+  assert.equal(movedRedTeam.stale_parent_version, true);
+
+  // A name the register does not carry is reported as unresolved rather than guessed as an older version.
+  const dangling = JSON.parse(JSON.stringify(documents));
+  dangling.documents[2].parent_document_id = "not-in-the-register";
+  const danglingRedTeam = ResearchLibrary.chainProgress(chain, dangling).stages.find(stage => stage.stage === "red_team");
+  assert.equal(danglingRedTeam.stale_parent_version, false);
+  assert.equal(danglingRedTeam.parent_unresolved, true);
+  assert.equal(danglingRedTeam.state, "delivered");
+});
+
 test("the store records the chain, the stage and the exact version a stage judged", () => {
   const dir = tempDir("stage-store");
   const store = createStore({ root: path.join(dir, "library"), registryPath: path.join(dir, "documents.json"), now: () => new Date("2026-10-15T00:00:00Z") });
