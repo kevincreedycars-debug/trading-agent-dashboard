@@ -2964,6 +2964,11 @@ heartbeat row now names the copy's age too, because `22m ago` beside a green car
 **Evidence.** `tests/live_trading_status_bar.browser.test.js` 7 of 7 (two new: a 24-minute record in a 20-minute copy
 still reads active with its date; a 65-minute copy reads `no publish for 1h` and never the word active),
 `live_trading_accounts` 4 of 4 with its publish time stamped by the fixture instead of borrowed from the shipped
-document. Local suite 763 tests, 760 pass, the same three pre-existing reds as above.
+document, `live_trading_dashboard` 2 of 2. Local suite 763 tests, 759 pass: the two chart reds recorded in Â§14,
+`research_library` without its local store, and one `refresh_progress` case that failed a different test in each of three
+runs - a timing flake on this workstation, unrelated to a change that touches only the lamp and the accounts strip.
+Published as `38341c2f` and `d456bce0`; the live page then read `live` - `Live trader active / ftmo-1 nothing to place -
+as of 17:16Z`, tooltip `4m before the publisher read it, inside the 15 minute window`, page copy 18m old - checked in a
+headless browser against the published site, not against a fixture.
 
 

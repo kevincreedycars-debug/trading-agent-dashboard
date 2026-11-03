@@ -1172,8 +1172,10 @@ The accounts strip draws the same distinction: badge `HEARTBEAT STALE` or `COPY 
 `tests/live_trading_status_bar.browser.test.js` grew two cases for exactly this - a heartbeat 24 minutes old in a copy
 20 minutes old still reads active with its date, and a copy 65 minutes old reads `no publish for 1h` without the word
 active - and `tests/live_trading_accounts.browser.test.js` stamps its fixture's publish time rather than reusing the
-shipped one, so neither file depends on when it is run. Local suite: 763 tests, 760 pass, the same 3 pre-existing reds
-as §15.2.
+shipped one, so neither file depends on when it is run. Local suite: 763 tests, 759 pass - the two recorded chart reds
+(§14), `research_library` missing its local store, and one case of `refresh_progress.browser.test.js`, which failed three
+times in three runs with a *different* test each time and is a timing flake on this workstation, not this change: the
+three live-trading files are 13 of 13 on their own.
 
 
 
