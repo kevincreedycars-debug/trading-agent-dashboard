@@ -91,7 +91,12 @@ The same scripted check was run on the published page before and after the deplo
 then calling the function the 60-second timer calls. Before: 3 of 4 checks failed - stage 1 had fallen back
 to `usd-baseline-audit-01-vix-usd-report`, stage 2 read `awaiting_upload`, stage 3 `not_started`. After:
 4 of 4 passed - all three stages read `delivered` with the same stored ids across the background load, and
-stage 3 still offers both parent documents plus its own return.
+stage 3 still offers both parent documents plus its own return. Sitting on the page for 80 seconds with the
+dashboard's own timer running - a real tick, not a hand-run call - still read `delivered` with the same
+three ids.
+
+The pre-deploy run is the reproduction: it is the reported symptom, caught with the same three ids the
+reader saw before the panel changed under them.
 
 ## What did not change
 
