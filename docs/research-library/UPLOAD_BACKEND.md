@@ -1,10 +1,10 @@
 # Research upload backend
 
-This is the private place the published dashboard keeps returned research documents in. It is provisioned and in use: a signed-in reader uploads the original bytes from the live page, the store records the SHA-256 fingerprint and the file name, and View or Download later asks Supabase for a short-lived private link and re-checks the fingerprint before anything is shown or saved. Uploading research is still evidence, not approval.
+This is the private place the published dashboard keeps returned research documents in. It is provisioned and in use: the live page uploads the original bytes, the store records the SHA-256 fingerprint and the file name, and View or Download later asks Supabase for a short-lived private link and re-checks the fingerprint before anything is shown or saved. **No research-account sign-in is needed**: the page reaches the store through a hosted access gateway, which is the only holder of the project's service key. Uploading research is still evidence, not approval.
 
 ## What exists
 
-- Project `eaolqbrlywczinfordvg` (`Inputs Database`), the same project the dashboard already reads its research views from. The page carries only that project's publishable key; no service key is in the repository or the page.
+- Project `eaolqbrlywczinfordvg` (`Inputs Database`), the same project the dashboard already reads its research views from. The page carries only that project's publishable key and one purpose-specific library key; no service key is in the repository or the page.
 - Private bucket `research-documents`. No object in it has a public URL.
 - Table `public.research_documents`: `topic_id` (the chain id), `stage` (1, 2, 3), `version`, `title`, `kind`, `original_filename`, `sha256`, `bytes`, `storage_path`, `parent_research_id`/`parent_red_team_id` (hosted parents) or `parent_research_ref`/`parent_red_team_ref` (a parent already registered in the catalogue), `uploaded_by`, `uploaded_at`, `notes`.
 - View `public.research_documents_current` (latest row per chain and stage).
@@ -16,11 +16,36 @@ This is the private place the published dashboard keeps returned research docume
 
 `supabase/research-uploads.sql` is the whole one-time script. It refuses to run if it finds a conflicting table, view, function, policy, membership table or public bucket. RLS on `storage.objects` is already enabled by the platform, so the script does not alter that table.
 
-## Sign in
+## No sign-in: the access gateway
 
-The library header carries an account block. A reader signs in once in the browser with the owner
-account's email and password; the session token is kept in that browser only, and signing out drops
-the hosted rows from the page without touching the committed registry or the local service's records.
+`supabase/functions/research-library/index.ts` is one Supabase Edge Function, deployed to the same project, and it is the only code that touches the bucket or the table. The page calls it and nothing else; the project's service key is injected into the function by the runtime and never reaches a browser. Deploy and rotate it with:
+
+```
+npm run research-library:deploy                      # supabase functions deploy research-library --project-ref eaolqbrlywczinfordvg --no-verify-jwt --use-api
+supabase secrets set RESEARCH_LIBRARY_KEY=<new key> --project-ref eaolqbrlywczinfordvg
+```
+
+Four operations, all at `/functions/v1/research-library`:
+
+- `GET ?op=documents[&topic_id=<chain>]` — the stored rows, oldest version first, up to 1000. This is what fills the stage cards after a reload.
+- `POST ?op=upload` — JSON `{topic_id, stage, title, kind, original_filename, notes, sha256, content_base64, parents{research_ref,red_team_ref}}`. The function re-computes the SHA-256, rejects different bytes, assigns the next version for that chain and stage, stores the object at `<chain>/<stage>/v<version>-<sha256>.md` with `x-upsert: false`, and inserts the row against the library's owner account. One Markdown file, one record, no second request from the page.
+- `GET ?op=sign&path=<storage path>&download=<name>` — a short-lived private link (`Content-Disposition: attachment`), so the browser streams the file itself.
+- `GET ?op=status` — metadata only, for a health check.
+
+What it enforces, and what it cannot:
+
+- Every request needs `x-research-key` equal to the `RESEARCH_LIBRARY_KEY` secret (constant-time compare), and the function refuses everything when that secret is absent. The same value sits in `script.js` as `researchLibraryAccessKey` so the browser can call it. **That key is not a secret in the ordinary sense**: the page is public, so anyone who reads the HTML can call the same four operations. What it does buy is that no Supabase credential is exposed, the store cannot be reached without going through these four validated paths, and the key can be rotated in one minute without touching the database.
+- The bucket stays private, no RLS policy is loosened, and there is no anonymous insert on the table or on `storage.objects`.
+- Validation: chain id `^[A-Za-z0-9._-]{1,120}$`, stage 1–3, non-empty title and kind, the parent shape the table requires (stage 1 names no parent, stage 2 names research, stage 3 names both), 1-byte to 1-MiB payload, valid UTF-8 with no NUL bytes, a fingerprint that matches what the page computed, and a refusal of bytes already stored for that chain and stage.
+- Rate limit: 40 uploads per rolling hour across the store, after which the function pauses with a plain sentence. That is the practical protection against a stranger using the page to flood the bucket.
+- Append-only: no operation can update or delete a stored row or object, so a junk upload cannot damage an existing record, though it can add a new version that the stage card then shows.
+- Attribution: rows carry `uploaded_by` set to the library's owner account (the first row of `research_members`), so an upload made without a sign-in is still attributable.
+
+## Sign in (optional, still supported)
+
+The sign-in block is no longer shown while the access gateway is configured: the header carries one line saying no sign-in is needed. The account block the page used to draw is still in the code, and it comes back if the gateway address or its key is ever removed from the page.
+
+A reader who does sign in once in the browser with the owner account's email and password keeps a session token in that browser only, and signing out drops the hosted rows from the page without touching the committed registry or the local service's records.
 
 GitHub is the owner's chosen sign-in, so **Sign in with GitHub** sits first in that block and the email
 and password stay underneath as the fallback. The button only redirects to the project's own OAuth
@@ -51,7 +76,7 @@ insert into public.research_members (user_id, note) values ('<uuid>', 'who this 
 
 ## What the page does
 
-- Factor-chain stages 1 to 3 upload straight to the store when a session exists. The chain id owns the version sequence, so two chains under one display topic never share a version number.
+- Factor-chain stages 1 to 3 upload straight to the store, with no sign-in: the page hands the file to the access gateway, which is the only writer. The chain id owns the version sequence, so two chains under one display topic never share a version number.
 - The form asks for one Markdown file and nothing else. The reader used to be asked for a model or session label and the upload was refused without it; that field is gone, and the record no longer carries it. The page writes the rest itself: file name, SHA-256, bytes, upload time, asset, factor, chain, stage, document type and version, plus the parent row or catalogue document the stage follows.
 - Stage 2 records the research row it follows and stage 3 records the research and red-team rows; a parent already registered in the catalogue is named by its catalogue document id, and a parent stored here is named by its row id.
 - A stage whose file is stored reads **Uploaded** (the pill used to say "Delivered"), with the file name, hash, size, upload date and the private-store note. **View result** opens the bytes in a new tab and **Download result** saves them under the uploaded file name; both go through a short-lived private link and re-check the fingerprint first.
@@ -65,13 +90,13 @@ insert into public.research_members (user_id, note) values ('<uuid>', 'who this 
 
 **View result** opens the stored bytes in a new tab from an ephemeral blob, which is read once and dropped. **Download result**, **Download inputs** and the input-package buttons hand the browser the private link itself, which carries `download=<the name the reader uploaded>` and is answered with `Content-Disposition: attachment`, so the file streams into the reader's own download folder. The page reads the bytes once before that and re-checks the recorded sha256, so a download is still refused when the stored file and the record disagree. Nothing stays in page memory after the click, which is what makes the same button work on a phone and on a slow connection; a blob held by the page was the part that failed there.
 
-A record whose bytes live in the store downloads through the store even when the record was registered before the store existed: a registry row and a stored row are the same file when their sha256 matches, and the stored row is the one that names the private object and the version the store understands. A page that is not served from this machine never asks `127.0.0.1:8791` for a stored document. The local service is a developer tool that runs on the reader's own machine, so the loopback path is kept for a page served from `localhost`, `127.0.0.1` or a file. On the published page a stored record is answered by the store and nothing else: a signed-in reader whose store read was slow or refused gets one fresh read before anything is reported, a reader who is not signed in is asked to sign in, and a store that still cannot be read says so. That rule is what a reported failure needed. The click for the committed VIX report fell through to the loopback service - a browser that had used the local service earlier keeps its endpoint and token in `localStorage` - so the published page asked `http://127.0.0.1:8791/health` and `http://127.0.0.1:8791/documents/usd-baseline-audit-01-vix-usd-report/versions/1`, both `net::ERR_CONNECTION_REFUSED`, and the reader was shown "... could not be downloaded: Failed to fetch". A record whose bytes are genuinely not in the store still says so plainly instead of asking a machine this page never contacted.
+A record whose bytes live in the store downloads through the store even when the record was registered before the store existed: a registry row and a stored row are the same file when their sha256 matches, and the stored row is the one that names the private object and the version the store understands. A page that is not served from this machine never asks `127.0.0.1:8791` for a stored document. The local service is a developer tool that runs on the reader's own machine, so the loopback path is kept for a page served from `localhost`, `127.0.0.1` or a file. On the published page a stored record is answered by the store and nothing else, through the access gateway and with no sign-in: a store read that was slow or refused gets one fresh read before anything is reported, and a store that still cannot be reached says so. That rule is what a reported failure needed. The click for the committed VIX report once fell through to the loopback service - a browser that had used the local service earlier keeps its endpoint and token in `localStorage` - so the published page asked `http://127.0.0.1:8791/health` and `http://127.0.0.1:8791/documents/usd-baseline-audit-01-vix-usd-report/versions/1`, both `net::ERR_CONNECTION_REFUSED`, and the reader was shown "... could not be downloaded: Failed to fetch". A record whose bytes are genuinely not in the store still says so plainly instead of asking a machine this page never contacted.
 
 If the page's own read-back of an already-signed link fails (a blocked request, a proxy, a slow link), a **Download** still hands the browser that link, because the link carries the file itself, and the message says the fingerprint could not be re-checked in this browser. **View** keeps the strict path: nothing is shown that was not read and checked.
 
 ## Messages a reader may see
 
-- “Sign in with your email and password…” means no session exists in this browser.
+- “Sign in with your email and password…” only appears if the access gateway is not configured in the page. While it is, no message ever asks for a sign-in.
 - “The upload service could not be reached…” means the browser could not contact Supabase. Check the connection and retry.
 - “These exact file contents are already stored…” means the SHA-256 rule found the same bytes for that chain and stage. Open the existing version instead.
 - “The file could not be stored…” means no object was committed; nothing was recorded.
@@ -99,7 +124,26 @@ one factor chain, choose one Markdown file, upload, read the stage card, reload,
 then read the parent document the next stage names and download it. Every step prints `PASS` or `FAIL`,
 the run exits non-zero if anything fails, and the script deletes only the rows that appeared during its
 own run plus the member account it created. The whole flow, the isolation rules and the two-minute check
-to repeat by hand on a real phone are in `docs/research-library/PAGE_CHECK_RUNBOOK.md`.
+to repeat by hand on a real phone are in `docs/research-library/PAGE_CHECK_RUNBOOK.md`. That script still
+signs in, because a session remains supported; the path a reader actually takes now — no sign-in at all — is
+driven by `tmp/rl/probe-open-access.js`, which is kept as local evidence rather than a committed suite because
+it writes one real document to the store and deletes it again.
+
+The run of 2026-11-03 (published site, `7ca34b45`, **no research-account session anywhere**) is the one that
+matters now: `tmp/rl/probe-open-access.js` opened the published page in a fresh browser context with an empty
+profile and, in a second case, with a stale `research-library-service-endpoint`/`-token` pair left in
+`localStorage`, and every step read PASS (18 of 18). The account block read "Open access … No sign-in" and
+carried no password field. The VIX report downloaded as `VIX_USD_Research_Report.md`, 84,056 bytes, sha256
+`e4151937411e`, served by the gateway (`/functions/v1/research-library`) with no loopback request, in both
+cases. The red-team stage's **Download inputs** returned the same bytes with the fingerprint re-checked. A
+239-byte Markdown file uploaded to `usd-factor-live-f10-equity-versus-usd` stage 1 as version 1 through the
+same gateway, read `UPLOADED` after a full page reload, and downloaded back under its own name with the same
+sha256, again with no loopback request. The run deleted its own row and object and the store read back
+afterwards at two rows, two objects and one member, both objects matching their recorded hashes
+(`usd-factor-live-f1-vix-level/1/v1-e4151937…md` 84,056 bytes and `usd-factor-live-f5-dxy-delta/1/v1-9048e897…md`
+47,576 bytes). The function's own refusals were checked on the live deployment: no `x-research-key` → 401,
+binary bytes → 415, a stage-2 upload with no parent → 400, a storage path outside the object pattern → 400,
+and an existing file's exact bytes → 409.
 
 The run of 2026-11-02 (desktop and phone-sized emulation, published site, the local service stopped) read: every step
 PASS from sign-in through the upload, the reload, the parent hand-back, View and Download, with no loopback request and

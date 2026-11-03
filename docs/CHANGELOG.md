@@ -1,4 +1,42 @@
 # Changelog
+## 2026-11-03 - Research Library: upload and download with no research-account sign-in
+
+- Why: the owner asked for the simplest workflow - open the published dashboard, sign nothing in, download
+  an existing report, upload a Markdown file against a stage, refresh, download it back, and reach the parent
+  document a later stage needs - because the research-account sign-in was unreliable and blocking research.
+- What was built: one Supabase Edge Function, `supabase/functions/research-library/index.ts`, in the same
+  project. It is the only code that touches the private bucket or the table, and the project's service key is
+  injected into it by the runtime, so no privileged credential is in the page or the repository and no RLS
+  policy was loosened. Four operations: list the stored rows, upload one Markdown file, mint a short-lived
+  private link, and a metadata-only status. The function re-checks the fingerprint, assigns the version,
+  enforces the chain/stage/parent shape, refuses non-text or over 1 MB, refuses bytes already stored, caps
+  uploads at 40 per rolling hour and cannot update or delete a stored row.
+- Access is a purpose-specific key (`RESEARCH_LIBRARY_KEY` secret, mirrored in `script.js` as
+  `researchLibraryAccessKey`). It is deliberately not a Supabase credential and it grants only those four
+  operations, but because the page is public it is not secret: the docs say so plainly and rotation is one
+  secret plus one line.
+- `lib/research_upload_client.js`: open-access mode for list, upload and signed link, chosen when a gateway
+  address and key are configured; the signed-in path is untouched. `lib/research_upload_adapter.js`:
+  `available()` replaces `signedIn()` at every upload, download and store-read gate, and the account block
+  reads "Open access" instead of asking for a password. `script.js`: the page configures the gateway, every
+  store gate asks `available()`, and a page served from this machine that has its own service token keeps the
+  offline developer path exactly as it was. `index.html` cache-busters are `20261103-open-access-v1`.
+- Tests: upload client 22/22 (the gateway contract: one call per operation, no bearer token, base64 payload,
+  refusals in plain words), upload adapter 21/21 (a full no-session upload/list/download round trip against a
+  faithful gateway fake, plus a guard that the page carries no service-role key), library browser 1/1 (the
+  published account block offers Open access, and the suite now refuses the live gateway on every context so a
+  test run can never read or write the real store). Full local suite 750/751, the one failure being the
+  pre-existing `live_trading_levels_visibility` chart case.
+- Deployed as `7ca34b45`; the function was deployed with `npm run research-library:deploy`. Live verification
+  on the published page with no session at all, 18 of 18 PASS: a clean browser and a browser holding a stale
+  local-service endpoint and token both downloaded the VIX report as `VIX_USD_Research_Report.md`, 84,056 bytes,
+  sha256 `e4151937411e`, through the gateway with no loopback request; the red-team stage's **Download inputs**
+  returned the same bytes; a 239-byte Markdown file uploaded to `usd-factor-live-f10-equity-versus-usd` stage 1
+  read `UPLOADED` after a reload and downloaded back under its own name with the same sha256. Live refusals:
+  no key 401, binary bytes 415, stage 2 with no parent 400, a path outside the object pattern 400, existing
+  bytes 409. Store unchanged: two rows, two objects, one member, both objects matching their recorded hashes.
+  No factor status, weight, threshold, prompt, chain association, registry hash or live call moved.
+
 ## 2026-11-03 - Research Library: a stored document never asks the local machine for its bytes
 
 - What was wrong: the download repaired on 2026-11-02 still fell back to the local service at
