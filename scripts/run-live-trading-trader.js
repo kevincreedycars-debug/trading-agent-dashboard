@@ -1203,8 +1203,9 @@ function stopReview({ live, joined, state, closing = [] } = {}) {
         `This trade's stop has already been taken to breakeven - at or past the entry ${base.entry} it was placed with - and the trail starts at ${TRAIL_FROM_R_MULTIPLE} times the ${base.risk} it was placed with, which is ${trailFrom}: the furthest price since the ticket was placed is ${best}, ${shownR} times that risk, so the stop stays where it stands.`
       );
     }
-    // The level is the furthest price minus the risk, so the stop sits exactly that distance behind the high (the low,
-    // on a short) at whatever price the trade has reached - not a rung down from it.
+    // The level is the furthest price less the trail's own multiple of the risk - three of them, the distance the
+    // trade was placed with - so the stop sits exactly that distance behind the high (the low, on a short) at whatever
+    // price the trade has reached, rather than a rung down from it.
     const atR = Number((bestR - TRAIL_BEHIND_R).toFixed(4));
     const newStop = priceOnDigits(
       instrument,
