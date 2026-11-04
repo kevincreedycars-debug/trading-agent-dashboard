@@ -195,6 +195,8 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
   const hasLoop = fs.existsSync(loopPath) && fs.existsSync(registerPath);
   let perDay = 4;
   let breakeven = 2;
+  let trailFrom = 3;
+  let trailBehind = 1;
   if (hasLoop) {
     const loop = fs.readFileSync(loopPath, "utf8");
     perDay = Number((loop.match(/const DEFAULT_MAX_PER_DAY = (\d+);/) || [])[1]);
@@ -203,10 +205,15 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
     assert.ok(Number.isInteger(perDay) && perDay > 0, "the loop states a daily count of new trades");
     assert.equal(maxOpen, "null", "and passes no cap of its own across markets: the one-trade-per-market hold is the cap");
     assert.equal(expiry, "null", "and no expiry, because the marked levels are permanent");
-    // The one rung the loop adds to a position it already holds, read the same way: the page states that the stop
-    // moves once, and the multiple it moves at is the loop's own number rather than a remembered one.
+    // The rungs the loop adds to a position it already holds, read the same way: the page states where the stop
+    // moves to and where it starts following the market, and the multiples it turns on are the loop's own numbers
+    // rather than remembered ones.
     breakeven = Number((loop.match(/const BREAKEVEN_R_MULTIPLE = (\d+);/) || [])[1]);
     assert.equal(breakeven, 2, "and one rung for the stop, at twice the risk the trade was placed with");
+    trailFrom = Number((loop.match(/const TRAIL_FROM_R_MULTIPLE = (\d+);/) || [])[1]);
+    trailBehind = Number((loop.match(/const TRAIL_BEHIND_R = (\d+);/) || [])[1]);
+    assert.equal(trailFrom, 3, "and the trail's own rung, where the stop stops sitting at the entry");
+    assert.equal(trailBehind, 1, "keeping one whole R between the furthest price and the stop");
     // And the registration script's own defaults, which are what the rule asks a fresh task to be armed with.
     const register = fs.readFileSync(registerPath, "utf8");
     assert.match(register, /\[int\] \$MaxOpen = 0,/, "a freshly registered task passes no cap across markets");
@@ -234,13 +241,15 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
     assert.match(logic.stepsText, /One trade per market, and the other three stay free/);
     assert.match(logic.stepsText, /The entry carries no time limit/);
     assert.match(logic.stepsText, /0\.01 lot/);
-    // The stop's one rung, stated in the page and held to the loop's own multiple: the step used to read that the
-    // loop never moves either price, which stopped describing the loop when the rung was added, so the sentence is
-    // now the amended one and the multiple it turns on is the number read out of the loop above (2, asserted there
-    // as "twice the risk"), not a number typed into the copy.
-    assert.match(logic.stepsText, /The stop is set once, and moves once/);
+    // The two stop rungs, stated in the page and held to the loop's own multiples: the sentence used to read that
+    // the loop never moves either price, which stopped describing the loop when the breakeven rung was added and
+    // again when the trail was, so the copy is now the amended one and the numbers it turns on are the ones read out
+    // of the loop above, not numbers typed into the copy.
+    assert.match(logic.stepsText, /The stop is set once, then moves and follows the market/);
     assert.match(logic.stepsText, /twice the risk it was placed with/);
-    assert.match(logic.stepsText, /The target is never moved, nothing trails or follows the market/);
+    assert.match(logic.stepsText, new RegExp(`${WORDS[trailFrom]} times that risk it follows the market instead`));
+    assert.match(logic.stepsText, new RegExp(`${WORDS[trailBehind]} whole R behind the furthest price the trade has reached`));
+    assert.match(logic.stepsText, /The target is never moved|No page can change either price/);
     // The day's count, in the words the page uses, held to the loop's own number rather than to a remembered one.
     assert.match(logic.gatesText, new RegExp(`${WORDS[perDay]} a day by default`, "i"));
     assert.match(logic.gatesText, /one per market/);

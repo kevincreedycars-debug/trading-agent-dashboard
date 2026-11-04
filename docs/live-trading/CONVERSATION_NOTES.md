@@ -2993,3 +2993,20 @@ money - a plan-only shadow lane for two to four weeks.
 
 
 
+
+### 2026-11-04: the 2R stop turns into a trail at 3R
+
+*"Can we have it so that once an active trade it crosses 3R, the SL which was moved to breakeven at 2R turns into a
+trailing stop?"* That is the instruction, and it is the one line this cycle built. The loop's second rung now follows
+the market: from three times the risk the trade was placed with, the stop goes one whole R behind the furthest price
+the trade has reached since it was placed, never behind the stop the position already carries and never at or past the
+target. Three times the risk up holds entry + 2R, four times up holds entry + 3R, and a five-R trade asks for at most
+three moves.
+
+The reading is the one the target already uses - the snapshot's quote and the extremes of the M5 bars from the bar the
+ticket was placed in onwards - and the level is written on the symbol's own `digits`, because a stop rounded to two
+decimals would put a EURUSD stop at 1.12. The page's Live trade logic tab was amended with the loop (its stop step,
+its summary line and its endings tag) and `index.html` carries a new script token for it. §59 of STRATEGY_LIVE.md is
+the record; §57's "one move and nothing further" is superseded by this note, and the trail is untested on a live trade
+until one crosses three times its risk.
+

@@ -3539,3 +3539,54 @@ the snapshot schema, the validator and every file the backtester reads are untou
 is published as an empty log so the loop, the page and a reader of the raw file all have the same document from the
 start; the page's write path is the reader's own token, exactly as the marked-levels file's is.
 
+
+## 59. The stop's second rung: from 3R it follows the market, one whole R behind the furthest price (user instruction, 2026-11-04)
+
+**What was asked.** *"Can we have it so that once an active trade it crosses 3R, the SL which was moved to breakeven
+at 2R turns into a trailing stop?"* That supersedes the answer recorded at §57 - the rule was one move and nothing
+further because the user said so on 2026-10-16 - and it amends only the stop: the entry, the target, the one-trade-
+per-market hold, the daily count, the exits on a turned call and the hand-run close are all as §§1-58 leave them.
+
+**What the loop now does.** `scripts/run-live-trading-trader.js` carries three constants instead of one:
+`BREAKEVEN_R_MULTIPLE = 2` unchanged, `TRAIL_FROM_R_MULTIPLE = 3` and `TRAIL_BEHIND_R = 1`. The review that used to be
+`breakevenReview` is `stopReview` and it decides one move per position per run, on two rungs:
+
+- **Below 3R** the rule is what it was: the stop stays where it was placed until the market reaches twice the risk the
+  trade was placed with, and then goes to the entry the trade was placed with, once.
+- **From 3R** the stop follows the market: one whole R behind the furthest price the trade has reached since it was
+  placed. A trade three times its risk up is held at entry + 2R, one four times up at entry + 3R, and so on - whole R
+  steps, so a five-R trade asks for at most three moves and each one is a level a reader of the log can name.
+- **Never back, never past the target.** The level is only asked for when it is beyond the stop the position already
+  carries, so a retracement cannot walk the stop backwards, and a level at or past the target is not asked for at all
+  because the target answers the trade by itself.
+
+The furthest price is read by a new `marketExtreme(side, instrument, sinceMs)`, which is the same reading the target
+uses: the snapshot's own quote plus the extremes of every M5 bar from the bar the ticket was placed in onwards, a
+long's high and a short's low, so a spike between two five-minute runs is not missed. The level is written on the
+symbol's own grid by a new `priceOnDigits(instrument, value)`, which takes the `digits` the feed publishes for the
+symbol and falls back to its `point`; a snapshot stating neither produces no move at all rather than a level rounded to
+a scale the terminal would read as somewhere else - the 2-decimal rounding that would have turned a EURUSD stop of
+1.12476 into 1.12 is exactly what this prevents. Every move carries `rung` (`breakeven` or `trail`), `best_price` and
+`at_r` beside the level it asked for, and the state file's `moves` rows carry the same fields; a row written before
+this section carries no `rung` and is read as the breakeven rung, so existing state files keep working. The run record
+that used to be `record.breakeven` is `record.stops`.
+
+**The page follows the loop.** The Live trade logic tab's stop step now reads *"The stop is set once, then moves and
+follows the market"* and states both rungs and both example levels, the one-sentence summary says the stop is the only
+thing that ever moves, the endings card's tag reads `One stop that follows, no timer`, and `index.html` bumps the
+script token to `script.js?v=20261104-trailing-stop`. `tests/live_trade_logic_tab.browser.test.js` reads
+`TRAIL_FROM_R_MULTIPLE` and `TRAIL_BEHIND_R` out of the loop and holds the page's words to those numbers.
+
+**What is not proved.** No live trade has been trailed yet: the first trail move happens the first time a real
+position crosses three times its risk, and until then this is a tested function rather than an observed one. No
+backtest was re-run for the 3R start or the one-R give-back; both numbers are the user's instruction, not a measured
+edge, and the 5R target means a trail that is hit gives back a fifth of the target from the traded extreme. The trail
+moves on the five-minute loop's own snapshot and no faster. The order tool refuses a level closer to the market than
+the symbol's `trade_stops_level`, which arrives here as a refusal rather than a failure: the row states the tool's own
+reason, no rung is recorded, and the next run asks again.
+
+**Guards.** `tests/live_trading_trader.test.js` 71 of 71 - the trail's own cases being the level it asks for at three
+and four times the risk, the retracement that asks for nothing, the bar-only reading, the missing digits, the target
+guard, and an armed run whose `modify` carries `--stop-loss 84900` for a trade 3.5R up - the tab test 5 of 5, and the
+unit suite 678 of 678. Nothing scheduled, no workflow and no n8n flow was touched by this section.
+

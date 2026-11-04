@@ -30,14 +30,18 @@ const {
   pendingDirection,
   rowDirection,
   marketHasReached,
+  marketExtreme,
+  priceOnDigits,
   closedAtItsTarget,
   tradeCycles,
   reviewPendings,
   reviewPositions,
-  breakevenReview,
+  stopReview,
   placementRisk,
   movedTickets,
   BREAKEVEN_R_MULTIPLE,
+  TRAIL_FROM_R_MULTIPLE,
+  TRAIL_BEHIND_R,
   parseToolRecord,
   liveFromStatus,
   decide,
@@ -481,8 +485,8 @@ test("the usage states the arming flag, the sources and the caps, and offers no 
   assert.match(USAGE, /--close-ticket <n>/, "the one hand act this loop takes is stated");
   assert.match(USAGE, /Needs --once/, "and that it is a hand act rather than a cadence");
   assert.match(USAGE, /--close-requests <path>/, "the page's own close request is stated too");
-  assert.match(USAGE, /twice the risk it was placed with/, "the stop adjustment is stated as automatic rather than as a flag");
-  assert.match(USAGE, /never moved a second time/, "and that it is one rung rather than a trail");
+  assert.match(USAGE, /twice the risk it was placed with/, "the first stop adjustment is stated as automatic rather than as a flag");
+  assert.match(USAGE, /has the stop follow the market instead/, "and that from three times that risk the stop trails rather than sitting at the entry");
   assert.equal(/--lots|--max-lots/.test(USAGE), false, "the loop must not offer a size of its own");
   assert.equal(/--take-profit|--stop-loss|--breakeven/.test(USAGE), false, "a level this loop sets is the rule's own, not the caller's");
   assert.equal(/"--lots"|"--max-lots"/.test(runnerSource), false, "the loop must not pass a size to the tool");
@@ -1571,14 +1575,16 @@ test("the breakeven rung is read from the trade's own placement, once, and never
     stop_loss: 84300,
     ...over
   });
-  const review = ({ at = 84950, held = {}, heldState = state, closing = [] } = {}) => breakevenReview({
+  const review = ({ at = 84950, held = {}, heldState = state, closing = [], feed = null } = {}) => stopReview({
     live: { positions: [position(held)] },
-    joined: joinLevels(feedFixture({ close: at }), levelsFixture()),
+    joined: joinLevels(feed || feedFixture({ close: at }), levelsFixture()),
     state: heldState,
     closing
   });
 
-  assert.equal(BREAKEVEN_R_MULTIPLE, 2, "the rung is the rule's own and it is a constant rather than a flag");
+  assert.equal(BREAKEVEN_R_MULTIPLE, 2, "the first rung is the rule's own and it is a constant rather than a flag");
+  assert.equal(TRAIL_FROM_R_MULTIPLE, 3, "the trail starts at three times the risk, which is the user's own number");
+  assert.equal(TRAIL_BEHIND_R, 1, "and it keeps one whole R between the furthest price and the stop");
   assert.equal(placementRisk(placement), 200, "the placement states its risk");
   assert.equal(placementRisk({ entry: 84500, stop: 84300 }), 200, "and the distance it placed is the risk when it states none");
   assert.equal(placementRisk({ entry: 84500, stop: 84500, target: 85500, r_multiple: 5 }), 200, "and its target over its multiple when the stop was placed at the entry");
@@ -1594,7 +1600,8 @@ test("the breakeven rung is read from the trade's own placement, once, and never
   assert.equal(move[0].target, 85500, "and the target is carried through rather than restated");
   assert.equal(move[0].exit_price, 84950);
   assert.match(move[0].reason, /has run to 2 times the 200 it was placed with/);
-  assert.match(move[0].reason, /one rung rather than a trail/);
+  assert.match(move[0].reason, /From 3 times that risk the stop follows the market instead/);
+  assert.equal(move[0].rung, "breakeven", "and the row says which rung it asked for, so the state file can too");
 
   // The trade whose stop the terminal already carries at the entry, and the one the state file records a move for:
   // the first is the level itself, the second is the rung that has been spent, and neither is asked for twice.
@@ -1610,13 +1617,83 @@ test("the breakeven rung is read from the trade's own placement, once, and never
   assert.equal(short[0].decision, "keep");
   assert.match(short[0].reason, /the market has to reach 84900/);
 
+  // The second rung: once the trade has run to three times its risk the stop stops sitting at the entry and follows
+  // the market instead, one whole R behind the furthest price the trade has reached since it was placed. Three times
+  // the risk puts it at entry + 2R, four times at entry + 3R, and every step is a level a reader can name.
+  const spentState = {
+    ...state,
+    moves: [{ ticket: 278466201, rung: "breakeven", new_stop: 84500, moved_at_utc: "2026-10-05T05:30:00.000Z" }]
+  };
+  const trail = review({ at: 85150, held: { stop_loss: 84500 }, heldState: spentState });
+  assert.equal(trail[0].decision, "move");
+  assert.equal(trail[0].rung, "trail", "the row says this is the trail's rung rather than the breakeven one");
+  assert.equal(trail[0].best_price, 85150, "with the fixture's bars all older than the ticket, the quote is the furthest price");
+  assert.equal(trail[0].new_stop, 84900, "so a trade three times its risk up is protected at entry + 2R");
+  assert.equal(trail[0].at_r, 2, "and the row states the whole number of R the stop now holds");
+  assert.equal(trail[0].trigger_price, 85100, "beside the level the trail starts at");
+  assert.match(trail[0].reason, /has run to 3 times the 200 it was placed with/);
+  assert.match(trail[0].reason, /1 R behind that furthest point/);
+  const further = review({ at: 85350, held: { stop_loss: 84900 }, heldState: spentState });
+  assert.equal(further[0].new_stop, 85100, "and a trade four times its risk up is protected at entry + 3R");
+  assert.equal(further[0].at_r, 3);
+
+  // Never back: the level the terminal already holds is the one the market has to come back through, so a run that
+  // sees the same furthest price again asks for nothing.
+  const heldAtTrail = review({ at: 85150, held: { stop_loss: 84900 }, heldState: spentState });
+  assert.equal(heldAtTrail[0].decision, "keep");
+  assert.match(heldAtTrail[0].reason, /the position's own stop is 84900, at or past it/);
+
+  // The furthest price is read from the bars as well as the quote, so a spike between two runs is not missed.
+  const barOnly = feedFixture({ close: 84600 });
+  const barInstruments = barOnly.instruments.find(instrument => instrument.symbol === "BTCUSD");
+  barInstruments.m5.bars = barInstruments.m5.bars.concat([
+    { time_utc: "2026-10-05T05:20:00Z", open: 84600, high: 85250, low: 84550, close: 84600 }
+  ]);
+  const fromBars = review({ feed: barOnly, held: { stop_loss: 84500 }, heldState: spentState });
+  assert.equal(fromBars[0].best_price, 85250, "a touch between two runs reaches the trail through the bar");
+  assert.equal(fromBars[0].new_stop, 84900);
+
+  // A level is written on the symbol's own grid, and a snapshot that states no grid is not one to guess.
+  assert.equal(priceOnDigits({ digits: 5 }, 1.124764), 1.12476, "the digits the feed states are the scale the stop is written on");
+  assert.equal(priceOnDigits({ point: 0.01 }, 84900.4567), 84900.46, "and the point is the same fallback the rule's module reads");
+  assert.equal(priceOnDigits({}, 1.5), null, "a snapshot stating neither is not a scale to guess");
+  const unscaled = feedFixture({ close: 85150 });
+  const plain = unscaled.instruments.find(instrument => instrument.symbol === "BTCUSD");
+  delete plain.digits;
+  delete plain.point;
+  const noScale = review({ feed: unscaled, held: { stop_loss: 84500 }, heldState: spentState });
+  assert.equal(noScale[0].decision, "keep");
+  assert.match(noScale[0].reason, /states neither the BTCUSD digits nor its point/);
+
+  // And the trail never asks for a level at or past the target: that price answers the trade by itself.
+  const beyond = review({ at: 85700, held: { stop_loss: 85100 }, heldState: spentState });
+  assert.equal(beyond[0].decision, "keep");
+  assert.match(beyond[0].reason, /at or past the target 85500/);
+
+  // The reading the trail is measured from, on its own: the quote and the bars' extremes from the bar the ticket was
+  // placed in onwards, and nothing before it.
+  const extremes = {
+    quote: { bid: 100, ask: 101 },
+    m5: {
+      bars: [
+        { time_utc: "2026-10-05T04:00:00Z", high: 200, low: 300 },
+        { time_utc: "2026-10-05T05:10:00Z", high: 150, low: 90 }
+      ]
+    }
+  };
+  const since = Date.parse("2026-10-05T05:00:00Z");
+  assert.equal(marketExtreme("long", extremes, since), 150, "a long's furthest price is the highest high in the window");
+  assert.equal(marketExtreme("short", extremes, since), 90, "and a short's is the lowest low");
+  assert.equal(marketExtreme("long", { quote: { bid: 160 } }, since), 160, "the quote is read beside the bars");
+  assert.equal(marketExtreme("long", {}, since), null, "and no market at all is not a price to trail behind");
+
 
   // A position this same run is exiting keeps its stop, and a ticket the state file says nothing about is not moved
   // against a number this loop does not have.
   const exiting = review({ closing: [278466201] });
   assert.equal(exiting[0].decision, "keep");
   assert.match(exiting[0].reason, /already exiting BTCUSD/);
-  const unknown = breakevenReview({
+  const unknown = stopReview({
     live: { positions: [position({ ticket: 999 })] },
     joined: joinLevels(feedFixture({ close: 84950 }), levelsFixture()),
     state
@@ -1626,19 +1703,19 @@ test("the breakeven rung is read from the trade's own placement, once, and never
 
   // A pair the snapshot does not carry, another path's position, and a position whose direction the terminal does
   // not state: none of them is moved.
-  const orphan = breakevenReview({
+  const orphan = stopReview({
     live: { positions: [position({ ticket: 999, symbol: "GBPUSD" })] },
     joined: joinLevels(feedFixture({ close: 84950 }), levelsFixture()),
     state: { ...state, placements: [{ ...placement, order_ticket: 999, symbol: "GBPUSD", entry: 1.2, stop: 1.19, target: 1.25, risk: 0.01 }] }
   });
   assert.equal(orphan[0].decision, "keep");
   assert.match(orphan[0].reason, /snapshot carries no GBPUSD pair/);
-  assert.equal(breakevenReview({
+  assert.equal(stopReview({
     live: { positions: [position({ ticket: 5, magic: 1 })] },
     joined: joinLevels(feedFixture({ close: 84950 }), levelsFixture()),
     state
   }).length, 0, "a position another path placed is not this loop's to amend");
-  const unstated = breakevenReview({
+  const unstated = stopReview({
     live: { positions: [{ ticket: 278466201, symbol: "BTCUSD", magic: ORDER_MAGIC, volume: 0.01 }] },
     joined: joinLevels(feedFixture({ close: 84950 }), levelsFixture()),
     state
@@ -1659,12 +1736,12 @@ test("an unarmed run states the stop it would take to breakeven and writes nothi
   assert.equal(code, 0);
   assert.equal(record.status, "planned");
   assert.equal(spawn.calls.length, 1, "only the read-only status was called: looking sends no move");
-  assert.equal(record.breakeven.reviewed, 1);
-  assert.equal(record.breakeven.rows[0].decision, "move");
-  assert.equal(record.breakeven.moves[0].planned, true);
-  assert.equal(record.breakeven.moves[0].sent, false);
-  assert.equal(record.breakeven.moves[0].moved, false);
-  assert.equal(record.breakeven.moves[0].new_stop, 84500);
+  assert.equal(record.stops.reviewed, 1);
+  assert.equal(record.stops.rows[0].decision, "move");
+  assert.equal(record.stops.moves[0].planned, true);
+  assert.equal(record.stops.moves[0].sent, false);
+  assert.equal(record.stops.moves[0].moved, false);
+  assert.equal(record.stops.moves[0].new_stop, 84500);
   assert.equal(record.state.written, false);
   assert.equal(readState(path.join(dir, "trader-state.json")).moves.length, 0, "a plan is not a move");
 });
@@ -1682,10 +1759,10 @@ test("an armed run moves the stop of a trade that has run to twice its risk, and
   assert.equal(code, 0);
   assert.equal(record.status, "stop_moved");
   assert.deepEqual(spawn.calls.map(call => call.args[1]), ["status", "modify"], "the terminal is read, then the stop is moved");
-  assert.equal(record.breakeven.moves[0].moved, true);
-  assert.equal(record.breakeven.moves[0].new_stop, 84500);
-  assert.equal(record.breakeven.moves[0].retcode_name, "TRADE_RETCODE_DONE");
-  assert.equal(record.breakeven.moves[0].comment, "l2l-rule-btc");
+  assert.equal(record.stops.moves[0].moved, true);
+  assert.equal(record.stops.moves[0].new_stop, 84500);
+  assert.equal(record.stops.moves[0].retcode_name, "TRADE_RETCODE_DONE");
+  assert.equal(record.stops.moves[0].comment, "l2l-rule-btc");
   const flags = flagMap(spawn.calls[1].args);
   assert.equal(flags["--ticket"], "278466201", "the move names the position rather than a pending order");
   assert.equal(flags["--stop-loss"], "84500", "and the level it asks for is the entry the trade was placed with");
@@ -1703,9 +1780,53 @@ test("an armed run moves the stop of a trade that has run to twice its risk, and
     status: { positions: [{ ticket: 278466201, symbol: "BTCUSD", side: "buy", magic: ORDER_MAGIC, volume: 0.01, price_open: 84500, stop_loss: 84500, profit: 1.4 }] }
   });
   const again = runOnce(optionsFor(dir, { confirmLive: true }), { spawn: againSpawn, now: () => NOW });
-  assert.equal(again.record.breakeven.rows[0].decision, "keep");
-  assert.match(again.record.breakeven.rows[0].reason, /already been taken to breakeven/);
-  assert.equal(againSpawn.calls.length, 1, "one rung per trade, not one a bar");
+  assert.equal(again.record.stops.rows[0].decision, "keep");
+  assert.match(again.record.stops.rows[0].reason, /already been taken to breakeven/);
+  assert.equal(againSpawn.calls.length, 1, "the trail asks for nothing until the next whole R");
+});
+
+test("an armed run trails the stop of a trade that has run to three times its risk, one whole R at a time", () => {
+  const dir = tempDir();
+  // The breakeven move is already in the state file and already on the terminal, so this trade is on its second
+  // rung: three and a half times its risk up, and the stop follows to one whole R behind the furthest price.
+  const placed = stateWithPlacement(dir);
+  fs.writeFileSync(
+    path.join(dir, "trader-state.json"),
+    `${JSON.stringify({
+      placements: [placed],
+      moves: [{
+        ticket: 278466201,
+        rung: "breakeven",
+        new_stop: 84500,
+        moved: true,
+        moved_at_utc: new Date(NOW - 1800000).toISOString()
+      }]
+    }, null, 2)}\n`,
+    "utf8"
+  );
+  writeFixtures(dir, { feed: feedFixture({ close: 85150 }) });
+  const spawn = fakeSpawn({
+    status: { positions: [{ ticket: 278466201, symbol: "BTCUSD", side: "buy", magic: ORDER_MAGIC, volume: 0.01, price_open: 84500, stop_loss: 84500, profit: 6.5 }] },
+    send: { exitCode: 0, stdout: modifiedStdout({ stop_loss: 84500 }) }
+  });
+  const { code, record } = runOnce(optionsFor(dir, { confirmLive: true }), { spawn, now: () => NOW });
+
+  assert.equal(code, 0);
+  assert.equal(record.status, "stop_moved");
+  assert.equal(record.stops.rows[0].rung, "trail");
+  assert.equal(record.stops.rows[0].best_price, 85150, "the furthest price is the one the snapshot's own quote states");
+  assert.deepEqual(spawn.calls.map(call => call.args[1]), ["status", "modify"], "the terminal is read, then the stop follows the market");
+  const flags = flagMap(spawn.calls[1].args);
+  assert.equal(flags["--stop-loss"], "84900", "the level asked for is one whole R behind the furthest price, not the entry");
+  assert.equal(flags["--take-profit"], undefined, "and the target is still the position's own");
+  // Both rungs are written down, in the order they were asked for: the breakeven row is what says the trade is past
+  // its first rung, and the trail's own row is the level the stop now holds.
+  const moves = readState(path.join(dir, "trader-state.json")).moves;
+  assert.equal(moves.length, 2);
+  assert.equal(moves[0].rung, "breakeven");
+  assert.equal(moves[1].rung, "trail");
+  assert.equal(moves[1].new_stop, 84900);
+  assert.equal(moves[1].at_r, 2);
 });
 
 test("a stop move that was sent and did not land fails the run rather than passing quietly", () => {
@@ -1729,8 +1850,8 @@ test("a stop move that was sent and did not land fails the run rather than passi
 
   assert.equal(code, 1);
   assert.equal(record.status, "send_failed");
-  assert.equal(record.breakeven.moves[0].moved, false);
-  assert.equal(record.breakeven.moves[0].retcode_name, "TRADE_RETCODE_INVALID_STOPS");
+  assert.equal(record.stops.moves[0].moved, false);
+  assert.equal(record.stops.moves[0].retcode_name, "TRADE_RETCODE_INVALID_STOPS");
   assert.match(record.reason, /stop move\(s\) did not land/);
   assert.equal(readState(path.join(dir, "trader-state.json")).moves.length, 0, "a move that did not land is not a rung that has been spent");
 });
@@ -1784,7 +1905,7 @@ test("an armed hand-run close exits the named position, writes it down, and does
   assert.equal(record.rule, undefined, "the rule was never asked");
   assert.equal(record.positions, undefined);
   assert.equal(record.pendings, undefined);
-  assert.equal(record.breakeven, undefined, "and no stop was reviewed on the way out");
+  assert.equal(record.stops, undefined, "and no stop was reviewed on the way out");
   assert.deepEqual(record.placements, [], "nothing was placed");
   const held = readState(path.join(dir, "trader-state.json"));
   assert.equal(held.closes.length, 1);
@@ -2226,9 +2347,9 @@ test("a stop move the tool refused does not spend the rung, and the next run ask
 
   assert.equal(code, 0, "the market saying no is not a cadence that has broken");
   assert.equal(record.status, "refused");
-  assert.equal(record.breakeven.moves[0].refused, true);
-  assert.equal(record.breakeven.moves[0].moved, false);
-  assert.match(record.breakeven.moves[0].tool_reason, /will not accept a level closer than/);
+  assert.equal(record.stops.moves[0].refused, true);
+  assert.equal(record.stops.moves[0].moved, false);
+  assert.match(record.stops.moves[0].tool_reason, /will not accept a level closer than/);
   assert.match(record.reason, /no rung was spent/);
   assert.equal(readState(path.join(dir, "trader-state.json")).moves.length, 0, "the trade keeps the stop it was placed with");
 
@@ -2239,7 +2360,7 @@ test("a stop move the tool refused does not spend the rung, and the next run ask
     send: { exitCode: 0, stdout: modifiedStdout() }
   });
   const again = runOnce(optionsFor(dir, { confirmLive: true }), { spawn: againSpawn, now: () => NOW });
-  assert.equal(again.record.breakeven.rows[0].decision, "move");
+  assert.equal(again.record.stops.rows[0].decision, "move");
   assert.equal(again.record.status, "stop_moved");
   assert.equal(readState(path.join(dir, "trader-state.json")).moves.length, 1);
 });
