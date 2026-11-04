@@ -2998,10 +2998,19 @@ money - a plan-only shadow lane for two to four weeks.
 
 *"Can we have it so that once an active trade it crosses 3R, the SL which was moved to breakeven at 2R turns into a
 trailing stop?"* That is the instruction, and it is the one line this cycle built. The loop's second rung now follows
-the market: from three times the risk the trade was placed with, the stop goes one whole R behind the furthest price
-the trade has reached since it was placed, never behind the stop the position already carries and never at or past the
-target. Three times the risk up holds entry + 2R, four times up holds entry + 3R, and a five-R trade asks for at most
-three moves.
+the market: from three times the risk the trade was placed with, the stop stays the trade's own risk behind the
+furthest price the trade has reached since it was placed - never behind the stop the position already carries and never
+at or past the target. Because that distance is the distance the trade was placed with, the level reaches the entry
+exactly as the trade becomes three times its risk up, four times up holds entry plus one R, and from there the stop
+rises with the price.
+
+The first version of this trailed one whole R behind the furthest price and the user corrected it the same day: *"I
+didnt say 1 r behind highest price, I said turn the stop to a trailing stop from when it hits 3R so it starts moving up
+as price moves above 3R but always at the 3R distance from the highest price."* `TRAIL_BEHIND_R` is 3 and the level is
+the extreme minus three times the placement's risk rather than a step down from a whole-R rung, so the trail can move
+above 3R by any amount rather than only at whole-R boundaries. Two consequences worth naming: the first move the trail
+itself sends is above 3R, since at exactly 3R its level is the entry the breakeven rung already set, and the give-back
+is a full risk - a trade that peaks at five times its risk and is then stopped by the trail keeps two of them.
 
 The reading is the one the target already uses - the snapshot's quote and the extremes of the M5 bars from the bar the
 ticket was placed in onwards - and the level is written on the symbol's own `digits`, because a stop rounded to two

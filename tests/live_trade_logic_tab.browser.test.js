@@ -196,7 +196,7 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
   let perDay = 4;
   let breakeven = 2;
   let trailFrom = 3;
-  let trailBehind = 1;
+  let trailBehind = 3;
   if (hasLoop) {
     const loop = fs.readFileSync(loopPath, "utf8");
     perDay = Number((loop.match(/const DEFAULT_MAX_PER_DAY = (\d+);/) || [])[1]);
@@ -213,7 +213,7 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
     trailFrom = Number((loop.match(/const TRAIL_FROM_R_MULTIPLE = (\d+);/) || [])[1]);
     trailBehind = Number((loop.match(/const TRAIL_BEHIND_R = (\d+);/) || [])[1]);
     assert.equal(trailFrom, 3, "and the trail's own rung, where the stop stops sitting at the entry");
-    assert.equal(trailBehind, 1, "keeping one whole R between the furthest price and the stop");
+    assert.equal(trailBehind, 3, "and the distance it keeps behind the furthest price is the trade's own risk");
     // And the registration script's own defaults, which are what the rule asks a fresh task to be armed with.
     const register = fs.readFileSync(registerPath, "utf8");
     assert.match(register, /\[int\] \$MaxOpen = 0,/, "a freshly registered task passes no cap across markets");
@@ -248,7 +248,11 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
     assert.match(logic.stepsText, /The stop is set once, then moves and follows the market/);
     assert.match(logic.stepsText, /twice the risk it was placed with/);
     assert.match(logic.stepsText, new RegExp(`${WORDS[trailFrom]} times that risk it follows the market instead`));
-    assert.match(logic.stepsText, new RegExp(`${WORDS[trailBehind]} whole R behind the furthest price the trade has reached`));
+    // The distance the trail keeps is the distance the trade was placed with, so the page says so in those words and
+    // then states the two levels that follow from it - both held to the loop's own numbers rather than typed in.
+    assert.match(logic.stepsText, /stays the same distance behind the furthest price the trade has reached that it was placed behind the entry/);
+    assert.match(logic.stepsText, new RegExp(`${WORDS[trailFrom]} times its risk up is held at its entry`));
+    assert.match(logic.stepsText, new RegExp(`${WORDS[trailFrom + 1]} times up at entry plus ${WORDS[trailBehind - trailFrom + 1]} R`));
     assert.match(logic.stepsText, /The target is never moved|No page can change either price/);
     // The day's count, in the words the page uses, held to the loop's own number rather than to a remembered one.
     assert.match(logic.gatesText, new RegExp(`${WORDS[perDay]} a day by default`, "i"));

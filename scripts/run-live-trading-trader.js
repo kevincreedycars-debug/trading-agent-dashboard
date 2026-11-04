@@ -84,9 +84,10 @@
 //
 //   the stop's two rungs        a position that has run to twice the risk it was placed with has its stop taken
 //                               to breakeven - to the entry it was placed with - and one that has run to three
-//                               times that risk has the stop follow the market instead: one whole R behind the
-//                               furthest price the trade has reached since it was placed, never behind the stop
-//                               that already stands and never past the target. Those are the only amendments this
+//                               times that risk has the stop follow the market instead, kept the same distance
+//                               behind the furthest price the trade has reached since it was placed as it was
+//                               placed behind the entry: never behind the stop that already stands and never past
+//                               the target. Those are the only amendments this
 //                               file makes to an open position, both go through the tool's `modify`, and the
 //                               numbers are read from the trade's own placement rather than from the stop the
 //                               terminal now holds: the breakeven move is what overwrites that stop, so the risk
@@ -181,15 +182,16 @@ const DEFAULT_MAX_OPEN = null;
 const DEFAULT_MAX_PER_DAY = 4;
 // The rungs this loop adds to a position, and the user's own instruction for them: a trade that has run to twice the
 // risk it was placed with has its stop taken to breakeven at the entry it was placed with, and a trade that has run
-// to three times that risk has the stop follow the market rather than sit at the entry. The trail keeps one whole R
-// between the furthest price the trade has reached and the stop - so a trade three times its risk up is protected at
-// entry + 2R, one four times up at entry + 3R - never behind where the stop already stands and never past the
-// target. Whole R steps rather than a stop that follows every tick: a five-R trade asks for at most three moves, and
-// each one is a level a reader of the log can name without a chart. The state file remembers both kinds, so neither
-// is asked for twice.
+// to three times that risk has the stop follow the market rather than sit at the entry. The trail keeps the trade's
+// own risk between the furthest price it has reached and the stop - the same distance that separated the entry from
+// the stop when the trade was placed - so a trade three times its risk up is held at its entry, one four times up at
+// entry + 1R, and every further R of price carries the stop up with it. Never behind where the stop already stands
+// and never at or past the target. The level is read from the furthest price itself rather than in whole-R steps, so
+// the distance it keeps is the one the user asked for at every price, and the symbol's own digits decide where the
+// level lands. The state file remembers both kinds, so neither is asked for twice.
 const BREAKEVEN_R_MULTIPLE = 2;
 const TRAIL_FROM_R_MULTIPLE = 3;
-const TRAIL_BEHIND_R = 1;
+const TRAIL_BEHIND_R = 3;
 // Mirrors MAGIC in tools/mt5-bridge/live-trading-order.py: a position or a pending order carrying it is one
 // this lane placed. tests/live_trading_trader.test.js holds the two files to the same number.
 const ORDER_MAGIC = 20261004;
@@ -262,9 +264,10 @@ const USAGE = [
   "  --help                     print this text",
   "",
   "Automatic, and not a flag: a position that has run to twice the risk it was placed with has its stop moved to",
-  "its own entry, and one that has run to three times that risk has the stop follow the market instead, one whole R",
-  "behind the furthest price the trade has reached - never behind the stop that already stands and never past the",
-  "target - through the tool's modify. Nothing else about an open position is ever amended.",
+  "its own entry, and one that has run to three times that risk has the stop follow the market instead, staying the",
+  "same distance behind the furthest price the trade has reached as it was placed behind the entry - never behind the",
+  "stop that already stands and never past the target - through the tool's modify. Nothing else about an open position",
+  "is ever amended.",
   "",
   "Exit 0 when the run read everything and did what the rule said (which may be nothing at all), 1 when a",
   "gate refused or a ticket that was sent did not land, 2 on a bad command line."
@@ -1061,9 +1064,10 @@ function placementRisk(placement) {
 }
 
 // The two amendments this loop makes to an open position: the stop taken to breakeven at twice the risk the trade
-// was placed with, and - from three times that risk - the stop following the market, one whole R behind the furthest
-// price the trade has reached. Read here rather than acted on, so a plan-only run states the move it would send and
-// the one reason for it, and the send itself stays in the one place the other sends are.
+// was placed with, and - from three times that risk - the stop following the market, kept the same distance behind
+// the furthest price the trade has reached as it was placed behind the entry. Read here rather than acted on, so a
+// plan-only run states the move it would send and the one reason for it, and the send itself stays in the one place
+// the other sends are.
 //
 // Each refusal names the one fact that decided it. The trade's own numbers come from
 // its placement in the state file, because the terminal's stop is the very thing these moves overwrite; the market
@@ -1178,9 +1182,11 @@ function stopReview({ live, joined, state, closing = [] } = {}) {
     }
 
     // The second rung: the stop follows the market. The furthest price the trade has reached since it was placed
-    // decides the level, one whole R behind that price and on the symbol's own grid - never behind where the stop
-    // already stands, so a retracement cannot walk it back, and never at or past the target, which answers the
-    // trade by itself.
+    // decides the level, the trade's own risk behind that price and on the symbol's own grid - never behind where the
+    // stop already stands, so a retracement cannot walk it back, and never at or past the target, which answers the
+    // trade by itself. That distance is the user's instruction: it is the distance the trade was placed with, so the
+    // stop arrives at the entry exactly as the trade becomes three times its risk up and follows one-for-one from
+    // there, rather than walking up in steps of its own choosing.
     const best = marketExtreme(side, instrument, placedAtMs);
     const trailFrom = side === "long"
       ? base.entry + TRAIL_FROM_R_MULTIPLE * base.risk
@@ -1192,36 +1198,36 @@ function stopReview({ live, joined, state, closing = [] } = {}) {
     }
     const bestR = (side === "long" ? best - base.entry : base.entry - best) / base.risk;
     const shownR = Number(bestR.toFixed(4));
-    // Whole R steps, so the trail is a ladder a reader can name rather than a level that moves with every tick.
-    const step = Math.floor(bestR + 1e-9);
-    if (step < TRAIL_FROM_R_MULTIPLE) {
+    if (bestR + 1e-9 < TRAIL_FROM_R_MULTIPLE) {
       return keep(
         `This trade's stop has already been taken to breakeven - at or past the entry ${base.entry} it was placed with - and the trail starts at ${TRAIL_FROM_R_MULTIPLE} times the ${base.risk} it was placed with, which is ${trailFrom}: the furthest price since the ticket was placed is ${best}, ${shownR} times that risk, so the stop stays where it stands.`
       );
     }
-    const atR = step - TRAIL_BEHIND_R;
+    // The level is the furthest price minus the risk, so the stop sits exactly that distance behind the high (the low,
+    // on a short) at whatever price the trade has reached - not a rung down from it.
+    const atR = Number((bestR - TRAIL_BEHIND_R).toFixed(4));
     const newStop = priceOnDigits(
       instrument,
-      side === "long" ? base.entry + atR * base.risk : base.entry - atR * base.risk
+      side === "long" ? best - TRAIL_BEHIND_R * base.risk : best + TRAIL_BEHIND_R * base.risk
     );
     const held = base.held_stop;
     if (newStop === null) {
       return keep(
-        `The trail would stand ${TRAIL_BEHIND_R} R behind ${best}, but this snapshot states neither the ${row?.symbol} digits nor its point, so a level on the symbol's own grid cannot be written: the stop stays where it stands rather than being sent at a scale the terminal would read as somewhere else.`
+        `The trail would stand ${TRAIL_BEHIND_R} times the ${base.risk} this trade was placed with behind ${best}, but this snapshot states neither the ${row?.symbol} digits nor its point, so a level on the symbol's own grid cannot be written: the stop stays where it stands rather than being sent at a scale the terminal would read as somewhere else.`
       );
     }
     if (held !== null && (side === "long" ? newStop <= held + 1e-9 : newStop >= held - 1e-9)) {
       return keep(
-        `The trade has reached ${step} times the ${base.risk} it was placed with, and the trail's level for that is ${newStop}; the position's own stop is ${held}, at or past it, so nothing is sent - the stop already placed is the one the market has to come back through.`
+        `The trade's furthest price since the ticket was placed is ${best}, ${shownR} times the ${base.risk} it was placed with, and the trail's level for that is ${newStop}; the position's own stop is ${held}, at or past it, so nothing is sent - the stop already placed is the one the market has to come back through.`
       );
     }
     if (base.target !== null && (side === "long" ? newStop >= base.target : newStop <= base.target)) {
       return keep(
-        `The trail's level for ${step} times the ${base.risk} this trade was placed with is ${newStop}, at or past the target ${base.target} it was placed with: a stop there would be the target itself, and the target is what answers this trade, so nothing is sent.`
+        `The trail's level for a furthest price of ${best} - ${shownR} times the ${base.risk} this trade was placed with - is ${newStop}, at or past the target ${base.target} it was placed with: a stop there would be the target itself, and the target is what answers this trade, so nothing is sent.`
       );
     }
     return move(
-      `The trade on ${row?.symbol} has run to ${step} times the ${base.risk} it was placed with: the furthest price since the ticket was placed is ${best} (${reading}), so the stop follows the market to ${TRAIL_BEHIND_R} R behind that furthest point - ${newStop}, ${atR} times the risk - through the tool's modify. The stop it already holds is ${held === null ? "unstated" : held}, so this is a step forward and never one back, and the target at ${base.target} is carried through unchanged.`,
+      `The trade on ${row?.symbol} has run to ${shownR} times the ${base.risk} it was placed with: the furthest price since the ticket was placed is ${best} (${reading}), so the stop follows the market and stays ${TRAIL_BEHIND_R} times that risk behind it - ${newStop}, ${atR} times the risk and ${TRAIL_BEHIND_R}R below the furthest point - through the tool's modify. The stop it already holds is ${held === null ? "unstated" : held}, so this is a step forward and never one back, and the target at ${base.target} is carried through unchanged.`,
       { rung: "trail", trigger_price: trailFrom, new_stop: newStop, exit_price: exitPrice, best_price: best, at_r: atR }
     );
   });
@@ -2269,8 +2275,9 @@ function runOnce(options, deps = {}) {
     }
     // The two amendments this loop makes to an open position, reviewed after the exits and before anything new
     // is placed: a trade that has run to twice the risk it was placed with has its stop taken to breakeven, and one
-    // that has run to three times that risk has the stop follow the market - one whole R behind the furthest price
-    // it has reached, never behind the stop already placed and never past the target. A position this same run is
+    // that has run to three times that risk has the stop follow the market - staying the trade's own risk behind the
+    // furthest price it has reached, never behind the stop already placed and never past the target. A position this
+    // same run is
     // already exiting is left to that exit rather than having its stop moved on the way out, which is why the
     // closing tickets are handed to the review rather than left to the market to settle. This is the third kind of
     // send this file makes, and it goes through the tool's `modify` with the same gates, the same journal and the
@@ -2507,7 +2514,7 @@ function runOnce(options, deps = {}) {
     }
     if (movedNow.length) {
       record.status = "stop_moved";
-      record.reason = `${movedNow.length} position(s) had their stop moved - to breakeven at twice the risk they were placed with, or to one whole R behind the furthest price the trade has reached - and nothing was placed or taken out this run.`;
+      record.reason = `${movedNow.length} position(s) had their stop moved - to breakeven at twice the risk they were placed with, or to the trade's own risk behind the furthest price it has reached - and nothing was placed or taken out this run.`;
       return finish(0);
     }
     if (refusedMoves.length) {

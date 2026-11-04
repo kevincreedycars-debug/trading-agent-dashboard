@@ -87,8 +87,10 @@ the owner added after watching it work:
 - **A reached target invalidates a resting entry.** If price reaches the trade's target before the limit is filled,
   the pending order is cancelled rather than left to fill late.
 - **The stop has two rungs: break-even at 2R, then a trail from 3R.** Once a position has run twice its original risk
-  the stop moves to its own entry; from three times that risk it follows the market instead, one whole R behind the
-  furthest price the trade has reached, never back and never at or past the target.
+  the stop moves to its own entry; from three times that risk it follows the market instead, staying the same distance
+  behind the furthest price the trade has reached that it was placed behind its entry - the level is at the entry the
+  moment the trade is three times its risk up, at entry + 1R four times up, and rises with the price from there, never
+  back and never at or past the target.
 
 **Caps, read back from the scheduler rather than from a document:** `--confirm-live --max-open 1 --max-per-day 4
 --settle-seconds 90 --align`. One open trade at a time across all four pairs, four placements a day, and a 90-second

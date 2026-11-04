@@ -19624,7 +19624,7 @@ function renderLiveTrading(data) {
 // page rather than hidden: the scheduled task registered on 2026-10-05 was generated with the older hand cap
 // --max-open 1, so one working ticket across all four markets is what that task enforces until it is
 // re-registered, while the rule itself holds one trade per market.
-const LIVE_TRADE_LOGIC_SUMMARY = "One resting order per market, left at a line marked by hand and only in the direction the day's call gives. The target is the next marked line that way, the stop is a fifth of the distance to it, and the only thing that ever moves once the ticket is left is that stop: to break even at twice the risk, then behind the market from three times it.";
+const LIVE_TRADE_LOGIC_SUMMARY = "One resting order per market, left at a line marked by hand and only in the direction the day's call gives. The target is the next marked line that way, the stop is a fifth of the distance to it, and the only thing that ever moves once the ticket is left is that stop: to break even at twice the risk, then trailing the furthest price the trade reaches from three times it.";
 
 const LIVE_TRADE_LOGIC_STEPS = [
   {
@@ -19665,7 +19665,7 @@ const LIVE_TRADE_LOGIC_STEPS = [
   },
   {
     title: "The stop is set once, then moves and follows the market",
-    detail: "Both prices are fixed at the moment the ticket is left. The stop is the only thing ever changed on an open trade: once the trade has run to twice the risk it was placed with it goes to the entry the trade was placed at, so the worst it can do from there is break even, and once it has run to three times that risk it follows the market instead - one whole R behind the furthest price the trade has reached, so a trade three times its risk up is held at entry plus two R, a trade four times up at entry plus three R, never moving back and never past the target. No page can change either price."
+    detail: "Both prices are fixed at the moment the ticket is left. The stop is the only thing ever changed on an open trade: once the trade has run to twice the risk it was placed with it goes to the entry the trade was placed at, so the worst it can do from there is break even, and once it has run to three times that risk it follows the market instead - it stays the same distance behind the furthest price the trade has reached that it was placed behind the entry, so a trade three times its risk up is held at its entry, four times up at entry plus one R, and every further R of price carries the stop up with it. It never moves back and never sits at or past the target. No page can change either price."
   },
   {
     title: "Nothing on this page can trade",

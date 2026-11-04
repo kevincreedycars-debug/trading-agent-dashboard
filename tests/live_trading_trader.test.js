@@ -1584,7 +1584,7 @@ test("the breakeven rung is read from the trade's own placement, once, and never
 
   assert.equal(BREAKEVEN_R_MULTIPLE, 2, "the first rung is the rule's own and it is a constant rather than a flag");
   assert.equal(TRAIL_FROM_R_MULTIPLE, 3, "the trail starts at three times the risk, which is the user's own number");
-  assert.equal(TRAIL_BEHIND_R, 1, "and it keeps one whole R between the furthest price and the stop");
+  assert.equal(TRAIL_BEHIND_R, 3, "and the stop stays the trade's own risk behind the furthest price it reaches");
   assert.equal(placementRisk(placement), 200, "the placement states its risk");
   assert.equal(placementRisk({ entry: 84500, stop: 84300 }), 200, "and the distance it placed is the risk when it states none");
   assert.equal(placementRisk({ entry: 84500, stop: 84500, target: 85500, r_multiple: 5 }), 200, "and its target over its multiple when the stop was placed at the entry");
@@ -1618,28 +1618,33 @@ test("the breakeven rung is read from the trade's own placement, once, and never
   assert.match(short[0].reason, /the market has to reach 84900/);
 
   // The second rung: once the trade has run to three times its risk the stop stops sitting at the entry and follows
-  // the market instead, one whole R behind the furthest price the trade has reached since it was placed. Three times
-  // the risk puts it at entry + 2R, four times at entry + 3R, and every step is a level a reader can name.
+  // the market instead, staying the trade's own risk behind the furthest price it has reached since it was placed.
+  // That distance is the one the trade was placed with, so the level arrives at the entry exactly as the trade
+  // becomes three times its risk up - the step the breakeven rung has already made - and every further move of the
+  // price carries the stop up with it: four times up is entry + 1R, four and a quarter times up entry + 1.25R.
   const spentState = {
     ...state,
     moves: [{ ticket: 278466201, rung: "breakeven", new_stop: 84500, moved_at_utc: "2026-10-05T05:30:00.000Z" }]
   };
-  const trail = review({ at: 85150, held: { stop_loss: 84500 }, heldState: spentState });
+  const atTrailStart = review({ at: 85100, held: { stop_loss: 84500 }, heldState: spentState });
+  assert.equal(atTrailStart[0].decision, "keep", "at exactly three times its risk the trail's level is the entry the stop already holds");
+  assert.match(atTrailStart[0].reason, /the position's own stop is 84500, at or past it/);
+  const trail = review({ at: 85300, held: { stop_loss: 84500 }, heldState: spentState });
   assert.equal(trail[0].decision, "move");
   assert.equal(trail[0].rung, "trail", "the row says this is the trail's rung rather than the breakeven one");
-  assert.equal(trail[0].best_price, 85150, "with the fixture's bars all older than the ticket, the quote is the furthest price");
-  assert.equal(trail[0].new_stop, 84900, "so a trade three times its risk up is protected at entry + 2R");
-  assert.equal(trail[0].at_r, 2, "and the row states the whole number of R the stop now holds");
+  assert.equal(trail[0].best_price, 85300, "with the fixture's bars all older than the ticket, the quote is the furthest price");
+  assert.equal(trail[0].new_stop, 84700, "so a trade four times its risk up is held at entry + 1R");
+  assert.equal(trail[0].at_r, 1, "and the row states how many R from the entry the stop now stands");
   assert.equal(trail[0].trigger_price, 85100, "beside the level the trail starts at");
-  assert.match(trail[0].reason, /has run to 3 times the 200 it was placed with/);
-  assert.match(trail[0].reason, /1 R behind that furthest point/);
-  const further = review({ at: 85350, held: { stop_loss: 84900 }, heldState: spentState });
-  assert.equal(further[0].new_stop, 85100, "and a trade four times its risk up is protected at entry + 3R");
-  assert.equal(further[0].at_r, 3);
+  assert.match(trail[0].reason, /has run to 4 times the 200 it was placed with/);
+  assert.match(trail[0].reason, /stays 3 times that risk behind it/);
+  const between = review({ at: 85350, held: { stop_loss: 84500 }, heldState: spentState });
+  assert.equal(between[0].new_stop, 84750, "and a price between two whole R keeps the same distance rather than a rung below it");
+  assert.equal(between[0].at_r, 1.25);
 
   // Never back: the level the terminal already holds is the one the market has to come back through, so a run that
   // sees the same furthest price again asks for nothing.
-  const heldAtTrail = review({ at: 85150, held: { stop_loss: 84900 }, heldState: spentState });
+  const heldAtTrail = review({ at: 85300, held: { stop_loss: 84900 }, heldState: spentState });
   assert.equal(heldAtTrail[0].decision, "keep");
   assert.match(heldAtTrail[0].reason, /the position's own stop is 84900, at or past it/);
 
@@ -1651,7 +1656,7 @@ test("the breakeven rung is read from the trade's own placement, once, and never
   ]);
   const fromBars = review({ feed: barOnly, held: { stop_loss: 84500 }, heldState: spentState });
   assert.equal(fromBars[0].best_price, 85250, "a touch between two runs reaches the trail through the bar");
-  assert.equal(fromBars[0].new_stop, 84900);
+  assert.equal(fromBars[0].new_stop, 84650);
 
   // A level is written on the symbol's own grid, and a snapshot that states no grid is not one to guess.
   assert.equal(priceOnDigits({ digits: 5 }, 1.124764), 1.12476, "the digits the feed states are the scale the stop is written on");
@@ -1666,7 +1671,7 @@ test("the breakeven rung is read from the trade's own placement, once, and never
   assert.match(noScale[0].reason, /states neither the BTCUSD digits nor its point/);
 
   // And the trail never asks for a level at or past the target: that price answers the trade by itself.
-  const beyond = review({ at: 85700, held: { stop_loss: 85100 }, heldState: spentState });
+  const beyond = review({ at: 86200, held: { stop_loss: 84500 }, heldState: spentState });
   assert.equal(beyond[0].decision, "keep");
   assert.match(beyond[0].reason, /at or past the target 85500/);
 
@@ -1782,13 +1787,14 @@ test("an armed run moves the stop of a trade that has run to twice its risk, and
   const again = runOnce(optionsFor(dir, { confirmLive: true }), { spawn: againSpawn, now: () => NOW });
   assert.equal(again.record.stops.rows[0].decision, "keep");
   assert.match(again.record.stops.rows[0].reason, /already been taken to breakeven/);
-  assert.equal(againSpawn.calls.length, 1, "the trail asks for nothing until the next whole R");
+  assert.equal(againSpawn.calls.length, 1, "the trail asks for nothing until the price runs past three times the risk");
 });
 
-test("an armed run trails the stop of a trade that has run to three times its risk, one whole R at a time", () => {
+test("an armed run trails a trade that has run past three times its risk, the stop keeping the distance it was placed with", () => {
   const dir = tempDir();
   // The breakeven move is already in the state file and already on the terminal, so this trade is on its second
-  // rung: three and a half times its risk up, and the stop follows to one whole R behind the furthest price.
+  // rung: four times its risk up, and the stop follows to the trade's own risk behind the furthest price - which is
+  // entry + 1R, the same distance it was placed behind the entry.
   const placed = stateWithPlacement(dir);
   fs.writeFileSync(
     path.join(dir, "trader-state.json"),
@@ -1804,20 +1810,20 @@ test("an armed run trails the stop of a trade that has run to three times its ri
     }, null, 2)}\n`,
     "utf8"
   );
-  writeFixtures(dir, { feed: feedFixture({ close: 85150 }) });
+  writeFixtures(dir, { feed: feedFixture({ close: 85300 }) });
   const spawn = fakeSpawn({
     status: { positions: [{ ticket: 278466201, symbol: "BTCUSD", side: "buy", magic: ORDER_MAGIC, volume: 0.01, price_open: 84500, stop_loss: 84500, profit: 6.5 }] },
-    send: { exitCode: 0, stdout: modifiedStdout({ stop_loss: 84500 }) }
+    send: { exitCode: 0, stdout: modifiedStdout({ stop_loss: 84700 }) }
   });
   const { code, record } = runOnce(optionsFor(dir, { confirmLive: true }), { spawn, now: () => NOW });
 
   assert.equal(code, 0);
   assert.equal(record.status, "stop_moved");
   assert.equal(record.stops.rows[0].rung, "trail");
-  assert.equal(record.stops.rows[0].best_price, 85150, "the furthest price is the one the snapshot's own quote states");
+  assert.equal(record.stops.rows[0].best_price, 85300, "the furthest price is the one the snapshot's own quote states");
   assert.deepEqual(spawn.calls.map(call => call.args[1]), ["status", "modify"], "the terminal is read, then the stop follows the market");
   const flags = flagMap(spawn.calls[1].args);
-  assert.equal(flags["--stop-loss"], "84900", "the level asked for is one whole R behind the furthest price, not the entry");
+  assert.equal(flags["--stop-loss"], "84700", "the level asked for is the trade's own risk behind the furthest price, not the entry");
   assert.equal(flags["--take-profit"], undefined, "and the target is still the position's own");
   // Both rungs are written down, in the order they were asked for: the breakeven row is what says the trade is past
   // its first rung, and the trail's own row is the level the stop now holds.
@@ -1825,8 +1831,8 @@ test("an armed run trails the stop of a trade that has run to three times its ri
   assert.equal(moves.length, 2);
   assert.equal(moves[0].rung, "breakeven");
   assert.equal(moves[1].rung, "trail");
-  assert.equal(moves[1].new_stop, 84900);
-  assert.equal(moves[1].at_r, 2);
+  assert.equal(moves[1].new_stop, 84700);
+  assert.equal(moves[1].at_r, 1);
 });
 
 test("a stop move that was sent and did not land fails the run rather than passing quietly", () => {
