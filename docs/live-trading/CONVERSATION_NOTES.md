@@ -3009,8 +3009,13 @@ didnt say 1 r behind highest price, I said turn the stop to a trailing stop from
 as price moves above 3R but always at the 3R distance from the highest price."* `TRAIL_BEHIND_R` is 3 and the level is
 the extreme minus three times the placement's risk rather than a step down from a whole-R rung, so the trail can move
 above 3R by any amount rather than only at whole-R boundaries. Two consequences worth naming: the first move the trail
-itself sends is above 3R, since at exactly 3R its level is the entry the breakeven rung already set, and the give-back
-is a full risk - a trade that peaks at five times its risk and is then stopped by the trail keeps two of them.
+itself sends is above 3R, since at exactly 3R its level is the entry the breakeven rung already set, and the stop
+stands a full risk behind the price rather than a fraction of one, so what a turn gives back is that full risk.
+
+The user corrected the reading of the give-back too: *"No once it hits the 5R target the trade closes as the TP is
+hit."* The target is five times the risk, so the trail is never what ends a run that reaches it: as the target is
+touched the stop holds just under entry + 2R and the target answers the trade first. The trail's own risk is a peak
+short of the target turning over, not the best price of the run being handed back.
 
 The reading is the one the target already uses - the snapshot's quote and the extremes of the M5 bars from the bar the
 ticket was placed in onwards - and the level is written on the symbol's own `digits`, because a stop rounded to two

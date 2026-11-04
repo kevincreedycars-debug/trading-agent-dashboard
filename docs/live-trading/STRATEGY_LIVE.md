@@ -3580,9 +3580,12 @@ price, which the user corrected: *"I didnt say 1 r behind highest price, I said 
 when it hits 3R so it starts moving up as price moves above 3R but always at the 3R distance from the highest price."*
 `TRAIL_BEHIND_R` is therefore 3 and the level is computed as the extreme minus (or plus, on a short) three times the
 placement's risk, not as a step down from a whole-R rung. Two things follow that a reader should know: the trail's
-level at exactly 3R is the entry, so the first move the trail itself sends is above 3R, and the give-back is a full
-risk rather than a fraction of one - a trade that peaks at five times its risk and is then stopped by the trail keeps
-two of them.
+level at exactly 3R is the entry, so the first move the trail itself sends is above 3R, and what a turn gives back is
+a full risk rather than a fraction of one, because the stop stands three times the risk behind the price rather than
+one. The user corrected the reading of the give-back too: *"No once it hits the 5R target the trade closes as the TP
+is hit."* The target is five times the risk and closes the trade when it is touched, so the trail never answers a run
+at its best price: the deepest level it can be holding as the target is reached is just under entry + 2R, and the
+target, not the trail, is what ends a run that gets that far.
 
 **The page follows the loop.** The Live trade logic tab's stop step now reads *"The stop is set once, then moves and
 follows the market"* and states both rungs and both example levels - three times the risk up held at the entry, four
@@ -3593,8 +3596,10 @@ card's tag reads `One stop that follows, no timer`, and `index.html` bumps the s
 
 **What is not proved.** No live trade has been trailed yet: the first trail move happens the first time a real
 position crosses three times its risk, and until then this is a tested function rather than an observed one. No
-backtest was re-run for the 3R start or the 3R distance; both numbers are the user's instruction, not a measured edge,
-and the 5R target means a trail that is hit keeps two of the five R the trade reached. The trail moves on the
+backtest was re-run for the 3R start or the 3R distance; both numbers are the user's instruction, not a measured edge.
+The trail never ends a run at its best price: the target is five times the risk and closes the trade as it is touched,
+so the stop the trail is holding at that moment - just under entry + 2R - is the one a late reversal would have to come
+back through, and the peak itself is answered by the target. The trail moves on the
 five-minute loop's own snapshot and no faster, so between two runs it can give back more than the distance it keeps.
 The order tool refuses a level closer to the market than the symbol's `trade_stops_level`, which arrives here as a
 refusal rather than a failure: the row states the tool's own reason, no rung is recorded, and the next run asks again.
