@@ -9,12 +9,17 @@
 # still runs, and any later slot that day sees the earlier success and stops. The last slot is the 10:07 one, and a
 # slot that arrives at 11:00 or later is turned away, so a GitHub outage at 07:00 does not cause an orchestrator run
 # at ten at night.
+#
+# 2026-11-04: "sees the earlier success" was read off the run list, and a run that decided to skip also concludes
+# green under the same name, so the first slot of every New York day spent the day and no scheduled slot ever called
+# the webhook (runs 40203054555 .. 41753003767, every one with "Call the webhook" = skipped, and the daily refresh
+# arriving only from the host task at 06:00 UTC). The day's record is now data/workflow-status.json, which only the
+# orchestrator writes, and a run that came back failed leaves the day free so a later slot can retry it.
 name: master-orchestrator-daily
 
-# The slot puts its character in its own run name, because the guards read the run list back: a dry run proves the
-# guards without calling anything, so it must never be the "success today" that turns tomorrow morning's slot away.
-# The name is a prefix of its own rather than a word like "live", because a run without a name is titled after the
-# workflow or the commit, and those must not be mistaken for a live slot.
+# The slot puts its character in its own run name so a person reading the run list can tell a dispatch from a
+# schedule at a glance. Since 2026-11-04 no guard reads that name: a run that skipped and a run that called the
+# webhook are both green under this title, which is exactly why the name cannot be the day's record.
 # A `boolean` dispatch input arrives as a boolean, not as the string "true", so the name tests it for truth rather
 # than comparing it to text.
 run-name: orchestrator daily ${{ inputs.dry_run && 'dry' || 'live' }}
@@ -80,28 +85,44 @@ jobs:
           gh api -H "Accept: application/vnd.github.raw" \
             "repos/${GITHUB_REPOSITORY}/contents/data/workflow-control.json?ref=main" > control.json
 
-          # Every earlier live run of this same job today, from the repository's own run list. This is the record
-          # the guards use: a success today means the day is done; a run still going means a second one would
-          # overlap the orchestrator itself. Dry runs are not in it — they call nothing, so they leave the day free.
-          gh run list --workflow master-orchestrator-daily.yml --limit 60 \
-            --json databaseId,createdAt,status,conclusion,event,displayTitle > runs.json || echo '[]' > runs.json
-          jq --arg since "$since" --arg self "${GITHUB_RUN_ID}" \
-            '[.[] | select(.databaseId != ($self | tonumber)) | select(.createdAt >= $since)
-                  | select(.displayTitle | startswith("orchestrator daily live"))]' \
-            runs.json > today.json
+          # The day's record is the status file the flow commits when it finishes, not the run list. A run of this
+          # job that decided to skip also concludes green and is also titled "orchestrator daily live", so the run
+          # list cannot tell "the day is done" from "this slot declined" - and until 2026-11-04 it was read that
+          # way, so the first slot of each New York day (almost always a slot before 07:00 that skipped) spent the
+          # day and no scheduled slot ever called the webhook.
+          # `triggered_by` in that file is a constant inside the flow's own Code node, so it says nothing about who
+          # called; the stamp is what is compared here. A run that came back failed is not the day: leaving it free
+          # is what lets a later slot retry the morning's failure inside the same 07:00-10:00 window.
+          record_readable=true
+          gh api -H "Accept: application/vnd.github.raw" \
+            "repos/${GITHUB_REPOSITORY}/contents/data/workflow-status.json?ref=main" > status.json \
+            || record_readable=false
+          run_started=$(jq -r '.last_run_started_at // empty' status.json 2>/dev/null || true)
+          run_status=$(jq -r '.status // empty' status.json 2>/dev/null || true)
+          ran_today=false
+          if [ -n "$run_started" ] && [ "$(date -u -d "$run_started" +%s)" -ge "$(date -u -d "$since" +%s)" ]; then
+            ran_today=true
+          fi
+          echo "status_file_run_started_at=${run_started:-none} status_file_run_status=${run_status:-none} ran_today=$ran_today"
 
-          succeeded=$(jq '[.[] | select(.conclusion == "success")] | length' today.json)
-          in_flight=$(jq '[.[] | select(.status != "completed")] | length' today.json)
-          echo "runs_today_succeeded=$succeeded runs_today_in_flight=$in_flight"
-          jq -r '.[] | "  \(.createdAt) \(.status)/\(.conclusion // "-") \(.event) #\(.databaseId)"' today.json
+          # A run still going is the one thing the status file cannot show, because it is written at the end. The
+          # run list is asked only that question; its titles and conclusions are not read at all any more.
+          gh run list --workflow master-orchestrator-daily.yml --limit 60 \
+            --json databaseId,createdAt,status > runs.json || echo '[]' > runs.json
+          in_flight=$(jq --arg since "$since" --arg self "${GITHUB_RUN_ID}" \
+            '[.[] | select(.databaseId != ($self | tonumber)) | select(.createdAt >= $since)
+                  | select(.status != "completed")] | length' runs.json)
+          echo "runs_today_in_flight=$in_flight"
 
           # Order matters. The day's two guards are absolute: a duplicate or an overlap is never overridden by a
           # clock or by a person. Force comes next, so a person asking at 06:40 or at 15:00 gets a run when the day
           # is otherwise free; the local-hour gates are what the clock alone obeys.
           decision=skip
           reason=""
-          if [ "$succeeded" -gt 0 ]; then
+          if [ "$ran_today" = true ] && [ "$run_status" = "success" ]; then
             reason="today already has a successful run of this job, so a second call would be a duplicate"
+          elif [ "$record_readable" != true ]; then
+            reason="data/workflow-status.json could not be read from main, and a call without it could be a duplicate"
           elif [ "$in_flight" -gt 0 ]; then
             reason="a run of this job is still in flight, so a second call would overlap the orchestrator"
           elif [ "${FORCE:-false}" = "true" ]; then
@@ -113,7 +134,7 @@ jobs:
             reason="the 07:00-10:00 New York slots have all passed for today"
           else
             decision=trigger
-            reason="the first slot at or after 07:00 New York and nothing has run today"
+            reason="inside the 07:00-10:00 New York window, and today has no successful run to duplicate: either none has run, or the one that did came back failed"
           fi
           echo "decision=$decision (${reason})"
 

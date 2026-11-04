@@ -1,6 +1,11 @@
 // The daily orchestrator trigger is one workflow file, and the guards in it are the whole reason it is safe to
 // leave a machine starting decisions on its own: a clock in New York rather than UTC, one call a day, no overlap,
 // and nothing written back. These assertions keep those properties from being dropped in a later tidy-up.
+//
+// 2026-11-04: they also keep the day's *record* where it belongs. The guards used to read the run list back and
+// count a green run titled "orchestrator daily live" as the day's run, but a slot that skipped also concludes green
+// under that same title, so the first slot of each New York day spent the day and no scheduled slot ever called the
+// webhook. The record is now data/workflow-status.json, which only the orchestrator writes.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -41,9 +46,16 @@ test("one call a day, one at a time", () => {
     "force is reached after the day's guards and before the clock, so it cannot cause a duplicate or an overlap");
   // A dry run proves the guards without calling anything, so it must not be the success that ends the day.
   assert.match(workflow, /run-name: orchestrator daily \$\{\{ inputs\.dry_run && 'dry' \|\| 'live' \}\}/,
-    "the run names itself dry or live, the only thing a later slot can read back");
-  assert.match(workflow, /select\(\.displayTitle \| startswith\("orchestrator daily live"\)\)/,
-    "and only live runs count towards the day, by a name no unnamed run can imitate");
+    "the run names itself dry or live, which is what a person reading the run list wants first");
+  assert.doesNotMatch(workflow, /displayTitle/,
+    "no guard reads a run title: a slot that skipped is also green under the live title, so a title cannot be the day's record");
+  // The day's record is the status file the orchestrator writes, and only a *successful* run there spends the day.
+  assert.match(workflow, /contents\/data\/workflow-status\.json\?ref=main/,
+    "the day is read from the file the flow commits, on the branch the page is served from");
+  assert.match(workflow, /ran_today" = true \] && \[ "\$run_status" = "success"/,
+    "a run today counts only when it reported success: a run that failed leaves the day free to be retried");
+  assert.match(workflow, /record_readable" != true/,
+    "a record that cannot be read is a skip, because a call without it could be a duplicate");
   // One POST in the whole file: the trigger is a single place, not scattered through the steps.
   assert.equal(occurrences(workflow, "-X POST"), 1);
   assert.match(workflow, /if: steps\.decide\.outputs\.decision == 'trigger' && steps\.decide\.outputs\.dry_run != 'true' && steps\.decide\.outputs\.enabled == 'true'/,
