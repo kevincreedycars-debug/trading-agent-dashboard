@@ -201,3 +201,70 @@ means two runs on a day both fire; that was already true before today and is wor
 them.
 
 
+## 2026-11-04: the 06:00 slot fired, the run failed at the USD Collector, and the GitHub guard had been spending the day
+
+**The morning looked like a scheduler that never fired and was two separate faults.** What actually happened, in
+order, from `data/workflow-status.json`, `data/layer1.json` and the run list:
+
+| UTC | What | Evidence |
+| --- | --- | --- |
+| 06:00 | the host task `LiveTradingRefresh0600` POSTs the webhook, as it has since 2026-11-03 | `logs\refresh-0600.log` on the host; the run below is 6 minutes later |
+| 06:06:37 | the run finishes **failed** at step `USD Collector`: *"Bad gateway - the service failed to handle your request"* | status commit `ea27ad7c`; the other 14 steps, `Dashboard Writer` included, report `success` |
+| 06:06:35 | `layer1.json` is republished anyway, carrying the previous day's USD direction | commit `6a3d8d9c` |
+| 07:44:16 | a person presses Refresh; the run succeeds and republishes | status commit `4cdf333b`, `layer1.json` commit `50b2608e` |
+
+Two things were read wrong before this page was written, and both are worth keeping:
+
+- **`triggered_by` in the status file is a constant.** It is the string `dashboard_or_manual`, typed into the flow's
+  own `Build Workflow Status JSON` Code node, so a host-triggered run records exactly what a hand press records.
+  "manual" there is not evidence that a person pressed anything. The 06:06 run was the host's.
+- **A scheduled slot that skips concludes green under the live title.** Every slot since 2026-10-25 shows
+  *Call the webhook* = `skipped` (runs 40203054555 .. 41753003767, 2026-11-04's only delivery at 01:17Z), and the
+  duplicate guard counted those green runs as "today already ran" — the first slot of each New York day is a slot
+  before 07:00, so it spent the day and the real 07:00-10:00 slot was turned away. The GitHub schedule has never
+  produced a run; every daily run in the table above came from the host task or a hand press.
+
+### What changed
+
+1. **`.github/workflows/master-orchestrator-daily.yml`** no longer reads run titles. The day's record is
+   `data/workflow-status.json` on `main`: a run today counts only when that file says `success`, so a skipped slot
+   spends nothing and a *failed* run leaves the day free for a later slot to retry. The run list is still asked one
+   question — is a run of this workflow still in flight — because the status file is only written at the end.
+   A status file that cannot be read is a skip, not a call.
+2. **`scripts/trigger-orchestrator-refresh.ps1`** is the daily slot as a versioned script: read
+   `data/workflow-control.json` (and refuse, loudly, when `enabled` is false), POST the webhook, wait for
+   `last_run_started_at` to move, read `status` and `failed_step`, and call again up to `-MaxAttempts` (default 3,
+   two minutes apart). It writes one JSON line per attempt to its log and exits 0 only on a successful run, so the
+   task's `LastTaskResult` answers "did today's Layer 1 run happen". It holds no token or key: the webhook is public
+   and the status file is read from `raw.githubusercontent.com`. `-WhatIf` posts nothing.
+3. **`scripts/register-orchestrator-refresh-task.ps1`** puts it on the clock as `LiveTradingRefresh0600`, daily at
+   06:00 in the host's clock (UTC on that host), as SYSTEM with `StartWhenAvailable` and `IgnoreNew`.
+4. **Tests**: `npm run test:orchestrator-schedule` runs `tests/master_orchestrator_schedule.test.js` (the guard is
+   the status file, no guard reads a title) and `tests/orchestrator_refresh_trigger.test.js` (five cases against a
+   local listener: failure-then-success, exhausted attempts exit 1, a 502 to the POST is retried, `-WhatIf` spends
+   nothing, an off switch is refused).
+
+### What is not proved, and what is left
+
+- **The host still runs the old slot.** `LiveTradingRefresh0600` points at
+  `C:\live-trading\logs\trigger-refresh-0600.ps1`, which is not in this repository and does no read-back. The new
+  task has **not** been registered on the host: that needs the host's key, which is not on the machine this was
+  written from. Until it is run there, item 2 and 3 are a script and a registration script, not a change on the host.
+  The sequence, once at the host: copy `scripts\trigger-orchestrator-refresh.ps1` to
+  `C:\live-trading\runtime\scripts\`, copy the repository's `data\workflow-control.json` beside it, run
+  `register-orchestrator-refresh-task.ps1 -Test`, then without `-Test`, then read `logs\refresh-0600.log` after the
+  next 06:00.
+- **The 502 is not fixed here.** It came from inside n8n, at the `USD Collector` step, whose `executeWorkflow` node
+  in `exports/master_orchestrator.json` carries no `retryOnFail`. The durable fix is `Retry On Fail` (2 tries, a few
+  seconds apart) on that node in the n8n UI — the export in this repository is a snapshot, not a deployment. The
+  retry added here is a whole-chain retry from outside, which is coarser but does not depend on the flow being
+  edited.
+- **GitHub's cron is not the morning's net.** It delivered three or four of the twenty-four hourly slots per day in
+  this record (2026-11-03: 06:39Z, 15:02Z, 20:56Z; 2026-11-04: 01:17Z). With the guard fixed it can retry a failed
+  morning inside 07:00-10:00 New York, which is worth having, but the host's 06:00 slot remains the one that is
+  expected to fire.
+- **No automatic retry has been observed yet.** The honest statement until a `schedule` run reaches
+  `decision=trigger` and calls the webhook, or the host's new task logs `"action":"retry"` followed by
+  `"action":"success"`, is: the guard now reads the right file and the slot script retries against a local listener.
+
+
