@@ -3594,6 +3594,15 @@ card's tag reads `One stop that follows, no timer`, and `index.html` bumps the s
 `script.js?v=20261104-trail-three-r`. `tests/live_trade_logic_tab.browser.test.js` reads `TRAIL_FROM_R_MULTIPLE` and
 `TRAIL_BEHIND_R` out of the loop and holds the page's words to those numbers, so the copy cannot drift from the loop.
 
+**Deployed 2026-11-05.** The loop the host runs was pinned at `c5abd0ac` (2026-11-02) and its trader script predated
+this section entirely - no `TRAIL_FROM_R_MULTIPLE`, no `TRAIL_BEHIND_R`, only `BREAKEVEN_R_MULTIPLE = 2` - so every
+trail commit above was on `main` and never on the account. The single-file copy the deployment model expects was made
+from the object store on 2026-11-05T09:45:07Z (old file kept at
+`C:\live-trading\logs\run-live-trading-trader.js.bak-20261105094506`), the file's blob hash equals `origin/main`'s and
+the constants in the file the tick reads are `2` and `3`; the 09:46:30Z and 09:51:30Z ticks wrote `nothing_to_place`
+with zero positions and `LastTaskResult` 0. What that changes for this section is only that the trail is now the code
+the account would run if a call fired - it is still unproved on a live trade, because the account is flat.
+
 **What is not proved.** No live trade has been trailed yet: the first trail move happens the first time a real
 position crosses three times its risk, and until then this is a tested function rather than an observed one. No
 backtest was re-run for the 3R start or the 3R distance; both numbers are the user's instruction, not a measured edge.

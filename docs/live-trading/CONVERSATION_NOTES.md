@@ -3024,3 +3024,54 @@ its summary line and its endings tag) and `index.html` carries a new script toke
 the record; §57's "one move and nothing further" is superseded by this note, and the trail is untested on a live trade
 until one crosses three times its risk.
 
+### 2026-11-05: the trail reached the host, and the script that registers the daily slot had never registered anything
+
+Two things happened on the host today, both driven from this PC over the key-only SSH door at
+`D:\trading-agent-dashboard-codex\.local\vps-access\id_ed25519` (`Administrator@158.220.87.240`), not by asking the
+owner to open RDP and copy a file.
+
+**1. The trailing stop is live.** The runtime checkout at `C:\live-trading\runtime` was pinned at `c5abd0ac`
+(2026-11-02) and 143 commits behind `main`, and the trader script sitting in it predated the trail entirely: it had
+`BREAKEVEN_R_MULTIPLE = 2` and nothing else. `git rev-list c5abd0ac..origin/main -- scripts/run-live-trading-trader.js`
+names exactly three commits - `e3b04fcd` (the trail from 3R), `90c9b08f` (the distance corrected to the trade's own
+risk) and `bafaea61` (the comment) - so nothing of the trail had ever run against the account. The deploy was the
+documented one, and it is a one-file copy that the next five-minute tick carries: back the old file up to
+`C:\live-trading\logs\run-live-trading-trader.js.bak-20261105094506`, then
+`git -C C:\live-trading\runtime checkout origin/main -- scripts/run-live-trading-trader.js` followed by
+`git reset` on that path so the index is left alone. The object store writes the bytes, so there is no encoding
+detour: the file's blob hash now equals `origin/main`'s (then `02662dd1`), `node --check` passes, and the constants in
+the file the tick reads are `BREAKEVEN_R_MULTIPLE = 2` and `TRAIL_BEHIND_R = 3`. The `lib/` modules and
+`scripts/publish-live-trading-feed.js` are byte-identical between the pinned commit and `main`, which is what makes a
+single-file copy safe here. First proof: the 09:46:30Z and 09:51:30Z ticks both wrote `status = nothing_to_place`,
+`armed = true`, zero positions and zero orders, and the task's `LastTaskResult` was 0. What is **not** proved is the
+trail itself: it needs a position to cross three times its risk, and the account is flat, so the first live move is
+still ahead.
+
+**2. `LiveTradingRefresh0600` was still the unversioned POST because the script that replaces it could not register
+anything.** `scripts/register-orchestrator-refresh-task.ps1` opened `if ($Test) {` at line 62 and never closed it, so
+the action, the SYSTEM principal and the `Register-ScheduledTask` call all sat inside the dry-run branch, whose first
+statement is `return`. `-Test` worked, `-Show` printed nothing, and a plain run printed nothing, exited 0 and touched
+no scheduler - which is exactly why yesterday's record said the task "has not been registered on the host". The
+missing brace is now closed (the AST reports the guard spanning 62-68 and the registration at 111 outside it), and
+`tests/orchestrator_refresh_register.test.js` holds the three modes apart: the statement tree cannot swallow the
+registration, `-Show` prints the definition and registers nothing, and `-Test` runs the slot's own `-WhatIf` pass
+against a live listener with zero posts. `npm run test:orchestrator-schedule` is now 9 of 9 (`master_orchestrator_schedule`
++ the five slot cases + these three), and the fix is on `main` as `0dd3d958`.
+
+The task is then registered from the host with `-NoStart`, because the register script's default `Start-ScheduledTask`
+would have spent a real orchestrator run this morning when the day already had a green one at 06:06. The scheduler now
+holds: `powershell.exe -File "C:\live-trading\runtime\scripts\trigger-orchestrator-refresh.ps1" -ControlPath
+"C:\live-trading\runtime\data\workflow-control.json" -Log "C:\live-trading\logs\refresh-0600.log" -MaxAttempts 3
+-RetryDelaySeconds 120 -TimeoutSeconds 900`, as `SYSTEM` / `ServiceAccount` / `Highest`, daily at 06:00 with
+`StartWhenAvailable`, `IgnoreNew` and a 61-minute limit; `next = 2026-11-06T06:00:00Z`, `LastTaskResult = 267011`
+(`0x41303`, "has not run yet"). The SYSTEM context was proved without spending a run: a temporary task with the same
+principal ran the slot with `-WhatIf` and wrote its output to `C:\live-trading\logs\refresh-system-probe.log` - control
+file read, `enabled=True`, webhook named - and the temporary task was removed again. The old one-line script stays on
+disk at `C:\live-trading\logs\trigger-refresh-0600.ps1` as history and is no longer referenced by any task.
+
+Still open: the first real 06:00 run under the new task (2026-11-06), `Retry On Fail` on the orchestrator's
+`USD Collector` node in n8n (the flow in this repository is a snapshot, not a deployment), and a way for the daily
+check to read which code the loop is running - the heartbeat names `host.computer` and `checkout` but not a commit or a
+script hash, so today's deploy is provable only by the file's mtime and its blob hash on the host.
+
+

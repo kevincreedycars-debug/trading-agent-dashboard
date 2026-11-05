@@ -246,14 +246,10 @@ Two things were read wrong before this page was written, and both are worth keep
 
 ### What is not proved, and what is left
 
-- **The host still runs the old slot.** `LiveTradingRefresh0600` points at
-  `C:\live-trading\logs\trigger-refresh-0600.ps1`, which is not in this repository and does no read-back. The new
-  task has **not** been registered on the host: that needs the host's key, which is not on the machine this was
-  written from. Until it is run there, item 2 and 3 are a script and a registration script, not a change on the host.
-  The sequence, once at the host: copy `scripts\trigger-orchestrator-refresh.ps1` to
-  `C:\live-trading\runtime\scripts\`, copy the repository's `data\workflow-control.json` beside it, run
-  `register-orchestrator-refresh-task.ps1 -Test`, then without `-Test`, then read `logs\refresh-0600.log` after the
-  next 06:00.
+- **The host ran the old slot until 2026-11-05.** `LiveTradingRefresh0600` pointed at
+  `C:\live-trading\logs\trigger-refresh-0600.ps1`, which is not in this repository and does no read-back.
+  Section 12 below is the day it was replaced; the short version is that the registration script could not register
+  anything, so "not registered yet" was not a missing step but a broken command that reported success.
 - **The 502 is not fixed here.** It came from inside n8n, at the `USD Collector` step, whose `executeWorkflow` node
   in `exports/master_orchestrator.json` carries no `retryOnFail`. The durable fix is `Retry On Fail` (2 tries, a few
   seconds apart) on that node in the n8n UI — the export in this repository is a snapshot, not a deployment. The
@@ -266,5 +262,61 @@ Two things were read wrong before this page was written, and both are worth keep
 - **No automatic retry has been observed yet.** The honest statement until a `schedule` run reaches
   `decision=trigger` and calls the webhook, or the host's new task logs `"action":"retry"` followed by
   `"action":"success"`, is: the guard now reads the right file and the slot script retries against a local listener.
+
+
+## 12. 2026-11-05: the slot is on the clock, and the command that put it there had been a no-op
+
+**What the host actually held.** `LiveTradingRefresh0600` still ran `C:\live-trading\logs\trigger-refresh-0600.ps1`
+- the nineteen-line POST with no read-back that section 204 is about - as `Administrator` / `Interactive`, and its log
+carried three lines of `posted status=200`, one per morning, including 2026-11-04's run that failed at `USD Collector`.
+Nothing in that log could have said so.
+
+**Why the replacement never landed, and it is not the missing key.** `scripts/register-orchestrator-refresh-task.ps1`
+opened `if ($Test) {` and never closed it. Every statement after the dry-run branch - `$arguments`, the action, the
+SYSTEM principal, the trigger, the settings, the `Register-ScheduledTask` call and the read-back that prints
+`task_state` - sat inside that branch, whose first statement is `return`. So `-Test` worked, `-Show` printed nothing,
+and a plain run printed nothing, exited 0 and registered nothing. The command looked like it succeeded because it did
+succeed at doing nothing. This is why the host's carry-over said "the new task has not been registered there": the
+registration had been attempted with a tool that cannot register.
+
+The PowerShell AST was what showed it - `if ($Test)` spanning lines 62-130, the registration call at 111 - and the
+missing brace is now closed (guard 62-68, call at 111 outside it). `tests/orchestrator_refresh_register.test.js` keeps
+the three modes apart so a re-edit cannot swallow them again:
+
+- the statement tree: the `$Test` guard ends before `Register-ScheduledTask`, and that call is not a descendant of the
+  guard (this is the exact shape of the bug, asserted rather than read);
+- `-Show` prints the definition - task name, trigger path, SYSTEM principal, `daily at 06:00`, `StartWhenAvailable,
+  IgnoreNew` - and leaves the scheduler alone;
+- `-Test` runs the slot's own `-WhatIf` pass against a live local listener and posts nothing.
+
+`npm run test:orchestrator-schedule` now runs these three with `master_orchestrator_schedule` and the slot's five
+cases, 9 of 9. The fix is on `main` as `0dd3d958`.
+
+**What the host holds now.** Registered from the host itself on 2026-11-05T09:56:23Z, with `-NoStart` because the
+script's default `Start-ScheduledTask` would have spent a real orchestrator run when the day already had a green one at
+06:06:54Z:
+
+| Field | Value |
+| --- | --- |
+| action | `powershell.exe -File "C:\live-trading\runtime\scripts\trigger-orchestrator-refresh.ps1" -ControlPath "C:\live-trading\runtime\data\workflow-control.json" -Log "C:\live-trading\logs\refresh-0600.log" -MaxAttempts 3 -RetryDelaySeconds 120 -TimeoutSeconds 900` |
+| principal | `SYSTEM` / `ServiceAccount` / `Highest` |
+| trigger | daily at `06:00` host clock (UTC), `StartWhenAvailable`, `IgnoreNew`, 61-minute limit |
+| next | `2026-11-06T06:00:00Z` |
+| last result | `267011` (`0x41303`, has not run yet) |
+
+The two files were taken from `main` by the object store (`git checkout origin/main -- <path>`), so the host's copies
+are byte-identical to the committed ones, and `C:\live-trading\runtime\data\workflow-control.json` already matched
+`main` (`enabled = true`, the n8n webhook named).
+
+**The SYSTEM context was proved without spending a run.** A temporary task with the same principal ran the slot with
+`-WhatIf` and redirected its output to `C:\live-trading\logs\refresh-system-probe.log`; it read the control file,
+printed `enabled=True` and the webhook, and the temporary task was then removed. That is the one thing `-Test` under
+`Administrator` could not answer.
+
+**What is left.** The first real run under the new task is 2026-11-06 06:00Z - until it happens, the task's
+`LastTaskResult` is the only claim, and `0x0` plus a `"action":"success"` line in `refresh-0600.log` is what ends the
+question. `Retry On Fail` on the orchestrator's `USD Collector` node is still unset in n8n (section 247's second
+bullet). The old script stays at `C:\live-trading\logs\trigger-refresh-0600.ps1` as history and is referenced by
+nothing.
 
 
