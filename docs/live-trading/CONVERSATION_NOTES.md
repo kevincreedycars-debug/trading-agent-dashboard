@@ -3140,12 +3140,15 @@ silent case), with `npm test` at 778 tests and 776 passing, the same two failure
 Live, and the one gap left. The published page draws `f43ac5ea318f` on the ftmo-1 card, between the trader's host
 and the position count, with both whole digests and the checkout label in the tooltip; a headless read of the live
 site confirmed the row and the tooltip, and the artifact behind it states `git_blob = f43ac5ea...` and
-`sha256 = b6422a72...`. The published lanes document still carries `code: null` in its `trader` row, because the
-publisher's own checkout (`D:\trading-agent-dashboard-codex\.local\worktrees\live-trading`, branch
-`workers/live-trading-20260929`, `2901de9a`) predates this commit: the card does not wait for it, since the
-artifact states the block, but the fallback row stays silent until that checkout is brought up to `main`, and that
-checkout also holds the only uncommitted snapshot in the tree, so moving it is a publish decision rather than a
-side effect of this change.
+`sha256 = b6422a72...`. The published lanes document still carried `code: null` in its `trader` row at 22:10:57,
+and the reason is a clock, not a deploy: the publisher runs on the host as `LiveTradingPublishLanes019` from
+`C:\live-trading\publisher`, resets that checkout to `origin/main` on every run, and had already reset to
+`12905b73` - so the script on disk there is this commit's (`6d629eec`), while the run that wrote that document had
+loaded the previous script before the reset. The next publish settled it at `22:30:57` (`a1baffba`): that document
+states `trader.code.git_blob = f43ac5ea...`, the same blob the card shows, so both paths name the version now and
+nothing had to be deployed. An earlier note in this entry blamed the local `workers/live-trading-20260929` worktree
+instead, which was wrong: those three local tasks have been disabled since 2026-11-03 and that worktree's feed log
+stops at `2026-11-03T13:10:20Z`, so it publishes nothing and the host does all of it.
 
 What this still does not prove is that the code is correct, only which code ran, and the trail itself is unproved
 until a position crosses three times its risk - the position placed at `21:31:30Z` is the first one that will. The
