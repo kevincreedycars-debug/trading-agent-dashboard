@@ -65,6 +65,7 @@ if ($Test) {
   Write-Output "--- one pass with -WhatIf (posts nothing, waits on nothing)"
   & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Trigger -ControlPath $ControlPath -WhatIf
   return
+}
 
 $arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Trigger`"" +
   " -ControlPath `"$ControlPath`" -Log `"$Log`"" +
@@ -125,6 +126,4 @@ if (-not $NoStart) {
   if (Test-Path -LiteralPath $Log) {
     Write-Output "last_log_line  = $((Get-Content -LiteralPath $Log -Tail 1))"
   }
-}
-
 }
