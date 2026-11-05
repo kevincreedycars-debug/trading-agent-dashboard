@@ -50,7 +50,8 @@ const {
   main,
   TRADE_DAY_TIMEZONE,
   tradeDayKey,
-  placementsToday
+  placementsToday,
+  codeIdentity
 } = require("../scripts/run-live-trading-trader.js");
 
 const repoRoot = path.join(__dirname, "..");
@@ -2476,6 +2477,52 @@ test("the heartbeat names the host that wrote it and the cadence it sits on", ()
     false,
     "the heartbeat must not publish an absolute path"
   );
+});
+
+// A heartbeat that says a loop is alive says nothing about which loop. The host's trader was replaced by hand on
+// 2026-11-05 and no record could have shown it: the checkout's HEAD still named the 2026-11-02 commit. The digest
+// is the loop's own file, so the version travels in the record that travels with the lane, and any machine can
+// recompute it from the file without trusting this process's word for it.
+test("the heartbeat names the code that wrote it, and the checkout's own label beside it", () => {
+  const dir = tempDir();
+  const spawn = fakeSpawn({ status: { positions: [], orders: [], history: [] } });
+  runOnce(optionsFor(dir, {}), { spawn, now: () => NOW });
+  const status = JSON.parse(fs.readFileSync(path.join(dir, "trader-status.json"), "utf8"));
+  const ownBytes = fs.readFileSync(path.join(repoRoot, "scripts", "run-live-trading-trader.js"));
+  const expected = crypto.createHash("sha256").update(ownBytes).digest("hex");
+
+  assert.equal(status.code.script, "scripts/run-live-trading-trader.js", "the block names the file it hashes");
+  assert.match(status.code.sha256, /^[0-9a-f]{64}$/, "the digest is a plain sha256 anybody can recompute");
+  assert.equal(status.code.sha256, expected, "the digest is of the file that is on disk, not of a fixture");
+  assert.equal(
+    JSON.stringify(status.code).includes(repoRoot),
+    false,
+    "the block names the file relatively, so the heartbeat does not publish an absolute path"
+  );
+  const head = spawnSync("git", ["-C", repoRoot, "rev-parse", "--short", "HEAD"], { encoding: "utf8" });
+  const expectedHead = head.status === 0 ? String(head.stdout).trim() : null;
+  assert.equal(
+    status.code.checkout_head,
+    expectedHead,
+    "the checkout's HEAD is carried as a label, and is null rather than invented where git cannot answer"
+  );
+});
+
+// The digest is taken from the bytes handed to it, so the case can use a file with a known answer rather than
+// waiting for the loop's own file to change. "abc" is the published sha256 of those three bytes.
+test("the code digest is of the bytes it is given, and a git that cannot run leaves the label null", () => {
+  const dir = tempDir();
+  const script = path.join(dir, "run-live-trading-trader.js");
+  fs.writeFileSync(script, "abc");
+  const failing = () => ({ error: new Error("git is not installed"), status: null, stdout: "", stderr: "" });
+
+  const identity = codeIdentity({ scriptPath: script, repoRoot: dir, exec: failing });
+
+  assert.equal(identity.sha256, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+  assert.equal(identity.checkout_head, null, "a label git could not produce is null, never a guess");
+  assert.equal(identity.script, "scripts/run-live-trading-trader.js");
+  const missing = codeIdentity({ scriptPath: path.join(dir, "absent.js"), repoRoot: dir, exec: failing });
+  assert.equal(missing.sha256, null, "a file that cannot be read is null rather than an invented digest");
 });
 
 // A self test that can arm is not a test, and a self test that runs against the live state spends the signal

@@ -105,6 +105,7 @@
 // tmp/live-trading-orders.log, and what has already been placed in tmp/live-trading-trader-state.json, so
 // the next run - or the next reader - can tell what this path has done without trusting this file.
 const { spawnSync } = require("node:child_process");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -136,6 +137,35 @@ const HOST_IDENTITY = Object.freeze({
   platform: process.platform,
   checkout: path.basename(REPO_ROOT)
 });
+// The code a heartbeat was written by, so a daily check reads the version off the record instead of asking
+// somebody to open the host and look. It is this loop's own file rather than the checkout's HEAD, because the
+// deployment is a one-file copy into a pinned checkout: on 2026-11-05 that checkout's HEAD was the 2026-11-02
+// commit while the trader in it had been replaced twice, so HEAD named neither the code that ran nor the code
+// that was meant to. The digest is a plain sha256 of the bytes on disk, which any machine can recompute -
+// Get-FileHash on Windows, sha256sum elsewhere - without a git repository or a matching history. It is read once
+// per process, because what a run may report is the code it loaded rather than whatever was copied over the file
+// after it started. `checkout_head` is carried beside the digest only as the checkout's own label, and is null
+// where git cannot be run, which is not an error: the digest is the part that proves what ran.
+const CODE_SCRIPT_RELATIVE = "scripts/run-live-trading-trader.js";
+function codeIdentity({ scriptPath = __filename, repoRoot = REPO_ROOT, exec = spawnSync } = {}) {
+  let sha256 = null;
+  try {
+    sha256 = crypto.createHash("sha256").update(fs.readFileSync(scriptPath)).digest("hex");
+  } catch {
+    sha256 = null;
+  }
+  const head = feedPublisher.git(["-C", repoRoot, "rev-parse", "--short", "HEAD"], { exec });
+  return {
+    script: CODE_SCRIPT_RELATIVE,
+    sha256,
+    checkout_head: head.ok && head.stdout ? head.stdout : null
+  };
+}
+let codeIdentityOnce = null;
+function currentCodeIdentity() {
+  if (codeIdentityOnce === null) codeIdentityOnce = codeIdentity();
+  return codeIdentityOnce;
+}
 const ORDER_TOOL_RELATIVE = "tools/mt5-bridge/live-trading-order.py";
 // The calls and the ladder come from the published checkout - the bytes the published page serves - and that
 // path is resolved by the feed publisher's own helper, so one checkout is read by both.
@@ -1867,6 +1897,9 @@ function traderStatus(record, { nowMs } = {}) {
     // fresh and on which host - two hosts can hold the same lane during a migration, and the older heartbeat
     // must never be read as the newer one running.
     host: HOST_IDENTITY,
+    // The code that wrote this run: the loop's own digest, so a daily check can say which build is on the host
+    // rather than inferring it from a file's timestamp.
+    code: currentCodeIdentity(),
     expected_interval_seconds: record?.interval_seconds ?? null,
     at_utc: at,
     written_at_utc: new Date(Number.isFinite(nowMs) ? nowMs : Date.now()).toISOString(),
@@ -2608,6 +2641,8 @@ module.exports = {
   TRAIL_BEHIND_R,
   ORDER_MAGIC,
   COMMENT_PREFIX,
+  CODE_SCRIPT_RELATIVE,
+  codeIdentity,
   USAGE,
   UsageError,
   parseArgs,

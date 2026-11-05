@@ -154,7 +154,15 @@ async function checkLane(lane, options, deps) {
     notes: [],
     identity: { expected: lane?.account_login_masked ?? null, served: null, matched: null },
     feed: { age_seconds: null, window_seconds: null },
-    heartbeat: { declared: Boolean(lane?.trader_status), age_seconds: null, armed: null, status: null }
+    heartbeat: {
+      declared: Boolean(lane?.trader_status),
+      age_seconds: null,
+      armed: null,
+      status: null,
+      // Which build wrote the heartbeat. A reader can compare the digest with the script it expects without
+      // opening the host, which is the difference between "the loop is alive" and "the loop is the one we think".
+      code: { script: null, sha256: null, checkout_head: null }
+    }
   };
   if (!enabled) {
     row.status = "disabled";
@@ -212,6 +220,18 @@ async function checkLane(lane, options, deps) {
       row.heartbeat.age_seconds = ageSecondsOf(status?.written_at_utc || status?.at_utc, nowMs);
       row.heartbeat.armed = status?.armed === true;
       row.heartbeat.status = status?.status ?? null;
+      // The heartbeat's own account of the code that wrote it. It is reported rather than judged: this check
+      // does not know which script a host should be running, and a digest it cannot compare is still evidence for
+      // whoever reads the report. A heartbeat that states no code block (any written before the block existed)
+      // leaves these null instead of raising a problem, because a loop that is alive is not made broken by an
+      // older heartbeat.
+      row.heartbeat.code = {
+        script: typeof status?.code?.script === "string" ? status.code.script : null,
+        sha256: /^[0-9a-f]{64}$/.test(status?.code?.sha256 || "") ? status.code.sha256 : null,
+        checkout_head: /^[0-9a-f]{7,40}$/.test(status?.code?.checkout_head || "")
+          ? status.code.checkout_head
+          : null
+      };
       if (status?.lane && status.lane !== row.id) {
         row.problems.push(`the heartbeat names lane ${status.lane}, where this lane is ${row.id}`);
       }
@@ -306,6 +326,11 @@ async function main(argv = process.argv.slice(2), deps = {}) {
             ? `heartbeat ${row.heartbeat.age_seconds === null ? "unreadable" : `${row.heartbeat.age_seconds}s`}, ${row.heartbeat.armed ? "armed" : "not armed"}`
             : "heartbeat not declared"
         );
+        // The build, abbreviated to twelve characters: long enough to compare two digests by eye, short enough
+        // to keep the line one line. The report's JSON carries the whole digest.
+        if (row.heartbeat.declared) {
+          parts.push(`code ${row.heartbeat.code.sha256 ? row.heartbeat.code.sha256.slice(0, 12) : "unknown"}`);
+        }
       }
       process.stdout.write(`${parts.join(" | ")}\n`);
       for (const problem of row.problems) process.stdout.write(`    problem: ${problem}\n`);
