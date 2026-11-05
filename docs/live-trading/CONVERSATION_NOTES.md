@@ -3137,6 +3137,16 @@ small lie in the place a reader goes to check the build. Tests: three in `tests/
 heartbeat leaves it null) and one in `tests/live_trading_accounts.browser.test.js` (the row, its tooltip, and the
 silent case), with `npm test` at 778 tests and 776 passing, the same two failures.
 
+Live, and the one gap left. The published page draws `f43ac5ea318f` on the ftmo-1 card, between the trader's host
+and the position count, with both whole digests and the checkout label in the tooltip; a headless read of the live
+site confirmed the row and the tooltip, and the artifact behind it states `git_blob = f43ac5ea...` and
+`sha256 = b6422a72...`. The published lanes document still carries `code: null` in its `trader` row, because the
+publisher's own checkout (`D:\trading-agent-dashboard-codex\.local\worktrees\live-trading`, branch
+`workers/live-trading-20260929`, `2901de9a`) predates this commit: the card does not wait for it, since the
+artifact states the block, but the fallback row stays silent until that checkout is brought up to `main`, and that
+checkout also holds the only uncommitted snapshot in the tree, so moving it is a publish decision rather than a
+side effect of this change.
+
 What this still does not prove is that the code is correct, only which code ran, and the trail itself is unproved
 until a position crosses three times its risk - the position placed at `21:31:30Z` is the first one that will. The
 trap for the next reader is the one worth writing down: a `sha256` compared across two machines proves nothing on
