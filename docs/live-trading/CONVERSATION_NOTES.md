@@ -3102,13 +3102,21 @@ tracked path and a second implementation of the framing would be another thing t
 per lane: the blob's first twelve characters in the one-line report, all four fields in `--json`, and nulls rather
 than a new problem when a heartbeat predates the block, so an older record is not made a failure by a newer field.
 
-Live proof: the first tick after the copy (`2026-11-05T21:41:30Z`) wrote `code.sha256 =
-35a5fd70514d2d410a968283cda6cad2b72973852aca8db443c6f541ee8dee2a` with `checkout_head = c5abd0ac` - a file from
-`main` inside a checkout pinned to the 2026-11-02 commit, which is exactly the drift the field exists to show, and
-the same sha256 `Get-FileHash` gives for the file on the host. The blob arrived in the following commit
-(`8588970c`), is deployed as `40cd6480` and equals `origin/main`'s; the host's copy is byte-identical to the
-committed one (`git -C C:\live-trading\runtime diff origin/main -- scripts/run-live-trading-trader.js` prints
-nothing).
+Live proof, and a flaw the first live tick exposed. The tick that started at 21:36:01 wrote its heartbeat at
+21:41:30 with `code.sha256 = 35a5fd70...dee2a` and `checkout_head = c5abd0ac` - a file from `main` inside a
+checkout pinned to the 2026-11-02 commit, which is exactly the drift the field exists to show. But it wrote no
+`git_blob`, although the file it hashed had one: the run had loaded its code at 21:36:01, the copy that landed at
+21:40:06 replaced the file while it waited out its settle window, and the identity was read lazily at the moment of
+writing. So the record named a build newer than the code that ran - the one thing the block exists to rule out.
+`f20582b4` takes it at load instead, as a frozen constant, so a run that waits names the code it loaded; the note
+in the source says why, with these timestamps in it, because the next reader will otherwise "optimise" it back.
+
+Deployed as `f43ac5ea`, the 21:46:30Z heartbeat states the whole block - `sha256 = b6422a72...`,
+`git_blob = f43ac5ea...`, `checkout_head = c5abd0ac` - and the blob is `origin/main`'s for that file, which is the
+comparison the field is for. The host's copy is byte-identical to the committed one (`git -C C:\live-trading\runtime
+diff origin/main -- scripts/run-live-trading-trader.js` prints nothing), the run wrote `nothing_to_place` with
+`armed = true` and `LastTaskResult` 0, and `npm test` is 775 tests, 773 passing, the two failures being the chart
+line-count and Research Library browser cases that fail on `main` without this change.
 
 Tests: `tests/live_trading_trader.test.js` recomputes both digests from the file on disk and asserts the block
 publishes no absolute path, and checks the digests against git's own answer for three bytes the case chose, with

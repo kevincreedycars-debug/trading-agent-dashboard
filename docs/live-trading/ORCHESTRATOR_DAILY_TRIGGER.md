@@ -347,10 +347,14 @@ heartbeat predates the block. It reports rather than judges, because it holds no
 be running; saying "the loop is alive" and "the loop is the one we think" are different answers and it now prints
 the second one for a human to read.
 
-Live proof of the shape, `2026-11-05T21:41:30Z`: the first tick after the copy wrote `code.sha256 =
-35a5fd70...dee2a` with `checkout_head = c5abd0ac`, i.e. a file from `main` inside a checkout pinned to the
-2026-11-02 commit. That mismatch is the point of the field: it can now be seen from the record instead of inferred.
-The blob (`git_blob = 40cd6480...`) followed in `8588970c` and equals `origin/main`'s copy.
+Live proof, `2026-11-05T21:46:30Z`: the heartbeat states `sha256 = b6422a72...`, `git_blob = f43ac5ea...` and
+`checkout_head = c5abd0ac` - the blob being `origin/main`'s for that file, which is the comparison the field
+exists for, and HEAD being the pinned 2026-11-02 commit, which is the drift it exists to show.
+
+One correction the first live tick forced, worth keeping: the identity is taken when the module loads, not when the
+heartbeat is written. The earlier shape read it lazily, and the 21:41:30 record named the file that was on disk at
+21:41:30 while the code that ran was the copy loaded at 21:36:01 - a record of a build that never ran. It is a
+frozen constant now (`f20582b4`), so a run that waits out its settle window names the code it loaded.
 
 What this does not prove: that the code is correct, only which code ran.
 
