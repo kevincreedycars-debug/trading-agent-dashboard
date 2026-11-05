@@ -2491,11 +2491,9 @@ test("the heartbeat names the code that wrote it, and the checkout's own label b
   const status = JSON.parse(fs.readFileSync(path.join(dir, "trader-status.json"), "utf8"));
   const ownBytes = fs.readFileSync(path.join(repoRoot, "scripts", "run-live-trading-trader.js"));
   const expected = crypto.createHash("sha256").update(ownBytes).digest("hex");
-  // What git itself says about the same content: written to a temp file with its line endings normalised, so the
-  // answer is the blob a commit would carry, and the comparison does not depend on whether the tree is mid-edit.
-  const lfCopy = path.join(dir, "normalised.js");
-  fs.writeFileSync(lfCopy, ownBytes.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
-  const expectedBlob = spawnSync("git", ["hash-object", lfCopy], { encoding: "utf8" });
+  const expectedBlob = spawnSync("git", ["-C", repoRoot, "hash-object", "scripts/run-live-trading-trader.js"], {
+    encoding: "utf8"
+  });
 
   assert.equal(status.code.script, "scripts/run-live-trading-trader.js", "the block names the file it hashes");
   assert.match(status.code.sha256, /^[0-9a-f]{64}$/, "the digest is a plain sha256 anybody can recompute");
@@ -2503,7 +2501,7 @@ test("the heartbeat names the code that wrote it, and the checkout's own label b
   assert.equal(
     status.code.git_blob,
     expectedBlob.status === 0 ? String(expectedBlob.stdout).trim() : null,
-    "the blob is the file as git hashes it, which is the value a commit's own tree states"
+    "the blob is git's own id for the file, which is the value a commit's tree states"
   );
   assert.equal(
     JSON.stringify(status.code).includes(repoRoot),
@@ -2521,8 +2519,8 @@ test("the heartbeat names the code that wrote it, and the checkout's own label b
 
 // The digest is taken from the bytes handed to it, so the case can use a file with a known answer rather than
 // waiting for the loop's own file to change. "abc" is the published sha256 of those three bytes, its git blob is
-// `f2ba8f84`, and the blob must not move when the same text is written with Windows line endings.
-test("the code digests are of the bytes it is given, and the blob ignores line endings", () => {
+// `f2ba8f84`, and a git that cannot be run leaves both the blob and the label null rather than guessing.
+test("the code digests are what a reader would compute, and a git that cannot run leaves nulls", () => {
   const dir = tempDir();
   const script = path.join(dir, "run-live-trading-trader.js");
   fs.writeFileSync(script, "abc");
@@ -2531,16 +2529,15 @@ test("the code digests are of the bytes it is given, and the blob ignores line e
   const identity = codeIdentity({ scriptPath: script, repoRoot: dir, exec: failing });
 
   assert.equal(identity.sha256, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
-  assert.equal(identity.git_blob, "f2ba8f84ab5c1bce84a7b441cb1959cfc7093b7f", "the blob is the id git would give it");
+  assert.equal(identity.git_blob, null, "the blob comes from git, so no git means no blob");
   assert.equal(identity.checkout_head, null, "a label git could not produce is null, never a guess");
   assert.equal(identity.script, "scripts/run-live-trading-trader.js");
 
-  fs.writeFileSync(script, "a\r\nb\r\n");
-  const crlf = codeIdentity({ scriptPath: script, repoRoot: dir, exec: failing });
-  fs.writeFileSync(script, "a\nb\n");
-  const lf = codeIdentity({ scriptPath: script, repoRoot: dir, exec: failing });
-  assert.equal(crlf.git_blob, lf.git_blob, "the same text on two machines is one blob, whatever the line endings");
-  assert.notEqual(crlf.sha256, lf.sha256, "the on-disk bytes are a different number where line endings differ");
+  // The same bytes, with git actually asked: this is the loop's own command against a file whose content the case
+  // chose, so the value is git's rather than the loop's reading of git.
+  const real = codeIdentity({ scriptPath: script, repoRoot });
+  assert.equal(real.git_blob, "f2ba8f84ab5c1bce84a7b441cb1959cfc7093b7f", "git's own id for the three bytes");
+  assert.match(real.checkout_head, /^[0-9a-f]{7,40}$/, "the checkout's short HEAD is reported beside it");
 
   const missing = codeIdentity({ scriptPath: path.join(dir, "absent.js"), repoRoot: dir, exec: failing });
   assert.equal(missing.sha256, null, "a file that cannot be read is null rather than an invented digest");

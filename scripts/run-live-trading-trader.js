@@ -143,47 +143,38 @@ const HOST_IDENTITY = Object.freeze({
 // commit while the trader in it had been replaced by hand, so HEAD named neither the code that ran nor the code
 // that was meant to.
 //
-// Two digests, because one of them cannot answer the question on its own. `git_blob` is the file as git would
-// hash it - the same "blob <length>\0" framing, with line endings normalised to LF first - which is the value
-// `git rev-parse origin/main:scripts/run-live-trading-trader.js` states from any checkout. That is the version,
-// and it is the same number on every machine. `sha256` is the bytes this process actually read off the disk,
+// Two digests, because one of them cannot answer the question on its own. `git_blob` is the file as git hashes
+// it, which is the value `git rev-parse origin/main:scripts/run-live-trading-trader.js` states from any checkout:
+// that is the version, and it is the same number on every machine, because git normalises the line endings of a
+// tracked file to the ones the repository stores. `sha256` is the bytes this process actually read off the disk,
 // which is what "the file that ran" means, and it is not the same number everywhere: a checkout that converts
 // line endings holds CRLF where the blob holds LF, so this PC's file and the host's file can be the same version
-// and still digest differently. The blob is framed here rather than asked of `git hash-object`, because
-// hash-object reads the working bytes as they lie on disk and answers with a hash no commit contains. A reader
-// comparing machines uses the blob; a reader asking what sat on this disk uses the sha256. Both are read once per
-// process, because what a run may report is the code it loaded rather than whatever was copied over the file
-// after it started. `checkout_head` is carried beside them only as the checkout's own label, and is null where
-// git cannot be run, which is not an error.
+// and still digest differently. A reader comparing machines uses the blob; a reader asking what sat on this disk
+// uses the sha256. Both are read once per process, because what a run may report is the code it loaded rather
+// than whatever was copied over the file after it started. `checkout_head` is carried beside them only as the
+// checkout's own label, and is null where git cannot be run, which is not an error.
 const CODE_SCRIPT_RELATIVE = "scripts/run-live-trading-trader.js";
-function gitBlobHash(bytes) {
-  const normalised = Buffer.from(bytes.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
-  return crypto
-    .createHash("sha1")
-    .update(`blob ${normalised.length}\0`, "latin1")
-    .update(normalised)
-    .digest("hex");
-}
 function codeIdentity({ scriptPath = __filename, repoRoot = REPO_ROOT, exec = spawnSync } = {}) {
-  let bytes = null;
+  let sha256 = null;
   try {
-    bytes = fs.readFileSync(scriptPath);
+    sha256 = crypto.createHash("sha256").update(fs.readFileSync(scriptPath)).digest("hex");
   } catch {
-    bytes = null;
+    sha256 = null;
   }
+  const blob = feedPublisher.git(["-C", repoRoot, "hash-object", scriptPath], { exec });
   const head = feedPublisher.git(["-C", repoRoot, "rev-parse", "--short", "HEAD"], { exec });
   return {
     script: CODE_SCRIPT_RELATIVE,
-    sha256: bytes ? crypto.createHash("sha256").update(bytes).digest("hex") : null,
-    git_blob: bytes ? gitBlobHash(bytes) : null,
+    sha256,
+    git_blob: blob.ok && /^[0-9a-f]{40,64}$/.test(blob.stdout) ? blob.stdout : null,
     checkout_head: head.ok && head.stdout ? head.stdout : null
   };
 }
-let codeIdentityOnce = null;
-function currentCodeIdentity() {
-  if (codeIdentityOnce === null) codeIdentityOnce = codeIdentity();
-  return codeIdentityOnce;
-}
+// Read once, at load, and not at the first heartbeat: a run that waits out the settle window would otherwise name
+// whatever was copied over the file while it waited. That is not a hypothetical - on 2026-11-05 a tick started at
+// 21:40:01, the file was replaced at 21:40:06, and a lazy read at 21:41:30 named the newer file while the older
+// code was the code that ran. The block exists to say what ran, so it is taken at the moment the module loads.
+const CODE_IDENTITY = Object.freeze(codeIdentity());
 const ORDER_TOOL_RELATIVE = "tools/mt5-bridge/live-trading-order.py";
 // The calls and the ladder come from the published checkout - the bytes the published page serves - and that
 // path is resolved by the feed publisher's own helper, so one checkout is read by both.
@@ -1915,9 +1906,9 @@ function traderStatus(record, { nowMs } = {}) {
     // fresh and on which host - two hosts can hold the same lane during a migration, and the older heartbeat
     // must never be read as the newer one running.
     host: HOST_IDENTITY,
-    // The code that wrote this run: the loop's own digest, so a daily check can say which build is on the host
+    // The code that wrote this run: the loop's own digests, so a daily check can say which build is on the host
     // rather than inferring it from a file's timestamp.
-    code: currentCodeIdentity(),
+    code: CODE_IDENTITY,
     expected_interval_seconds: record?.interval_seconds ?? null,
     at_utc: at,
     written_at_utc: new Date(Number.isFinite(nowMs) ? nowMs : Date.now()).toISOString(),
@@ -2661,7 +2652,6 @@ module.exports = {
   COMMENT_PREFIX,
   CODE_SCRIPT_RELATIVE,
   codeIdentity,
-  gitBlobHash,
   USAGE,
   UsageError,
   parseArgs,

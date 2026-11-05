@@ -319,4 +319,39 @@ question. `Retry On Fail` on the orchestrator's `USD Collector` node is still un
 bullet). The old script stays at `C:\live-trading\logs\trigger-refresh-0600.ps1` as history and is referenced by
 nothing.
 
+## 13. 2026-11-05 (later): the heartbeat states which code ran
+
+The daily check could prove the snapshot was fresh, that the account was the one the lanes file names and that a
+loop was armed, and still not say which trader wrote the heartbeat. On 2026-11-05 that gap mattered: the host's
+trader had been replaced by hand and the only evidence of which build was running was a file's modification time
+and a blob hash somebody had to go and compute over SSH. `C:\live-trading\runtime` is a pinned checkout with no
+pull task, so drift there is invisible to everything the page publishes unless the heartbeat states it.
+
+`scripts/run-live-trading-trader.js` now writes a `code` block beside `host` on every tick:
+
+| Field | What it is | How a reader checks it |
+| --- | --- | --- |
+| `script` | `scripts/run-live-trading-trader.js`, relative so no absolute path is published | - |
+| `sha256` | the bytes that run read off that host's disk, once per process | `Get-FileHash` on the host, `sha256sum` elsewhere |
+| `git_blob` | the same file as git hashes it, line endings as the repository stores them | `git rev-parse origin/main:scripts/run-live-trading-trader.js` |
+| `checkout_head` | the pinned checkout's short HEAD, a label and not a version | `git -C C:\live-trading\runtime rev-parse --short HEAD` |
+
+Two digests because one cannot answer the question alone. Compare **blobs** when asking whether the host runs what
+`main` holds: git normalises a tracked file's line endings, so the blob is the same on every machine. The sha256 is
+the bytes on that disk and is not portable - this PC's checkout holds the trader as CRLF (`git ls-files --eol` says
+`w/crlf`, `i/lf`) - so it answers "what sat on this disk", not "which version is this".
+
+`scripts/check-live-trading-publication.js`, the monitor a daily check runs, reports it per lane: the blob's first
+twelve characters in the one-line report, all four fields in `--json`, and nulls rather than a problem when a
+heartbeat predates the block. It reports rather than judges, because it holds no list of which build a host should
+be running; saying "the loop is alive" and "the loop is the one we think" are different answers and it now prints
+the second one for a human to read.
+
+Live proof of the shape, `2026-11-05T21:41:30Z`: the first tick after the copy wrote `code.sha256 =
+35a5fd70...dee2a` with `checkout_head = c5abd0ac`, i.e. a file from `main` inside a checkout pinned to the
+2026-11-02 commit. That mismatch is the point of the field: it can now be seen from the record instead of inferred.
+The blob (`git_blob = 40cd6480...`) followed in `8588970c` and equals `origin/main`'s copy.
+
+What this does not prove: that the code is correct, only which code ran.
+
 

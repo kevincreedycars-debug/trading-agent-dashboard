@@ -3039,7 +3039,8 @@ documented one, and it is a one-file copy that the next five-minute tick carries
 `C:\live-trading\logs\run-live-trading-trader.js.bak-20261105094506`, then
 `git -C C:\live-trading\runtime checkout origin/main -- scripts/run-live-trading-trader.js` followed by
 `git reset` on that path so the index is left alone. The object store writes the bytes, so there is no encoding
-detour: the file's blob hash now equals `origin/main`'s (then `02662dd1`), `node --check` passes, and the constants in
+detour: the file's blob hash now equals `origin/main`'s (`37e5de0c`, checked again on the evening of 2026-11-05
+against both `0dd3d958` and `8e105f76`: the file has not moved since `bafaea61`), `node --check` passes, and the constants in
 the file the tick reads are `BREAKEVEN_R_MULTIPLE = 2` and `TRAIL_BEHIND_R = 3`. The `lib/` modules and
 `scripts/publish-live-trading-feed.js` are byte-identical between the pinned commit and `main`, which is what makes a
 single-file copy safe here. First proof: the 09:46:30Z and 09:51:30Z ticks both wrote `status = nothing_to_place`,
@@ -3070,8 +3071,54 @@ file read, `enabled=True`, webhook named - and the temporary task was removed ag
 disk at `C:\live-trading\logs\trigger-refresh-0600.ps1` as history and is no longer referenced by any task.
 
 Still open: the first real 06:00 run under the new task (2026-11-06), `Retry On Fail` on the orchestrator's
-`USD Collector` node in n8n (the flow in this repository is a snapshot, not a deployment), and a way for the daily
-check to read which code the loop is running - the heartbeat names `host.computer` and `checkout` but not a commit or a
-script hash, so today's deploy is provable only by the file's mtime and its blob hash on the host.
+`USD Collector` node in n8n (the flow in this repository is a snapshot, not a deployment), and - until the
+evening of the same day - a way for the daily check to read which code the loop is running: the heartbeat named
+`host.computer` and `checkout` but not a commit or a script hash, so the deploy above was provable only by the
+file's mtime and a blob hash somebody had to go and compute. The third part below closes that.
+
+**3. The heartbeat now states the code that wrote it.** The owner asked for the daily check to be able to prove
+which trader the VPS loop is actually running, rather than trusting a file's modification time and a manual hash
+comparison, and approved the change when the drift was shown: `C:\live-trading\runtime` is a pinned checkout with
+no pull task, so nothing in the published record could have shown that the trader in it had been replaced by hand.
+
+`scripts/run-live-trading-trader.js` now writes a `code` block beside `host` on every heartbeat:
+
+- `script` - `scripts/run-live-trading-trader.js`, relative, so the heartbeat still publishes no absolute path and
+  still names no operator profile;
+- `sha256` - the bytes that run read off that host's disk, taken once per process (a `--loop` process reports the
+  code it loaded, not whatever is copied over the file after it started);
+- `git_blob` - the same file as git hashes it, which is what
+  `git rev-parse origin/main:scripts/run-live-trading-trader.js` states from any checkout;
+- `checkout_head` - the pinned checkout's short HEAD, a label rather than a version.
+
+Two digests, because one cannot answer the question alone. Git hashes a tracked file with the line endings the
+repository stores, so the blob is the version and is the same number on every machine, while the sha256 is the
+bytes on that disk: a checkout that converts line endings holds CRLF where the blob holds LF, and this PC and the
+host can run the same version and digest differently (measured here: `w/crlf` on disk, `i/lf` in the tree for this
+very file). The blob is asked of `git hash-object` rather than reimplemented, because git already normalises a
+tracked path and a second implementation of the framing would be another thing to be wrong.
+
+`scripts/check-live-trading-publication.js` - the monitor that a phone check or a second machine runs - reports it
+per lane: the blob's first twelve characters in the one-line report, all four fields in `--json`, and nulls rather
+than a new problem when a heartbeat predates the block, so an older record is not made a failure by a newer field.
+
+Live proof: the first tick after the copy (`2026-11-05T21:41:30Z`) wrote `code.sha256 =
+35a5fd70514d2d410a968283cda6cad2b72973852aca8db443c6f541ee8dee2a` with `checkout_head = c5abd0ac` - a file from
+`main` inside a checkout pinned to the 2026-11-02 commit, which is exactly the drift the field exists to show, and
+the same sha256 `Get-FileHash` gives for the file on the host. The blob arrived in the following commit
+(`8588970c`), is deployed as `40cd6480` and equals `origin/main`'s; the host's copy is byte-identical to the
+committed one (`git -C C:\live-trading\runtime diff origin/main -- scripts/run-live-trading-trader.js` prints
+nothing).
+
+Tests: `tests/live_trading_trader.test.js` recomputes both digests from the file on disk and asserts the block
+publishes no absolute path, and checks the digests against git's own answer for three bytes the case chose, with
+git unable to run; `tests/live_trading_publication_monitor.test.js` proves the monitor passes a stated digest
+through and reports a non-digest as absent without turning it into a problem.
+
+What this still does not prove is that the code is correct, only which code ran, and the trail itself is unproved
+until a position crosses three times its risk - the position placed at `21:31:30Z` is the first one that will. The
+trap for the next reader is the one worth writing down: a `sha256` compared across two machines proves nothing on
+its own, because the same version can sit on one disk as CRLF and on the other as LF. Compare blobs, and use the
+sha256 only to ask what was on a named disk.
 
 
