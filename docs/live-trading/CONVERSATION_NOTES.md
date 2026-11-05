@@ -3125,6 +3125,18 @@ publishes no absolute path, and checks the digests against git's own answer for 
 git unable to run; `tests/live_trading_publication_monitor.test.js` proves the monitor passes a stated digest
 through and reports a non-digest as absent without turning it into a problem.
 
+On the page, and in the document the page falls back to. Each account card carries a `Trader code` row: the first
+twelve characters of the blob, with both whole digests and the checkout label in its tooltip and the
+`git rev-parse <rev>:scripts/run-live-trading-trader.js` sentence that says what to compare it with. A card whose
+heartbeat predates the block says `not stated by this heartbeat` in the muted tone rather than inventing a version
+or turning amber - an older record is not a broken loop, the same line the monitor takes. The lanes document
+carries the block too (`publish-live-trading-lanes.js` gained `liveTradingCodeBlock`), because the card's fallback
+when the artifact cannot be read is that row, and `not stated` about a record that did state its code would be a
+small lie in the place a reader goes to check the build. Tests: three in `tests/live_trading_lanes_publish.test.js`
+(the block travels, a block with no readable digest is dropped rather than published as a version, an older
+heartbeat leaves it null) and one in `tests/live_trading_accounts.browser.test.js` (the row, its tooltip, and the
+silent case), with `npm test` at 778 tests and 776 passing, the same two failures.
+
 What this still does not prove is that the code is correct, only which code ran, and the trail itself is unproved
 until a position crosses three times its risk - the position placed at `21:31:30Z` is the first one that will. The
 trap for the next reader is the one worth writing down: a `sha256` compared across two machines proves nothing on

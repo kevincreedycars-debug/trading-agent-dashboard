@@ -16139,6 +16139,28 @@ function liveTradingLaneEnabled(lane) {
   return !lane || lane.enabled !== false;
 }
 
+// The code a heartbeat says wrote it. `git_blob` is the file as git hashes it, which is the number
+// `git rev-parse <rev>:scripts/run-live-trading-trader.js` states from any checkout, so two machines holding the
+// same commit agree on it; the sha256 is the bytes on that host's disk, and a checkout that converts line endings
+// holds CRLF where the tree holds LF, so it does not travel. The row shows the head of the blob and leaves both
+// whole digests in its tooltip, because the point is to be able to compare one number and copy the other. A
+// heartbeat written before the block existed names no code, which is a fact the card states rather than an error
+// it raises: the loop behind that older record may still be running.
+function liveTradingHeartbeatCode(facts) {
+  const code = facts && typeof facts.code === "object" && facts.code ? facts.code : null;
+  if (!code) return null;
+  const blob = /^[0-9a-f]{40,64}$/.test(code.git_blob || "") ? code.git_blob : null;
+  const sha256 = /^[0-9a-f]{64}$/.test(code.sha256 || "") ? code.sha256 : null;
+  if (!blob && !sha256) return null;
+  return {
+    script: typeof code.script === "string" && code.script ? code.script : null,
+    blob,
+    sha256,
+    checkoutHead: /^[0-9a-f]{7,40}$/.test(code.checkout_head || "") ? code.checkout_head : null,
+    short: (blob || sha256).slice(0, 12)
+  };
+}
+
 // One heartbeat, from the artifact when this page could read it and from the lanes document when it could not.
 // The publisher copies the same facts into the lane's row, so a device holding an older commit still sees what
 // the loop last said instead of an empty card.
@@ -16160,6 +16182,7 @@ function liveTradingLaneHeartbeat(lane) {
       status: null,
       reason: null,
       host: null,
+      code: null,
       writtenAt: null,
       publishedAt: null
     };
@@ -16200,6 +16223,7 @@ function liveTradingLaneHeartbeat(lane) {
     host: typeof facts.host?.computer === "string"
       ? facts.host.computer
       : typeof facts.host === "string" ? facts.host : null,
+    code: liveTradingHeartbeatCode(facts),
     writtenAt,
     publishedAt,
     ageSeconds,
@@ -16214,8 +16238,8 @@ function liveTradingLaneHeartbeat(lane) {
   };
 }
 
-function liveTradingLaneRow(label, value, tone = "") {
-  return `<div class="live-trading-lane-row${tone ? ` is-${escapeHtml(tone)}` : ""}"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
+function liveTradingLaneRow(label, value, tone = "", title = "") {
+  return `<div class="live-trading-lane-row${tone ? ` is-${escapeHtml(tone)}` : ""}"><dt>${escapeHtml(label)}</dt><dd${title ? ` title="${escapeHtml(title)}"` : ""}>${escapeHtml(value)}</dd></div>`;
 }
 
 function liveTradingLaneCard(lane) {
@@ -16261,6 +16285,28 @@ function liveTradingLaneCard(lane) {
       ? `${liveTradingAgeLabel(snapshotAge)} - ${snapshot.generated_at_utc || "no time"}`
       : loadError ? "not readable" : "not published";
   const hostValue = !heartbeat.present ? "none" : heartbeat.host || "not recorded in this heartbeat";
+  // The version, as one short number a reader can compare at a glance, with both whole digests in the tooltip for
+  // the reader who wants to copy one into `git rev-parse`. Silence is stated rather than faked: a card with no
+  // heartbeat, and a heartbeat written before the code block existed, each say which of the two they are.
+  const codeValue = !heartbeat.present
+    ? "no heartbeat published"
+    : !heartbeat.code
+      ? "not stated by this heartbeat"
+      : heartbeat.code.short;
+  // The tooltip is where the whole digests live, and the sentence names the command that answers with the same
+  // blob from any checkout, so a reader can compare without being told how. The row itself stays one short number.
+  const codeParts = heartbeat.code
+    ? [
+        heartbeat.code.script ? `from ${heartbeat.code.script}` : null,
+        heartbeat.code.blob ? `git blob ${heartbeat.code.blob}` : null,
+        heartbeat.code.sha256 ? `sha256 on that host ${heartbeat.code.sha256}` : null,
+        heartbeat.code.checkoutHead ? `checkout ${heartbeat.code.checkoutHead}` : null
+      ].filter(Boolean)
+    : [];
+  const codePath = heartbeat.code?.script || "scripts/run-live-trading-trader.js";
+  const codeTitle = codeParts.length
+    ? `${codeParts.join(", ")}. Compare the blob with git rev-parse <rev>:${codePath} from any checkout; the sha256 is the bytes on the host's own disk, which another machine's checkout of the same version can answer differently.`
+    : "";
   const positions = snapshot
     ? String(account.positions_open ?? (Array.isArray(snapshot.positions) ? snapshot.positions.length : 0))
     : displayDash();
@@ -16301,7 +16347,8 @@ function liveTradingLaneCard(lane) {
     liveTradingLaneRow("Heartbeat", heartbeatValue, heartbeat.stale ? "stale" : ""),
     liveTradingLaneRow("Last result", resultValue),
     liveTradingLaneRow("Snapshot", snapshotValue, snapshot ? "" : "muted"),
-    liveTradingLaneRow("Trader host", hostValue, heartbeat.host ? "" : "muted")
+    liveTradingLaneRow("Trader host", hostValue, heartbeat.host ? "" : "muted"),
+    liveTradingLaneRow("Trader code", codeValue, heartbeat.code ? "" : "muted", codeTitle)
   ];
   if (enabled) rows.push(liveTradingLaneRow("Positions", positions));
 

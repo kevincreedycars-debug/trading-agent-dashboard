@@ -18,7 +18,17 @@ function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(repoRoot, relativePath), "utf8").replace(/^\uFEFF/, ""));
 }
 
-function heartbeat({ writtenAtMs, armed = true, status = "nothing_to_place", host = "PC-DESKTOP-A17" }) {
+// The code block the trader writes: a git blob that means the same commit everywhere git runs, and the sha256 of
+// the bytes on that host's disk. It is part of the ordinary heartbeat now, so the fixture carries it unless a test
+// asks for a record from before the block existed.
+const TRADER_CODE = {
+  script: "scripts/run-live-trading-trader.js",
+  sha256: "b6422a720f1117274560c226e6aa690a0ad3d6132d8643cae0152d9751c13580",
+  git_blob: "f43ac5ea318fb5e8c87bf55a6a88b76cc1eb6958",
+  checkout_head: "c5abd0ac"
+};
+
+function heartbeat({ writtenAtMs, armed = true, status = "nothing_to_place", host = "PC-DESKTOP-A17", code = TRADER_CODE }) {
   return {
     schema_version: "live-trading-trader-status-v1",
     lane: "ftmo-1",
@@ -28,6 +38,7 @@ function heartbeat({ writtenAtMs, armed = true, status = "nothing_to_place", hos
     written_at_utc: new Date(writtenAtMs).toISOString(),
     armed,
     status,
+    code,
     reason: "no pair was left a ticket this run: every row states why, whether that is the rule, the account or the market.",
     account: { login_masked: "***614", server: "FTMO-Server" },
     terminal: { positions_open: 1, orders_open: 0, ours: 1 },
@@ -170,6 +181,46 @@ test("an armed heartbeat that stopped writing is drawn as stale, not as a runnin
     assert.equal(/the loop last ran/i.test(text), false, "a stale card must not say the loop last ran as though it were current");
   } finally {
     await harness.close();
+  }
+});
+
+test("a card names the code its heartbeat was written by, and says so plainly when the record is silent", async () => {
+  const now = Date.now();
+  const withCode = heartbeat({ writtenAtMs: now - 60_000 });
+  const harness = await createHarness({ lanes: lanesWith(withCode), trader: withCode });
+  try {
+    const context = await harness.createContext();
+    const { page, errors } = await openLiveTrading(context, harness.origin);
+    assert.deepEqual(errors, [], "opening the section must not raise a script error");
+
+    const row = page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-1"] .live-trading-lane-row', { hasText: "Trader code" });
+    // The row states the head of the git blob - one number a reader can compare at a glance - and keeps both whole
+    // digests in its tooltip, because the blob is the value `git rev-parse <rev>:<path>` answers with anywhere.
+    assert.equal((await row.locator("dd").textContent()).trim(), "f43ac5ea318f");
+    const title = await row.locator("dd").getAttribute("title");
+    assert.match(title, /git blob f43ac5ea318fb5e8c87bf55a6a88b76cc1eb6958/);
+    assert.match(title, /sha256 on that host b6422a720f1117274560c226e6aa690a0ad3d6132d8643cae0152d9751c13580/);
+    assert.match(title, /checkout c5abd0ac/, "the pinned checkout is carried as a label beside the version");
+    assert.match(title, /git rev-parse <rev>:scripts\/run-live-trading-trader\.js/, "the tooltip says which command compares it");
+  } finally {
+    await harness.close();
+  }
+
+  // A heartbeat written before the block existed: the card states the silence rather than an invented version, and
+  // the strip stays healthy, because an older record is not a broken loop.
+  const older = heartbeat({ writtenAtMs: now - 60_000, code: null });
+  const silent = await createHarness({ lanes: lanesWith(older), trader: older });
+  try {
+    const context = await silent.createContext();
+    const { page, errors } = await openLiveTrading(context, silent.origin);
+    assert.deepEqual(errors, [], "an older heartbeat must not raise a script error");
+    const row = page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-1"] .live-trading-lane-row', { hasText: "Trader code" });
+    assert.equal((await row.locator("dd").textContent()).trim(), "not stated by this heartbeat");
+    assert.match(await row.getAttribute("class"), /is-muted/, "an unstated version is drawn quietly, not as a fault");
+    assert.equal(await row.locator("dd").getAttribute("title"), null, "there is nothing to tooltip when nothing was stated");
+    assert.match((await cardText(page, "ftmo-1")), /LIVE/, "the card is still a running lane, whatever it can say about the build");
+  } finally {
+    await silent.close();
   }
 });
 

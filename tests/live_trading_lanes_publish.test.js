@@ -390,6 +390,73 @@ test("a heartbeat with no host in it leaves the lane row's host null", () => {
   const row = result.lanes.find((lane) => lane.id === "ftmo-1");
   assert.equal(row.trader_status.host, null, "the publisher must not stamp its own host on a heartbeat");
   assert.equal(row.trader_status.expected_interval_seconds, null);
+  // A heartbeat that names no code is not an error: the row says null and the page states that the record is
+  // silent about it, rather than inventing a version for a host nobody can ask.
+  assert.equal(row.trader_status.code, null, "a heartbeat written before the code block leaves the row's code null");
+});
+
+// The version a heartbeat states travels in the lanes document too, not only in the artifact: the page's fallback
+// for an unreadable artifact is this row, and a card that says "not stated" about a record that did state its code
+// would be a small lie in the one place a reader goes to check the build.
+test("the code a heartbeat states travels with the lanes document", () => {
+  const space = workspace();
+  const written = new Date(NOW_MS - 30_000).toISOString();
+  fs.mkdirSync(path.join(space.first.rootDir, "tmp"), { recursive: true });
+  fs.writeFileSync(
+    path.join(space.first.rootDir, "tmp", "live-trading-trader-status.json"),
+    JSON.stringify({
+      lane: "ftmo-1",
+      written_at_utc: written,
+      armed: true,
+      status: "nothing_to_place",
+      code: {
+        script: "scripts/run-live-trading-trader.js",
+        sha256: "b6422a720f1117274560c226e6aa690a0ad3d6132d8643cae0152d9751c13580",
+        git_blob: "f43ac5ea318fb5e8c87bf55a6a88b76cc1eb6958",
+        checkout_head: "c5abd0ac",
+        // Anything else in the block is dropped: the row carries the four fields a reader compares, not whatever a
+        // future heartbeat happens to add.
+        operator: "not for publication"
+      }
+    })
+  );
+  const git = fakeGit();
+
+  const result = lanes.publishLanes(optionsFor(space), deps(git));
+
+  assert.equal(result.action, "published");
+  const row = result.lanes.find((lane) => lane.id === "ftmo-1");
+  assert.deepEqual(row.trader_status.code, {
+    script: "scripts/run-live-trading-trader.js",
+    sha256: "b6422a720f1117274560c226e6aa690a0ad3d6132d8643cae0152d9751c13580",
+    git_blob: "f43ac5ea318fb5e8c87bf55a6a88b76cc1eb6958",
+    checkout_head: "c5abd0ac"
+  });
+  // The document the page reads is the summary, and the artifact beside it is copied as the loop wrote it.
+  const document = JSON.parse(fs.readFileSync(path.join(space.checkout, "data", "live-trading-lanes.json"), "utf8"));
+  assert.equal(document.lanes.find((lane) => lane.id === "ftmo-1").trader.code.git_blob, "f43ac5ea318fb5e8c87bf55a6a88b76cc1eb6958");
+});
+
+test("a heartbeat's code block with no readable digest is dropped rather than published as a version", () => {
+  const space = workspace();
+  fs.mkdirSync(path.join(space.first.rootDir, "tmp"), { recursive: true });
+  fs.writeFileSync(
+    path.join(space.first.rootDir, "tmp", "live-trading-trader-status.json"),
+    JSON.stringify({
+      lane: "ftmo-1",
+      written_at_utc: new Date(NOW_MS).toISOString(),
+      armed: true,
+      status: "nothing_to_place",
+      code: { script: "scripts/run-live-trading-trader.js", sha256: "not-a-digest", git_blob: null, checkout_head: null }
+    })
+  );
+  const git = fakeGit();
+
+  const result = lanes.publishLanes(optionsFor(space), deps(git));
+
+  assert.equal(result.action, "published");
+  const row = result.lanes.find((lane) => lane.id === "ftmo-1");
+  assert.equal(row.trader_status.code, null, "a block with neither digest is no version at all");
 });
 
 test("a lane with no snapshot refuses the run before git is asked anything", () => {

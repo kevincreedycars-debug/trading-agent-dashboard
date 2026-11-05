@@ -291,6 +291,23 @@ function identityCheck(lane, feed) {
   return { ok: true, configured: true, account_login_masked: masked, account_server: server, reason: null };
 }
 
+// The heartbeat's own account of the code that wrote it, reduced to the four fields the page and the monitor
+// read, with anything unreadable turned into null rather than passed through. A heartbeat written before the
+// block existed yields null: the caller keeps the whole record, and a loop that is alive is not made broken by an
+// older record. Both digests are kept because they answer different questions - `git_blob` is the file as git
+// hashes it, the same number `git rev-parse <rev>:<path>` states from any checkout, while `sha256` is the bytes on
+// the host's own disk, which a checkout converting line endings changes.
+function liveTradingCodeBlock(code) {
+  if (!code || typeof code !== "object") return null;
+  const block = {
+    script: typeof code.script === "string" && code.script ? code.script : null,
+    sha256: /^[0-9a-f]{64}$/.test(code.sha256 || "") ? code.sha256 : null,
+    git_blob: /^[0-9a-f]{40,64}$/.test(code.git_blob || "") ? code.git_blob : null,
+    checkout_head: /^[0-9a-f]{7,40}$/.test(code.checkout_head || "") ? code.checkout_head : null
+  };
+  return block.sha256 || block.git_blob ? block : null;
+}
+
 // Every lane read, checked, then handed to the one publisher as a set. Returning the publisher's own result
 // rather than a second summary keeps one set of gates: this script adds the lane identity check and nothing that
 // could disagree with the publisher about freshness, cadence or what the served branch already carries.
@@ -423,6 +440,12 @@ function publishLanes(options, deps = {}) {
       // own name here: during a cutover the publisher and the loop can be on different hosts, and the page has
       // to see the host of the loop rather than the host of the commit.
       host: typeof status?.host?.computer === "string" ? status.host.computer : null,
+      // The code the loop says wrote this record, carried here as well as in the artifact so a page or a reader
+      // holding only this document still names the version. Two digests, because they answer different questions:
+      // `git_blob` is the file as git hashes it and is the number `git rev-parse <rev>:<path>` states from any
+      // checkout, while `sha256` is the bytes that sat on that host's disk, which a checkout converting line
+      // endings changes. Nulls where the heartbeat is too old to carry a block.
+      code: liveTradingCodeBlock(status?.code),
       expected_interval_seconds:
         status?.expected_interval_seconds !== null &&
         status?.expected_interval_seconds !== undefined &&
@@ -537,6 +560,7 @@ module.exports = {
   loadLanes,
   laneArtifactPath,
   identityCheck,
+  liveTradingCodeBlock,
   publishLanes,
   main
 };
