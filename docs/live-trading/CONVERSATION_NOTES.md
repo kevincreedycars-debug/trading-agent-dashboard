@@ -3116,7 +3116,9 @@ Deployed as `f43ac5ea`, the 21:46:30Z heartbeat states the whole block - `sha256
 comparison the field is for. The host's copy is byte-identical to the committed one (`git -C C:\live-trading\runtime
 diff origin/main -- scripts/run-live-trading-trader.js` prints nothing), the run wrote `nothing_to_place` with
 `armed = true` and `LastTaskResult` 0, and `npm test` is 775 tests, 773 passing, the two failures being the chart
-line-count and Research Library browser cases that fail on `main` without this change.
+line-count and Research Library browser cases that fail on `main` without this change. The tick at 21:51:30Z was
+the first to load the frozen constant, and it wrote the same block again with `git_blob = f43ac5ea...`, so the
+load-time read works inside the scheduled task and not only under `node --test`.
 
 Tests: `tests/live_trading_trader.test.js` recomputes both digests from the file on disk and asserts the block
 publishes no absolute path, and checks the digests against git's own answer for three bytes the case chose, with
