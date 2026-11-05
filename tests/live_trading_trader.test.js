@@ -2480,9 +2480,10 @@ test("the heartbeat names the host that wrote it and the cadence it sits on", ()
 });
 
 // A heartbeat that says a loop is alive says nothing about which loop. The host's trader was replaced by hand on
-// 2026-11-05 and no record could have shown it: the checkout's HEAD still named the 2026-11-02 commit. The digest
-// is the loop's own file, so the version travels in the record that travels with the lane, and any machine can
-// recompute it from the file without trusting this process's word for it.
+// 2026-11-05 and no record could have shown it: the checkout's HEAD still named the 2026-11-02 commit. Two digests
+// travel for two questions: the blob is the version, comparable with `git rev-parse origin/main:<path>` from any
+// checkout, and the sha256 is the bytes on this disk, which a checkout converting line endings would state
+// differently. Neither is taken on trust - both are recomputed here from the file itself.
 test("the heartbeat names the code that wrote it, and the checkout's own label beside it", () => {
   const dir = tempDir();
   const spawn = fakeSpawn({ status: { positions: [], orders: [], history: [] } });
@@ -2490,10 +2491,20 @@ test("the heartbeat names the code that wrote it, and the checkout's own label b
   const status = JSON.parse(fs.readFileSync(path.join(dir, "trader-status.json"), "utf8"));
   const ownBytes = fs.readFileSync(path.join(repoRoot, "scripts", "run-live-trading-trader.js"));
   const expected = crypto.createHash("sha256").update(ownBytes).digest("hex");
+  // What git itself says about the same content: written to a temp file with its line endings normalised, so the
+  // answer is the blob a commit would carry, and the comparison does not depend on whether the tree is mid-edit.
+  const lfCopy = path.join(dir, "normalised.js");
+  fs.writeFileSync(lfCopy, ownBytes.toString("latin1").replace(/\r\n/g, "\n"), "latin1");
+  const expectedBlob = spawnSync("git", ["hash-object", lfCopy], { encoding: "utf8" });
 
   assert.equal(status.code.script, "scripts/run-live-trading-trader.js", "the block names the file it hashes");
   assert.match(status.code.sha256, /^[0-9a-f]{64}$/, "the digest is a plain sha256 anybody can recompute");
   assert.equal(status.code.sha256, expected, "the digest is of the file that is on disk, not of a fixture");
+  assert.equal(
+    status.code.git_blob,
+    expectedBlob.status === 0 ? String(expectedBlob.stdout).trim() : null,
+    "the blob is the file as git hashes it, which is the value a commit's own tree states"
+  );
   assert.equal(
     JSON.stringify(status.code).includes(repoRoot),
     false,
@@ -2509,8 +2520,9 @@ test("the heartbeat names the code that wrote it, and the checkout's own label b
 });
 
 // The digest is taken from the bytes handed to it, so the case can use a file with a known answer rather than
-// waiting for the loop's own file to change. "abc" is the published sha256 of those three bytes.
-test("the code digest is of the bytes it is given, and a git that cannot run leaves the label null", () => {
+// waiting for the loop's own file to change. "abc" is the published sha256 of those three bytes, its git blob is
+// `f2ba8f84`, and the blob must not move when the same text is written with Windows line endings.
+test("the code digests are of the bytes it is given, and the blob ignores line endings", () => {
   const dir = tempDir();
   const script = path.join(dir, "run-live-trading-trader.js");
   fs.writeFileSync(script, "abc");
@@ -2519,10 +2531,20 @@ test("the code digest is of the bytes it is given, and a git that cannot run lea
   const identity = codeIdentity({ scriptPath: script, repoRoot: dir, exec: failing });
 
   assert.equal(identity.sha256, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+  assert.equal(identity.git_blob, "f2ba8f84ab5c1bce84a7b441cb1959cfc7093b7f", "the blob is the id git would give it");
   assert.equal(identity.checkout_head, null, "a label git could not produce is null, never a guess");
   assert.equal(identity.script, "scripts/run-live-trading-trader.js");
+
+  fs.writeFileSync(script, "a\r\nb\r\n");
+  const crlf = codeIdentity({ scriptPath: script, repoRoot: dir, exec: failing });
+  fs.writeFileSync(script, "a\nb\n");
+  const lf = codeIdentity({ scriptPath: script, repoRoot: dir, exec: failing });
+  assert.equal(crlf.git_blob, lf.git_blob, "the same text on two machines is one blob, whatever the line endings");
+  assert.notEqual(crlf.sha256, lf.sha256, "the on-disk bytes are a different number where line endings differ");
+
   const missing = codeIdentity({ scriptPath: path.join(dir, "absent.js"), repoRoot: dir, exec: failing });
   assert.equal(missing.sha256, null, "a file that cannot be read is null rather than an invented digest");
+  assert.equal(missing.git_blob, null);
 });
 
 // A self test that can arm is not a test, and a self test that runs against the live state spends the signal

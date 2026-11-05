@@ -161,7 +161,7 @@ async function checkLane(lane, options, deps) {
       status: null,
       // Which build wrote the heartbeat. A reader can compare the digest with the script it expects without
       // opening the host, which is the difference between "the loop is alive" and "the loop is the one we think".
-      code: { script: null, sha256: null, checkout_head: null }
+      code: { script: null, sha256: null, git_blob: null, checkout_head: null }
     }
   };
   if (!enabled) {
@@ -224,10 +224,12 @@ async function checkLane(lane, options, deps) {
       // does not know which script a host should be running, and a digest it cannot compare is still evidence for
       // whoever reads the report. A heartbeat that states no code block (any written before the block existed)
       // leaves these null instead of raising a problem, because a loop that is alive is not made broken by an
-      // older heartbeat.
+      // older heartbeat. The blob is the digest to compare with `git rev-parse <rev>:<path>` from any checkout;
+      // the sha256 is the bytes on that host's disk, which a checkout that converts line endings can differ on.
       row.heartbeat.code = {
         script: typeof status?.code?.script === "string" ? status.code.script : null,
         sha256: /^[0-9a-f]{64}$/.test(status?.code?.sha256 || "") ? status.code.sha256 : null,
+        git_blob: /^[0-9a-f]{40,64}$/.test(status?.code?.git_blob || "") ? status.code.git_blob : null,
         checkout_head: /^[0-9a-f]{7,40}$/.test(status?.code?.checkout_head || "")
           ? status.code.checkout_head
           : null
@@ -327,9 +329,11 @@ async function main(argv = process.argv.slice(2), deps = {}) {
             : "heartbeat not declared"
         );
         // The build, abbreviated to twelve characters: long enough to compare two digests by eye, short enough
-        // to keep the line one line. The report's JSON carries the whole digest.
+        // to keep the line one line. It shows the blob when the heartbeat has one, because that is the value a
+        // reader can compare with a commit's own tree; the sha256 is in the JSON for the on-disk bytes.
         if (row.heartbeat.declared) {
-          parts.push(`code ${row.heartbeat.code.sha256 ? row.heartbeat.code.sha256.slice(0, 12) : "unknown"}`);
+          const shown = row.heartbeat.code.git_blob || row.heartbeat.code.sha256;
+          parts.push(`code ${shown ? shown.slice(0, 12) : "unknown"}`);
         }
       }
       process.stdout.write(`${parts.join(" | ")}\n`);

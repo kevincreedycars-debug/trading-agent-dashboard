@@ -267,11 +267,17 @@ test("a stale heartbeat fails, and so does a heartbeat naming another lane", asy
 // heartbeat written before the block existed must not fail for being older than the field.
 test("a heartbeat's code digest is reported, and one without it is not made a failure", async () => {
   const digest = "a".repeat(64);
+  const blob = "b".repeat(40);
   const withCode = await serve({
     "/data/live-trading-lanes.json": lanesDocument(),
     "/data/live-trading.json": feedAt(),
     "/data/live-trading-trader.ftmo-1.json": statusAt({
-      code: { script: "scripts/run-live-trading-trader.js", sha256: digest, checkout_head: "c5abd0ac" }
+      code: {
+        script: "scripts/run-live-trading-trader.js",
+        sha256: digest,
+        git_blob: blob,
+        checkout_head: "c5abd0ac"
+      }
     })
   });
   try {
@@ -279,6 +285,7 @@ test("a heartbeat's code digest is reported, and one without it is not made a fa
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const lane1 = JSON.parse(result.stdout.trim()).lanes.find((row) => row.id === "ftmo-1");
     assert.equal(lane1.heartbeat.code.sha256, digest, "the report carries the digest the heartbeat states");
+    assert.equal(lane1.heartbeat.code.git_blob, blob, "the report carries the blob a reader compares with a commit");
     assert.equal(lane1.heartbeat.code.checkout_head, "c5abd0ac");
     assert.equal(lane1.heartbeat.code.script, "scripts/run-live-trading-trader.js");
   } finally {
@@ -288,13 +295,14 @@ test("a heartbeat's code digest is reported, and one without it is not made a fa
   const without = await serve({
     "/data/live-trading-lanes.json": lanesDocument(),
     "/data/live-trading.json": feedAt(),
-    "/data/live-trading-trader.ftmo-1.json": statusAt({ code: { sha256: "not a digest", script: 7 } })
+    "/data/live-trading-trader.ftmo-1.json": statusAt({ code: { sha256: "not a digest", git_blob: 7, script: 7 } })
   });
   try {
     const result = await runMonitor(without.base);
     assert.equal(result.status, 0, "an older or half-written code block is not a stale heartbeat");
     const lane1 = JSON.parse(result.stdout.trim()).lanes.find((row) => row.id === "ftmo-1");
     assert.equal(lane1.heartbeat.code.sha256, null, "something that is not a digest is reported as absent, not passed on");
+    assert.equal(lane1.heartbeat.code.git_blob, null);
     assert.equal(lane1.heartbeat.code.script, null);
     assert.equal(lane1.heartbeat.code.checkout_head, null);
   } finally {
