@@ -95,7 +95,16 @@ repository, so nothing in this checkout can stop these runs failing on GitHub's 
 
 It matters here because the published tree is 596 files and 80.4MB, of which 56.8MB is five
 `data/backtester-checker-*` files that the research tabs pull on demand, and the whole of it is republished every
-1200s. Left alone, the expectation is another red Pages run every few days. Two levers exist and neither was taken in
-this change, because both touch production publishing and belong in their own cycle with the owner's decision: publish
-less often, or replace the legacy Pages build with a workflow this repository owns (a slimmed artifact plus one retry
-before the run goes red).
+1200s. Left alone, the expectation is another red Pages run every few days. Three levers exist and none was taken in
+this change, because all three touch production publishing and belong in their own cycle with the owner's decision:
+
+1. **Make the published tree smaller.** The five checker files are 70% of the bytes GitHub has to sync on every
+   publish and are not needed by the dashboard's own pages. Moving them behind a separate download, or publishing
+   them on demand rather than on every tick, shortens the step that is timing out and is the only lever held in this
+   repository.
+2. **Publish less often.** The cadence and its 600s gate are the subject of section 1; a slower cycle is cheaper here
+   and slower to notice a stopped publisher, so the two cannot be decided apart.
+3. **Own the deployment.** Set Settings → Pages → Build and deployment → Source to `GitHub Actions` and add a workflow
+   that uploads the site as an artifact and calls `actions/deploy-pages`, with one retry before the run goes red. That
+   setting is the owner's to change, and the workflow file is a change this repository has to make first; neither is
+   done here.
