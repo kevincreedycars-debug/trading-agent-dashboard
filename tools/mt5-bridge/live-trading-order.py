@@ -157,6 +157,13 @@ Usage:
   --deviation <points>     slippage allowed on the market order (default {DEFAULT_DEVIATION_POINTS})
   --path <path>            terminal64.exe or its folder, if the package cannot find the terminal
   --journal <path>         append-only evidence log (default {DEFAULT_JOURNAL})
+  --magic <n>              the ownership number this lane's tickets carry (default {MAGIC}). Passing a different
+                           one means trading a second account, which requires --expect-identity as well
+  --expect-identity <path> a private JSON file naming the account this lane trades
+                           ({{"login": <int>, "server": "<name>", "terminal_path": "<terminal64.exe>"}}). The
+                           terminal's login, server, connected state and path are checked before anything is read
+                           and again immediately before every send, retries included; a mismatch or a missing file
+                           sends nothing. The file is named by path, so no login ever appears in a command line
 
 Every run appends one JSON line to the journal: the plan, the request as sent and the terminal's answer.
 """
@@ -188,6 +195,131 @@ def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
+class IdentityRefused(RuntimeError):
+    """The terminal is not the account this lane trades, so nothing may be sent from it.
+
+    Raised by the identity check and caught once, in `main`, where it becomes an ordinary refusal record: no
+    order call has happened by then, and none will.
+    """
+
+
+def masked_login(login):
+    """The only form a login is ever written in: the same `***614` the page and the heartbeat use."""
+    text = str(login)
+    return "***" + text[-3:] if len(text) >= 3 else "***"
+
+
+def read_identity(path):
+    """The private identity document a lane is bound to.
+
+    Shape, and nothing else belongs in it:
+
+        {"login": 1234567, "server": "FTMO-Server", "terminal_path": "C:\\\\...\\\\terminal64.exe"}
+
+    `login` and `server` are required; `terminal_path` is checked when it is there. The file is private on
+    purpose - it is not published, not tracked and not passed on a command line as a number - so a run's
+    argument list names a path rather than the account.
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            document = json.load(handle)
+    except FileNotFoundError:
+        raise IdentityRefused(
+            f"identity_missing: the identity file {path} does not exist, so this lane cannot prove which account "
+            "its terminal is logged into. Nothing was sent."
+        )
+    except (OSError, ValueError) as error:
+        raise IdentityRefused(
+            f"identity_missing: the identity file {path} could not be read as JSON ({error}). Nothing was sent."
+        )
+    if not isinstance(document, dict):
+        raise IdentityRefused(f"identity_missing: the identity file {path} is not a JSON object. Nothing was sent.")
+    login = document.get("login")
+    if isinstance(login, str) and login.strip().isdigit():
+        login = int(login.strip())
+    if not isinstance(login, int) or isinstance(login, bool) or login <= 0:
+        raise IdentityRefused(
+            f"identity_missing: the identity file {path} carries no integer 'login'. Nothing was sent."
+        )
+    server = document.get("server")
+    if not isinstance(server, str) or not server.strip():
+        raise IdentityRefused(
+            f"identity_missing: the identity file {path} carries no 'server'. Nothing was sent."
+        )
+    terminal_path = document.get("terminal_path")
+    return {
+        "login": int(login),
+        "server": server.strip(),
+        "terminal_path": terminal_path if isinstance(terminal_path, str) and terminal_path.strip() else None,
+    }
+
+
+def verify_identity(mt5, identity):
+    """Compare the attached terminal to the identity document and refuse, by name, if it is another account.
+
+    Checks, in this order: an account is readable at all; the terminal is connected; the login matches; the server
+    matches; and, when the document names one, the terminal's own path matches. Returns the facts that may be
+    written down - a masked login, the server and the terminal path - and never the full login.
+    """
+    account = mt5.account_info()
+    if account is None:
+        raise IdentityRefused(
+            "identity_unreadable: the terminal answered no account, so this lane cannot prove which account it is "
+            "logged into. Nothing was sent."
+        )
+    terminal = mt5.terminal_info()
+    if terminal is not None and getattr(terminal, "connected", None) is not True:
+        raise IdentityRefused(
+            f"identity_disconnected: the terminal is not connected (it reports {masked_login(account.login)}, "
+            f"{account.server}), so an order sent now could not be answered. Nothing was sent."
+        )
+    if int(account.login) != identity["login"]:
+        raise IdentityRefused(
+            f"identity_mismatch: the terminal is logged into {masked_login(account.login)}, not the "
+            f"{masked_login(identity['login'])} this lane trades. Nothing was sent."
+        )
+    if str(account.server or "").strip().casefold() != identity["server"].casefold():
+        raise IdentityRefused(
+            f"identity_mismatch: the terminal is on server {account.server!r}, not the {identity['server']!r} this "
+            "lane trades. Nothing was sent."
+        )
+    expected_path = identity.get("terminal_path")
+    if expected_path:
+        actual_path = str(getattr(terminal, "path", "") or "")
+        try:
+            same = str(Path(actual_path).resolve()).casefold() == str(Path(expected_path).resolve()).casefold()
+        except (OSError, ValueError):
+            same = False
+        if not same:
+            raise IdentityRefused(
+                f"identity_mismatch: this run is attached to the terminal at {actual_path!r}, not the one this "
+                f"lane trades ({expected_path!r}). Nothing was sent."
+            )
+    return {
+        "login_masked": masked_login(account.login),
+        "server": account.server,
+        "terminal_path": str(getattr(terminal, "path", "") or "") or None,
+    }
+
+
+def identity_guard(mt5, args):
+    """The check the send paths run immediately before every `order_send`, retries included.
+
+    It reads the identity file once and re-reads the terminal every time it is called, because the point of the
+    check is the account the terminal is on *now* - a terminal can be re-logged into another account between the
+    read at the top of a run and the send at the bottom of it. A run with no `--expect-identity` gets a no-op
+    guard and no identity facts, which is lane 1's arrangement exactly as it was.
+    """
+    if not args.expect_identity:
+        return (lambda: None), None
+    identity = read_identity(args.expect_identity)
+
+    def guard():
+        return verify_identity(mt5, identity)
+
+    return guard, identity
+
+
 def round_to_step(value, step):
     """Round a volume to the instrument's own step, so the terminal is not asked for an impossible size."""
     if not step:
@@ -209,7 +341,7 @@ def plan_open(args):
         "stop_loss": args.stop_loss,
         "take_profit": args.take_profit,
         "comment": args.comment,
-        "magic": MAGIC,
+        "magic": args.magic,
     }
 
 
@@ -220,7 +352,7 @@ def plan_close(args):
         "requested_lots": args.lots if args.lots else "the position's whole volume",
         "max_lots": args.max_lots if args.max_lots else "the position's own volume",
         "comment": args.comment,
-        "magic": MAGIC,
+        "magic": args.magic,
     }
 
 
@@ -236,7 +368,7 @@ def plan_cancel(args):
         "trader_action": "TRADE_ACTION_REMOVE on a working pending order",
         "note": "this removes one working pending order; it never closes a position - that is the close action",
         "comment": args.comment,
-        "magic": MAGIC,
+        "magic": args.magic,
     }
 
 
@@ -256,7 +388,7 @@ def plan_modify(args):
         "trader_action": "TRADE_ACTION_SLTP on an open position",
         "note": "this moves the levels of a position that already exists; it never opens and never closes one",
         "comment": args.comment,
-        "magic": MAGIC,
+        "magic": args.magic,
     }
 
 
@@ -265,6 +397,18 @@ def guard_before_broker(args):
 
     Returns (reason, exit_code) when the run must stop, or (None, None) when it may attach.
     """
+    if args.magic is None or args.magic <= 0:
+        return (
+            "refused: --magic must be the positive ownership number this lane stamps on its tickets; nothing was sent.",
+            EXIT_REFUSED,
+        )
+    if args.magic != MAGIC and not args.expect_identity:
+        return (
+            f"refused: --magic {args.magic} is not this tool's own ({MAGIC}), so this run is trading a second "
+            "account: pass --expect-identity <path> naming the private file its terminal must match. Without it "
+            "a run cannot tell one account from the other, and nothing was sent.",
+            EXIT_REFUSED,
+        )
     if args.action in ("open", "close", "modify", "cancel") and not args.confirm_live:
         return (
             "refused: --confirm-live is required to send anything; this run planned and sent nothing. "
@@ -372,13 +516,17 @@ def retcode_name(mt5, retcode):
     return f"RETCODE_{retcode}"
 
 
-def send_with_retries(mt5, request, modes, refresh_price, attempts=3):
+def send_with_retries(mt5, request, modes, refresh_price, attempts=3, guard=None):
     """Send one request, trying each filling mode and re-reading the price between attempts.
 
     A market order built from a tick that has already moved comes back as a requote or a price change
     rather than as a fill, and a symbol that does not accept the first filling mode answers
     `TRADE_RETCODE_INVALID_FILL`. Both are ordinary here, so the price is refreshed from a new tick and the
     next mode tried instead of the same request being resent unchanged. Returns (result, mode, attempts).
+
+    `guard` is the identity check, called immediately before *every* send - each filling mode and each retry -
+    because a retry is another send and the account it goes to has to be proved again each time. It raises
+    `IdentityRefused`; nothing is caught here, so a refuse leaves the loop with no result and no order sent.
     """
     last_result = None
     last_mode = None
@@ -389,6 +537,8 @@ def send_with_retries(mt5, request, modes, refresh_price, attempts=3):
             if attempt > 1 or last_mode is not None:
                 time.sleep(0.5)
                 refresh_price(request)
+            if guard is not None:
+                guard()
             result = mt5.order_send(request)
             last_result, last_mode, last_attempt = result, mode, attempt
             if result is None:
@@ -521,14 +671,14 @@ def tick_price(mt5, symbol, side):
     return (float(tick.ask) if side == "buy" else float(tick.bid)), tick
 
 
-def open_order(mt5, args, journal):
+def open_order(mt5, args, journal, guard=None):
     """Open one position: a market order, or one pending limit when --entry-price is given.
 
     The size is the smallest the symbol allows unless told otherwise twice, and the stop and the target are
     only what the caller passed. With an --entry-price the entry is a limit left at that price, which is
     the entry the L2L rule states: the retrace, not the candle that broke the level.
     """
-    base = {"at_utc": now_iso(), "tool": TOOL, "action": "open"}
+    base = {"at_utc": now_iso(), "tool": TOOL, "action": "open", "identity": getattr(args, "identity_facts", None)}
     info = mt5.symbol_info(args.symbol)
     plan = plan_open(args)
     if info is None:
@@ -563,7 +713,7 @@ def open_order(mt5, args, journal):
             "volume": volume,
             "type": mt5.ORDER_TYPE_BUY_LIMIT if args.side == "buy" else mt5.ORDER_TYPE_SELL_LIMIT,
             "price": float(args.entry_price),
-            "magic": MAGIC,
+            "magic": args.magic,
             "comment": args.comment,
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_RETURN,
@@ -581,7 +731,7 @@ def open_order(mt5, args, journal):
             "type": mt5.ORDER_TYPE_BUY if args.side == "buy" else mt5.ORDER_TYPE_SELL,
             "price": price,
             "deviation": args.deviation,
-            "magic": MAGIC,
+            "magic": args.magic,
             "comment": args.comment,
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_RETURN,
@@ -599,7 +749,7 @@ def open_order(mt5, args, journal):
         if fresh:
             target["price"] = fresh
 
-    result, mode, attempts = send_with_retries(mt5, request, filling_modes(mt5, info), refresh_price)
+    result, mode, attempts = send_with_retries(mt5, request, filling_modes(mt5, info), refresh_price, guard=guard)
     # A server that will not take an expiry answers a pending request with an expiry retcode while the request
     # itself is sound. The ticket the rule states is a limit at the level; the expiry is this tool's own guard
     # against it sitting there for ever, so it is dropped for one further attempt rather than costing the
@@ -614,7 +764,7 @@ def open_order(mt5, args, journal):
         request.pop("expiration", None)
         request["type_time"] = mt5.ORDER_TIME_GTC
         expiry_fallback = True
-        result, mode, attempts = send_with_retries(mt5, request, filling_modes(mt5, info), refresh_price)
+        result, mode, attempts = send_with_retries(mt5, request, filling_modes(mt5, info), refresh_price, guard=guard)
     answer = summarise(mt5, result, mode)
     record = {
         **base,
@@ -640,9 +790,9 @@ def open_order(mt5, args, journal):
     return EXIT_OK if answer.get("done") else EXIT_BROKER
 
 
-def close_order(mt5, args, journal):
+def close_order(mt5, args, journal, guard=None):
     """Close one named position at the market, so what was executed can be read back as a closed trade."""
-    base = {"at_utc": now_iso(), "tool": TOOL, "action": "close"}
+    base = {"at_utc": now_iso(), "tool": TOOL, "action": "close", "identity": getattr(args, "identity_facts", None)}
     plan = plan_close(args)
     positions = mt5.positions_get(ticket=args.ticket)
     if not positions:
@@ -655,6 +805,17 @@ def close_order(mt5, args, journal):
         )
 
     position = positions[0]
+    # The same ownership rule the other three actions apply: a tool that closes what it did not place is a tool
+    # that can close anything. The trader already refuses a close request on a ticket of another magic; this is
+    # the tool's own half of that, so a hand run cannot do what the loop will not.
+    if int(position.magic) != args.magic:
+        return refuse(
+            journal,
+            base,
+            f"refused: ticket {position.ticket} carries magic {int(position.magic)}, not this lane's {args.magic}: "
+            "another path placed it, and this tool closes only what it placed. Nothing was sent.",
+            plan,
+        )
     info = mt5.symbol_info(position.symbol)
     if info is None:
         return refuse(journal, base, f"refused: {position.symbol} is not served by this terminal; nothing was sent.", plan)
@@ -679,7 +840,7 @@ def close_order(mt5, args, journal):
         "position": int(position.ticket),
         "price": price,
         "deviation": args.deviation,
-        "magic": MAGIC,
+        "magic": args.magic,
         "comment": args.comment,
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_RETURN,
@@ -690,7 +851,7 @@ def close_order(mt5, args, journal):
         if fresh:
             target["price"] = fresh
 
-    result, mode, attempts = send_with_retries(mt5, request, filling_modes(mt5, info), refresh_price)
+    result, mode, attempts = send_with_retries(mt5, request, filling_modes(mt5, info), refresh_price, guard=guard)
     answer = summarise(mt5, result, mode)
     record = {
         **base,
@@ -718,7 +879,7 @@ def close_order(mt5, args, journal):
     return EXIT_OK if answer.get("done") else EXIT_BROKER
 
 
-def modify_order(mt5, args, journal):
+def modify_order(mt5, args, journal, guard=None):
     """Move the levels of one position this tool placed, without opening or closing anything.
 
     The rule's own adjustment arrives here: a trade that has run to twice the risk it was placed with has its stop
@@ -735,7 +896,7 @@ def modify_order(mt5, args, journal):
     request carries no price of its own, so a requote cannot be its answer, and resending the same levels would
     ask the same question twice. The terminal's own answer is journaled.
     """
-    base = {"at_utc": now_iso(), "tool": TOOL, "action": "modify"}
+    base = {"at_utc": now_iso(), "tool": TOOL, "action": "modify", "identity": getattr(args, "identity_facts", None)}
     plan = plan_modify(args)
     positions = mt5.positions_get(ticket=args.ticket)
     if not positions:
@@ -753,11 +914,11 @@ def modify_order(mt5, args, journal):
         )
 
     position = positions[0]
-    if int(position.magic) != MAGIC:
+    if int(position.magic) != args.magic:
         return refuse(
             journal,
             base,
-            f"refused: ticket {position.ticket} carries magic {int(position.magic)}, not this tool's {MAGIC}: another "
+            f"refused: ticket {position.ticket} carries magic {int(position.magic)}, not this tool's {args.magic}: another "
             "path placed it, and this tool moves only what it placed. Nothing was sent.",
             plan,
         )
@@ -799,12 +960,14 @@ def modify_order(mt5, args, journal):
         "symbol": position.symbol,
         "position": int(position.ticket),
         "sl": stop_loss,
-        "magic": MAGIC,
+        "magic": args.magic,
         "comment": args.comment,
     }
     if take_profit is not None:
         request["tp"] = take_profit
 
+    if guard is not None:
+        guard()
     result = mt5.order_send(request)
     answer = summarise(mt5, result, None)
     record = {
@@ -836,7 +999,7 @@ def modify_order(mt5, args, journal):
     return EXIT_OK if answer.get("done") else EXIT_BROKER
 
 
-def cancel_order(mt5, args, journal):
+def cancel_order(mt5, args, journal, guard=None):
     """Remove one working pending order this tool placed, because the reason for the entry has gone.
 
     A pending entry is a limit left at a marked line, so taking it back out is a removal rather than a closing
@@ -848,7 +1011,7 @@ def cancel_order(mt5, args, journal):
     Exactly one attempt is made, deliberately: a removal is not a price-bearing request, so a requote cannot be
     the answer and sending it twice would be asking to remove two things. The terminal's own answer is journaled.
     """
-    base = {"at_utc": now_iso(), "tool": TOOL, "action": "cancel"}
+    base = {"at_utc": now_iso(), "tool": TOOL, "action": "cancel", "identity": getattr(args, "identity_facts", None)}
     plan = plan_cancel(args)
     orders = mt5.orders_get(ticket=args.ticket)
     if not orders:
@@ -869,11 +1032,11 @@ def cancel_order(mt5, args, journal):
         )
 
     order = orders[0]
-    if int(order.magic) != MAGIC:
+    if int(order.magic) != args.magic:
         return refuse(
             journal,
             base,
-            f"refused: ticket {order.ticket} carries magic {int(order.magic)}, not this tool's {MAGIC}: another "
+            f"refused: ticket {order.ticket} carries magic {int(order.magic)}, not this tool's {args.magic}: another "
             "path placed it, and this tool removes only what it placed. Nothing was sent.",
             plan,
         )
@@ -884,9 +1047,11 @@ def cancel_order(mt5, args, journal):
     request = {
         "action": mt5.TRADE_ACTION_REMOVE,
         "order": int(order.ticket),
-        "magic": MAGIC,
+        "magic": args.magic,
         "comment": args.comment,
     }
+    if guard is not None:
+        guard()
     result = mt5.order_send(request)
     answer = summarise(mt5, result, None)
     record = {
@@ -918,7 +1083,7 @@ def cancel_order(mt5, args, journal):
     return EXIT_OK if answer.get("done") else EXIT_BROKER
 
 
-def report_status(mt5, args, journal):
+def report_status(mt5, args, journal, identity=None):
     """What the account holds right now: read-only, and the same rows the feed publishes."""
     positions = mt5.positions_get(ticket=args.ticket) if args.ticket else mt5.positions_get()
     orders = mt5.orders_get()
@@ -971,6 +1136,9 @@ def report_status(mt5, args, journal):
             "orders_open": len(orders or ()),
         },
         "ticket_filter": args.ticket,
+        # The identity this run was checked against, when it was checked: the masked login, the server and the
+        # terminal path, never the account number. A read with no file states null rather than an empty claim.
+        "identity": identity,
         "positions": rows,
         "orders": order_rows,
     }
@@ -1000,6 +1168,13 @@ def build_parser():
     parser.add_argument("--deviation", type=int, default=DEFAULT_DEVIATION_POINTS)
     parser.add_argument("--path", default=None)
     parser.add_argument("--journal", default=DEFAULT_JOURNAL)
+    # The ownership number this lane's tickets carry. Lane 1 passes nothing and gets its own; the second account
+    # passes its own, and doing so requires the identity file below, because a magic says which path placed a
+    # ticket and not which account the terminal is logged into.
+    parser.add_argument("--magic", type=int, default=MAGIC)
+    # The private file this lane's terminal must match: login, server and, optionally, terminal path. A path on the
+    # command line rather than a login, so the account number never lands in a task's XML, a log or a journal.
+    parser.add_argument("--expect-identity", dest="expect_identity", default=None)
     parser.add_argument("--confirm-live", dest="confirm_live", action="store_true")
     parser.add_argument("--help", dest="help", action="store_true")
     return parser
@@ -1030,15 +1205,37 @@ def main(argv=None):
 
     mt5 = attach(args.path)
     try:
-        if args.action == "open":
-            return open_order(mt5, args, args.journal)
-        if args.action == "close":
-            return close_order(mt5, args, args.journal)
-        if args.action == "modify":
-            return modify_order(mt5, args, args.journal)
-        if args.action == "cancel":
-            return cancel_order(mt5, args, args.journal)
-        return report_status(mt5, args, args.journal)
+        # The identity gate, before anything is read or sent: a run whose terminal is another account must not even
+        # be read as this lane's, and a private file that is missing is a refusal rather than a shrug. With no
+        # --expect-identity this is a no-op and lane 1 behaves exactly as it always did.
+        guard, identity = identity_guard(mt5, args)
+        facts = verify_identity(mt5, identity) if identity is not None else None
+        # The facts are put on the parsed arguments so every record this run writes - an open, a close, a move, a
+        # removal or a refusal - says which account it was made on, in the same masked form.
+        args.identity_facts = facts
+        if facts is not None:
+            print(
+                f"IDENTITY {facts['login_masked']} on {facts['server']}"
+                f"{' at ' + facts['terminal_path'] if facts.get('terminal_path') else ''}"
+            )
+        try:
+            if args.action == "open":
+                return open_order(mt5, args, args.journal, guard)
+            if args.action == "close":
+                return close_order(mt5, args, args.journal, guard)
+            if args.action == "modify":
+                return modify_order(mt5, args, args.journal, guard)
+            if args.action == "cancel":
+                return cancel_order(mt5, args, args.journal, guard)
+            return report_status(mt5, args, args.journal, facts)
+        except IdentityRefused as refused:
+            # The check that fires between a read and a send: the account changed under this run, so the send it was
+            # about to make is not made, and the refusal says which account it found.
+            base = {"at_utc": now_iso(), "tool": TOOL, "action": args.action, "identity": facts or None}
+            return refuse(args.journal, base, f"refused: {refused}")
+    except IdentityRefused as refused:
+        base = {"at_utc": now_iso(), "tool": TOOL, "action": args.action, "identity": None}
+        return refuse(args.journal, base, f"refused: {refused}")
     finally:
         mt5.shutdown()
 
