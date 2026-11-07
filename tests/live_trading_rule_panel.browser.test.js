@@ -249,6 +249,10 @@ test("live calls and a close beyond a marked level produce the module's own tick
   const btc = feed.instruments.find(instrument => instrument.symbol === "BTCUSD");
   const lastMs = Math.max(...btc.m5.bars.map(bar => Date.parse(bar.time_utc)));
   btc.m5.bars = crossingBars(btcSide, lastMs);
+  // The committed snapshot is the lane's own live one and it now carries a position on BTCUSD. This case is about
+  // a close beyond a marked level producing a ticket, and a pair already holding one is `blocked` by the rule
+  // itself, so the position is taken out of the fixture rather than the case being read as a failure.
+  feed.positions = (Array.isArray(feed.positions) ? feed.positions : []).filter(position => position.symbol !== "BTCUSD");
 
   const server = await startServer({ feed, levels, layer1 });
   const browser = await chromium.launch({ headless: true });

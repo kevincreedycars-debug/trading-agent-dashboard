@@ -16141,10 +16141,172 @@ function liveTradingLaneRows() {
   return Array.isArray(lanes) ? lanes.filter(row => row && typeof row === "object" && row.id) : [];
 }
 
+function liveTradingDrawData(fallback = null) {
+  const view = liveTradingLaneView();
+  // The primary lane draws the object the render was handed - which is its own snapshot on every ordinary call,
+  // and a caller's snapshot when one is passed in (the readback tests, and any hand render of a re-read feed).
+  if (view.id === "ftmo-1") return fallback || liveTradingData || {};
+  if (view.state === "ok" || view.state === "stale") return view.data || {};
+  return {};
+}
+
+// Ticket actions are offered only against a lane whose snapshot is inside its window: a Close pressed on a stale
+// table is an act against an account this page can no longer see.
+function liveTradingLaneActionsAllowed() {
+  // Lane 1's own staleness is drawn by the banner above it and its loop refuses a stale feed before it trades; a
+  // second lane has no such loop behind the page, so its actions are offered only against a snapshot this page can
+  // date. The gate is therefore on the lane that is not the primary one, and it says why.
+  const view = liveTradingLaneView();
+  return view.id === "ftmo-1" ? !view.data?.meta?.error : view.state === "ok";
+}
+
+function liveTradingLaneSelector(view = liveTradingLaneView()) {
+  const buttons = LIVE_TRADING_LANES.map(lane => {
+    const laneView = liveTradingLaneView(lane.id);
+    const badge = laneView.state === "ok"
+      ? ""
+      : `<i class="live-trading-lane-badge ${laneView.state}">${escapeHtml(laneView.state.toUpperCase())}</i>`;
+    const pressed = lane.id === view.id ? "true" : "false";
+    return `
+      <button type="button" class="live-trading-lane-button${lane.id === view.id ? " active" : ""}" data-live-lane="${escapeHtml(lane.id)}" aria-pressed="${pressed}" title="${escapeHtml(`${lane.label}: ${lane.note}`)}">
+        <span class="live-trading-lane-label">${escapeHtml(lane.label)}</span>
+        <span class="live-trading-lane-note">${escapeHtml(lane.note)}</span>${badge}
+      </button>`;
+  }).join("");
+  return `
+    <section class="live-trading-lane-selector" aria-label="FTMO account">
+      <div class="live-trading-lane-buttons" role="group" aria-label="Which account's charts and tables to draw">${buttons}</div>
+      <p class="live-trading-lane-caption">One selector for the whole tab: the four charts, their overlays, the rule panel and every table below them follow it. ${escapeHtml(view.detail || "")}</p>
+    </section>
+  `;
+}
+
+// A lane that cannot be drawn says so where the charts would be, in the lane's own words rather than as an empty
+// box: parked, missing and stale are three different facts and each one is stated.
+function liveTradingLaneNotice(view) {
+  if (view.state === "ok") return "";
+  const tone = view.tone === "error" ? "error" : view.tone === "fresh" ? "fresh" : "stale";
+  const heading = view.state === "stale"
+    ? `${view.label} is stale`
+    : view.state === "parked" ? `${view.label} is parked` : `${view.label} has no snapshot here`;
+  return `
+    <div class="live-trading-lane-notice ${tone}">
+      <b>${escapeHtml(heading)}</b>
+      <p>${escapeHtml(view.detail)}</p>
+    </div>
+  `;
+}
+
+// The ladder a lane trades: the lines the snapshot carries, and - for a lane whose snapshot does not carry the
+// marked file - the ladder this page published, joined by symbol, which is the join the loop makes. The primary
+// lane is left exactly as it was: its snapshot's own levels, applied by the page when the ladder is read.
+function liveTradingInstrumentLevels(instrument) {
+  const own = liveTradingChartLevelsFor(instrument);
+  if (own.length) return own;
+  const published = Array.isArray(liveTradingLevelsData?.instruments)
+    ? liveTradingLevelsData.instruments.find(row => row?.symbol === instrument?.symbol)
+    : null;
+  return Array.isArray(published?.levels) ? published.levels : [];
+}
+
+// The same ladder, as the grid the selected lane trades: `lib/l2l_strategy.js` is the module the loop and the
+// checker read, so a midpoint drawn here is the midpoint a ticket would be placed at.
+function liveTradingGridLevels(instrument) {
+  const view = liveTradingLaneView();
+  const own = liveTradingChartLevelsFor(instrument);
+  const levels = own.length || view.id === "ftmo-1" ? own : liveTradingInstrumentLevels(instrument);
+  if (view.grid !== "half" || !liveTradingStrategy || typeof liveTradingStrategy.gridLevels !== "function") {
+    return levels;
+  }
+  return liveTradingStrategy.gridLevels(levels, "half");
+}
+
+// Switching lanes is page state only, and it repaints from the read the page already holds: no fetch, no write.
+function liveTradingSelectLane(id) {
+  if (!LIVE_TRADING_LANES.some(lane => lane.id === id)) return;
+  liveTradingSelectedLane = id;
+  liveTradingClose.pending = null;
+  liveTradingClose.pending_position = null;
+  renderLiveTrading(liveTradingData || {});
+}
+
 function liveTradingLaneEnabled(lane) {
   // Enabled is the default in the lanes file and here: only an explicit false parks a lane, so a document
   // written before the flag existed does not read as "everything disabled".
   return !lane || lane.enabled !== false;
+}
+
+// ---- Which lane the tab draws -----------------------------------------------------------------------------
+// One selector above the charts, two accounts, and every number below it - the four charts, their overlays, the
+// rule panel, the tables, the heartbeat and the ticket actions - read from that one choice. The primary lane is
+// this page's own snapshot (`liveTradingData`); a second lane reads the snapshot the publisher carries for it.
+//
+// A lane that is parked, missing or stale is drawn as exactly that, and a lane-2 chart never falls back to lane
+// 1's numbers: the one thing a two-account page must not do is show one account's prices under the other's name.
+const LIVE_TRADING_LANES = [
+  { id: "ftmo-1", label: "FTMO 1 \u00b7 L2L", note: "the marked ladder, five to one" },
+  { id: "ftmo-2", label: "FTMO 2 \u00b7 0.5 L2L", note: "the half grid, three to one" }
+];
+let liveTradingSelectedLane = "ftmo-1";
+
+// The lanes document's own row for a lane. Named apart from `liveTradingLaneRow(label, value)`, which draws one
+// `<dt>/<dd>` line inside a card: two things called "lane row" would be one name too many.
+function liveTradingLaneRecord(id) {
+  return liveTradingLaneRows().find(row => row && row.id === id) || null;
+}
+
+function liveTradingLaneSnapshot(id) {
+  // The primary lane is this page's own snapshot, read live rather than from the copy `loadLiveTradingLanes` took:
+  // the page replaces `liveTradingData` whenever it re-joins the marked ladder, so a reference held at load would
+  // draw the levels from before the last mark.
+  if (id === "ftmo-1") return liveTradingData && !liveTradingData.meta?.error ? liveTradingData : null;
+  const snapshot = liveTradingLanes.snapshots[id];
+  if (snapshot && snapshot.present && snapshot.data) return snapshot.data;
+  return null;
+}
+
+// The four states a lane can be drawn in, in words:
+//   ok       a snapshot inside its own freshness window;
+//   stale    a snapshot whose window has passed - real numbers, but nobody is writing them now;
+//   missing  an enabled lane with no snapshot on this page;
+//   parked   a lane the lanes file marks enabled: false, so no loop trades it and nothing is published for it.
+function liveTradingLaneView(id = liveTradingSelectedLane) {
+  const entry = LIVE_TRADING_LANES.find(lane => lane.id === id) || { id, label: id, note: "" };
+  const row = liveTradingLaneRecord(id);
+  const snapshot = liveTradingLaneSnapshot(id);
+  const grid = row?.strategy?.grid === "half" ? "half" : "full";
+  const stated = Number(row?.strategy?.r_multiple);
+  const base = { id, label: entry.label, note: entry.note, row, data: null, grid, rMultiple: stated > 0 ? stated : 5 };
+  if (id !== "ftmo-1" && row && !liveTradingLaneEnabled(row)) {
+    return {
+      ...base,
+      state: "parked",
+      tone: "stale",
+      detail: `${entry.label} is parked in the lanes file (enabled: false): nothing is published for it and no loop trades it, so there is nothing to draw.`
+    };
+  }
+  if (!snapshot || snapshot.meta?.error) {
+    const why = snapshot?.meta?.error
+      ? `its snapshot could not be read (${snapshot.meta.error})`
+      : "this page carries no snapshot for it";
+    return {
+      ...base,
+      state: "missing",
+      tone: "error",
+      detail: `${entry.label} cannot be drawn: ${why}. Nothing is shown for it rather than lane 1's numbers.`
+    };
+  }
+  const freshness = liveTradingFreshness(snapshot);
+  if (freshness.tone === "fresh") {
+    return { ...base, data: snapshot, state: "ok", tone: "fresh", detail: freshness.detail };
+  }
+  return {
+    ...base,
+    data: snapshot,
+    state: "stale",
+    tone: freshness.tone === "error" ? "error" : "stale",
+    detail: `${freshness.detail} Its figures are drawn, labelled stale, and no ticket action is offered against them.`
+  };
 }
 
 // The code a heartbeat says wrote it. `git_blob` is the file as git hashes it, which is the number
@@ -16968,7 +17130,7 @@ function liveTradingLadderExtensionPlan(instrument) {
 }
 
 function liveTradingChartInstrument() {
-  const instruments = Array.isArray(liveTradingData?.instruments) ? liveTradingData.instruments : [];
+  const instruments = Array.isArray(liveTradingDrawData()?.instruments) ? liveTradingDrawData().instruments : [];
   return instruments.find(instrument => instrument?.symbol === liveTradingChartSymbol) || instruments[0] || null;
 }
 
@@ -17568,8 +17730,8 @@ function liveTradingChartTrades(instrument, points, geometry, digits) {
   // passes neither still gets the markers, drawn without a box.
   const plotX0 = Number.isFinite(geometry?.plotX0) ? geometry.plotX0 : Math.min(...points.map((point, index) => xAt(index)), 0);
   const plotX1 = Number.isFinite(geometry?.plotX1) ? geometry.plotX1 : Math.max(...points.map((point, index) => xAt(index)), 0);
-  const trades = Array.isArray(liveTradingData?.closed_trades)
-    ? liveTradingData.closed_trades.filter(trade => trade?.symbol === instrument?.symbol)
+  const trades = Array.isArray(liveTradingDrawData()?.closed_trades)
+    ? liveTradingDrawData().closed_trades.filter(trade => trade?.symbol === instrument?.symbol)
     : [];
   const times = points.map(point => Date.parse(point.time_utc));
   if (!trades.length || !points.length) return { html: "", count: 0, offWindow: 0 };
@@ -17594,10 +17756,10 @@ function liveTradingChartTrades(instrument, points, geometry, digits) {
   // The position tool for one trade. Its size comes from the trade's own row and the instrument's own
   // contract facts, so nothing here is a number the page chose.
   const barWidth = points.length > 1 ? (plotX1 - plotX0) / points.length : 12;
-  const instrumentRow = Array.isArray(liveTradingData?.instruments)
-    ? liveTradingData.instruments.find(row => row?.symbol === instrument?.symbol) || {}
+  const instrumentRow = Array.isArray(liveTradingDrawData()?.instruments)
+    ? liveTradingDrawData().instruments.find(row => row?.symbol === instrument?.symbol) || {}
     : {};
-  const accountRow = liveTradingData?.account || {};
+  const accountRow = liveTradingDrawData()?.account || {};
   const sizers = [];
   let tools = 0;
 
@@ -17696,8 +17858,8 @@ function liveTradingChartTrades(instrument, points, geometry, digits) {
 // counted and named in the caption rather than hidden.
 function liveTradingChartOpenPositions(instrument, points, geometry, digits) {
   const { xAt, yAt, plotX0, plotX1, plotY0, plotY1 } = geometry;
-  const rows = Array.isArray(liveTradingData?.positions)
-    ? liveTradingData.positions.filter(row => row?.symbol === instrument?.symbol)
+  const rows = Array.isArray(liveTradingDrawData()?.positions)
+    ? liveTradingDrawData().positions.filter(row => row?.symbol === instrument?.symbol)
     : [];
   if (!rows.length || !points.length) return { html: "", count: 0, bracketed: 0, beforeWindow: 0 };
 
@@ -17793,7 +17955,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
     Number.isFinite(Number(bar?.low)) && Number.isFinite(Number(bar?.close)));
   const closes = (Array.isArray(block.close_series) ? block.close_series : [])
     .filter(point => Number.isFinite(Number(point?.close)));
-  const levels = liveTradingChartLevelsFor(instrument);
+  const levels = liveTradingGridLevels(instrument);
 
   // An OHLC-less snapshot still gets a close line rather than an empty box, so the chart appears from
   // the artifact that is published today and upgrades to candles when the producer next runs.
@@ -18009,8 +18171,11 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
     const label = String(level.label || level.name || "level");
     const tag = `${label} ${liveTradingPrice(price, digits)}`;
     const alerting = ladderAlert?.active === true && Math.abs(price - ladderAlert.level) < 1e-9;
-    return `<line x1="${plotX0}" y1="${ly.toFixed(2)}" x2="${plotX1}" y2="${ly.toFixed(2)}" class="live-trading-chart-level${alerting ? " alert" : ""}"></line>`
-      + `<text x="${plotX0 + 6}" y="${(ly - 6).toFixed(2)}" class="live-trading-chart-level-tag">${escapeHtml(tag)}</text>`
+    // A midpoint of the half grid is drawn as its own kind of line rather than as another marked level: the tag says
+    // so, and the strokes differ, so a reader can tell the ladder the user marked from the grid this lane trades.
+    const midpoint = level.role === "midpoint";
+    return `<line x1="${plotX0}" y1="${ly.toFixed(2)}" x2="${plotX1}" y2="${ly.toFixed(2)}" class="live-trading-chart-level${alerting ? " alert" : ""}${midpoint ? " midpoint" : ""}"></line>`
+      + `<text x="${plotX0 + 6}" y="${(ly - 6).toFixed(2)}" class="live-trading-chart-level-tag${midpoint ? " midpoint" : ""}">${escapeHtml(midpoint ? `midpoint ${liveTradingPrice(price, digits)}` : tag)}</text>`
       + `<rect x="${plotX1 + 2}" y="${(ly - 9).toFixed(2)}" width="${axisWidth - 4}" height="18" rx="3" class="live-trading-chart-level-box"></rect>`
       + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(ly + 4).toFixed(2)}" text-anchor="middle" class="live-trading-chart-level-box-text">${escapeHtml(liveTradingPrice(price, digits))}</text>`;
   }).join("");
@@ -18250,13 +18415,19 @@ function liveTradingRuleReadings(data, nowMs) {
     instruments: instruments.map(instrument => ({
       symbol: instrument.symbol,
       dashboard_asset: instrument.dashboard_asset,
-      levels: instrument.levels,
+      // A lane's snapshot may not carry the ladder at all: the page joins the marked file it holds, which is the
+      // same join the loop makes, so a lane-2 chart is read against the ladder lane 2 trades.
+      levels: liveTradingInstrumentLevels(instrument),
       m5: instrument.m5,
       point: instrument.point
     })),
     positions: Array.isArray(data?.positions) ? data.positions : [],
     calls: handed,
-    nowMs: now
+    nowMs: now,
+    // The rule the lane on screen trades: a half grid at three to one for the second account, the marked ladder at
+    // five to one for the first, both read from the same module the loops read.
+    rMultiple: liveTradingLaneView().rMultiple,
+    grid: liveTradingLaneView().grid
   });
   const bySymbol = {};
   rows.forEach(row => { bySymbol[row.symbol] = row; });
@@ -18653,6 +18824,11 @@ function setupLiveTradingChart(panel) {
     // Close now link is left to the browser: that navigation is how the ticket reaches the close link
     // registered on this machine, so its default is never prevented, and the note below it says what the page
     // handed over rather than what it knows.
+    const laneButton = event.target.closest("[data-live-lane]");
+    if (laneButton) {
+      liveTradingSelectLane(String(laneButton.dataset.liveLane || ""));
+      return;
+    }
     const closeAskButton = event.target.closest("[data-live-close-ask]");
     if (closeAskButton) {
       liveTradingOpenCloseConfirm(Number(closeAskButton.dataset.liveCloseAsk));
@@ -18666,7 +18842,7 @@ function setupLiveTradingChart(panel) {
     const closeLoopButton = event.target.closest("[data-live-close-loop]");
     if (closeLoopButton && !closeLoopButton.disabled) {
       const ticket = Number(closeLoopButton.dataset.liveCloseLoop);
-      const row = (Array.isArray(liveTradingData?.positions) ? liveTradingData.positions : [])
+      const row = (Array.isArray(liveTradingDrawData()?.positions) ? liveTradingDrawData().positions : [])
         .find(position => Number(position?.ticket) === ticket) || liveTradingClose.pending_position;
       askLiveTradingClose(ticket, row);
       return;
@@ -18971,7 +19147,7 @@ function liveTradingBarsCoverage(data) {
 // The card chart is the same reading at card size: mini candles when the snapshot carries OHLC bars,
 // and an area line of the closes when it carries only `close_series`. It replaces the strip of hanging
 // bars, which showed each close's direction but nothing a reader could line up with the M5 chart above.
-function liveTradingCardChart(m5, digits, symbol) {
+function liveTradingCardChart(m5, digits, symbol, levels = []) {
   const bars = (Array.isArray(m5?.bars) ? m5.bars : []).filter(bar =>
     Number.isFinite(Number(bar?.high)) && Number.isFinite(Number(bar?.low)) && Number.isFinite(Number(bar?.close)));
   const closes = (Array.isArray(m5?.close_series) ? m5.close_series : [])
@@ -19003,6 +19179,19 @@ function liveTradingCardChart(m5, digits, symbol) {
     min -= pad;
     max += pad;
   }
+  // The two nearest ladder lines, when they sit within twice the span the candles cover: a line the price is being
+  // read against belongs on the picture, and a line far outside it would flatten the candles into a stripe. This is
+  // why the cards show the ladder at all - the same convention the full chart uses, at card size.
+  const span = max - min;
+  const lastCloseValue = Number(points[points.length - 1].close);
+  const near = levels
+    .map(level => Number(level?.price))
+    .filter(Number.isFinite)
+    .filter(price => Math.abs(price - lastCloseValue) <= span * 2);
+  if (near.length) {
+    min = Math.min(min, ...near);
+    max = Math.max(max, ...near);
+  }
   const headroom = (max - min) * 0.08;
   min -= headroom;
   max += headroom;
@@ -19026,15 +19215,32 @@ function liveTradingCardChart(m5, digits, symbol) {
 
   const lastY = Math.min(plotY1, Math.max(plotY0, yAt(last.close)));
   const midY = (plotY0 + plotY1) / 2;
+  // The marked ladder, and on the half grid every midpoint between two lines: solid for a price the user marked,
+  // dashed for the line the second account's lane inserts. Only the lines the candles actually span are drawn, and
+  // the legend states which is which rather than leaving a reader to guess from the dash.
+  const drawn = levels.filter(level => Number.isFinite(Number(level?.price)));
+  const levelLines = drawn
+    .filter(level => Number(level.price) >= min && Number(level.price) <= max)
+    .map(level => {
+      const y = yAt(Number(level.price)).toFixed(2);
+      const midpoint = level.role === "midpoint";
+      return `<line x1="${plotX0}" y1="${y}" x2="${plotX1}" y2="${y}" class="live-trading-card-chart-level${midpoint ? " midpoint" : ""}"></line>`;
+    }).join("");
+  const hasMidpoints = drawn.some(level => level.role === "midpoint");
+  const legend = drawn.length
+    ? `<p class="live-trading-card-chart-legend"><span class="solid"></span>marked level${hasMidpoints ? ` <span class="dashed"></span>midpoint (0.5 grid)` : ""}</p>`
+    : "";
   const aria = `Last ${points.length} M5 ${candles ? "candles" : "closes"} for ${symbol || "instrument"}`;
   return `<div class="live-trading-card-chart">
       <svg class="live-trading-card-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escapeHtml(aria)}">
         <rect x="0" y="0" width="${width}" height="${height}" class="live-trading-card-chart-bg"></rect>
         <line x1="${plotX0}" y1="${midY.toFixed(2)}" x2="${plotX1}" y2="${midY.toFixed(2)}" class="live-trading-card-chart-grid"></line>
+        ${levelLines}
         ${marks}
         <line x1="${plotX0}" y1="${lastY.toFixed(2)}" x2="${plotX1}" y2="${lastY.toFixed(2)}" class="live-trading-card-chart-last"></line>
         <text x="${plotX1 + 8}" y="${(lastY + 4).toFixed(2)}" class="live-trading-card-chart-price ${tone}">${escapeHtml(liveTradingPrice(last.close, digits))}</text>
       </svg>
+      ${legend}
     </div>`;
 }
 
@@ -19114,7 +19320,7 @@ function liveTradingInstrumentCard(instrument, data) {
         <div><dt>Change</dt><dd>${escapeHtml(liveTradingSigned(m5.change_points, digits) + changePct)}</dd></div>
       </dl>
 
-      ${liveTradingCardChart(m5, digits, instrument.symbol)}
+      ${liveTradingCardChart(m5, digits, instrument.symbol, liveTradingGridLevels(instrument))}
 
       ${staleNote}
 
@@ -19167,6 +19373,11 @@ function liveTradingDurationLabel(seconds) {
 const liveTradingCloseLink = "l2lclose";
 
 function liveTradingCloseLaneMagic() {
+  // The magic of the lane on screen: the number the lanes document publishes for it, or - for a document written
+  // before the field existed - lane 1's own from the shared module.
+  const row = liveTradingLaneRecord(liveTradingSelectedLane);
+  const stated = Number(row?.magic);
+  if (Number.isFinite(stated) && stated > 0) return stated;
   return liveTradingStrategy ? Number(liveTradingStrategy.LANE_MAGIC) : null;
 }
 
@@ -19217,6 +19428,9 @@ function liveTradingCloseNote() {
 // account says whose it is, because the loop only ever takes out a ticket carrying its own magic.
 function liveTradingCloseCell(position) {
   const ticket = Number(position?.ticket);
+  if (!liveTradingLaneActionsAllowed()) {
+    return `<td class="live-trading-close-cell"><span class="live-trading-close-other" title="This lane's snapshot is not current on this page, so no action is offered against the account">unverified</span></td>`;
+  }
   if (!Number.isInteger(ticket) || ticket <= 0) {
     return `<td class="live-trading-close-cell"><span class="live-trading-close-other">${escapeHtml(displayDash())}</span></td>`;
   }
@@ -19259,7 +19473,7 @@ function liveTradingCloseCell(position) {
 // open until the reader cancels it or the position leaves the table.
 function liveTradingOpenCloseConfirm(ticket) {
   const numeric = Number(ticket);
-  const positions = Array.isArray(liveTradingData?.positions) ? liveTradingData.positions : [];
+  const positions = Array.isArray(liveTradingDrawData()?.positions) ? liveTradingDrawData().positions : [];
   liveTradingClose.pending = Number.isInteger(numeric) ? numeric : null;
   liveTradingClose.pending_position = positions.find(row => Number(row?.ticket) === numeric) || null;
   liveTradingClose.status = "";
@@ -19335,8 +19549,8 @@ async function askLiveTradingClose(ticket, position) {
     requestedBy: module_.REQUESTED_BY.dashboard,
     note: liveTradingCloseReason(),
     lane,
-    accountLoginMasked: liveTradingData?.account?.login_masked ?? null,
-    accountServer: liveTradingData?.account?.server ?? null
+    accountLoginMasked: liveTradingDrawData()?.account?.login_masked ?? null,
+    accountServer: liveTradingDrawData()?.account?.server ?? null
   });
   if (!built.ok) {
     liveTradingClose.tone = "error";
@@ -19390,6 +19604,87 @@ async function askLiveTradingClose(ticket, position) {
   liveTradingClose.tone = "waiting";
   liveTradingClose.status = `Asked: ticket ${ticket} is written into ${target.path} on ${target.branch}${commit}. The loop reads it on its next tick, within five minutes, and this row clears when a later snapshot shows the position gone.`;
   renderLiveTrading(liveTradingData || {});
+}
+
+// The lane's working entries: the limits the account has resting right now, with the size, the stop and the
+// target each one carries. The snapshot's `orders` block is what the terminal reported on the run that wrote it,
+// so this is a read-back rather than an instruction. When entries are paused the note says so and says the thing a
+// paused table can be mistaken about: a limit already resting is held by the broker, so it can still fill.
+function liveTradingWorkingOrders(data) {
+  const orders = Array.isArray(data?.orders) ? data.orders : [];
+  const view = liveTradingLaneView();
+  const paused = view.row?.trader?.strategy?.entries_paused === true || view.row?.trader?.entries_paused === true;
+  const note = paused
+    ? "Entries are paused on this lane: no new limit will be left, and a limit already resting can still fill because the broker holds it rather than the loop."
+    : "A working limit is held by the broker, not by the loop: it fills when the market reaches it, whether or not the loop is running.";
+  const head = `
+    <div class="live-trading-table-head">
+      <h3>Working entries</h3>
+      <p class="live-trading-table-meta">${
+        orders.length
+          ? `${orders.length} resting on ${escapeHtml(view.label)}`
+          : "None resting on this account."
+      }</p>
+    </div>
+  `;
+  if (!orders.length) {
+    return `
+      <section class="live-trading-table-panel">
+        ${head}
+        <p class="live-trading-table-empty">Nothing is resting, so there is no entry to read back. A limit the loop leaves appears here on the next producer run with the size, the stop and the target it carries.</p>
+        <p class="live-trading-table-note-line">${escapeHtml(note)}</p>
+      </section>
+    `;
+  }
+  const rows = orders.map(order => {
+    const side = ["buy", "sell"].includes(order?.side) ? order.side : "buy";
+    const digits = liveTradingDigitsFor(data, order?.symbol);
+    const own = [Number(view.row?.magic), Number(liveTradingStrategy?.LANE_MAGIC), Number(liveTradingStrategy?.HALF_LANE_MAGIC)]
+      .filter(Number.isFinite)
+      .includes(Number(order?.magic));
+    return `
+      <tr>
+        <th scope="row">
+          <span class="live-trading-asset">${escapeHtml(order?.dashboard_asset || order?.symbol || displayDash())}</span>
+          <span class="live-trading-table-symbol">${escapeHtml(order?.symbol || displayDash())}</span>
+        </th>
+        <td class="num">#${escapeHtml(String(order?.ticket ?? displayDash()))}</td>
+        <td><span class="live-trading-side ${side}">${escapeHtml(side.toUpperCase())}</span></td>
+        <td class="num">${escapeHtml(String(order?.type || displayDash()).replace(/^ORDER_TYPE_/, "").toLowerCase().replace(/_/g, " "))}</td>
+        <td class="num">${escapeHtml(String(order?.volume ?? displayDash()))}</td>
+        <td class="num">${escapeHtml(liveTradingPrice(order?.price_open, digits))}</td>
+        <td class="num">${escapeHtml(order?.stop_loss === null || order?.stop_loss === undefined ? displayDash() : liveTradingPrice(order.stop_loss, digits))}</td>
+        <td class="num">${escapeHtml(order?.take_profit === null || order?.take_profit === undefined ? displayDash() : liveTradingPrice(order.take_profit, digits))}</td>
+        <td class="num">${escapeHtml(liveTradingDateTimeLabel(order?.placed?.time_utc ?? order?.placed))}</td>
+        <td class="live-trading-table-note">${escapeHtml(own ? (order?.comment || "this lane's") : "another path's")}</td>
+      </tr>
+    `;
+  }).join("");
+  return `
+    <section class="live-trading-table-panel">
+      ${head}
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr>
+              <th scope="col">Trade</th>
+              <th scope="col">Ticket</th>
+              <th scope="col">Side</th>
+              <th scope="col">Type</th>
+              <th scope="col">Volume</th>
+              <th scope="col">Entry</th>
+              <th scope="col">Stop</th>
+              <th scope="col">Target</th>
+              <th scope="col">Placed (UTC)</th>
+              <th scope="col">Ticket owner</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">${escapeHtml(note)}</p>
+    </section>
+  `;
 }
 
 function liveTradingPositions(data) {
@@ -19590,11 +19885,16 @@ function liveTradingClosedTrades(data) {
   `;
 }
 
-function renderLiveTrading(data) {
+function renderLiveTrading(passedData) {
   const panel = document.getElementById("liveTradingPanel");
   const updated = document.getElementById("liveTradingUpdated");
   if (!panel) return;
 
+  // Which lane the tab draws, decided once per render: every figure below - banner, charts, overlays, rule panel,
+  // tables and ticket actions - is read from this one view, so a button press cannot leave half the page on one
+  // account and half on the other.
+  const laneView = liveTradingLaneView();
+  const data = liveTradingDrawData(passedData);
   const freshness = liveTradingFreshness(data);
   const instruments = Array.isArray(data?.instruments) ? data.instruments : [];
   const account = data?.account || {};
@@ -19605,7 +19905,7 @@ function renderLiveTrading(data) {
   const ruleState = liveTradingRuleReadings(data);
 
   if (updated) {
-    updated.textContent = `${freshness.label} · snapshot ${data?.generated_at_utc || "unknown"}`;
+    updated.textContent = `${laneView.label} · ${freshness.label} · snapshot ${data?.generated_at_utc || "unknown"}`;
   }
 
   const accountChips = [
@@ -19632,10 +19932,14 @@ function renderLiveTrading(data) {
     : ", nothing marked yet";
 
   panel.innerHTML = `
+    ${liveTradingLaneSelector(laneView)}
+
     <div class="live-trading-banner ${freshness.tone}">
       <span class="live-trading-badge ${freshness.tone}">${escapeHtml(freshness.label)}</span>
-      <p>${escapeHtml(freshness.detail)}</p>
+      <p>${escapeHtml(`${laneView.label}: ${freshness.detail}`)}</p>
     </div>
+
+    ${liveTradingLaneNotice(laneView)}
 
     ${liveTradingAccounts()}
 
@@ -19648,6 +19952,8 @@ function renderLiveTrading(data) {
     <div class="live-trading-grid">${cards}</div>
 
     ${liveTradingPositions(data)}
+
+    ${laneView.id === "ftmo-1" ? "" : liveTradingWorkingOrders(data)}
 
     ${liveTradingClosedTrades(data)}
 
