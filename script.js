@@ -9,12 +9,20 @@ const inputHealthUrlDefault = "./data/input-health.json?v=20260723-operational-w
 let economicEventRefreshUrl = economicEventRefreshUrlDefault;
 let economicEventsSourceUrl = economicEventsSourceUrlDefault;
 let inputHealthUrl = inputHealthUrlDefault;
+// The five Backtest Checker corpora are 56.8MB of an 80.4MB published tree, and a Pages deployment moves the whole
+// tree rather than the files a publish changed - on a 1200s publish cycle that is what made GitHub's own deploy step
+// time out. They are frozen on a branch of their own, which raw serves with an open origin, and read from there until
+// the checker is used again. Nothing on the default page asks for them: this sub-tab is what asks, and it still asks
+// in one click. To bring them back into the published tree, check them onto `main` and point these five lines at
+// ./data/ again: git checkout frozen/backtester-checker-20261107 -- data/backtester-checker-*.json
+const checkerDataBase =
+  "https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/frozen/backtester-checker-20261107/data";
 const checkerDataUrls = {
-  USD: "./data/backtester-checker-usd-24h-2024-01.json?v=20260629-usd-flatband-010",
-  EUR: "./data/backtester-checker-eur-24h-2024-2026.json?v=20260629-eur-flatband-015",
-  GOLD: "./data/backtester-checker-gold-24h-2024-2026.json?v=20260630-gold-xauusd-dashboard",
-  NQ: "./data/backtester-checker-nq-24h-2024-2026.json?v=20260702-nq-qqq-proxy-dashboard",
-  BTC: "./data/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard"
+  USD: `${checkerDataBase}/backtester-checker-usd-24h-2024-01.json?v=20260629-usd-flatband-010`,
+  EUR: `${checkerDataBase}/backtester-checker-eur-24h-2024-2026.json?v=20260629-eur-flatband-015`,
+  GOLD: `${checkerDataBase}/backtester-checker-gold-24h-2024-2026.json?v=20260630-gold-xauusd-dashboard`,
+  NQ: `${checkerDataBase}/backtester-checker-nq-24h-2024-2026.json?v=20260702-nq-qqq-proxy-dashboard`,
+  BTC: `${checkerDataBase}/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard`
 };
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
 const halfL2lReachResearchUrl = "./data/half-l2l-reach-research.json?v=20260809-half-l2l-reach-v2";

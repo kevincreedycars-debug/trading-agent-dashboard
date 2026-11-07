@@ -3194,3 +3194,34 @@ or replacing legacy Pages with a workflow this repository owns, and both are the
 
 Evidence for both, with the run ids and the ages, is in `docs/live-trading/DAILY_ALERT_EMAILS_20261107.md`.
 
+### 2026-11-07, later: the site was republishing 80MB to carry one changed file, so the checker is frozen
+
+The owner asked why the whole site is refreshed at 80MB when only some things need refreshing, and why the unused
+Backtest Checker was being published at all.
+
+**There is no per-file refresh to switch on.** Git already sends only what changed - the publisher's 1200s commit
+carries one snapshot document - but Pages here is legacy branch publishing (`build_type: legacy`, source `main` at
+`/`, `.nojekyll` in the tree), so GitHub builds the branch and deploys a fresh snapshot of the entire tree on every
+push. One changed file, 80.4MB synced. `actions/deploy-pages` would not change that either, since its artifact is the
+whole site too; the lever is the size of the tree, or how often it is pushed.
+
+**So the checker is frozen, on your word.** The five `data/backtester-checker-*` corpora were 59,453,494 bytes - 70.5%
+of the tree - and are read by exactly one place: the Backtest Checker sub-tab, which you are not using. They are now on
+an orphan branch, `frozen/backtester-checker-20261107`, whose tree is those five files and nothing else, and `main`
+drops from 597 files and 84,316,485 bytes to 592 files and 24,862,991 bytes. The sub-tab still works in one click: its
+five `checkerDataUrls` in `script.js` point at `raw.githubusercontent.com` on that branch, which serves them with an
+open origin, and all five answered `200` at their exact committed byte counts before the change went in. Nothing on the
+default page asks for them. Unfreezing is one command and one revert, and both are written down in section 3 of
+`docs/live-trading/DAILY_ALERT_EMAILS_20261107.md`.
+
+What this does not do: it does not make the deploy free, and it does not prove the timeouts are gone - that is evidence
+after several publish cycles, not one green deploy. It takes 70.5% of the work out of a step that was failing on
+exactly that, and it leaves the two levers this repository does not hold - the host's publish cadence, and owning the
+deployment - untouched.
+
+Local work still reads them, from an ignored cache: `npm run checker:corpus` pulls the five into
+`.local/checker-corpus`, and the four calibration cases in `backtester/tests/confidence_calibration.test.js` look there
+first, then at `data/`, and otherwise say why they skip. Guards: full `npm test` 779 tests, 776 pass, 3 fail - and all
+three fail the same way in a second worktree held at `origin/main`'s `d5aa8b16`, so they are this machine's browser
+state, not this change; the four calibration cases are 4/4 with the cache and skip with their reason without it.
+
