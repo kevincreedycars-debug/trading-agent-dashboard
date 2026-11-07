@@ -234,6 +234,14 @@ const TRAIL_BEHIND_R = 3;
 // Mirrors MAGIC in tools/mt5-bridge/live-trading-order.py: a position or a pending order carrying it is one
 // this lane placed. tests/live_trading_trader.test.js holds the two files to the same number.
 const ORDER_MAGIC = 20261004;
+// Mirrors HALF_LANE_MAGIC in lib/l2l_strategy.js: the second account's own ownership number. A magic says which
+// path placed a ticket; it says nothing about which account the terminal is logged into, which is why a lane that
+// passes this one must also pass --expect-identity.
+const HALF_LANE_MAGIC = 20261005;
+// The rule's two numbers as a run gets them. Lane 1 passes neither: five to one on the marked grid is the default,
+// which is what every existing task's command line means by saying nothing.
+const DEFAULT_R_MULTIPLE = 5;
+const DEFAULT_GRID = "full";
 // The deals this loop places are labelled with the pair and the rule they came from, so a reader of the
 // terminal's own history can tell them from the hand-run plumbing proof.
 const COMMENT_PREFIX = "l2l-rule-";
@@ -275,6 +283,22 @@ const USAGE = [
   "                             fixed offset. This counts placements; it is not a loss-limit guard. A ticket put",
   "                             back at the level a standing trade was triggered on is that same trade rather",
   "                             than a new one, so it does not count against this",
+  "  --r-multiple <n>           the target's multiple of the risk (default 5, lane 1's own). The stop is the",
+  "                             entry-to-target distance divided by this, so the second account's lane passes 3",
+  "  --grid <full|half>         which ladder the rule reads (default full, the marked one). `half` inserts one",
+  "                             midpoint between every adjacent pair of marked levels, and every original and every",
+  "                             midpoint is then a line for both an entry and a target",
+  "  --magic <n>                the ownership number this lane's tickets carry (default 20261004). A lane with its",
+  "                             own number is required to pass --expect-identity as well: a magic says which path",
+  "                             placed a ticket, not which account the terminal is logged into",
+  "  --expect-identity <path>   the private identity file this lane's terminal must match - account login, server,",
+  "                             connected state and terminal path - checked by the order tool immediately before",
+  "                             every send, retries included. A wrong or missing identity sends nothing. Required",
+  "                             when --magic is not lane 1's",
+  "  --pause-entries            place nothing new this run: the two decisions that would leave a limit become",
+  "                             stated skips, while the review of working tickets, the exits and the stop rungs go",
+  "                             on. A working limit can still fill while entries are paused - the broker holds it,",
+  "                             not this loop - and the heartbeat says entries are paused so the page can say so",
   "  --close-ticket <n>         hand run only: close this ticket this once, whatever the rule would say, and place",
   "                             nothing else that run. The artifacts are not read and the rule is not asked, since",
   "                             the act is to be out of a named position rather than to judge it; the ticket must be",
@@ -331,6 +355,11 @@ function parseArgs(argv) {
     expireMinutes: DEFAULT_EXPIRE_MINUTES,
     maxOpen: DEFAULT_MAX_OPEN,
     maxPerDay: DEFAULT_MAX_PER_DAY,
+    rMultiple: DEFAULT_R_MULTIPLE,
+    grid: DEFAULT_GRID,
+    magic: ORDER_MAGIC,
+    expectIdentity: null,
+    pauseEntries: false,
     closeTicket: null,
     closeRequests: DEFAULT_CLOSE_REQUESTS,
     lane: null,
@@ -390,6 +419,26 @@ function parseArgs(argv) {
         break;
       case "--max-per-day":
         options.maxPerDay = positiveInteger(token, next());
+        break;
+      case "--r-multiple":
+        options.rMultiple = positiveNumber(token, next());
+        break;
+      case "--grid": {
+        const grid = String(next()).trim().toLowerCase();
+        if (!strategy.GRIDS.includes(grid)) {
+          throw new UsageError(`--grid must be one of ${strategy.GRIDS.join(", ")}, got ${JSON.stringify(grid)}`);
+        }
+        options.grid = grid;
+        break;
+      }
+      case "--magic":
+        options.magic = positiveInteger(token, next());
+        break;
+      case "--expect-identity":
+        options.expectIdentity = String(next()).trim() || null;
+        break;
+      case "--pause-entries":
+        options.pauseEntries = true;
         break;
       case "--close-ticket":
         options.closeTicket = positiveInteger(token, next());
@@ -454,6 +503,14 @@ function parseArgs(argv) {
   if (options.lane !== null && !closeRequests.isLane(options.lane)) {
     throw new UsageError(
       `--lane must be a lane id from config/live-trading-lanes.json (for example ftmo-1), got ${JSON.stringify(options.lane)}.`
+    );
+  }
+  // A lane with an ownership number of its own is a second account, and a second account is exactly the case the
+  // identity gate exists for: the wrong terminal is one flag away and nothing else on this machine notices. So the
+  // file is required rather than merely honoured, and a run that would trade another account refuses to start.
+  if (options.magic !== ORDER_MAGIC && options.expectIdentity === null) {
+    throw new UsageError(
+      `--magic ${options.magic} is not lane 1's own (${ORDER_MAGIC}), so this run trades a second account: pass --expect-identity <path> naming the private file the terminal must match. See docs/live-trading/SECOND_LANE_HALF_L2L.md.`
     );
   }
   return options;
@@ -629,11 +686,11 @@ function closedAtItsTarget(row) {
 //
 // There is no candle reading left in this function: it is the state file and the account's record alone, which is
 // what the permanence ruling leaves.
-function tradeCycles({ state, directions = {}, joined, closedTrades = [] } = {}) {
+function tradeCycles({ state, directions = {}, joined, closedTrades = [], magic = ORDER_MAGIC } = {}) {
   const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
   const instrumentBySymbol = new Map(instruments.filter(row => row?.symbol).map(row => [row.symbol, row]));
   const ours = (Array.isArray(closedTrades) ? closedTrades : []).filter(
-    row => Number(row?.magic) === ORDER_MAGIC && String(row?.comment || "").startsWith(COMMENT_PREFIX)
+    row => Number(row?.magic) === magic && String(row?.comment || "").startsWith(COMMENT_PREFIX)
   );
   // Every act this lane wrote down that took a ticket out by hand: the closes and cancellations of an ask or a
   // hand run, and the answers to close requests that say one landed. They are what lets a trade a person ended
@@ -929,10 +986,10 @@ function rowDirection(row) {
 // that finished past a line - a limit the terminal still reports as working has not filled, so a market at its
 // target has made the move the entry was left for without the entry, and that is exactly what "invalidated" means
 // here. The reading is the same one the trade below ends a level's turn on, through the same helper.
-function reviewPendings({ live, joined, calls = {}, cycles = new Map() } = {}) {
+function reviewPendings({ live, joined, calls = {}, cycles = new Map(), magic = ORDER_MAGIC } = {}) {
   const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
   const directions = calls?.directions && typeof calls.directions === "object" ? calls.directions : {};
-  const orders = (Array.isArray(live?.orders) ? live.orders : []).filter(row => Number(row?.magic) === ORDER_MAGIC);
+  const orders = (Array.isArray(live?.orders) ? live.orders : []).filter(row => Number(row?.magic) === magic);
 
   return orders.map(row => {
     const side = rowDirection(row);
@@ -1017,10 +1074,10 @@ function reviewPendings({ live, joined, calls = {}, cycles = new Map() } = {}) {
 // that reading and the position is left to the stop and target it was placed with rather than exited at whatever
 // the market happens to be. This is the only place this file takes a position out, and the module still decides
 // nothing about it: which way the call stands is `sideForDirection`'s answer, as everywhere else in this lane.
-function reviewPositions({ live, joined, calls = {} } = {}) {
+function reviewPositions({ live, joined, calls = {}, magic = ORDER_MAGIC } = {}) {
   const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
   const directions = calls?.directions && typeof calls.directions === "object" ? calls.directions : {};
-  const positions = (Array.isArray(live?.positions) ? live.positions : []).filter(row => Number(row?.magic) === ORDER_MAGIC);
+  const positions = (Array.isArray(live?.positions) ? live.positions : []).filter(row => Number(row?.magic) === magic);
 
   return positions.map(row => {
     const side = rowDirection(row);
@@ -1117,12 +1174,12 @@ function placementRisk(placement) {
 // against a number this loop does not have. One move per position per run: a trade that reaches its breakeven rung
 // and the trail's first step between two runs is taken to breakeven by this one and to the trail's own level by the
 // next, so a reader never sees two levels for the same rung in one run.
-function stopReview({ live, joined, state, closing = [] } = {}) {
+function stopReview({ live, joined, state, closing = [], magic = ORDER_MAGIC } = {}) {
   const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
   const placements = Array.isArray(state?.placements) ? state.placements : [];
   const alreadyMoved = movedTickets(state);
   const exiting = new Set((Array.isArray(closing) ? closing : []).map(value => Number(value)));
-  const positions = (Array.isArray(live?.positions) ? live.positions : []).filter(row => Number(row?.magic) === ORDER_MAGIC);
+  const positions = (Array.isArray(live?.positions) ? live.positions : []).filter(row => Number(row?.magic) === magic);
 
   return positions.map(row => {
     const ticket = Number(row?.ticket);
@@ -1287,6 +1344,11 @@ function toolArgs(action, options, extra = []) {
   const args = [path.resolve(REPO_ROOT, ORDER_TOOL_RELATIVE), action];
   if (options.terminal) args.push("--path", options.terminal);
   args.push("--journal", path.resolve(REPO_ROOT, options.journal));
+  // Lane 1's own arguments are what they always were: the tool's defaults are lane 1's magic, so it is named only
+  // when a lane carries a different one, and the identity file is named only when the lane has one. That keeps the
+  // published evidence for lane 1 - its task's XML and its journal - byte-identical to before this lane existed.
+  if (options.magic !== undefined && options.magic !== ORDER_MAGIC) args.push("--magic", String(options.magic));
+  if (options.expectIdentity) args.push("--expect-identity", path.resolve(REPO_ROOT, options.expectIdentity));
   return args.concat(extra);
 }
 
@@ -1338,11 +1400,11 @@ function runTool(spawn, options, args) {
 // The account as the terminal has it, with this lane's own tickets picked out by the magic the tool marks
 // them with. A read that does not come back as a status record is null, which is a refusal: a loop that
 // cannot see the account must not place anything into it.
-function liveFromStatus(record) {
+function liveFromStatus(record, magic = ORDER_MAGIC) {
   if (!record || record.action !== "status") return null;
   const positions = Array.isArray(record.positions) ? record.positions : [];
   const orders = Array.isArray(record.orders) ? record.orders : [];
-  const ours = positions.concat(orders).filter(row => Number(row?.magic) === ORDER_MAGIC);
+  const ours = positions.concat(orders).filter(row => Number(row?.magic) === magic);
   return { account: record.account || null, positions, orders, ours };
 }
 
@@ -1868,12 +1930,29 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map() }) {
     return { ...base, decision: "place" };
   });
 
+  // Paused entries: the two decisions above that would leave a limit - a fresh crossing and a put-back at the
+  // level a standing trade was triggered on - become stated skips, and nothing else about the run changes. The
+  // review of what is already working, the exits a turned call asks for and the breakeven/trail rungs all run
+  // exactly as they would unpaused, because pausing entries is a pause on new tickets rather than on the account.
+  // A working limit can still fill while this is on: the broker holds it, not this loop.
+  const settled = options.pauseEntries === true
+    ? rows.map(row => (row.decision === "place"
+      ? {
+          ...row,
+          decision: "skip",
+          entries_paused: true,
+          reason: `entries are paused on this lane (--pause-entries), so ${row.symbol} was read and left alone: ${row.reentry === true ? "the trade's own level is not put back" : "no new limit is left"}. A ticket already working can still fill, and every exit and stop rung still runs.`
+        }
+      : row))
+    : rows;
+
   return {
-    rows,
-    candidates: rows.filter(row => row.decision === "place"),
+    rows: settled,
+    candidates: settled.filter(row => row.decision === "place"),
     taken_today: placedToday,
     reentries_today: reentries,
     open_tickets: openTickets,
+    entries_paused: options.pauseEntries === true,
     ours: (live?.ours || []).map(row => ({ ticket: row?.ticket ?? null, symbol: row?.symbol ?? null, type: row?.type ?? null }))
   };
 }
@@ -1939,6 +2018,10 @@ function traderStatus(record, { nowMs } = {}) {
             : null
         }
       : null,
+    // The rule the run trades and its two switches a reader has to know about: a paused lane still manages what
+    // it already holds, and an identity-checked lane refuses to send from a terminal it cannot prove.
+    strategy: record?.strategy ?? null,
+    entries_paused: record?.strategy?.entries_paused === true,
     duration_seconds: record?.duration_seconds ?? null
   };
 }
@@ -2018,9 +2101,22 @@ function runOnce(options, deps = {}) {
     // cannot mistake one log for the other.
     lane: options.lane ?? null,
     armed: options.confirmLive === true,
+    // Entries paused is a fact about what this run was allowed to do, stated at the top of the record the way
+    // `armed` is, so a reader of a log line does not have to reach inside the strategy block for it.
+    entries_paused: options.pauseEntries === true,
     // The bar width this run aligns to, carried into the heartbeat so the page judges staleness on the cadence
     // the loop actually keeps rather than a number it keeps for itself.
     interval_seconds: options.intervalSeconds,
+    // Which rule this lane trades: the grid, the multiple, the ownership number, whether new entries are paused,
+    // and whether the account is identity-checked before every send. Lane 1's block states its own defaults, so a
+    // reader of the heartbeat can tell the two lanes apart without opening a config file.
+    strategy: {
+      grid: options.grid,
+      r_multiple: options.rMultiple,
+      magic: options.magic,
+      entries_paused: options.pauseEntries === true,
+      identity_checked: Boolean(options.expectIdentity)
+    },
     sources: {
       published: relativePath(published),
       calls: relativePath(callsPath),
@@ -2173,7 +2269,7 @@ function runOnce(options, deps = {}) {
     // the one-trade-per-pair and one-ticket-per-pair facts come from, read live rather than from a snapshot
     // that may be minutes old.
     const read = runTool(spawn, options, toolArgs("status", options));
-    const live = liveFromStatus(read.record);
+    const live = liveFromStatus(read.record, options.magic);
     if (!live) {
       record.terminal_read = {
         exit_code: read.exitCode,
@@ -2213,7 +2309,9 @@ function runOnce(options, deps = {}) {
           })),
         positions: live.positions,
         calls: calls.directions,
-        nowMs: startedMs
+        nowMs: startedMs,
+        rMultiple: options.rMultiple,
+        grid: options.grid
       })
       .map(row => ({ ...row, asset: assetBySymbol[row.symbol] ?? null }));
 
@@ -2227,7 +2325,8 @@ function runOnce(options, deps = {}) {
       state,
       directions: calls.directions,
       joined,
-      closedTrades: Array.isArray(feed?.closed_trades) ? feed.closed_trades : []
+      closedTrades: Array.isArray(feed?.closed_trades) ? feed.closed_trades : [],
+      magic: options.magic
     });
 
     // What this loop already has working, judged before anything new is placed: the entry stands while the call it
@@ -2235,7 +2334,7 @@ function runOnce(options, deps = {}) {
     // target the account has answered, or a target the market has already reached with the entry still working are
     // the reasons to take it back out rather than leave it waiting on something that is gone. A plan-only run
     // reviews them too and sends nothing, so looking still cannot spend a signal bar.
-    const pendings = reviewPendings({ live, joined, calls, cycles });
+    const pendings = reviewPendings({ live, joined, calls, cycles, magic: options.magic });
     const cancellations = [];
     for (const row of pendings.filter(entry => entry.decision === "cancel")) {
       const comment = `${COMMENT_PREFIX}${String(row.asset || row.symbol).toLowerCase()}`;
@@ -2278,7 +2377,7 @@ function runOnce(options, deps = {}) {
     // that is gone, which is the user's own instruction of 2026-10-06. This is the second kind of send this file
     // makes, and it goes through the tool's `close` with the same gates, the same journal and the same "only what
     // was sent is written down" rule as the removals above.
-    const positionReview = reviewPositions({ live, joined, calls });
+    const positionReview = reviewPositions({ live, joined, calls, magic: options.magic });
     const closes = [];
     for (const row of positionReview.filter(entry => entry.decision === "close")) {
       const comment = `${COMMENT_PREFIX}${String(row.asset || row.symbol).toLowerCase()}`;
@@ -2330,7 +2429,8 @@ function runOnce(options, deps = {}) {
       live,
       joined,
       state,
-      closing: positionReview.filter(row => row.decision === "close").map(row => row.ticket)
+      closing: positionReview.filter(row => row.decision === "close").map(row => row.ticket),
+      magic: options.magic
     });
     const moves = [];
     for (const row of stops.filter(entry => entry.decision === "move")) {
@@ -2383,6 +2483,9 @@ function runOnce(options, deps = {}) {
     const decision = decide({ readings, state, live: liveAfterReview, options, nowMs: startedMs, cycles });
     record.rule = {
       ...strategy.strategySummary(readings),
+      grid: options.grid,
+      r_multiple: options.rMultiple,
+      entries_paused: decision.entries_paused === true,
       taken_today: decision.taken_today,
       reentries_today: decision.reentries_today,
       open_tickets: decision.open_tickets,
@@ -2649,6 +2752,9 @@ module.exports = {
   TRAIL_FROM_R_MULTIPLE,
   TRAIL_BEHIND_R,
   ORDER_MAGIC,
+  HALF_LANE_MAGIC,
+  DEFAULT_R_MULTIPLE,
+  DEFAULT_GRID,
   COMMENT_PREFIX,
   CODE_SCRIPT_RELATIVE,
   codeIdentity,
