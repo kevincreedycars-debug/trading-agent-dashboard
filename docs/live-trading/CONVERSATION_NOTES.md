@@ -3169,10 +3169,13 @@ serves a new copy on a 1200s cycle. The publish commits on `main` are 1200s apar
 `09:50:57`, `10:10:57`), and the registration defaults this repository ships are a 600s repetition with
 `--min-interval-seconds 600`, which refuses alternating ticks for any run that takes more than a few seconds: that is
 the reading that fits both numbers, and it is the thing to test against the VPS before either value is changed. So
-every run landing in the back half of a cycle was a guaranteed red run. The five most recent failures, read back out
-of their own logs, carried snapshot/heartbeat ages of 815s/1044s, 888s/1118s, 1004s/1233s, 1375s/1604s and
-1084s/1312s with lanes-document ages of 780s to 1340s - publication was running in all five, and the same lanes were
-green twenty minutes later. The check now judges the served copy against the allowance it is given, 1800s by default
+every run landing in the back half of a cycle was a guaranteed red run. The instrument for that test is already
+written, and unmerged, on `fix/publish-cadence-stamp` (2026-11-02, worktree `.local/wt/cadence`): it records every run
+and every refusal, and its notes record a 1,412.6s served age under an older 540s gate. The five most recent
+failures, read back out of their own logs, carried snapshot/heartbeat ages of 815s/1044s, 888s/1118s, 1004s/1233s,
+1375s/1604s and 1084s/1312s with lanes-document ages of 780s to 1340s - publication was running in all five, and the
+same lanes were green twenty minutes later. The check now judges the served copy against the allowance it is given,
+1800s by default
 for both the snapshot and the heartbeat (the 1200s cycle, one 300s bar, a margin), reports the badge's own window as
 `declared_window_seconds` beside `window_seconds`, and notes a copy past the badge but inside the cycle instead of
 failing it. Everything that should still fail still does: exit 0/1/2, an identity mismatch, a declared heartbeat that

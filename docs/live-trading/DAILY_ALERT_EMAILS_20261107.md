@@ -33,6 +33,17 @@ carries the publish. That reading fits every commit in the list. It is a reading
 this checkout can see the host's registered task — but it is the reading that fits both numbers, and it is the one a
 later lane should test against the VPS before changing either value.
 
+Both numbers are in one file, so the arithmetic can be read here rather than on the host:
+`register-live-trading-lanes-publish-task.ps1` registers the tick at `$IntervalMinutes = 10` and passes
+`--min-interval-seconds $MinIntervalSeconds` with `$MinIntervalSeconds = 600`, which makes the gate exactly the
+repetition — a tick that publishes leaves the next one standing on the gate's own edge. The unmerged
+`fix/publish-cadence-stamp` branch from 2026-11-02 already built the instrument that records these refusals on the
+host (`last_run_*` on every run, plus `last_refusal_*` and a `refusal_count` for `refuse`, `too_soon` and `locked`),
+and its notes record 1,128s between commits and 1,412.6s of served age under the older 540s gate: the same shape,
+with a larger number, which is why the allowance here is 1800s rather than the cycle plus a little. Two refusals in a
+row would put the page past 1800s and still fail the run, which is the intent: the allowance covers one missed tick,
+not a publisher that has stopped.
+
 **The change:** `scripts/check-live-trading-publication.js` now judges the served copy against the allowance it is
 given rather than against the snapshot's own badge, and both allowances default to 1800s — the 1200s cycle, one
 300s bar, and a margin. A heartbeat is read at publish time and can already be a bar old before the publish, which is
