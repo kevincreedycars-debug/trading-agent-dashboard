@@ -3157,3 +3157,37 @@ its own, because the same version can sit on one disk as CRLF and on the other a
 sha256 only to ask what was on a named disk.
 
 
+
+### 2026-11-07: the daily failure email was two faults, and only one of them was ours
+
+The owner asked why a failure was arriving every day. It was two workflows, and neither was a broken trade.
+
+**1. `live-trading-monitor` was red on a healthy pipeline, because its alarm was set below the cadence it measures.**
+`scripts/check-live-trading-publication.js` judged the served snapshot against the snapshot's own
+`stale_after_seconds` - 900s, the page's badge, which answers "is this bar still tradeable" - while the publisher
+serves a new copy on a 1200s cycle. The publish commits on `main` are 1200s apart at a fixed offset (`09:30:57`,
+`09:50:57`, `10:10:57`), and the registration defaults this repository ships are a 600s repetition with
+`--min-interval-seconds 600`, which refuses alternating ticks for any run that takes more than a few seconds: that is
+the reading that fits both numbers, and it is the thing to test against the VPS before either value is changed. So
+every run landing in the back half of a cycle was a guaranteed red run. The five most recent failures, read back out
+of their own logs, carried snapshot/heartbeat ages of 815s/1044s, 888s/1118s, 1004s/1233s, 1375s/1604s and
+1084s/1312s with lanes-document ages of 780s to 1340s - publication was running in all five, and the same lanes were
+green twenty minutes later. The check now judges the served copy against the allowance it is given, 1800s by default
+for both the snapshot and the heartbeat (the 1200s cycle, one 300s bar, a margin), reports the badge's own window as
+`declared_window_seconds` beside `window_seconds`, and notes a copy past the badge but inside the cycle instead of
+failing it. Everything that should still fail still does: exit 0/1/2, an identity mismatch, a declared heartbeat that
+is not published, and a real silence. On `main` as `58dd02f5`; the test file gained the case that reproduces the email
+and it fails two of ten against the previous script; `npm run test:unit` 687/687. The dispatched run `42380866849` at
+`14:17:09Z` came back green carrying `feed age 409s of 1800s (badge 900s)` and `heartbeat 638s`.
+
+**2. `pages build and deployment` fails on GitHub's deploy step, not on the pipeline.** The build is nine seconds and
+green; the deploy polls `Current status: syncing_files` until GitHub's ten-minute cap and aborts with
+`Timeout reached, aborting!` (run `42369905329`, deploying the 11:50 publish). Thirteen of the last hundred Pages runs
+failed that way in three shapes - nine timeouts, three `Failed to create deployment (status: 400) ... due to in
+progress deployment` refusals that are the tail of a timed-out deployment never cleared, one `Deployment failed, try
+again later` - each beside a successful run of the same content. The served site is correct throughout and the next
+publish deploys clean. Nothing in this checkout can edit or retry that workflow; the levers are publishing less often
+or replacing legacy Pages with a workflow this repository owns, and both are the owner's call.
+
+Evidence for both, with the run ids and the ages, is in `docs/live-trading/DAILY_ALERT_EMAILS_20261107.md`.
+
