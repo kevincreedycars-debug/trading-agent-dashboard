@@ -8,6 +8,14 @@
 #
 #   node scripts/check-live-trading-publication.js   exit 0 fresh, 1 stale or identity-mismatched, 2 unreadable
 #
+# Its allowances are the checker's own defaults - 1800s for a snapshot and 1800s for a heartbeat - and this workflow
+# deliberately passes no tighter ones. They are set against the publish cycle, not against the page's badge: the lanes
+# publisher repeats on a 600s task with a --min-interval-seconds of 600, so a tick landing inside that gate is refused
+# and the following tick carries the publish, which makes the cycle that actually serves the page 1200s. A heartbeat
+# is read at publish time and can be a 300s bar old already. When these were 900s, borrowed from the snapshot's own
+# stale_after_seconds, a healthy pipeline went red on a schedule and the email was the only thing anyone read; see
+# docs/live-trading/DAILY_ALERT_EMAILS_20261107.md for the runs and the ages they carried.
+#
 # The job's own failure is the alert: a red run appears in the Actions list and GitHub's default notifications
 # email the repository owner for a failed scheduled workflow. It writes nothing, holds no credential and cannot
 # send anything, so a false alarm costs a red run and never a trade.
@@ -57,6 +65,7 @@ jobs:
             echo "## live trading publication check"
             echo ""
             echo "exit code ${status}: 0 fresh, 1 stale or identity mismatch, 2 lanes document unreadable"
+            echo "allowance: a 1800s snapshot and a 1800s heartbeat, against a 1200s publish cycle plus a bar and a margin"
             echo ""
             echo '```json'
             cat report.json

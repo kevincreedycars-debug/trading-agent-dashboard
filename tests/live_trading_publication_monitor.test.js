@@ -133,7 +133,7 @@ test("a fresh lane with a beating trader is OK, and a disabled lane is reported 
   }
 });
 
-test("a snapshot past its own window fails, and the report says by how much", async () => {
+test("an allowance tighter than the publish cycle still fails, and the report says by how much", async () => {
   const server = await serve({
     "/data/live-trading-lanes.json": lanesDocument(),
     "/data/live-trading.json": feedAt({ generatedAt: isoAgo(30 * 60) }),
@@ -144,9 +144,47 @@ test("a snapshot past its own window fails, and the report says by how much", as
     assert.equal(result.status, 1);
     const lane1 = JSON.parse(result.stdout.trim()).lanes.find((row) => row.id === "ftmo-1");
     assert.equal(lane1.status, "fail");
-    assert.match(lane1.problems.join(" "), /past the 900s window it declares/);
+    assert.match(lane1.problems.join(" "), /past the 900s this check allows/);
   } finally {
     await server.close();
+  }
+});
+
+// 2026-11-07: the monitor went red on a schedule while the pipeline was healthy, because it judged the served copy
+// against the snapshot's own stale_after_seconds - the page's badge, 900s, "is this bar still tradeable" - while the
+// publisher writes a new copy on a 1200s cycle. Every copy served in the back half of a cycle was therefore a
+// failure, from a publisher that had never stopped. A snapshot from the middle of the cycle is the cycle, and saying
+// so must not cost the alarm: a publisher that really has stopped still has to fail, at the cycle's own scale.
+test("a snapshot from the middle of the publish cycle is the cycle, not a failure", async () => {
+  const midCycle = await serve({
+    "/data/live-trading-lanes.json": lanesDocument({ documentAt: isoAgo(1000) }),
+    "/data/live-trading.json": feedAt({ generatedAt: isoAgo(1000) }),
+    "/data/live-trading-trader.ftmo-1.json": statusAt({ writtenAt: isoAgo(1400) })
+  });
+  try {
+    const result = await runMonitor(midCycle.base);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const lane1 = JSON.parse(result.stdout.trim()).lanes.find((row) => row.id === "ftmo-1");
+    assert.equal(lane1.feed.window_seconds, 1800, "the allowance is the publish cycle's, not the badge's");
+    assert.equal(lane1.feed.declared_window_seconds, 900, "the badge's own number is reported rather than judged");
+    assert.match(lane1.notes.join(" "), /past the 900s window its own badge declares/);
+  } finally {
+    await midCycle.close();
+  }
+
+  const stopped = await serve({
+    "/data/live-trading-lanes.json": lanesDocument({ documentAt: isoAgo(2000) }),
+    "/data/live-trading.json": feedAt({ generatedAt: isoAgo(2000) }),
+    "/data/live-trading-trader.ftmo-1.json": statusAt({ writtenAt: isoAgo(2000) })
+  });
+  try {
+    const result = await runMonitor(stopped.base);
+    assert.equal(result.status, 1, "a silence longer than the cycle is still the alarm");
+    const lane1 = JSON.parse(result.stdout.trim()).lanes.find((row) => row.id === "ftmo-1");
+    assert.match(lane1.problems.join(" "), /past the 1800s this check allows/);
+    assert.match(lane1.problems.join(" "), /the heartbeat is \d+s old, past the 1800s this check allows/);
+  } finally {
+    await stopped.close();
   }
 });
 

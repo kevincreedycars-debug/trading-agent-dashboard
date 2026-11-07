@@ -4,7 +4,7 @@
 // This asks the published URLs and answers three questions per enabled lane:
 //
 //   identity   does the served snapshot carry the masked login the lanes document says it should?
-//   freshness  how old is that snapshot, against the window the snapshot itself declares?
+//   freshness  how old is that snapshot, against the allowance this check is given for the publish cycle?
 //   heartbeat  is a trader beating behind it, how old is that beat, and is it armed?
 //
 // A stale snapshot gets a fourth answer, because "stale" alone sends a person to the wrong machine: the lanes
@@ -24,8 +24,18 @@ const path = require("node:path");
 const REPO_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_BASE = "https://kevincreedycars-debug.github.io/trading-agent-dashboard";
 const DEFAULT_LANES = "data/live-trading-lanes.json";
-const DEFAULT_MAX_FEED_AGE_SECONDS = 900;
-const DEFAULT_MAX_HEARTBEAT_AGE_SECONDS = 900;
+// 1800s, not 900s, and the gap between those two numbers was the daily failure email of 2026-11-07. The question
+// this check asks is "is publication still happening", and that question has a cadence in it, so its allowance has to
+// be on the scale of the publish cycle and not the page's own badge. What the cycle is, measured rather than assumed:
+// the publish commits on main are 1200s apart at a fixed second-of-minute offset, and the registration defaults this
+// repository ships are a 600s repetition with --min-interval-seconds 600, which lands a refusal on alternating ticks
+// for any run that takes more than a few seconds - that is the reading that fits both numbers, and it is the thing to
+// test against the VPS before either value is changed. A heartbeat is read at publish time and can already be a 300s
+// bar old before the publish, so 1200 + 300 + 300 = 1800. Borrowing the snapshot's own stale_after_seconds (900s, the
+// badge's "is this bar still tradeable" window) as the alarm's threshold failed a pipeline that was working; see
+// docs/live-trading/DAILY_ALERT_EMAILS_20261107.md for the runs and the ages they carried.
+const DEFAULT_MAX_FEED_AGE_SECONDS = 1800;
+const DEFAULT_MAX_HEARTBEAT_AGE_SECONDS = 1800;
 const TIMEOUT_MS = 20000;
 
 const USAGE = [
@@ -34,8 +44,8 @@ const USAGE = [
   "",
   `  --base <url>                     where the page is served (default ${DEFAULT_BASE})`,
   `  --lanes <path>                   the lanes document, relative to the base (default ${DEFAULT_LANES})`,
-  "  --max-feed-age-seconds <n>       how old an enabled lane's snapshot may be (default 900)",
-  "  --max-heartbeat-age-seconds <n>  how old a published heartbeat may be (default 900)",
+  `  --max-feed-age-seconds <n>       how old an enabled lane's snapshot may be (default ${DEFAULT_MAX_FEED_AGE_SECONDS}: the 1200s publish cycle, one 300s bar, and a margin)`,
+  `  --max-heartbeat-age-seconds <n>  how old a published heartbeat may be (default ${DEFAULT_MAX_HEARTBEAT_AGE_SECONDS}: the same cycle, since a beat can be one bar old when it is read)`,
   "  --json                           print one JSON line instead of the human report",
   "  --help                           print this text",
   "",
@@ -120,8 +130,8 @@ function ageSecondsOf(stamp, nowMs) {
 }
 
 // Which of the two faults a stale snapshot is. The lanes document travels in the same commit as the snapshot, so
-// its stamp is the publisher's own heartbeat: as old as the snapshot's window means nothing has been published
-// for longer than a full window, and younger means a publish did happen and the snapshot it carried is the part
+// its stamp is the publisher's own heartbeat: as old as the allowance means nothing has been published for longer
+// than a whole publish cycle and more, and younger means a publish did happen and the snapshot it carried is the part
 // that is late. The exit code does not move either way; only the sentence a person acts on does.
 function explainStaleSnapshot(row, documentAgeSeconds) {
   if (documentAgeSeconds === null) {
@@ -153,7 +163,7 @@ async function checkLane(lane, options, deps) {
     problems: [],
     notes: [],
     identity: { expected: lane?.account_login_masked ?? null, served: null, matched: null },
-    feed: { age_seconds: null, window_seconds: null },
+    feed: { age_seconds: null, window_seconds: null, declared_window_seconds: null },
     heartbeat: {
       declared: Boolean(lane?.trader_status),
       age_seconds: null,
@@ -185,9 +195,15 @@ async function checkLane(lane, options, deps) {
   const feed = feedRead.body || {};
   row.identity.served = feed?.account?.login_masked ?? null;
   row.feed.age_seconds = ageSecondsOf(feed?.generated_at_utc, nowMs);
-  row.feed.window_seconds = Number.isFinite(Number(feed?.stale_after_seconds))
+  // Two different ages, deliberately not interchangeable. `declared_window_seconds` is what the snapshot itself
+  // says about its own bar - the page's badge, "is this bar still tradeable" - and the publisher writes a new copy on
+  // a slower cycle than that, so a served copy inside its own badge window is not a broken pipeline. This check
+  // judges against `window_seconds`, the allowance it was given for the cycle it is measuring, and reports the
+  // declared number beside it so a reader sees both without either being mistaken for the other.
+  row.feed.declared_window_seconds = Number.isFinite(Number(feed?.stale_after_seconds))
     ? Number(feed.stale_after_seconds)
-    : options.maxFeedAgeSeconds;
+    : null;
+  row.feed.window_seconds = options.maxFeedAgeSeconds;
   if (!row.identity.expected) {
     row.notes.push("the lanes document names no masked login, so the served identity cannot be checked");
   } else {
@@ -202,7 +218,13 @@ async function checkLane(lane, options, deps) {
     row.problems.push("the snapshot states no readable generated_at_utc");
   } else if (row.feed.age_seconds > row.feed.window_seconds) {
     row.problems.push(
-      `the snapshot is ${row.feed.age_seconds}s old, past the ${row.feed.window_seconds}s window it declares`
+      `the snapshot is ${row.feed.age_seconds}s old, past the ${row.feed.window_seconds}s this check allows`
+    );
+  } else if (row.feed.declared_window_seconds !== null && row.feed.age_seconds > row.feed.declared_window_seconds) {
+    // Inside the allowance but past the badge: the ordinary middle of a publish cycle, stated once so that a reader
+    // who sees STALE on the page and a green run does not have to work out why the two disagree.
+    row.notes.push(
+      `the snapshot is ${row.feed.age_seconds}s old, past the ${row.feed.declared_window_seconds}s window its own badge declares and inside this check's ${row.feed.window_seconds}s; a copy served between two publishes is the normal shape of the cycle`
     );
   }
 
@@ -322,7 +344,12 @@ async function main(argv = process.argv.slice(2), deps = {}) {
             ? " (matched)"
             : ` (expected ${row.identity.expected})`;
         parts.push(`identity ${row.identity.served ?? "-"}${matched}`);
-        parts.push(`snapshot ${row.feed.age_seconds === null ? "age unknown" : `${row.feed.age_seconds}s`} of ${row.feed.window_seconds}s`);
+        const declared = row.feed.declared_window_seconds;
+        const badge =
+          declared !== null && declared !== row.feed.window_seconds ? ` (badge ${declared}s)` : "";
+        parts.push(
+          `snapshot ${row.feed.age_seconds === null ? "age unknown" : `${row.feed.age_seconds}s`} of ${row.feed.window_seconds}s${badge}`
+        );
         parts.push(
           row.heartbeat.declared
             ? `heartbeat ${row.heartbeat.age_seconds === null ? "unreadable" : `${row.heartbeat.age_seconds}s`}, ${row.heartbeat.armed ? "armed" : "not armed"}`
