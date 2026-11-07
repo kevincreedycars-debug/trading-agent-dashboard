@@ -165,6 +165,28 @@ so they are this machine's browser state and not this change. The four calibrati
 `.local/checker-corpus` and skip with their reason without it - both states were run. Each of the five raw URLs was
 read back before the change and answered `200` at its committed byte count.
 
-**Still open:** whether the smaller tree actually clears the `syncing_files` timeouts. That is evidence only after
-several publish cycles, not after one green deploy.
+**The first green deploy of the smaller tree, and the lock that hid it.** The smaller tree was not what failed first.
+The last 80.4MB deploy - run `42385129621`, `fd691249`, 15:11Z - timed out in `syncing_files` at 15:21:49 after its ten
+minutes and left its Pages deployment `in progress`, so the freeze push (run `42386460553`, `f5b0b8ae`, 15:27Z) and the
+next publish (run `42386752291`, `a84aca49`, 15:31Z) were both refused in about twenty seconds with `400 ... due to in
+progress deployment. Please cancel fd691249... first`. That is the second failure shape above, and it is why a smaller
+tree did not turn the next run green by itself. The stalled deployment was cleared with `POST
+/repos/kevincreedycars-debug/trading-agent-dashboard/pages/deployments/<build-version sha>/cancel` - the numeric
+deployment id answers `404` at that path, the build-version sha answers `204` - and one empty commit (`7cde014a`,
+"chore: retry the Pages deploy after the stuck deployment lock") was pushed to `main` to ask for a deploy straight away.
+Run `42387854929` for that commit went green with no timeout, and the published `script.js` carries the
+`frozen/backtester-checker-20261107` URLs. Read back live after that deploy: the five raw URLs answered `200`, and the
+sub-tab drew 15 tables, 3,399 rows and a USD panel reading `ROWS CHECKED 604 PASS 604 ... 0 FAIL`. The retry commit is
+the one thing here that can be repeated: a refused deploy is cleared by cancelling the stalled deployment, and if the
+cancel is slow to take effect, an empty push to `main` is the cheapest way to ask again.
+
+**What is left in the 23.7MB, if a timeout comes back.** The dashboard's own documents, and none of them large enough to
+be worth freezing today: `data/factor-edge-lab.json` 4.6MB, `data/live-trading.json` 2.35MB (the feed itself, written
+every 1200s), `data/adr-reach-research.json` 1.46MB, `script.js` 1.03MB, `data/confidence-calibration.json` 714KB and a
+664KB research handoff zip under `docs/`. The first of those is the only next candidate - 19% of the tree, read by one
+lab page - so it gets the same treatment if a `syncing_files` timeout returns at this size, and not before.
+
+**Still open:** whether 23.7MB a deploy actually clears the `syncing_files` timeouts. One green deploy is not evidence;
+the claim needs the next several publish cycles, so the count of red Pages runs over the coming hours is the number to
+watch, not this one run.
 
