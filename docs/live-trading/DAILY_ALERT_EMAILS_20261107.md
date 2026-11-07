@@ -178,7 +178,9 @@ Run `42387854929` for that commit went green with no timeout, and the published 
 `frozen/backtester-checker-20261107` URLs. Read back live after that deploy: the five raw URLs answered `200`, and the
 sub-tab drew 15 tables, 3,399 rows and a USD panel reading `ROWS CHECKED 604 PASS 604 ... 0 FAIL`. The retry commit is
 the one thing here that can be repeated: a refused deploy is cleared by cancelling the stalled deployment, and if the
-cancel is slow to take effect, an empty push to `main` is the cheapest way to ask again.
+cancel is slow to take effect, an empty push to `main` is the cheapest way to ask again. A second deploy of the same
+tree - the documentation commit `5bab74af` at 15:47Z, run `42388063677` - was also green, so two consecutive pushes of
+23.7MB have now deployed without a timeout, against the 80.4MB tree that had failed nine times in a hundred runs.
 
 **What is left in the 23.7MB, if a timeout comes back.** The dashboard's own documents, and none of them large enough to
 be worth freezing today: `data/factor-edge-lab.json` 4.6MB, `data/live-trading.json` 2.35MB (the feed itself, written
