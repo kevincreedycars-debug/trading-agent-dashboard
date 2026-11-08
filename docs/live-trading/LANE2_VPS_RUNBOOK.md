@@ -13,6 +13,19 @@ carrying the failure forward.
 and any reboot of the host. A reboot takes lane 1 down with lane 2, which is why the lane-2 watchdog must judge itself
 by its own snapshot and heartbeat and never by "is `terminal64` running".
 
+**The revision these commands were written against:** branch `live-trading/lane2-half-l2l-20261107`, commit
+`f08ce075e7f535896e6c66363bace16ebd54fa6e`, cut from `origin/main` `4faf3f35`. The two files that decide what may be
+sent hash to:
+
+| file | git blob |
+| --- | --- |
+| `scripts/run-live-trading-trader.js` | `1c528e542271194bcf15f77950fc96f241db2791` |
+| `scripts/register-live-trading-trader-task.ps1` | `c0bcc9bddb419d0a14ccc101de7a67c815ecae47` |
+
+A host checkout whose `git hash-object` answers differently is not the revision every check in this runbook was
+tested against, whatever its `HEAD` says - that is the same distinction the trader's own heartbeat draws between the
+blob it was deployed as and the bytes on disk.
+
 ## 0. Read-only audit of what lane 1 is running today
 
 No writes, no restarts, no registrations. Everything here is a read, and each line produces a value to paste into the
@@ -65,7 +78,8 @@ git rev-parse HEAD
 git hash-object scripts\run-live-trading-trader.js
 ```
 
-**Stage 1 passes when** `git rev-parse HEAD` is the tested commit and the file hash matches the one recorded with it.
+**Stage 1 passes when** `git rev-parse HEAD` is the tested commit and the two `git hash-object` answers are the blobs
+in the table at the top of this file.
 `config/live-trading-lanes.json` in this checkout must carry `ftmo-2` with `root: "../ftmo2"`, `magic: 20261005`,
 `strategy: { grid: "half", r_multiple: 3 }` and `expect_identity` naming the file stage 2 will make.
 
