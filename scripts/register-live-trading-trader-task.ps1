@@ -91,6 +91,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Lane 1's own two numbers, stated in one place: a registration that passes neither writes neither, so these are what
+# its command line means by saying nothing - and they are what the lane check below compares a completed command
+# line against the lanes file's own row.
+$lane1DefaultMagic = 20261004
+$lane1DefaultRMultiple = 5
+
 if ($ExpireMinutes -lt 0) {
   throw "-ExpireMinutes must be 0 (the rule's own answer: no expiry) or a positive number of minutes."
 }
@@ -197,6 +203,57 @@ if (-not $laneId) {
 if (-not $laneId) { throw "The lane id resolved to nothing; pass -Lane <id>." }
 $laneArgument = " --lane `"$laneId`" "
 
+# The lane's own row, and the command line held to it. The wrapper writes a flag only when a registration asks for
+# one - that is what keeps lane 1's command line byte-identical to before the second account existed - so a task
+# registered for ftmo-2 without -Magic would carry no --magic at all and the loop would keep lane 1's number while
+# the operator believed otherwise. The registration therefore refuses instead of registering: it computes the
+# numbers the wrapper will actually carry, compares them with the lane's row in the lanes file, and names the flag
+# that is missing. Nothing here rewrites the row or fills a default in: a task is either registered as the file
+# states the lane, or it is not registered.
+$lanesConfigPath = Join-Path $RepoRoot "config\live-trading-lanes.json"
+$laneRecord = $null
+if (Test-Path -LiteralPath $lanesConfigPath) {
+  try {
+    $lanesDocument = (Get-Content -LiteralPath $lanesConfigPath -Raw | ConvertFrom-Json)
+  } catch {
+    throw "The lanes file $lanesConfigPath could not be read: $($_.Exception.Message)"
+  }
+  $laneRecord = @($lanesDocument.lanes | Where-Object { $_ -and $_.id -eq $laneId }) | Select-Object -First 1
+}
+if (-not $laneRecord) {
+  throw ("No lane named '$laneId' in $lanesConfigPath. A registration is checked against that file, so a lane it " +
+    "does not carry is not registered.")
+}
+$declaredMagic = 0
+if ($null -ne $laneRecord.magic) { $declaredMagic = [int]$laneRecord.magic }
+$effectiveMagic = if ($Magic -gt 0) { $Magic } else { $lane1DefaultMagic }
+if ($declaredMagic -gt 0 -and $effectiveMagic -ne $declaredMagic) {
+  throw ("Lane $laneId carries magic $declaredMagic in $lanesConfigPath, but this registration would write " +
+    "$effectiveMagic. Pass -Magic $declaredMagic -ExpectIdentity <path>, or register the lane that number belongs " +
+    "to. Nothing is registered.")
+}
+if ($laneRecord.expect_identity) {
+  $declaredIdentity = [string]$laneRecord.expect_identity
+  if (-not $ExpectIdentity) {
+    throw ("Lane $laneId declares an identity file ($declaredIdentity) in $lanesConfigPath, so this registration " +
+      "must pass -ExpectIdentity naming the private file its terminal has to match. Nothing is registered.")
+  }
+}
+$declaredGrid = ""
+if ($laneRecord.strategy -and $laneRecord.strategy.grid) { $declaredGrid = [string]$laneRecord.strategy.grid }
+$effectiveGrid = if ($Grid) { $Grid } else { "full" }
+if ($declaredGrid -and $effectiveGrid -ne $declaredGrid) {
+  throw ("Lane $laneId trades the $declaredGrid grid in $lanesConfigPath, but this registration would write " +
+    "$effectiveGrid. Pass -Grid $declaredGrid. Nothing is registered.")
+}
+$declaredR = 0
+if ($laneRecord.strategy -and $null -ne $laneRecord.strategy.r_multiple) { $declaredR = [int]$laneRecord.strategy.r_multiple }
+$effectiveR = if ($RMultiple -gt 0) { $RMultiple } else { $lane1DefaultRMultiple }
+if ($declaredR -gt 0 -and $effectiveR -ne $declaredR) {
+  throw ("Lane $laneId trades $declaredR to one in $lanesConfigPath, but this registration would write " +
+    "$effectiveR. Pass -RMultiple $declaredR. Nothing is registered.")
+}
+
 
 # The hidden launcher takes the command to run as one argument, and Task Scheduler doubles every quote inside
 # an argument it stores, so the command the task passes is quote-free - `cmd.exe /c <wrapper>` - and every
@@ -235,8 +292,8 @@ function Get-WrapperLines($extraFlags, $paths = $null) {
     if ($Grid -notin @("full", "half")) { throw "-Grid must be 'full' or 'half'." }
     if ($Grid -ne "full") { $laneStyleArgument += "--grid $Grid " }
   }
-  if ($RMultiple -gt 0 -and $RMultiple -ne 5) { $laneStyleArgument += "--r-multiple $RMultiple " }
-  if ($Magic -gt 0 -and $Magic -ne 20261004) { $laneStyleArgument += "--magic $Magic " }
+  if ($RMultiple -gt 0 -and $RMultiple -ne $lane1DefaultRMultiple) { $laneStyleArgument += "--r-multiple $RMultiple " }
+  if ($Magic -gt 0 -and $Magic -ne $lane1DefaultMagic) { $laneStyleArgument += "--magic $Magic " }
   if ($ExpectIdentity) {
     if (-not (Test-Path -LiteralPath $ExpectIdentity)) {
       throw "Not found: $ExpectIdentity. The identity file must exist before a task is registered to check it."
@@ -375,6 +432,12 @@ if ($Show) {
   $productionFingerprint = Get-ProductionFingerprint
   $plan["wrapper_sha256"] = $productionFingerprint.wrapper_sha256
   $plan["task_sha256"] = $productionFingerprint.task_sha256
+  # The two command lines this registration would write, spelled out rather than described. `Get-WrapperLines`
+  # builds text and writes nothing, so showing them keeps -Show read-only - and a reader (or a test) can check
+  # what the task will actually carry without registering it and without opening the wrapper's old copy.
+  $plannedLines = @(Get-WrapperLines "")
+  $plan["loop_command"] = @($plannedLines | Where-Object { $_ -like "*run-live-trading-trader.js*" })[0]
+  $plan["feed_command"] = @($plannedLines | Where-Object { $_ -like "*run-live-trading-feed.js*" })[0]
   Write-Plan $plan
   return
 }

@@ -242,6 +242,14 @@ const HALF_LANE_MAGIC = 20261005;
 // which is what every existing task's command line means by saying nothing.
 const DEFAULT_R_MULTIPLE = 5;
 const DEFAULT_GRID = "full";
+// The lanes file, which is the one place a lane's own ownership number, its rule and its identity file are written
+// down. A command line is not checked against it in general - lane 1's task says nothing and must keep meaning what
+// it always meant - but a run that *names* its lane is checked against that lane's own row, because the one
+// misconfiguration this loop cannot notice by itself is the one that silently keeps lane 1's defaults while the
+// operator believes the second account was selected. A magic is what a ticket carries and what every filter in this
+// file reads, so `--lane ftmo-2` with lane 1's magic is not a small mistake: it would review, close and move the
+// other account's tickets on this account's terminal.
+const LANES_RELATIVE = "config/live-trading-lanes.json";
 // The deals this loop places are labelled with the pair and the rule they came from, so a reader of the
 // terminal's own history can tell them from the hand-run plumbing proof.
 const COMMENT_PREFIX = "l2l-rule-";
@@ -338,6 +346,61 @@ const USAGE = [
 
 // The one error a caller is meant to see as a message rather than a stack: a bad command line.
 class UsageError extends Error {}
+
+// The row `config/live-trading-lanes.json` carries for one lane id, as the loop needs it: the ownership number the
+// lane's tickets carry, the rule it trades, and the identity file its terminal has to match. Read only when a run
+// names its lane, and a lane the file does not carry is a refusal rather than a fallback: the loop cannot check a
+// command line against a row that is not there, and guessing lane 1's defaults is exactly the fault this closes.
+function laneRecord(id, { repoRoot = REPO_ROOT, readFile = fs.readFileSync } = {}) {
+  const filePath = path.join(repoRoot, LANES_RELATIVE);
+  let document = null;
+  try {
+    document = JSON.parse(String(readFile(filePath, "utf8")).replace(/^\uFEFF/, ""));
+  } catch (error) {
+    throw new UsageError(
+      `--lane ${id} was passed, so this run has to be checked against ${LANES_RELATIVE}, and that file could not be read: ${error.message}. Nothing is sent.`
+    );
+  }
+  const rows = Array.isArray(document?.lanes) ? document.lanes : [];
+  const record = rows.find(row => row && row.id === id) || null;
+  if (!record) {
+    throw new UsageError(
+      `--lane ${id} is not one of the lanes ${LANES_RELATIVE} carries (${rows.map(row => row?.id).filter(Boolean).join(", ") || "none"}). Nothing is sent.`
+    );
+  }
+  return record;
+}
+
+// The command line against the lane's own row. Every refusal here happens before the lock is taken, before the
+// artifacts are read and before the terminal is touched, so a misconfigured second-account run sends nothing at
+// all - not a placement, not a cancellation, not a close, not a stop move.
+function checkLaneCommandLine(options, record) {
+  const expectedMagic = Number(record?.magic);
+  if (Number.isFinite(expectedMagic) && expectedMagic !== options.magic) {
+    throw new UsageError(
+      `--lane ${options.lane} carries magic ${expectedMagic} in ${LANES_RELATIVE}, but this run would send tickets carrying ${options.magic}. ` +
+        `Pass --magic ${expectedMagic}, or name the lane ${options.magic} belongs to. Nothing is sent.`
+    );
+  }
+  const declaredIdentity = record?.expect_identity ? String(record.expect_identity) : null;
+  if (declaredIdentity && options.expectIdentity === null) {
+    throw new UsageError(
+      `--lane ${options.lane} declares an identity file (${declaredIdentity}) in ${LANES_RELATIVE}, so this run trades a second account: pass --expect-identity <path> naming the private file its terminal has to match. Nothing is sent.`
+    );
+  }
+  const declaredGrid = record?.strategy?.grid ? String(record.strategy.grid) : null;
+  if (declaredGrid && declaredGrid !== options.grid) {
+    throw new UsageError(
+      `--lane ${options.lane} trades the ${declaredGrid} grid in ${LANES_RELATIVE}, but this run would read the ${options.grid} grid: pass --grid ${declaredGrid}. Nothing is sent.`
+    );
+  }
+  const declaredR = Number(record?.strategy?.r_multiple);
+  if (Number.isFinite(declaredR) && declaredR > 0 && declaredR !== options.rMultiple) {
+    throw new UsageError(
+      `--lane ${options.lane} trades ${declaredR} to one in ${LANES_RELATIVE}, but this run would place ${options.rMultiple} to one: pass --r-multiple ${declaredR}. Nothing is sent.`
+    );
+  }
+}
 
 function parseArgs(argv) {
   const options = {
@@ -505,6 +568,10 @@ function parseArgs(argv) {
       `--lane must be a lane id from config/live-trading-lanes.json (for example ftmo-1), got ${JSON.stringify(options.lane)}.`
     );
   }
+  // A run that names its lane is held to that lane's own row before anything else happens: its magic, whether an
+  // identity file is required, its grid and its multiple. This is what makes `--lane ftmo-2` alone, or with lane 1's
+  // magic, a refusal rather than a run that quietly keeps lane 1's defaults on the second account.
+  if (options.lane !== null) checkLaneCommandLine(options, laneRecord(options.lane));
   // A lane with an ownership number of its own is a second account, and a second account is exactly the case the
   // identity gate exists for: the wrong terminal is one flag away and nothing else on this machine notices. So the
   // file is required rather than merely honoured, and a run that would trade another account refuses to start.
@@ -2270,7 +2337,11 @@ function runOnce(options, deps = {}) {
     // that may be minutes old.
     const read = runTool(spawn, options, toolArgs("status", options));
     const live = liveFromStatus(read.record, options.magic);
-    if (!live) {
+    // A status the tool refused is not a reading of the account. The identity gate refusing to attach, or a
+    // terminal that will not answer, leaves the record stating a refusal rather than an account, and a loop that
+    // cannot see the account must not be quiet about it: without this the run would report "nothing to place"
+    // against an account it never proved, which reads as a lane that simply had no setup.
+    if (!live || read.record?.refused === true) {
       record.terminal_read = {
         exit_code: read.exitCode,
         refused: read.record?.refused === true,
