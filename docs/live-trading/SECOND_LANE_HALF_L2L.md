@@ -105,18 +105,27 @@ positions / Closed trades tables and the Close control together, because every o
 | `tests/live_trading_identity_gate.test.js` | wrong account/server/terminal/disconnected/missing/changed account, foreign ticket: zero sends | 10/10 |
 | `tests/live_trading_order_tool.test.js` | the tool's contract and the one-file boundary | 11/11 |
 | `tests/live_trading_lanes_publish.test.js` | the publisher, with the lane's magic and rule in the document | 25/25 |
-| `tests/live_trading_lane_selector.browser.test.js` | the selector: four charts + tables + chips move together, parked/missing/stale, Close by lane | 5/5 |
-| browser suites (`dashboard`, `accounts`, `close_control`, `readback`, `rule_panel`, `levels`, `status`, `chart_zoom`, `chart_pan`) | lane 1's page, unchanged | 19/19 |
+| `tests/live_trading_lane_selector.browser.test.js` | the selector: four charts + tables + chips move together, parked/missing/stale, Close by lane, and the picture-level switch (levels, midpoints, entry band, position size) | 6/6 |
+| `tests/live_trading_lane_isolation.test.js` | seven misconfigurations through the real runner and the real registration script's `-Show`, each refused with no send and no terminal read; lane 1's command line unchanged | 12/12 |
+| `tests/live_trading_levels_visibility.browser.test.js` | the marked lines on the real page: ladder shape through the store, four frozen-fixture symbols two lines each side, and a one-sided ladder stated on the edge | 3/3 |
+| browser suites (`dashboard`, `accounts`, `close_control`, `readback`, `rule_panel`, `status`, `chart_zoom`, `chart_pan`) | lane 1's page, unchanged | 19/19 |
+| full local suite (`node scripts/test-local.js`) | everything, run twice on this branch head | 828 tests, 822 pass, 4 skipped, 2 fail |
 
 One test fixture was repaired rather than the code: `tests/live_trading_rule_panel.browser.test.js` crafts a
 crossing on BTCUSD from the committed snapshot, which now carries a live BTCUSD position, so the pair read
 `blocked`. The case is about the crossing, not the account, so the position is taken out of that fixture.
 
-Two failures in the wider browser run are not this branch's and are recorded rather than smoothed over:
-`live_trading_levels_visibility.browser.test.js` expects two marked lines below each symbol's bars, and today's
-committed ladder has every US100.cash line above the live bid (levels 27751.59-33522.81 against a bid of 26990.44),
-so no code path could draw them; and `research_library.browser.test.js` fails on the hosted-library page, which no
-live-trading file here touches.
+The `US100.cash` browser failure recorded in the previous session is **closed**: it was the artifact, not the page,
+and §10 states the fix and the page's real behaviour on a one-sided ladder. The two remaining failures in the wider
+run are dated here rather than smoothed over. `research_library.browser.test.js` fails on the hosted-library page,
+which no live-trading file here touches. `refresh_progress.browser.test.js` (the Overview tab's freshness verdict)
+failed on this machine on the day of the run and failed **differently on each of three runs** - one, then a sibling
+test, then three of its cases - always at the same stage, a panel read before its fixtures landed. None of the files
+it exercises is changed on this branch: `git diff --stat` against the base commit lists the trader, the registration
+script, two live-trading browser tests and two documents, and none of them is read by that file. It is an
+environment/timing fault on this machine, not a lane-2 regression, and it should be re-run on the host rather than
+argued from here.
+
 
 ## 6. Go-live checklist (not done, and not to be done by this branch alone)
 
