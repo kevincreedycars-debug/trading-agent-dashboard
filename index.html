@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261015-research-topics-v3" />
+  <link rel="stylesheet" href="styles.css?v=20261108-usd-l1-backtester" />
 </head>
 <body>
   <header class="topbar">
@@ -54,6 +54,7 @@
         <button class="tab-button" data-tab="factor-edge-lab">Factor Edge Lab</button>
         <button class="tab-button" data-tab="shadow-logic-backtest">Shadow Logic Backtest</button>
         <button class="tab-button backtesting-development-tab" data-tab="backtesting-development">Backtesting Development</button>
+        <button class="tab-button" data-tab="usd-layer1-backtester">USD L1 Backtester</button>
         <span class="side-rail-group">System</span>
         <button class="tab-button" data-tab="structure-map">Structure Map</button>
         <button class="tab-button" data-tab="architecture">Architecture</button>
@@ -285,6 +286,26 @@
       </section>
       <section id="backtestingDevelopmentPanel" class="backtest-panel" aria-live="polite"></section>
     </section>
+    <section id="usdLayer1BacktesterView" class="view">
+      <section class="section-header backtest-title">
+        <div>
+          <p class="eyebrow">USD Layer 1 Backtester</p>
+          <h2>Current model versus the 25-factor challenger</h2>
+        </div>
+        <p id="usdLayer1Updated" role="status">Loading saved research results...</p>
+      </section>
+
+      <section class="backtest-panel usd-l1-panel" aria-label="USD Layer 1 backtester: research panel">
+        <article class="usd-l1-north-star" data-usd-l1-north-star="true">
+          <p class="eyebrow">North Star</p>
+          <p class="usd-l1-north-star-text">Does one independent USD call at 05:00 London, built from the 25-factor research, improve on our current model? We measure four things: ① DXY directional accuracy, ② how often EUR/USD, gold, BTC/USD and NAS100 move opposite the USD call, ③ full-level L2L trading results at 5R, and ④ half-level L2L trading results at 3R. Both trade simulations start at £100,000 and risk 1% of the account balance per filled trade.</p>
+          <p class="usd-l1-north-star-note">Research only. Neither model is published as a live call, and no figure here is an edge claim.</p>
+        </article>
+        <div id="usdLayer1Panel" class="usd-l1-root" data-usd-l1-root="true" aria-live="polite"></div>
+      </section>
+    </section>
+
+
 
     <section id="researchProofMapView" class="view">
       <section class="section-header backtest-title">
@@ -372,8 +393,10 @@
 
   <script src="backtester/lib/headline_confidence.js?v=20260630-headline-confidence-contract"></script>
   <script src="backtester/lib/layer2_pair_logic.js?v=20260704-layer2-min-confidence-contract"></script>
+  <script src="lib/vendor/three.min.js?v=20261108-usd-l1-backtester"></script>
+  <script src="lib/usd_l1_replay.js?v=20261108-usd-l1-backtester"></script>
   <script src="lib/economic_event_refresh.js?v=20260727-input-health-overview-release"></script>
   <script src="lib/research_library.js?v=20261015-research-topics-v2"></script>
-  <script src="script.js?v=20261015-research-topics-v3"></script>
+  <script src="script.js?v=20261108-usd-l1-backtester"></script>
 </body>
 </html>

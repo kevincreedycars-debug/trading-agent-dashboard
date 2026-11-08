@@ -269,6 +269,9 @@ let backtestingDevelopmentData = null;
 let factorEdgeLabData = null;
 let researchLibraryData = null;
 let researchLibraryDocuments = null;
+// Documents the local service reports through its manifest. Kept apart from the page's registry copy so a
+// late-arriving view of that file cannot hide evidence the service has already stored.
+let researchLibraryServiceDocuments = [];
 const researchLibraryState = {
   asset: "USD",
   group: "all",
@@ -281,6 +284,7 @@ const researchLibraryState = {
   chainId: "",
   uploadTaskId: "",
   uploadStage: "",
+  uploadDraft: {},
   serviceEndpoint: "",
   serviceToken: "",
   serviceState: "unknown",
@@ -6802,7 +6806,89 @@ function researchLibraryStatusPill(kind, value) {
 }
 
 function researchLibraryDocumentList() {
-  return asArray(researchLibraryDocuments?.documents);
+  // The page's registry copy plus whatever the service reports. They are kept as separate inputs so an
+  // initial load that settles later cannot erase what the service has already answered.
+  return researchLibraryMergeDocuments(asArray(researchLibraryDocuments?.documents), researchLibraryServiceDocuments);
+}
+
+function researchLibraryLatestEntry(document) {
+  return asArray(document?.versions).reduce((best, entry) => (best === null || Number(entry.version) > Number(best.version) ? entry : best), null);
+}
+
+// What the service reports for one document, in the shape the committed registry uses. The manifest carries
+// the latest version only; that is enough to read a stage as delivered and to fetch that exact version.
+function researchLibraryDocumentFromServiceEntry(entry) {
+  const versionNumber = Number(entry?.latest_version);
+  const hasVersion = Number.isFinite(versionNumber) && versionNumber > 0;
+  const versions = hasVersion ? [{
+    version: versionNumber,
+    sha256: String(entry.latest_sha256 || ""),
+    bytes: entry.latest_bytes === null || entry.latest_bytes === undefined ? null : Number(entry.latest_bytes),
+    registered_at: entry.registered_at || "",
+    original_filename: entry.original_filename || "",
+    model: entry.model || "",
+    note: "listed by the local library service",
+    parent_document_id: entry.parent_document_id || null,
+    parent_version: entry.parent_version === undefined ? null : entry.parent_version,
+    input_documents: asArray(entry.input_documents),
+    open_findings: asArray(entry.open_findings)
+  }] : [];
+  return {
+    document_id: String(entry.document_id || ""),
+    asset: entry.asset || "",
+    factor_id: entry.factor_id || null,
+    task_id: entry.task_id || null,
+    topic_id: entry.topic_id || null,
+    chain_id: entry.chain_id || null,
+    stage: entry.stage || null,
+    document_type: entry.document_type,
+    title: entry.title,
+    model: entry.model,
+    origin: entry.origin || "external_upload",
+    storage: entry.storage || "library_object",
+    public_download: false,
+    context_version: entry.context_version || null,
+    open_findings: asArray(entry.open_findings),
+    parent_document_id: entry.parent_document_id || null,
+    parent_version: entry.parent_version === undefined ? null : entry.parent_version,
+    repo_path: entry.repo_path || null,
+    versions
+  };
+}
+
+// A page served from anywhere other than the service's own checkout reads a registry the service never
+// writes, so a stored return would keep reading "Awaiting upload" with no error to explain it. Merging the
+// service manifest over that copy means a stored return reads as delivered wherever the page is served;
+// where both know a document, the newer version wins and the older record is not hidden.
+function researchLibraryMergeDocuments(pageDocuments, serviceDocuments) {
+  const merged = new Map(pageDocuments.map(document => [String(document.document_id), document]));
+  serviceDocuments.forEach(entry => {
+    const id = String(entry?.document_id || "");
+    if (!id) return;
+    const current = merged.get(id);
+    const incomingVersion = Number(entry.latest_version) || 0;
+    const currentVersion = Number(researchLibraryLatestEntry(current)?.version) || 0;
+    if (!current || incomingVersion > currentVersion) merged.set(id, researchLibraryDocumentFromServiceEntry(entry));
+  });
+  return [...merged.values()];
+}
+
+// The registry a page shows is the committed file plus whatever the service has stored. Reading the
+// manifest is what keeps the two in step when they are not the same file.
+async function researchLibrarySyncServiceRegistry() {
+  if (researchLibraryState.serviceState !== "connected") return false;
+  const client = researchLibraryServiceClient();
+  if (!client) return false;
+  try {
+    const manifest = await client.manifest();
+    const entries = asArray(manifest?.documents);
+    if (!entries.length) return false;
+    researchLibraryServiceDocuments = entries;
+    return true;
+  } catch (err) {
+    console.warn("Could not read the research library service manifest", err);
+    return false;
+  }
 }
 
 function researchLibraryDocumentsFor(factorId, types = []) {
@@ -6858,6 +6944,9 @@ async function probeResearchLibraryService(options = {}) {
     const health = await client.health();
     researchLibraryState.serviceState = "connected";
     researchLibraryState.serviceDetail = `${health.service || "service"} ${health.version || ""}`.trim();
+    // The service's own registry is the authority for what it has stored. Read it as soon as the service
+    // answers, so a page whose registry copy is older still shows every registered stage.
+    await researchLibrarySyncServiceRegistry();
     if (options.render !== false) renderResearchLibrary();
     return true;
   } catch (err) {
@@ -6994,7 +7083,9 @@ async function researchLibraryDownloadDocument(documentId, version, storage) {
     const result = await client.download(documentId, wanted);
     const actual = lib && globalThis.crypto?.subtle ? await lib.sha256Hex(result.bytes) : "";
     const verification = actual && result.sha256 ? (actual === result.sha256 ? `hash verified ${actual.slice(0, 12)}` : `HASH MISMATCH: ${actual.slice(0, 12)} vs ${result.sha256.slice(0, 12)}`) : "hash not checked in this browser";
-    researchLibraryDownloadBytes(`${documentId}-v${wanted}.json`, result.bytes);
+    // The name the reader chose is the name they get back, so a downloaded review is recognisable.
+    const filename = String(record?.original_filename || "").trim() || `${documentId}-v${wanted}.json`;
+    researchLibraryDownloadBytes(filename, result.bytes);
     researchLibraryMessage(`${document.title} version ${wanted} downloaded (${verification}).`);
   } catch (err) {
     researchLibraryMessage(`${document.title} could not be downloaded: ${err?.message || err}`);
@@ -7051,12 +7142,20 @@ function researchLibraryDownloadInputPackage(chainId, stageId) {
 }
 
 async function researchLibraryRefreshDocuments() {
+  let pageDocuments = null;
   try {
     const refreshed = await fetchLocalJson(researchLibraryDocumentsUrl);
-    if (refreshed) researchLibraryDocuments = refreshed;
+    if (refreshed) {
+      researchLibraryDocuments = refreshed;
+      pageDocuments = asArray(refreshed.documents);
+    }
   } catch (err) {
     console.warn("Could not refresh the research library registry", err);
   }
+  // The file above comes from whichever origin serves this page. The service may write a different one, so
+  // its manifest is merged in and the caller is told what the page's own copy contained.
+  await researchLibrarySyncServiceRegistry();
+  return pageDocuments;
 }
 
 async function researchLibraryUpload(taskId) {
@@ -7249,7 +7348,10 @@ function setupResearchLibraryControls() {
     const stageUploadButton = target.closest("[data-rl-stage-upload]");
     if (stageUploadButton) {
       const [chainId, stageId] = String(stageUploadButton.dataset.rlStageUpload || "").split(":");
-      researchLibraryStageUpload(chainId, stageId, stageUploadButton.closest("[data-rl-upload-form]"));
+      const form = stageUploadButton.closest("[data-rl-upload-form]");
+      researchLibraryStageUpload(chainId, stageId, form).catch(error => {
+        researchLibraryStageNotice(form, `The upload could not be completed: ${error?.message || error}. Nothing was called registered.`);
+      });
       return;
     }
 
@@ -7301,6 +7403,12 @@ function setupResearchLibraryControls() {
   });
 
   panel.addEventListener("input", event => {
+    const uploadField = event.target.closest("[data-rl-upload-title], [data-rl-upload-model], [data-rl-upload-note], [data-rl-upload-findings]");
+    if (uploadField) {
+      const form = uploadField.closest("[data-rl-upload-form]");
+      if (form) researchLibrarySaveUploadDraft(form.dataset.rlUploadForm, form);
+      return;
+    }
     const query = event.target.closest("[data-rl-query]");
     if (query) {
       researchLibraryState.query = query.value;
@@ -7330,6 +7438,13 @@ function researchLibraryServiceCard() {
         The published page can browse the committed registry and download repo-backed documents, but it
         cannot upload and it cannot read an uploaded report.
       </p>
+      <p class="rl-service-detail" data-rl-service-page="true">
+        The page served by the service itself reads the registry the service writes:
+        <code>${escapeHtml(`${researchLibraryState.serviceEndpoint || researchLibraryDefaultEndpoint}/index.html`)}</code>.
+        Any other address (GitHub Pages, a different checkout) reads its own
+        <code>data/research-library/documents.json</code>; uploads still store and download, and this panel
+        reads the service's manifest for what that registry copy does not list.
+      </p>
       <div class="rl-service-form">
         <label>Endpoint<input id="researchLibraryEndpoint" type="text" value="${escapeHtml(researchLibraryState.serviceEndpoint || researchLibraryDefaultEndpoint)}" /></label>
         <label>Token<input id="researchLibraryToken" type="password" value="${escapeHtml(researchLibraryState.serviceToken)}" autocomplete="off" /></label>
@@ -7345,7 +7460,7 @@ function researchLibraryServiceCard() {
 // anything.
 function researchLibraryDocumentSummaries() {
   const lib = researchLibraryLib();
-  return lib ? lib.listDocuments(researchLibraryDocuments || {}) : [];
+  return lib ? lib.listDocuments({ documents: researchLibraryDocumentList() }) : [];
 }
 
 function researchLibraryChainById(lib, catalog, chainId) {
@@ -7450,98 +7565,214 @@ async function researchLibraryViewDocument(documentId, version) {
   }
 }
 
+function researchLibraryUploadDraft(key) {
+  const draft = researchLibraryState.uploadDraft[key];
+  return draft && typeof draft === "object" ? draft : {};
+}
+
+function researchLibrarySaveUploadDraft(key, form) {
+  if (!key || !form) return;
+  researchLibraryState.uploadDraft[key] = {
+    title: String(form.querySelector("[data-rl-upload-title]")?.value || ""),
+    model: String(form.querySelector("[data-rl-upload-model]")?.value || ""),
+    note: String(form.querySelector("[data-rl-upload-note]")?.value || ""),
+    findings: String(form.querySelector("[data-rl-upload-findings]")?.value || "")
+  };
+}
+
+// A refusal belongs next to the form that caused it: re-rendering the panel to show a message would also
+// throw away the chosen file and everything typed, which is exactly what must survive a failure.
+function researchLibraryStageNotice(form, text, kind = "error") {
+  const holder = form?.querySelector(`[data-rl-upload-${kind}]`);
+  if (!holder) {
+    researchLibraryMessage(text);
+    return;
+  }
+  holder.hidden = false;
+  holder.textContent = text;
+}
+
+function researchLibraryClearStageNotice(form, kind) {
+  const holder = form?.querySelector(`[data-rl-upload-${kind}]`);
+  if (!holder) return;
+  holder.hidden = true;
+  holder.textContent = "";
+}
+
+// The response plus the payload is all the page needs to read the stage as delivered at once. Where the
+// service's registry is not the page's registry copy, this is the record the panel shows until the manifest
+// merge catches up.
+function researchLibraryRegisteredDocument(payload, registration) {
+  const version = {
+    version: Number(registration.version),
+    sha256: String(registration.sha256 || ""),
+    bytes: Number(registration.bytes),
+    registered_at: new Date().toISOString().slice(0, 10),
+    original_filename: String(payload.original_filename || ""),
+    model: payload.model || "",
+    note: "registered by the local library service",
+    parent_document_id: registration.parent_document_id || payload.parent_document_id || null,
+    parent_version: registration.parent_version ?? payload.parent_version ?? null,
+    input_documents: asArray(payload.input_documents),
+    open_findings: asArray(payload.open_findings)
+  };
+  return {
+    document_id: String(registration.document_id),
+    asset: payload.asset,
+    factor_id: payload.factor_id || null,
+    task_id: registration.task_id || payload.task_id || null,
+    topic_id: registration.topic_id || payload.topic_id || null,
+    chain_id: payload.chain_id || null,
+    stage: registration.stage || payload.stage || null,
+    document_type: registration.document_type || payload.document_type,
+    title: payload.title,
+    model: payload.model,
+    origin: "external_upload",
+    storage: "library_object",
+    public_download: false,
+    context_version: payload.context_version || null,
+    open_findings: asArray(payload.open_findings),
+    parent_document_id: registration.parent_document_id || payload.parent_document_id || null,
+    parent_version: registration.parent_version ?? payload.parent_version ?? null,
+    versions: [version]
+  };
+}
+
+function researchLibraryRememberRegistration(document) {
+  const next = researchLibraryDocumentList().slice();
+  const index = next.findIndex(entry => String(entry.document_id) === String(document.document_id));
+  if (index < 0) {
+    next.push(document);
+  } else {
+    const added = asArray(document.versions);
+    const versions = asArray(next[index].versions)
+      .filter(entry => !added.some(candidate => Number(candidate.version) === Number(entry.version)))
+      .concat(added)
+      .sort((left, right) => Number(left.version) - Number(right.version));
+    next[index] = { ...next[index], ...document, versions };
+  }
+  researchLibraryDocuments = { ...(researchLibraryDocuments || {}), documents: next };
+}
+
 // One stage, one Markdown file. The dashboard writes the chain, the factor, the stage, the document type and
 // the exact parent version, so the reader supplies a file and a model label and nothing else. Nothing here
-// approves anything: the service records evidence and moves no status.
+// approves anything: the service records evidence and moves no status. A refusal is shown inside the form,
+// with the chosen file and every typed detail left in place, and nothing is called registered until the
+// service has answered with the stored version.
 async function researchLibraryStageUpload(chainId, stageId, form) {
   const lib = researchLibraryLib();
-  const catalog = lib ? lib.normalizeCatalog(researchLibraryData || {}) : null;
-  const chain = catalog ? researchLibraryChainById(lib, catalog, chainId) : null;
-  if (!lib || !chain) {
-    researchLibraryMessage(`Chain ${chainId} is not in the catalogue.`);
-    return;
-  }
-  const progress = lib.chainProgress(chain, { documents: researchLibraryDocumentSummaries() }, catalog);
-  const stage = progress.stages.find(entry => entry.stage === stageId);
-  if (!stage) {
-    researchLibraryMessage(`Chain ${chainId} has no ${stageId} stage.`);
-    return;
-  }
-  const file = form?.querySelector("[data-rl-upload-file]")?.files?.[0];
-  if (!file) {
-    researchLibraryMessage(`Choose the one Markdown file the ${stage.label} stage returned.`);
-    return;
-  }
-  const model = String(form.querySelector("[data-rl-upload-model]")?.value || "").trim();
-  if (!model) {
-    researchLibraryMessage("Name the model or session that produced the document: the record is not complete without it.");
-    return;
-  }
-  if (stage.parent_stage && (!stage.parent_document_id || stage.parent_version === null)) {
-    researchLibraryMessage(`The ${stage.parent_stage} stage has no registered document yet, so this upload has nothing to attach to. Run the earlier stage first.`);
-    return;
-  }
-  const isFinalChain = !chain.factor_id;
-  const inputDocuments = asArray(stage.input_documents).filter(entry => !entry.missing && entry.document_id);
-  if (isFinalChain) {
-    const finalStatus = lib.finalChainStatus(catalog, { documents: researchLibraryDocumentSummaries() });
-    if (!finalStatus || !finalStatus.unlocked) {
-      researchLibraryMessage("The final chain is locked until every factor chain is complete against current versions, so nothing can be registered.");
-      return;
-    }
-    if (!inputDocuments.length || inputDocuments.length !== asArray(stage.input_documents).length) {
-      researchLibraryMessage(`The ${stage.label} input package is incomplete, so this return has nothing complete to be registered against.`);
-      return;
-    }
-  }
-  const client = researchLibraryServiceClient();
-  if (!client) {
-    researchLibraryMessage("The shared research library helper did not load, so nothing can be registered.");
-    return;
-  }
-  const payload = {
-    // One stage has one document: a corrected return becomes the next version of it rather than a second
-    // document for the same stage, so a review keeps pointing at the report it was written against.
-    document_id: stage.document_id || researchLibraryStageDocumentId(chain, stage.stage),
-    asset: chain.asset || "USD",
-    factor_id: chain.factor_id || null,
-    topic_id: chain.topic_id || null,
-    chain_id: chain.chain_id,
-    stage: stage.stage,
-    document_type: stage.document_type,
-    title: String(form.querySelector("[data-rl-upload-title]")?.value || "").trim() || `${chain.title} - ${stage.label}`,
-    model,
-    note: String(form.querySelector("[data-rl-upload-note]")?.value || "").trim(),
-    original_filename: file.name,
-    content_base64: lib.toBase64(new Uint8Array(await file.arrayBuffer()))
-  };
-  if (stage.stage === "adjudication" || stage.stage === "final_adjudication") {
-    payload.open_findings = String(form.querySelector("[data-rl-upload-findings]")?.value || "")
-      .split("\n").map(line => line.trim()).filter(Boolean);
-  }
-  if (stage.parent_stage) {
-    payload.parent_document_id = stage.parent_document_id;
-    payload.parent_version = stage.parent_version;
-  }
-  if (isFinalChain) {
-    payload.input_documents = inputDocuments.map(entry => ({
-      document_id: entry.document_id,
-      version: entry.version,
-      sha256: entry.sha256,
-      role: entry.role,
-      role_stage: entry.role_stage
-    }));
-  }
-  researchLibraryMessage(`Uploading ${file.name} as stage ${stage.order} (${stage.label}) of ${chain.title}...`);
+  let file = null;
+  let stored = null;
   try {
-    const registration = await client.upload(payload);
-    await researchLibraryRefreshDocuments();
+    const catalog = lib ? lib.normalizeCatalog(researchLibraryData || {}) : null;
+    const chain = catalog ? researchLibraryChainById(lib, catalog, chainId) : null;
+    if (!lib || !chain) {
+      researchLibraryStageNotice(form, `Chain ${chainId} is not in the catalogue, so nothing was sent.`);
+      return;
+    }
+    const progress = lib.chainProgress(chain, { documents: researchLibraryDocumentSummaries() }, catalog);
+    const stage = progress.stages.find(entry => entry.stage === stageId);
+    if (!stage) {
+      researchLibraryStageNotice(form, `Chain ${chainId} has no ${stageId} stage, so nothing was sent.`);
+      return;
+    }
+    researchLibraryClearStageNotice(form, "error");
+    researchLibraryClearStageNotice(form, "status");
+    file = form?.querySelector("[data-rl-upload-file]")?.files?.[0] || null;
+    if (!file) {
+      researchLibraryStageNotice(form, `Choose the one Markdown file the ${stage.label} stage returned.`);
+      return;
+    }
+    const model = String(form.querySelector("[data-rl-upload-model]")?.value || "").trim();
+    researchLibrarySaveUploadDraft(researchLibraryStageKey(chain, stage.stage), form);
+    if (!model) {
+      researchLibraryStageNotice(form, "Name the model or session that produced the document: the record is not complete without it.");
+      return;
+    }
+    if (stage.parent_stage && (!stage.parent_document_id || stage.parent_version === null)) {
+      researchLibraryStageNotice(form, `The ${stage.parent_stage} stage has no registered document yet, so this upload has nothing to attach to. Run the earlier stage first.`);
+      return;
+    }
+    const isFinalChain = !chain.factor_id;
+    const inputDocuments = asArray(stage.input_documents).filter(entry => !entry.missing && entry.document_id);
+    if (isFinalChain) {
+      const finalStatus = lib.finalChainStatus(catalog, { documents: researchLibraryDocumentSummaries() });
+      if (!finalStatus || !finalStatus.unlocked) {
+        researchLibraryStageNotice(form, "The final chain is locked until every factor chain is complete against current versions, so nothing can be registered.");
+        return;
+      }
+      if (!inputDocuments.length || inputDocuments.length !== asArray(stage.input_documents).length) {
+        researchLibraryStageNotice(form, `The ${stage.label} input package is incomplete, so this return has nothing complete to be registered against.`);
+        return;
+      }
+    }
+    const client = researchLibraryServiceClient();
+    if (!client) {
+      researchLibraryStageNotice(form, "The shared research library helper did not load, so nothing can be registered.");
+      return;
+    }
+    const payload = {
+      // One stage has one document: a corrected return becomes the next version of it rather than a second
+      // document for the same stage, so a review keeps pointing at the report it was written against.
+      document_id: stage.document_id || researchLibraryStageDocumentId(chain, stage.stage),
+      asset: chain.asset || "USD",
+      factor_id: chain.factor_id || null,
+      topic_id: chain.topic_id || null,
+      chain_id: chain.chain_id,
+      stage: stage.stage,
+      document_type: stage.document_type,
+      title: String(form.querySelector("[data-rl-upload-title]")?.value || "").trim() || `${chain.title} - ${stage.label}`,
+      model,
+      note: String(form.querySelector("[data-rl-upload-note]")?.value || "").trim(),
+      original_filename: file.name,
+      content_base64: lib.toBase64(new Uint8Array(await file.arrayBuffer()))
+    };
+    if (stage.stage === "adjudication" || stage.stage === "final_adjudication") {
+      payload.open_findings = String(form.querySelector("[data-rl-upload-findings]")?.value || "")
+        .split("\n").map(line => line.trim()).filter(Boolean);
+    }
+    if (stage.parent_stage) {
+      payload.parent_document_id = stage.parent_document_id;
+      payload.parent_version = stage.parent_version;
+    }
+    if (isFinalChain) {
+      payload.input_documents = inputDocuments.map(entry => ({
+        document_id: entry.document_id,
+        version: entry.version,
+        sha256: entry.sha256,
+        role: entry.role,
+        role_stage: entry.role_stage
+      }));
+    }
+    researchLibraryStageNotice(form, `Uploading ${file.name} as stage ${stage.order} (${stage.label}) of ${chain.title}...`, "status");
+    stored = await client.upload(payload);
+    const pageDocuments = await researchLibraryRefreshDocuments();
+    // The service has answered, so the stage is delivered whatever this page's registry copy says.
+    researchLibraryRememberRegistration(researchLibraryRegisteredDocument(payload, stored));
     researchLibraryState.uploadStage = "";
-    const attached = stage.parent_stage ? `, attached to ${registration.parent_document_id || payload.parent_document_id} v${registration.parent_version || payload.parent_version}` : "";
+    delete researchLibraryState.uploadDraft[researchLibraryStageKey(chain, stage.stage)];
+    const attached = stage.parent_stage ? `, attached to ${stored.parent_document_id || payload.parent_document_id} v${stored.parent_version ?? payload.parent_version}` : "";
     const packageNote = isFinalChain ? `, with ${inputDocuments.length} input documents recorded` : "";
-    researchLibraryMessage(`${file.name} registered as ${registration.document_id} v${registration.version} (sha256 ${String(registration.sha256).slice(0, 12)}, ${lib.formatBytes(registration.bytes)}${attached}${packageNote})${registration.duplicate ? ". These bytes were already registered, so no new version was written" : ""}. Evidence only: no factor status, weight, threshold or live call moved.`);
+    const inPageRegistry = pageDocuments === null
+      ? null
+      : pageDocuments.some(entry => String(entry.document_id) === String(stored.document_id));
+    // When the page's own registry is not the file the service writes, say so rather than let the stage fall
+    // back to "Awaiting upload" at the next reload with no explanation.
+    const registryNote = inPageRegistry === false
+      ? ` This page reads a registry copy the service did not write, so the stage is shown from the service's own record; ${researchLibraryState.serviceEndpoint}/index.html reads that registry directly.`
+      : "";
+    researchLibraryState.message = `${file.name} registered as ${stored.document_id} v${stored.version} (sha256 ${String(stored.sha256).slice(0, 12)}, ${lib.formatBytes(stored.bytes)}${attached}${packageNote})${stored.duplicate ? ". These bytes were already registered, so no new version was written" : ""}. Evidence only: no factor status, weight, threshold or live call moved.${registryNote}`;
+    renderResearchLibrary();
   } catch (err) {
-    researchLibraryMessage(`${file.name} could not be registered: ${err?.message || err}`);
+    const detail = String(err?.message || err);
+    if (stored) {
+      // The service stored the file; only this page's own refresh failed. That is not a failed registration.
+      researchLibraryState.uploadStage = "";
+      researchLibraryState.message = `${file ? file.name : "The document"} was stored by the service as ${stored.document_id} v${stored.version}, but this page could not finish refreshing: ${detail}. Reload the page or open ${researchLibraryState.serviceEndpoint}/index.html.`;
+      renderResearchLibrary();
+      return;
+    }
+    researchLibraryStageNotice(form, `${file ? `${file.name} was` : "Nothing was"} not registered: ${detail}${file ? " Nothing was stored, and your file and details are still in this form; correct the problem and register again." : ""}`);
   }
 }
 
@@ -7624,19 +7855,42 @@ function researchLibraryStageAttachBlock(lib, chain, stage) {
       </div>
     `;
   }
+  // A later stage of a factor chain judges every earlier return, not only its immediate parent: the
+  // adjudication prompt asks for the research report and the red-team review together, so both are offered
+  // here with the exact version and hash the registry holds.
+  const attachDocuments = lib.chainStages(chain)
+    .filter(entry => Number(entry.order) < Number(stage.order))
+    .map(entry => {
+      const document = lib.chainStageDocument({ documents: researchLibraryDocumentSummaries() }, chain, entry.stage);
+      return document ? { label: entry.label || researchLibraryStageLabel(lib, entry.stage), stage: entry.stage, document } : null;
+    })
+    .filter(Boolean);
   const sameVersion = stage.reviewed_version !== null && stage.reviewed_version === stage.parent_version;
+  if (!attachDocuments.length) {
+    return `
+      <div class="rl-stage-attach" data-rl-stage-attach="true">
+        <p class="eyebrow">What to attach</p>
+        <p class="rl-muted">The ${escapeHtml(parentLabel)} stage has no registered document yet, so there is nothing to attach. Deliver stage ${escapeHtml(String(stage.order - 1))} first.</p>
+      </div>
+    `;
+  }
+  const attachLabels = attachDocuments.map(entry => entry.label);
+  const attachList = attachLabels.length === 1
+    ? attachLabels[0]
+    : `${attachLabels.slice(0, -1).join(", ")} and ${attachLabels[attachLabels.length - 1]}`;
   return `
-    <div class="rl-stage-attach" data-rl-stage-attach="true">
+    <div class="rl-stage-attach" data-rl-stage-attach="true" data-rl-attach-count="${attachDocuments.length}">
       <p class="eyebrow">What to attach</p>
-      <p class="rl-muted">Download the exact ${escapeHtml(parentLabel)} version this stage must judge, and attach that file. If your copy has a different sha256, the prompt tells you to stop rather than review a different version.</p>
+      <p class="rl-muted">Download the exact ${escapeHtml(attachList)} ${attachDocuments.length === 1 ? "version" : "versions"} this stage must judge, and attach ${attachDocuments.length === 1 ? "that file" : "them together"}. If a copy has a different sha256, the prompt tells you to stop rather than judge a substituted document.</p>
       <div class="rl-document-meta">
-        <span>${escapeHtml(stage.parent_document_id)}</span>
-        <span>v${escapeHtml(String(stage.parent_version))}</span>
-        <span class="rl-hash">sha256 ${escapeHtml(String(stage.parent_sha256).slice(0, 16))}</span>
+        ${attachDocuments.map(entry => `
+          <span data-rl-attach-document="${escapeHtml(String(entry.document.document_id))}" data-rl-attach-version="${escapeHtml(String(entry.document.latest_version))}">${escapeHtml(entry.label)}: ${escapeHtml(String(entry.document.document_id))} v${escapeHtml(String(entry.document.latest_version))}</span>
+          <span class="rl-hash">sha256 ${escapeHtml(String(entry.document.latest_sha256).slice(0, 16))}</span>
+        `).join("")}
         ${sameVersion ? `<span>this stage judged v${escapeHtml(String(stage.reviewed_version))}</span>` : ""}
       </div>
       <div class="rl-document-actions">
-        <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.parent_document_id)}" data-rl-version="${escapeHtml(String(stage.parent_version))}" data-rl-storage="library_object">Download inputs</button>
+        ${attachDocuments.map(entry => `<button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(String(entry.document.document_id))}" data-rl-version="${escapeHtml(String(entry.document.latest_version))}" data-rl-storage="${escapeHtml(entry.document.storage || "library_object")}" data-rl-attach-stage="${escapeHtml(entry.stage)}">Download ${escapeHtml(entry.label)} v${escapeHtml(String(entry.document.latest_version))}</button>`).join("")}
       </div>
     </div>
   `;
@@ -7665,6 +7919,7 @@ function researchLibraryStageDocumentBlock(lib, chain, stage) {
       <strong>${escapeHtml(stage.title || stage.document_id)}</strong>
       <div class="rl-document-meta">
         <span>${escapeHtml(stage.document_id)}</span>
+        <span data-rl-stage-filename="true">${escapeHtml(stage.original_filename || "filename not recorded")}</span>
         <span>v${escapeHtml(String(stage.version))}${stage.versions_total > 1 ? ` of ${escapeHtml(String(stage.versions_total))}` : ""}</span>
         <span class="rl-hash" data-rl-stage-hash="true">sha256 ${escapeHtml(String(stage.sha256).slice(0, 16))}</span>
         <span>${escapeHtml(lib.formatBytes(stage.bytes))}</span>
@@ -7691,6 +7946,8 @@ function researchLibraryStageUploadForm(lib, chain, stage) {
   const inputDocs = asArray(stage.input_documents);
   const inputCount = inputDocs.filter(entry => !entry.missing && entry.document_id).length;
   const inputsMissing = inputDocs.some(entry => entry.missing || !entry.document_id);
+  // A form that was refused keeps what the reader typed, so a corrected retry does not start from nothing.
+  const draft = researchLibraryUploadDraft(key);
   return `
     <div class="rl-stage-upload" data-rl-upload-form="${escapeHtml(key)}">
       <div class="rl-document-actions">
@@ -7699,12 +7956,14 @@ function researchLibraryStageUploadForm(lib, chain, stage) {
       </div>
       ${open ? `
         <div class="rl-upload-grid">
-          <label>Title<input type="text" data-rl-upload-title value="${escapeHtml(`${chain.title} - ${stage.label}`)}" /></label>
-          <label>Model or session<input type="text" data-rl-upload-model placeholder="the label you actually used" /></label>
+          <label>Title<input type="text" data-rl-upload-title value="${escapeHtml(draft.title || `${chain.title} - ${stage.label}`)}" /></label>
+          <label>Model or session<input type="text" data-rl-upload-model value="${escapeHtml(draft.model || "")}" placeholder="the label you actually used" /></label>
           <label>Result file<input type="file" data-rl-upload-file accept=".md,.markdown,.txt" /></label>
-          <label>Note<input type="text" data-rl-upload-note placeholder="optional" /></label>
+          <label>Note<input type="text" data-rl-upload-note value="${escapeHtml(draft.note || "")}" placeholder="optional" /></label>
         </div>
-        ${findings ? `<label class="rl-muted">Unresolved findings, one per line<textarea rows="3" data-rl-upload-findings placeholder="each line is recorded as an open finding for the final analysis"></textarea></label>` : ""}
+        ${findings ? `<label class="rl-muted">Unresolved findings, one per line<textarea rows="3" data-rl-upload-findings placeholder="each line is recorded as an open finding for the final analysis">${escapeHtml(draft.findings || "")}</textarea></label>` : ""}
+        <p class="rl-muted" data-rl-upload-status hidden></p>
+        <p class="rl-message rl-message-error" data-rl-upload-error role="alert" hidden></p>
         <p class="rl-muted">Document id ${escapeHtml(defaultId)}${stage.parent_stage ? `, attached to ${escapeHtml(stage.parent_document_id || "the parent stage")} v${escapeHtml(String(stage.parent_version))}` : ""}${inputCount ? `, with its ${inputCount}-document input package recorded` : ""}. Uploading records evidence: it is not an approval and it moves no factor status.</p>
         <div class="rl-document-actions">
           <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${connected && !inputsMissing ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
@@ -15585,6 +15844,775 @@ function setupArchitectureControls() {
   });
 }
 
+const usdLayer1BacktesterUrl = "./data/usd-layer1-backtester/run-v1.json?v=20261108-usd-l1-backtester";
+let usdLayer1Data = null;
+let usdLayer1LoadError = null;
+let usdLayer1Request = null;
+let usdL1ReplayController = null;
+const usdLayer1State = {
+  tab: "dxy_direction",
+  selectedDate: null,
+  sessionFilter: "all",
+  demoSession: null
+};
+
+function usdL1Text(value, fallback = "—") {
+  if (value === null || value === undefined || value === "") return fallback;
+  return escapeHtml(String(value));
+}
+
+function usdL1Number(value, decimals = 2) {
+  if (!Number.isFinite(value)) return "—";
+  return Number(value).toFixed(decimals);
+}
+
+function usdL1Signed(value, decimals = 2, suffix = "") {
+  if (!Number.isFinite(value)) return "—";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${Number(value).toFixed(decimals)}${suffix}`;
+}
+
+function usdL1Percent(value, decimals = 2) {
+  return Number.isFinite(value) ? `${Number(value).toFixed(decimals)}%` : "—";
+}
+
+function usdL1DashboardDirection(direction) {
+  const text = String(direction || "").toUpperCase();
+  if (text === "BULLISH") return { label: "USD bullish", tone: "bull" };
+  if (text === "BEARISH") return { label: "USD bearish", tone: "bear" };
+  if (text === "NO_CALL") return { label: "No call", tone: "flat" };
+  return { label: direction ? String(direction) : "No call", tone: "flat" };
+}
+
+function usdL1ConvictionPips(conviction) {
+  if (!Number.isFinite(conviction)) return `<span class="usd-l1-conviction empty">no band</span>`;
+  const pips = [1, 2, 3, 4, 5]
+    .map((level) => `<span class="usd-l1-pip${level <= conviction ? " on" : ""}"></span>`)
+    .join("");
+  return `<span class="usd-l1-conviction" title="Conviction ${conviction} of 5">${pips}<b>${conviction}/5</b></span>`;
+}
+
+function usdL1ResultChip(result) {
+  const tone = result === "hit" ? "hit" : result === "miss" ? "miss" : result === "flat" ? "flat" : "none";
+  const label = result === "hit" ? "opposite" : result === "miss" ? "same way" : result === "flat" ? "flat" : "—";
+  return `<span class="usd-l1-chip ${tone}" title="${escapeHtml(result || "unscored")}">${label}</span>`;
+}
+
+function renderUsdL1Progress(payload = {}) {
+  const run = payload.run || {};
+  const progress = payload.progress || {};
+  const stages = asArray(progress.stages);
+  const eligible = Number.isFinite(run.sessions_eligible) ? run.sessions_eligible : 0;
+  const processed = Number.isFinite(run.sessions_processed) ? run.sessions_processed : 0;
+  return `
+    <section class="usd-l1-progress" data-usd-l1-progress="true">
+      <div class="usd-l1-progress-head">
+        <div>
+          <p class="eyebrow">Progress</p>
+          <h3>${usdL1Text(progress.current_stage_label || "Not started")}</h3>
+        </div>
+        <p class="usd-l1-progress-detail">${usdL1Text(progress.current_stage_detail || "")}</p>
+      </div>
+      <div class="usd-l1-progress-metrics">
+        ${renderBacktestKpiMetric("Run version", usdL1Text(run.run_version), usdL1Text(run.challenger_version, ""), "Frozen parameter set and challenger version this artefact was built with")}
+        ${renderBacktestKpiMetric("Date range", `${usdL1Text(run.date_range?.start)} → ${usdL1Text(run.date_range?.end)}`, "05:00 London sessions", "Every session runs from 05:00 London to 05:00 London the next local date")}
+        ${renderBacktestKpiMetric("Sessions processed", `${processed} / ${eligible}`, "eligible sessions", "Eligible means a weekday 05:00 London start with a reconstructed snapshot")}
+        ${renderBacktestKpiMetric("Last update", usdL1Text(formatDashboardTime(run.last_update)), "", "Timestamp stamped into the saved research artefact")}
+      </div>
+      <ol class="usd-l1-stage-list">
+        ${stages.map((stage) => `
+          <li class="usd-l1-stage ${escapeHtml(stage.state || "")}" data-usd-l1-stage="${escapeHtml(stage.key || "")}">
+            <span class="usd-l1-stage-state">${usdL1Text(stage.state)}</span>
+            <div>
+              <strong>${usdL1Text(stage.label)}</strong>
+              <p>${usdL1Text(stage.detail)}</p>
+            </div>
+          </li>
+        `).join("")}
+      </ol>
+    </section>
+  `;
+}
+
+function renderUsdL1Coverage(payload = {}) {
+  const coverage = payload.coverage || {};
+  const byModel = coverage.by_model || {};
+  const byTest = coverage.by_test || {};
+  const modelCard = (key, label) => {
+    const entry = byModel[key] || {};
+    return `
+      <article class="usd-l1-coverage-card" data-usd-l1-model="${escapeHtml(key)}">
+        <p class="eyebrow">${escapeHtml(label)}</p>
+        <p class="usd-l1-coverage-number">${usdL1Number(entry.calls_reconstructed, 0)}<span> of ${usdL1Number(entry.sessions_eligible, 0)} sessions called</span></p>
+        <p class="usd-l1-coverage-sub">${usdL1Percent(entry.call_coverage_pct)} coverage · ${usdL1Number(entry.no_call_sessions, 0)} no-call sessions</p>
+        <ul class="usd-l1-conviction-split">
+          ${[1, 2, 3, 4, 5].map((level) => `<li><span>conviction ${level}</span><b>${usdL1Number(entry.convictions?.[level], 0)}</b></li>`).join("")}
+        </ul>
+      </article>
+    `;
+  };
+  const testRow = (id, label) => {
+    const entry = byTest[id] || {};
+    return `
+      <tr data-usd-l1-test-coverage="${escapeHtml(id)}">
+        <th scope="row">${escapeHtml(label)}</th>
+        <td>${usdL1Number(entry.usable_sessions, 0)}</td>
+        <td>${asArray(entry.holding_it_up).map((item) => `<span class="usd-l1-blocker">${escapeHtml(item)}</span>`).join("")}</td>
+      </tr>
+    `;
+  };
+  return `
+    <section class="usd-l1-coverage" data-usd-l1-coverage="true">
+      <div class="usd-l1-coverage-models">
+        ${modelCard("current", "Current model - call reconstruction")}
+        ${modelCard("challenger", "Challenger - call reconstruction")}
+      </div>
+      <div class="usd-l1-coverage-tests">
+        <table class="usd-l1-table">
+          <caption>Usable sessions per test, and what is holding each one up</caption>
+          <thead>
+            <tr><th scope="col">Test</th><th scope="col">Usable sessions</th><th scope="col">What is holding it up</th></tr>
+          </thead>
+          <tbody>
+            ${testRow("dxy_direction", "① DXY direction")}
+            ${testRow("four_markets", "② Four markets")}
+            ${testRow("l2l_full_5r", "③ Full L2L 5R")}
+            ${testRow("l2l_half_3r", "④ Half L2L 3R")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+const USD_L1_TABS = [
+  { id: "dxy_direction", label: "① DXY direction" },
+  { id: "four_markets", label: "② Four markets" },
+  { id: "l2l_full_5r", label: "③ Full L2L 5R" },
+  { id: "l2l_half_3r", label: "④ Half L2L 3R" }
+];
+
+function renderUsdL1TabStrip() {
+  return `
+    <nav class="usd-l1-tabs" role="tablist" aria-label="The four tests" data-usd-l1-tabs="true">
+      ${USD_L1_TABS.map((tab) => `
+        <button
+          type="button"
+          role="tab"
+          class="usd-l1-tab${usdLayer1State.tab === tab.id ? " active" : ""}"
+          aria-selected="${usdLayer1State.tab === tab.id ? "true" : "false"}"
+          data-usd-l1-tab="${tab.id}"
+        >${escapeHtml(tab.label)}</button>
+      `).join("")}
+    </nav>
+  `;
+}
+
+function usdL1ConvictionTable(byConviction = {}, label) {
+  const levels = [1, 2, 3, 4, 5];
+  return `
+    <table class="usd-l1-table usd-l1-conviction-table">
+      <caption>${escapeHtml(label)}</caption>
+      <thead>
+        <tr>
+          <th scope="col">Conviction</th>
+          <th scope="col">Scored</th>
+          <th scope="col">Right</th>
+          <th scope="col">Wrong</th>
+          <th scope="col">Flat</th>
+          <th scope="col">Accuracy</th>
+          <th scope="col">95% lower bound</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${levels.map((level) => {
+          const entry = byConviction[level] || {};
+          return `
+            <tr data-usd-l1-conviction-row="${level}">
+              <th scope="row">${level}</th>
+              <td>${usdL1Number(entry.scored, 0)}</td>
+              <td>${usdL1Number(entry.hits, 0)}</td>
+              <td>${usdL1Number(entry.misses, 0)}</td>
+              <td>${usdL1Number(entry.flat, 0)}</td>
+              <td>${usdL1Percent(entry.accuracy_pct)}</td>
+              <td>${usdL1Percent(entry.lower_bound_pct)}</td>
+            </tr>
+          `;
+        }).join("")}
+        <tr class="usd-l1-uncalled-row">
+          <th scope="row">no call</th>
+          <td colspan="5">${usdL1Number(byConviction.uncalled?.no_call, 0)} sessions</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
+
+function renderUsdL1DxyTab(test = {}) {
+  const official = test.official_series || {};
+  const models = test.models || {};
+  const card = (key, label) => `
+    <article class="usd-l1-test-card" data-usd-l1-dxy-model="${escapeHtml(key)}">
+      <p class="eyebrow">${escapeHtml(label)}</p>
+      <p class="usd-l1-test-headline">${usdL1Number(models[key]?.awaiting_prices_sessions ?? models[key]?.calls_made, 0)}<span> calls ready to score</span></p>
+      <p class="usd-l1-test-copy">${usdL1Number(models[key]?.overall?.scored, 0)} scored · ${usdL1Number(models[key]?.overall?.flat, 0)} flat · ${usdL1Percent(models[key]?.overall?.accuracy_pct)} accuracy</p>
+      ${usdL1ConvictionTable(models[key]?.by_conviction, `${label} by conviction`)}
+    </article>
+  `;
+  return `
+    <section class="usd-l1-test-body" data-usd-l1-test-body="dxy_direction">
+      <article class="usd-l1-blocker-card">
+        <p class="eyebrow">Blocked</p>
+        <h3>${usdL1Text(official.required_series)} is not in this checkout</h3>
+        <p class="usd-l1-test-copy">${usdL1Text(test.blocker?.reason || official.why_it_cannot_stand_in)}</p>
+        <p class="usd-l1-test-copy muted">What exists instead: ${usdL1Text(official.what_exists_instead)}. It carries the challenger's dollar-momentum mechanism and is labelled as a substitution there; it is refused for this test.</p>
+        <p class="usd-l1-test-copy muted">Unblocks when: ${usdL1Text(official.unblock_condition)} — owner: ${usdL1Text(official.blocker_owner)}</p>
+      </article>
+      <div class="usd-l1-test-grid">
+        ${card("current", "Current model")}
+        ${card("challenger", "Challenger")}
+      </div>
+    </section>
+  `;
+}
+
+function renderUsdL1FourMarketTab(test = {}) {
+  const models = test.models || {};
+  const comparisons = (test.comparisons && test.comparisons.markets) || {};
+  const marketKeys = Object.keys(models.challenger?.markets || models.current?.markets || {});
+  const row = (key) => {
+    const current = models.current?.markets?.[key];
+    const challenger = models.challenger?.markets?.[key];
+    const compare = comparisons[key] || {};
+    return `
+      <tr data-usd-l1-market="${escapeHtml(key)}">
+        <th scope="row">${escapeHtml(current?.label || challenger?.label || key)}</th>
+        <td>${usdL1Percent(current?.overall?.accuracy_pct)}<span class="usd-l1-sample">n=${usdL1Number(current?.overall?.scored, 0)}</span></td>
+        <td>${usdL1Number(current?.overall?.flat, 0)}</td>
+        <td>${usdL1Percent(challenger?.overall?.accuracy_pct)}<span class="usd-l1-sample">n=${usdL1Number(challenger?.overall?.scored, 0)}</span></td>
+        <td>${usdL1Number(challenger?.overall?.flat, 0)}</td>
+        <td>+${usdL1Number(compare.corrected, 0)} / −${usdL1Number(compare.spoiled, 0)}</td>
+        <td>${usdL1Number(compare.matched, 0)}</td>
+        <td><span class="usd-l1-chip none">blocked</span></td>
+      </tr>
+    `;
+  };
+  const firstMarket = marketKeys[0];
+  return `
+    <section class="usd-l1-test-body" data-usd-l1-test-body="four_markets">
+      <p class="usd-l1-test-intro">${usdL1Text(test.question)}</p>
+      <p class="usd-l1-test-copy muted">${usdL1Text(test.outcome_reads)} Accuracy counts only sessions with a call and a move outside the frozen flat band, and the flat count sits beside it so noise is never counted as a hit.</p>
+      <table class="usd-l1-table usd-l1-four-market-table">
+        <caption>Direction across four markets — ${usdL1Number(test.usable_sessions, 0)} sessions with a scorable move</caption>
+        <thead>
+          <tr>
+            <th scope="col">Market</th>
+            <th scope="col">Current accuracy</th>
+            <th scope="col">Current flat</th>
+            <th scope="col">Challenger accuracy</th>
+            <th scope="col">Challenger flat</th>
+            <th scope="col">Corrected / spoiled</th>
+            <th scope="col">Matched dates</th>
+            <th scope="col">When DXY proved the call</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${marketKeys.map(row).join("")}
+        </tbody>
+      </table>
+      <p class="usd-l1-test-copy muted">The final column is the second view the brief asks for: accuracy restricted to calls DXY later proved right. It needs the same licensed series test ① is waiting for, so it is reported as blocked rather than quietly dropped.</p>
+      <div class="usd-l1-test-grid">
+        <article class="usd-l1-test-card">${usdL1ConvictionTable(models.current?.markets?.[firstMarket]?.by_conviction, `Current model by conviction — ${models.current?.markets?.[firstMarket]?.label || firstMarket}`)}</article>
+        <article class="usd-l1-test-card">${usdL1ConvictionTable(models.challenger?.markets?.[firstMarket]?.by_conviction, `Challenger by conviction — ${models.challenger?.markets?.[firstMarket]?.label || firstMarket}`)}</article>
+      </div>
+    </section>
+  `;
+}
+
+function usdL1EquityCurveSvg(account = {}, label = "") {
+  const points = asArray(account.equity_curve);
+  const start = Number.isFinite(account.starting_balance) ? account.starting_balance : 100000;
+  if (points.length < 2) {
+    return `<div class="usd-l1-empty">No equity curve: this account has no fills yet.</div>`;
+  }
+  const balances = points.map((point) => point.balance);
+  const low = Math.min(start, ...balances);
+  const high = Math.max(start, ...balances);
+  const span = high - low || 1;
+  const width = 520;
+  const height = 150;
+  const coords = points.map((point, index) => {
+    const x = (index / (points.length - 1)) * (width - 8) + 4;
+    const y = height - 8 - ((point.balance - low) / span) * (height - 16);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const last = points[points.length - 1].balance;
+  const tone = last >= start ? "up" : "down";
+  const startY = height - 8 - ((start - low) / span) * (height - 16);
+  return `
+    <figure class="usd-l1-equity" data-usd-l1-equity="${escapeHtml(account.id || "")}">
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(label)} equity curve">
+        <line x1="0" y1="${startY.toFixed(1)}" x2="${width}" y2="${startY.toFixed(1)}" class="usd-l1-equity-start"></line>
+        <polyline points="${coords.join(" ")}" class="usd-l1-equity-line ${tone}"></polyline>
+      </svg>
+      <figcaption>${escapeHtml(label)} · start £${usdL1Number(start, 2)} · end £${usdL1Number(last, 2)} · peak-to-trough £${usdL1Number(account.max_drawdown?.amount, 2)} (${usdL1Percent(account.max_drawdown?.pct)})</figcaption>
+    </figure>
+  `;
+}
+
+function usdL1AccountTable(accounts = []) {
+  if (!accounts.length) return `<div class="usd-l1-empty">No accounts were run.</div>`;
+  return `
+    <table class="usd-l1-table usd-l1-account-table">
+      <caption>Four independent £100,000 accounts, 1% of each account's own running balance per filled trade</caption>
+      <thead>
+        <tr>
+          <th scope="col">Account</th>
+          <th scope="col">Fills</th>
+          <th scope="col">Wins</th>
+          <th scope="col">Losses</th>
+          <th scope="col">Average R</th>
+          <th scope="col">Ending balance</th>
+          <th scope="col">Max drawdown</th>
+          <th scope="col">Call source</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${accounts.map((account) => `
+          <tr data-usd-l1-account="${escapeHtml(account.id || "")}">
+            <th scope="row">${escapeHtml(account.label || account.id || "")}</th>
+            <td>${usdL1Number(account.fills, 0)}</td>
+            <td>${usdL1Number(account.wins, 0)}</td>
+            <td>${usdL1Number(account.losses, 0)}</td>
+            <td>${usdL1Signed(account.average_r, 2, "R")}</td>
+            <td>£${usdL1Number(account.ending_balance, 2)}</td>
+            <td>£${usdL1Number(account.max_drawdown?.amount, 2)} (${usdL1Percent(account.max_drawdown?.pct)})</td>
+            <td class="usd-l1-call-source">demo call shared by both model slots</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderUsdL1DemoBlock(demo = {}) {
+  if (!demo || !demo.available) {
+    return `
+      <article class="usd-l1-blocker-card">
+        <p class="eyebrow">Execution demo</p>
+        <h3>Not available in this checkout</h3>
+        <p class="usd-l1-test-copy">${usdL1Text(demo?.reason)}</p>
+      </article>
+    `;
+  }
+  const sessions = asArray(demo.sessions).filter((session) => asArray(session.candles).length);
+  const selected = usdLayer1State.demoSession || (sessions[sessions.length - 1] || {}).date || null;
+  const session = sessions.find((entry) => entry.date === selected) || sessions[sessions.length - 1];
+  const trades = asArray(demo.trades).filter((trade) => trade.sessionDate === (session && session.date));
+  return `
+    <article class="usd-l1-demo" data-usd-l1-demo="true">
+      <div class="usd-l1-demo-head">
+        <div>
+          <p class="eyebrow">Execution demo</p>
+          <h3>${escapeHtml(demo.market)} · ${escapeHtml(session ? session.date : "no session")} · M5 replay</h3>
+        </div>
+        <p class="usd-l1-test-copy muted">${usdL1Text(demo.label)}</p>
+      </div>
+      <p class="usd-l1-test-copy muted">Call source: ${usdL1Text(demo.call_source)}</p>
+      <div class="usd-l1-demo-controls">
+        <div class="usd-l1-demo-sessions" role="group" aria-label="Demo session">
+          ${sessions.map((entry) => `
+            <button type="button" class="usd-l1-demo-session${entry.date === (session && session.date) ? " active" : ""}" data-usd-l1-demo-session="${escapeHtml(entry.date)}">
+              ${escapeHtml(entry.date)}<span>${asArray(entry.candles).length} bars</span>
+            </button>
+          `).join("")}
+        </div>
+        <div class="usd-l1-replay-buttons" role="group" aria-label="Replay step">
+          <button type="button" data-usd-l1-replay-action="first">⏮ First</button>
+          <button type="button" data-usd-l1-replay-action="prev">◀ Back</button>
+          <button type="button" data-usd-l1-replay-action="next">Next ▶</button>
+          <button type="button" data-usd-l1-replay-action="last">Last ⏭</button>
+        </div>
+      </div>
+      <div class="usd-l1-replay-frame" data-usd-l1-replay="true" data-usd-l1-replay-session="${escapeHtml(session ? session.date : "")}" aria-label="Candle replay of the demo session"></div>
+      <p class="usd-l1-replay-caption" data-usd-l1-replay-caption="true">Step 0 of 0</p>
+      <p class="usd-l1-test-copy muted">${escapeHtml(demo.provenance?.note || "")}</p>
+      <p class="usd-l1-test-copy muted">${trades.length} trades belong to this session; the stepper walks their qualifying close, order, fill, stop, target and exit in fill-time order.</p>
+    </article>
+  `;
+}
+
+function renderUsdL1LineToLineTab(payload = {}, test = {}) {
+  const accounts = asArray(test.accounts);
+  const geometry = test.geometry || {};
+  const blockerList = asArray(test.blockers);
+  const variantKey = test.id === "l2l_half_3r" ? "half" : "full";
+  const variant = (payload.execution_demo?.variants || {})[variantKey] || {};
+  const totals = variant.totals || {};
+  return `
+    <section class="usd-l1-test-body" data-usd-l1-test-body="${escapeHtml(test.id || "")}">
+      <p class="usd-l1-test-intro">${usdL1Text(test.question)}</p>
+      <article class="usd-l1-blocker-card">
+        <p class="eyebrow">Scored grid blocked</p>
+        <h3>No session can be executed line-to-line across the four markets yet</h3>
+        <ul class="usd-l1-blocker-list">
+          ${blockerList.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+        </ul>
+        <p class="usd-l1-test-copy muted">Geometry this lane will use when the data arrives: ${usdL1Text(geometry.grid)}; target ${usdL1Text(geometry.target)}; ${usdL1Text(geometry.stop)}.</p>
+      </article>
+      <div class="usd-l1-test-grid usd-l1-l2l-grid">
+        <article class="usd-l1-test-card">
+          <p class="eyebrow">Demo ledger totals</p>
+          <p class="usd-l1-test-copy">${usdL1Number(totals.fills, 0)} fills · ${usdL1Number(totals.targets, 0)} targets · ${usdL1Number(totals.stops, 0)} stops · ${usdL1Number(totals.working, 0)} still working · ${usdL1Signed(totals.rGross, 2, "R")} gross</p>
+          <p class="usd-l1-test-copy muted">Execution demo: gross of spread, commission and slippage, two sessions, one pair, one call direction. Not a scored result.</p>
+        </article>
+        <article class="usd-l1-test-card">
+          <p class="eyebrow">What would make this scored</p>
+          <p class="usd-l1-test-copy">An archived 5-minute tape and a pre-session level ladder for each market, plus a reconstructed 05:00 call for those dates. The four accounts would then run on the same dates for both models.</p>
+        </article>
+      </div>
+      ${usdL1AccountTable(accounts)}
+      <div class="usd-l1-equity-grid">
+        ${accounts.map((account) => usdL1EquityCurveSvg(account, account.label || account.id || "")).join("")}
+      </div>
+      ${renderUsdL1DemoBlock(payload.execution_demo)}
+    </section>
+  `;
+}
+
+function renderUsdL1TestBody(payload = {}) {
+  const tests = payload.tests || {};
+  if (usdLayer1State.tab === "dxy_direction") return renderUsdL1DxyTab(tests.dxy_direction);
+  if (usdLayer1State.tab === "four_markets") return renderUsdL1FourMarketTab(tests.four_markets);
+  if (usdLayer1State.tab === "l2l_full_5r") return renderUsdL1LineToLineTab(payload, tests.l2l_full_5r);
+  return renderUsdL1LineToLineTab(payload, tests.l2l_half_3r);
+}
+
+const USD_L1_SESSION_LIMIT = 150;
+
+function usdL1SessionsForFilter(payload = {}) {
+  const sessions = asArray(payload.sessions);
+  const filter = usdLayer1State.sessionFilter;
+  return sessions.filter((session) => {
+    if (filter === "development") return session.split_key === "development";
+    if (filter === "unseen") return session.split_key !== "development";
+    if (filter === "scored") {
+      return Object.values(session.results?.challenger || {}).some((result) => result === "hit" || result === "miss");
+    }
+    return true;
+  });
+}
+
+function renderUsdL1SessionList(payload = {}) {
+  const filtered = usdL1SessionsForFilter(payload);
+  const shown = filtered.slice(-USD_L1_SESSION_LIMIT).reverse();
+  // The newest session is often the one whose tape has not been cached yet, so the first view opens on the
+  // newest session that actually has a scored result rather than on an empty one.
+  const firstScored = shown.find((session) =>
+    Object.values(session.results?.challenger || {}).some((result) => result === "hit" || result === "miss"));
+  const selected = usdLayer1State.selectedDate || (firstScored || shown[0] || {}).date || null;
+  return `
+    <section class="usd-l1-session-block" data-usd-l1-sessions="true">
+      <div class="usd-l1-session-head">
+        <div>
+          <p class="eyebrow">Daily drill-down</p>
+          <h3>Click a date: what we knew, what each model called, what happened next</h3>
+        </div>
+        <div class="usd-l1-session-filters" role="group" aria-label="Filter sessions">
+          ${[["all", "All"], ["development", "Development"], ["unseen", "Unseen dates"], ["scored", "Scored only"]]
+            .map(([key, label]) => `
+              <button type="button" class="usd-l1-filter${usdLayer1State.sessionFilter === key ? " active" : ""}" data-usd-l1-session-filter="${key}">${label}</button>
+            `).join("")}
+        </div>
+      </div>
+      <p class="usd-l1-test-copy muted">${filtered.length} sessions match this filter; the most recent ${shown.length} are listed — the artefact keeps every one.</p>
+      <div class="usd-l1-session-list" role="list">
+        ${shown.map((session) => {
+          const current = session.models?.current || {};
+          const challenger = session.models?.challenger || {};
+          const currentTone = usdL1DashboardDirection(current.direction).tone;
+          const challengerTone = usdL1DashboardDirection(challenger.direction).tone;
+          return `
+            <button type="button" role="listitem" class="usd-l1-session-row${session.date === selected ? " active" : ""}" data-usd-l1-session="${escapeHtml(session.date)}">
+              <span class="usd-l1-session-date">${escapeHtml(session.date)}<span class="usd-l1-session-split">${escapeHtml(session.split || "")}</span></span>
+              <span class="usd-l1-session-call ${currentTone}">current ${escapeHtml(current.conviction ? `${current.direction} ${current.conviction}` : current.direction || "—")}</span>
+              <span class="usd-l1-session-call ${challengerTone}">challenger ${escapeHtml(challenger.conviction ? `${challenger.direction} ${challenger.conviction}` : challenger.direction || "—")}</span>
+              <span class="usd-l1-session-results">
+                ${["EURUSD", "XAUUSD", "BTCUSD", "NAS100"].map((key) => `
+                  <span class="usd-l1-dot ${escapeHtml(session.results?.challenger?.[key] || "none")}" title="${escapeHtml(key)}: ${escapeHtml(session.results?.challenger?.[key] || "unscored")}"></span>
+                `).join("")}
+              </span>
+            </button>
+          `;
+        }).join("")}
+      </div>
+      <div class="usd-l1-drilldown" data-usd-l1-drilldown="true">
+        ${renderUsdL1Drilldown(payload, selected)}
+      </div>
+    </section>
+  `;
+}
+
+function usdL1InputRows(session = {}) {
+  const inputs = session.inputs || {};
+  const rows = [
+    ["VIX level", inputs.vix_level, ""],
+    ["VIX 5-day change", inputs.vix_d5_chg, "points"],
+    ["US 2-year 5-day change", inputs.us_2y_d5_bps, "bp"],
+    ["US 10-year real 5-day change", inputs.us_10y_real_d5_bps, "bp"],
+    ["Broad dollar 5-day change (DXY stand-in)", inputs.broad_dollar_d5_pct, "%"],
+    ["Gold 5-day change", inputs.gold_d5_pct, "%"],
+    ["NAS100 5-day change", inputs.nasdaq100_d5_pct, "%"],
+    ["EUR/USD 5-day change", inputs.eurusd_d5_pct, "%"],
+    ["USD/JPY 5-day change", inputs.usdjpy_d5_pct, "%"],
+    ["Gold price at 05:00", inputs.gold_price, ""],
+    ["NAS100 price at 05:00", inputs.nasdaq100_price, ""],
+    ["EUR/USD at 05:00", inputs.eurusd, ""]
+  ];
+  return rows.map(([label, value, suffix]) => `
+    <tr>
+      <th scope="row">${escapeHtml(label)}</th>
+      <td>${Number.isFinite(value) ? escapeHtml(`${value}${suffix ? ` ${suffix}` : ""}`) : `<span class="usd-l1-missing">missing</span>`}</td>
+    </tr>
+  `).join("");
+}
+
+function renderUsdL1Drilldown(payload = {}, date) {
+  const session = asArray(payload.sessions).find((entry) => entry.date === date);
+  if (!session) {
+    return `<div class="usd-l1-empty">Select a date to see what was known, what each model called and what happened next.</div>`;
+  }
+  const current = session.models?.current || {};
+  const challenger = session.models?.challenger || {};
+  const modelCard = (key, label, call) => `
+    <article class="usd-l1-drill-card" data-usd-l1-drill-model="${key}">
+      <p class="eyebrow">${escapeHtml(label)}</p>
+      <p class="usd-l1-drill-direction ${usdL1DashboardDirection(call.direction).tone}">${usdL1Text(call.direction_label || call.direction)}</p>
+      ${usdL1ConvictionPips(call.conviction)}
+      <p class="usd-l1-drill-score">${key === "current"
+        ? `raw conviction ${usdL1Text(call.conviction_raw)} / 100 · net weight ${usdL1Signed(call.net_weight, 2)} · ${usdL1Number(call.factors_live, 0)} factors live`
+        : `raw score ${usdL1Signed(call.raw_score, 0)} · ${usdL1Number(call.usable_mechanisms, 0)} mechanisms · agreement ${usdL1Percent(Number.isFinite(call.agreement) ? call.agreement * 100 : null, 0)}`}</p>
+      <p class="usd-l1-drill-reason">${usdL1Text(call.reason)}</p>
+      ${asArray(call.missing_inputs).length
+        ? `<p class="usd-l1-drill-missing">Missing: ${asArray(call.missing_inputs).map((item) => `<span>${escapeHtml(item)}</span>`).join(" ")}</p>`
+        : ""}
+    </article>
+  `;
+  const markets = asArray(payload.run?.markets);
+  const outcomeRow = (market) => {
+    const outcome = (session.outcomes || {})[market.key] || {};
+    const actual = outcome.direction
+      ? `${outcome.direction}${Number.isFinite(outcome.move_pct) ? ` (${usdL1Signed(outcome.move_pct, 2, "%")})` : ""}`
+      : (outcome.present ? "no direction" : "no 05:00 bar");
+    return `
+      <tr data-usd-l1-outcome="${escapeHtml(market.key)}">
+        <th scope="row">${escapeHtml(market.label)}</th>
+        <td>${usdL1ResultChip(session.results?.current?.[market.key])}</td>
+        <td>${usdL1ResultChip(session.results?.challenger?.[market.key])}</td>
+        <td title="${escapeHtml(outcome.reason || "")}">${usdL1Text(actual)}</td>
+        <td>${Number.isFinite(outcome.flat_band_pct) ? usdL1Percent(outcome.flat_band_pct) : "—"}</td>
+      </tr>
+    `;
+  };
+  return `
+    <div class="usd-l1-drill-head">
+      <div>
+        <p class="eyebrow">Selected date</p>
+        <h3>${escapeHtml(session.date)} · ${escapeHtml(session.split)}</h3>
+      </div>
+      <p class="usd-l1-test-copy muted">Cutoff ${escapeHtml(session.cutoff_at_utc)} (${escapeHtml(session.cutoff_offset_abbrev)}) → endpoint ${escapeHtml(session.endpoint_at_utc)} · ${usdL1Number(session.window_hours, 0)}h</p>
+    </div>
+    <div class="usd-l1-drill-grid">
+      <section class="usd-l1-drill-section">
+        <h4>What did we know at 05:00?</h4>
+        <table class="usd-l1-table usd-l1-input-table">
+          <caption>Inputs as they stood at the cutoff</caption>
+          <tbody>${usdL1InputRows(session)}</tbody>
+        </table>
+        ${asArray(session.inputs_missing).length
+          ? `<p class="usd-l1-drill-missing">Not available at this cutoff: ${asArray(session.inputs_missing).map((item) => `<span>${escapeHtml(item)}</span>`).join(" ")}</p>`
+          : ""}
+      </section>
+      <section class="usd-l1-drill-section">
+        <h4>What did each model call?</h4>
+        ${modelCard("current", "Current model", current)}
+        ${modelCard("challenger", "Challenger", challenger)}
+      </section>
+      <section class="usd-l1-drill-section">
+        <h4>What happened next?</h4>
+        <table class="usd-l1-table usd-l1-outcome-table">
+          <caption>A USD-bullish call predicts down for all four markets</caption>
+          <thead>
+            <tr><th scope="col">Market</th><th scope="col">Current</th><th scope="col">Challenger</th><th scope="col">Session move</th><th scope="col">Flat band</th></tr>
+          </thead>
+          <tbody>${markets.map(outcomeRow).join("")}</tbody>
+        </table>
+        <p class="usd-l1-test-copy muted">Test ① is unscored on every date until licensed cash DXY prices exist; this view uses each market's own one-hour tape instead.</p>
+      </section>
+    </div>
+  `;
+}
+
+function usdL1ReplayCaptionStep(step, index, total, accountTrades) {
+  const trade = step.trade;
+  if (!trade) return `Step ${index + 1} of ${total}: ${step.label}`;
+  const settled = accountTrades.find((entry) => entry.id === trade.id);
+  const parts = [`Step ${index + 1} of ${total}: ${step.label}`];
+  if (step.time) parts.push(`${new Date(step.time).toISOString().slice(11, 16)}Z`);
+  parts.push(`level ${trade.level} · target ${trade.target} · stop ${trade.stop}`);
+  if (settled && Number.isFinite(settled.rGross)) {
+    parts.push(`${settled.rGross > 0 ? "+" : ""}${settled.rGross}R`);
+    if (Number.isFinite(settled.pnl)) parts.push(`£${settled.pnl > 0 ? "+" : ""}${settled.pnl.toFixed(2)}`);
+  }
+  return parts.join(" · ");
+}
+
+function mountUsdL1Replay() {
+  if (usdL1ReplayController && typeof usdL1ReplayController.destroy === "function") {
+    usdL1ReplayController.destroy();
+  }
+  usdL1ReplayController = null;
+  const host = document.querySelector("[data-usd-l1-replay='true']");
+  if (!host || !usdLayer1Data || !window.UsdL1Replay) return;
+  const demo = usdLayer1Data.execution_demo || {};
+  const sessionDate = host.getAttribute("data-usd-l1-replay-session");
+  const session = asArray(demo.sessions).find((entry) => entry.date === sessionDate);
+  if (!session) return;
+  const variantKey = usdLayer1State.tab === "l2l_half_3r" ? "half" : "full";
+  const variant = (demo.variants || {})[variantKey] || {};
+  const trades = asArray(demo.trades).filter(
+    (trade) => trade.geometry === variantKey && (!sessionDate || trade.sessionDate === sessionDate)
+  );
+  const accountTrades = asArray(demo.accounts)
+    .filter((account) => account.geometry === variantKey)
+    .flatMap((account) => asArray(account.trades));
+  const caption = document.querySelector("[data-usd-l1-replay-caption='true']");
+  usdL1ReplayController = window.UsdL1Replay.create(host, {
+    candles: asArray(session.candles),
+    levels: asArray(variant.grid),
+    trades,
+    onStep: (index, step) => {
+      const total = usdL1ReplayController && usdL1ReplayController.steps
+        ? usdL1ReplayController.steps.length
+        : 1;
+      host.setAttribute("data-usd-l1-replay-step", String(index));
+      if (!caption) return;
+      caption.setAttribute("data-usd-l1-replay-step", String(index));
+      caption.textContent = usdL1ReplayCaptionStep(step, index, total, accountTrades);
+    }
+  });
+  if (caption && usdL1ReplayController) {
+    caption.setAttribute("data-usd-l1-replay-mode", usdL1ReplayController.mode);
+  }
+}
+
+function renderUsdL1Backtester(payload = null) {
+  const updated = document.getElementById("usdLayer1Updated");
+  if (updated) {
+    updated.textContent = usdLayer1LoadError
+      ? `Saved research results unavailable: ${usdLayer1LoadError}`
+      : payload
+        ? `Last update: ${formatDashboardTime(payload.generated_at)} · research only`
+        : "Loading saved research results...";
+  }
+  const panel = document.getElementById("usdLayer1Panel");
+  if (!panel) return;
+
+  if (usdLayer1LoadError) {
+    panel.innerHTML = `
+      <article class="detail-panel wide-panel research-status-card">
+        <p class="eyebrow">USD Layer 1 Backtester</p>
+        <h3>Saved research results unavailable</h3>
+        <div class="empty-state">${escapeHtml(usdLayer1LoadError)}</div>
+        <p class="usd-l1-test-copy muted">The panel renders <code>data/usd-layer1-backtester/run-v1.json</code>. Rebuild it with <code>node backtester/scripts/run_usd_layer1_backtest.js --publish</code>.</p>
+      </article>
+    `;
+    return;
+  }
+
+  if (!payload) {
+    panel.innerHTML = `<div class="empty-state">Loading the saved run artefact...</div>`;
+    return;
+  }
+
+  panel.innerHTML = `
+    ${renderUsdL1Progress(payload)}
+    ${renderUsdL1Coverage(payload)}
+    ${renderUsdL1TabStrip()}
+    ${renderUsdL1TestBody(payload)}
+    ${renderUsdL1SessionList(payload)}
+  `;
+  mountUsdL1Replay();
+}
+
+function ensureUsdLayer1Loaded() {
+  if (usdLayer1Request) return usdLayer1Request;
+  usdLayer1Request = fetchLocalJson(usdLayer1BacktesterUrl)
+    .then((payload) => {
+      usdLayer1Data = payload;
+      usdLayer1LoadError = null;
+      return payload;
+    })
+    .catch((error) => {
+      usdLayer1LoadError = error?.message || String(error);
+      usdLayer1Data = null;
+      console.error("USD Layer 1 backtester artefact unavailable", error);
+      return null;
+    })
+    .finally(() => {
+      renderUsdL1Backtester(usdLayer1Data);
+    });
+  return usdLayer1Request;
+}
+
+function setupUsdL1Controls() {
+  const panel = document.getElementById("usdLayer1Panel");
+  if (!panel || panel.dataset.usdL1Bound === "true") return;
+  panel.dataset.usdL1Bound = "true";
+
+  panel.addEventListener("click", (event) => {
+    const tabButton = event.target.closest("[data-usd-l1-tab]");
+    if (tabButton) {
+      usdLayer1State.tab = tabButton.dataset.usdL1Tab || "dxy_direction";
+      renderUsdL1Backtester(usdLayer1Data);
+      return;
+    }
+
+    const filterButton = event.target.closest("[data-usd-l1-session-filter]");
+    if (filterButton) {
+      usdLayer1State.sessionFilter = filterButton.dataset.usdL1SessionFilter || "all";
+      usdLayer1State.selectedDate = null;
+      renderUsdL1Backtester(usdLayer1Data);
+      return;
+    }
+
+    const sessionButton = event.target.closest("[data-usd-l1-session]");
+    if (sessionButton) {
+      usdLayer1State.selectedDate = sessionButton.dataset.usdL1Session || null;
+      renderUsdL1Backtester(usdLayer1Data);
+      return;
+    }
+
+    const demoSessionButton = event.target.closest("[data-usd-l1-demo-session]");
+    if (demoSessionButton) {
+      usdLayer1State.demoSession = demoSessionButton.dataset.usdL1DemoSession || null;
+      renderUsdL1Backtester(usdLayer1Data);
+      return;
+    }
+
+    const replayAction = event.target.closest("[data-usd-l1-replay-action]");
+    if (replayAction && usdL1ReplayController) {
+      const action = replayAction.dataset.usdL1ReplayAction;
+      const last = usdL1ReplayController.steps.length - 1;
+      if (action === "first") usdL1ReplayController.setStep(0);
+      else if (action === "prev") usdL1ReplayController.previous();
+      else if (action === "next") usdL1ReplayController.next();
+      else if (action === "last") usdL1ReplayController.setStep(last);
+    }
+  });
+}
+
 function setTab(tab) {
   const availableTabs = getAvailableTopLevelTabs();
   const fallbackTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -15602,6 +16630,7 @@ function setTab(tab) {
   const researchProofMapView = document.getElementById("researchProofMapView");
   const backtestingDevelopmentView = document.getElementById("backtestingDevelopmentView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
+  const usdLayer1BacktesterView = document.getElementById("usdLayer1BacktesterView");
   const researchLibraryView = document.getElementById("researchLibraryView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
   const structureMapView = document.getElementById("structureMapView");
@@ -15615,6 +16644,7 @@ function setTab(tab) {
   if (researchProofMapView) researchProofMapView.classList.toggle("active-view", activeTab === "research-proof-map");
   if (backtestingDevelopmentView) backtestingDevelopmentView.classList.toggle("active-view", activeTab === "backtesting-development");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
+  if (usdLayer1BacktesterView) usdLayer1BacktesterView.classList.toggle("active-view", activeTab === "usd-layer1-backtester");
   if (researchLibraryView) researchLibraryView.classList.toggle("active-view", activeTab === "research-library");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
   if (structureMapView) structureMapView.classList.toggle("active-view", activeTab === "structure-map");
@@ -15629,6 +16659,10 @@ function setTab(tab) {
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
   if (activeTab === "research-library") { renderResearchLibrary(); maybeProbeResearchLibraryService(); }
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
+  if (activeTab === "usd-layer1-backtester") {
+    renderUsdL1Backtester(usdLayer1Data);
+    if (!usdLayer1Data && !usdLayer1LoadError) ensureUsdLayer1Loaded();
+  }
   if (activeTab === "architecture") {
     renderArchitecture();
     loadArchitectureManifest().catch(() => {});
@@ -16402,6 +17436,7 @@ setupResearchLibraryControls();
 setupBacktestEvidenceControls();
 setupBacktestingDevelopmentControls();
 setupArchitectureControls();
+setupUsdL1Controls();
 restoreNavigationState();
 createWorkflowRefreshTabId();
 restoreWorkflowRefreshState();
