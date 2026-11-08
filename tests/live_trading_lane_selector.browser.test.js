@@ -64,8 +64,9 @@ function laneTwoSnapshot({ ageSeconds = 0, withOrder = true } = {}) {
       ? Math.max(...bars.map(bar => Number(bar.high))) - Math.min(...bars.map(bar => Number(bar.low)))
       : 0;
     // This account's own ladder, close enough to price to be drawn: two lines either side of the last close, a
-    // third of the bars' own span away, so the chart shows the grid rather than a stripe with lines off its edge.
-    const step = span > 0 ? span / 3 : Math.abs(lastClose) * 0.001;
+    // forty-eighth of the bars' own span away, so every one of the four marked lines and the three midpoints the half
+    // grid inserts between them is inside the card's scale rather than off its edge.
+    const step = span > 0 ? span / 24 : Math.abs(lastClose) * 0.0001;
     return {
       ...instrument,
       quote: instrument.quote
@@ -79,6 +80,31 @@ function laneTwoSnapshot({ ageSeconds = 0, withOrder = true } = {}) {
       ]
     };
   });
+  // One closed trade on this account's own paper, so the chart's position-size band has something to draw: the
+  // tool's title states the lot, and 0.05 is a size lane 1 does not trade. Its two times are taken from the bars the
+  // snapshot already carries, so the entry falls inside the window the chart draws.
+  const eur = snapshot.instruments.find(instrument => instrument.symbol === "EURUSD");
+  const eurBars = eur && Array.isArray(eur.m5?.bars) ? eur.m5.bars : [];
+  snapshot.closed_trades = eurBars.length >= 2
+    ? [{
+      position_id: 900301,
+      ticket: 900301,
+      symbol: "EURUSD",
+      dashboard_asset: "EUR",
+      side: "buy",
+      volume: 0.05,
+      price_open: 1.1,
+      price_close: 1.105,
+      stop_loss: 1.0999,
+      take_profit: 1.2,
+      profit: 2.5,
+      net_profit: 2.5,
+      magic: 20261005,
+      comment: "l2l-rule-eur",
+      opened: { time_utc: eurBars[eurBars.length - 2].time_utc },
+      closed: { time_utc: eurBars[eurBars.length - 1].time_utc }
+    }]
+    : [];
   snapshot.stale_after_seconds = 900;
   snapshot.account.orders_open = snapshot.orders.length;
   snapshot.account.positions_open = snapshot.positions.length;
@@ -309,3 +335,122 @@ test("the Close control names the ticket of the lane on screen and refuses the o
     await harness.close();
   }
 });
+
+// What the selector has to get right on the picture rather than in the tables: the same symbol, drawn twice, with each
+// lane's own levels, its own midpoints (only the half grid has them), its own entry band and its own position size.
+// The readout is the page's own text - the full chart's level labels and entry band, the card's dashed midpoints and
+// legend - because a chart that drew lane 1's prices under lane 2's name would look perfectly ordinary in a count.
+function fullChartReadout() {
+  const panel = document.getElementById("liveTradingPanel");
+  const text = value => (value?.textContent || "").replace(/\s+/g, " ").trim();
+  const drawn = Array.from(panel.querySelectorAll(".live-trading-chart-level-tag")).map(text);
+  return {
+    tags: drawn,
+    levels: drawn.filter(tag => !tag.startsWith("midpoint ")),
+    positionEntries: Array.from(panel.querySelectorAll(".live-trading-chart-position-label.entry"))
+      .map(text)
+      .filter(label => label.startsWith("ENTRY "))
+      .map(label => Number(label.slice(6).replace(/,/g, ""))),
+    toolTitles: Array.from(panel.querySelectorAll(".live-trading-chart-tool title")).map(text)
+  };
+}
+
+// The card chart of one symbol: its marked lines and its dashed midpoints, as the geometry the card actually drew.
+// Reading `y1` rather than counting classes is what lets a midpoint be checked against the lines it sits between.
+function cardChartReadout(symbol) {
+  const card = Array.from(document.querySelectorAll("#liveTradingPanel .live-trading-card"))
+    .find(node => (node.querySelector(".live-trading-symbol")?.textContent || "").trim() === symbol);
+  if (!card) return null;
+  const text = value => (value?.textContent || "").replace(/\s+/g, " ").trim();
+  const lines = Array.from(card.querySelectorAll(".live-trading-card-chart-level")).map(node => ({
+    midpoint: node.classList.contains("midpoint"),
+    y: Number(node.getAttribute("y1"))
+  })).filter(line => Number.isFinite(line.y));
+  return {
+    lines,
+    levels: lines.filter(line => !line.midpoint).length,
+    midpoints: lines.filter(line => line.midpoint).length,
+    legend: text(card.querySelector(".live-trading-card-chart-legend"))
+  };
+}
+
+// Every drawn midpoint sits between an original line above it and one below it: the half grid inserts a line
+// halfway, so a midpoint outside the marked lines it belongs to would be a line at a price nobody marked.
+function midpointsSitBetweenLevels(readout, where) {
+  const sorted = readout.lines.slice().sort((a, b) => a.y - b.y);
+  for (let index = 0; index < sorted.length; index += 1) {
+    if (!sorted[index].midpoint) continue;
+    const above = sorted.slice(0, index).some(line => !line.midpoint);
+    const below = sorted.slice(index + 1).some(line => !line.midpoint);
+    assert.ok(above && below, `${where}: the midpoint at ${sorted[index].y} sits between two marked lines`);
+  }
+}
+
+test("switching accounts redraws the levels, the midpoints, the entry band and the position size", async () => {
+  const harness = await createHarness({ lanes: lanesDocument(), laneTwo: laneTwoSnapshot() });
+  try {
+    const { page } = await openLiveTrading(harness);
+    await page.click('[data-live-chart-symbol="EURUSD"]');
+    await page.waitForFunction(
+      () => (document.querySelector("#liveTradingPanel .live-trading-chart-caption")?.textContent || "").trim().startsWith("EURUSD"),
+      null,
+      { timeout: 20000 }
+    );
+
+    const laneOne = await page.evaluate(fullChartReadout);
+    assert.ok(laneOne.levels.length > 0, "lane 1 draws the marked ladder for EURUSD");
+    const laneOneCards = await page.evaluate(cardChartReadout, "EURUSD");
+    assert.equal(laneOneCards.midpoints, 0, "lane 1's grid is the marked one: no midpoints on the card either");
+
+    await selectLane(page, "ftmo-2", "222");
+    await page.waitForFunction(
+      () => {
+        const card = Array.from(document.querySelectorAll("#liveTradingPanel .live-trading-card"))
+          .find(node => (node.querySelector(".live-trading-symbol")?.textContent || "").trim() === "EURUSD");
+        return Boolean(card && card.querySelector(".live-trading-card-chart-level.midpoint"));
+      },
+      null,
+      { timeout: 20000 }
+    );
+
+    // The card is the half grid: this account's marked lines, and a dashed midpoint between them. The midpoint is
+    // checked against the lines around it rather than against a count, because the card draws only the lines its own
+    // candles' scale reaches.
+    const laneTwoCards = await page.evaluate(cardChartReadout, "EURUSD");
+    assert.ok(laneTwoCards.midpoints >= 1, "the half grid inserts midpoints on this account's card");
+    assert.ok(laneTwoCards.levels >= 2, "and keeps the marked lines they are inserted between");
+    assert.ok(laneTwoCards.lines.length > laneTwoCards.levels, "a midpoint is its own line, not a relabelled level");
+    midpointsSitBetweenLevels(laneTwoCards, "EURUSD on FTMO 2");
+    assert.match(laneTwoCards.legend, /marked level/);
+    assert.match(laneTwoCards.legend, /midpoint \(0\.5 grid\)/);
+
+    const laneTwo = await page.evaluate(fullChartReadout);
+    // The original levels are this account's own: labels drawn from lane 1's ladder are gone rather than blended in.
+    assert.ok(laneTwo.levels.length > 0, "lane 2 draws its own marked ladder");
+    const shared = laneTwo.levels.filter(tag => laneOne.levels.includes(tag));
+    assert.deepEqual(shared, [], "none of lane 1's level labels survives the switch");
+
+    // The entry band and the position size are this account's: 0.05 lot on lane 2, and the entry the table states.
+    assert.ok(
+      laneTwo.positionEntries.some(value => Math.abs(value - 1.1) < 1e-6),
+      `lane 2's open position is drawn at its own entry: ${laneTwo.positionEntries.join(", ")}`
+    );
+    assert.ok(
+      laneTwo.toolTitles.some(title => /EURUSD BUY 0\.05 lot/.test(title)),
+      `lane 2's closed trade is drawn at its own size: ${laneTwo.toolTitles.join(" | ")}`
+    );
+
+    await selectLane(page, "ftmo-1", "614");
+    const back = await page.evaluate(fullChartReadout);
+    const backCards = await page.evaluate(cardChartReadout, "EURUSD");
+    assert.equal(backCards.midpoints, 0, "switching back removes the midpoints");
+    assert.equal(backCards.legend.includes("midpoint"), false, "and the legend stops naming them");
+    assert.equal(back.positionEntries.some(value => Math.abs(value - 1.1) < 1e-6), false, "and lane 2's entry band");
+    assert.deepEqual(back.toolTitles.filter(title => /0\.05 lot/.test(title)), [], "and lane 2's position size");
+    await page.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+
