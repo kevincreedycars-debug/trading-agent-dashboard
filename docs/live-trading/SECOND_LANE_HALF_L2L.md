@@ -136,9 +136,10 @@ live-trading file here touches.
    host** from the lane-2 watchdog while lane 1 is trading.
 6. **Publisher.** `enabled: true` for `ftmo-2` once its snapshot exists; until then the page draws it as parked,
    which is the honest state.
-7. **FTMO wording.** The approval text in `VPS_DEPLOYMENT_STATUS_20261024.md` §4 allows "geometry and per-account
-   caps" as differences. A half grid at three to one is a different rule, not a geometry setting, so the wording has
-   to be answered in writing before this lane is armed.
+7. **FTMO wording.** Not an approval, and never was: the sentence this checklist used to quote as "the approval
+   text" in `VPS_DEPLOYMENT_STATUS_20261024.md` §4 is **our own draft question**, written on 2026-10-24 and never
+   sent. Section 8 below traces it, and carries the message that has not been sent. A half grid at three to one is a
+   different rule, not a geometry setting, so the wording has to be answered in writing before this lane is armed.
 8. **Open decisions** (from the review that preceded this branch): whether lane 2 reads both the original and the
    midpoint lines or inserted midpoints only (this branch implements both, as asked), and whether "0.5 L2L" means
    three to one on the half grid (implemented, stop = `g/6`) or lane 1's stop rule at the half target (2.5R today).
@@ -152,4 +153,132 @@ live-trading file here touches.
 - The login masked in `VPS_DEPLOYMENT_STATUS_20261024.md` §14.5 was published in full until 2026-11-07 and is in
   this repository's history: the account's password, not its number, is what protects it, and re-checking that
   password is on the pre-arm list.
+
+
+## 8. The FTMO wording: it is our draft, not their answer
+
+Traced on 2026-11-07, file by file, because the difference decides whether this lane may be armed.
+
+| Where the sentence lives | What it actually is |
+| --- | --- |
+| `VPS_DEPLOYMENT_STATUS_20261024.md` §4, the block quote beginning "I run one automated strategy..." | A question **written here on 2026-10-24**, in the repository, by us. It is phrased in the first person as something to send, it is followed by "Until the answer is in writing, account #2 stays **unarmed**", and nothing in the file records a send. |
+| `docs/live-trading/FTMO_SETUP_GUIDE.md`, "Still to verify with FTMO before the first automated order" (read from FTMO's terms on 2026-09-30) | Says a first-party statement that automated trading is permitted **was not found in the affirmative** and is to be asked in writing; item 4 records that the question was asked, not answered, and that lane 1 was armed anyway on the user's instruction. |
+| `docs/live-trading/CONVERSATION_NOTES.md` | Carries the same item as **"still open"**: "the FTMO support reply on automated trading and news trading during a Swing evaluation" has not arrived. |
+| `docs/live-trading/SECOND_LANE_HALF_L2L_REVIEW.md` | "**FTMO permission is not yet in writing.**" |
+| anywhere in the repository | No quoted reply, no ticket number, no email, no support name. There is no written FTMO response of any kind in this repository, about this setup or any other. |
+
+So the "geometry and per-account caps" phrasing this document used to cite as an allowance was **our paraphrase of
+our own draft**, and it is corrected above. Nothing about different grids, different targets, repeat entries after a
+take-profit, or two terminals on one VPS is covered by anything FTMO has said, because nothing has been said.
+
+What that changes: the closed question "may I run the same strategy on both accounts" does **not** cover the half
+grid, the 3R targets or the same-day re-entry, which are the three things that make lane 2 a different rule rather
+than a smaller one. The message below asks about those three by name, along with the isolation facts, so one reply
+settles this lane instead of starting a second exchange.
+
+### 8.1 The message that has not been sent (for the user to send)
+
+> Subject: two FTMO accounts, one VPS, the same strategy with different grids
+>
+> Hello,
+>
+> I run one automated strategy of my own - no EA, no signal service, my own Python through the MetaTrader 5 package -
+> and I would like to run it on two of my FTMO accounts at the same time. The facts of the setup:
+>
+> - **Two separate MT5 terminals on one VPS**, one logged into each account, one process per terminal, no EA on either.
+> - **The same directional calls on both**, same instruments, same day, same direction, sized at the instrument's
+>   minimum lot. The two accounts are never on opposite sides of the same instrument.
+> - **Different grids and different targets.** Account A trades every marked level at five to one. Account B trades
+>   the half grid - a midpoint inserted between each pair of marked levels - at three to one, so its entry, stop and
+>   target are at different prices and it may trade a level account A never uses.
+> - **Repeat entries.** Account B may enter the same instrument again later the same day once a take-profit has been
+>   filled, capped at four entries a day. Account A holds one ticket per instrument.
+>
+> Could you confirm in writing: (1) that running the same strategy on two accounts at the same time from one VPS, with
+> separate terminals and separate logins, is permitted for the account types I hold; (2) whether any part of this is
+> treated as copying, group trading, or opposite-account hedging; (3) whether there is an aggregate allocation or
+> maximum-lot limit across my accounts that I must respect, and how it is measured; and (4) whether running the
+> terminals unattended on a VPS is permitted for these account types.
+>
+> If any part of it is restricted, I would rather be told which part so I can leave that account off than guess.
+>
+> Thank you.
+
+Until a reply exists, this lane stays unarmed and its row stays `enabled: false`. Sending it, and keeping the reply,
+are the user's own acts; nothing in this branch sends mail, and no reply is invented here.
+
+
+## 9. Account isolation: what refuses, proved through the runner
+
+The question this closes: what happens if `ftmo-2` is selected but `--magic` or `--expect-identity` is omitted, or
+lane 1's magic is supplied. Before this branch the answer was "the run keeps lane 1's defaults": the wrapper writes a
+flag only when a registration asks for one, and the loop only required an identity file when the magic was not lane
+1's - so `--lane ftmo-2` alone, or with `20261004`, was a run that would have reviewed, cancelled, closed and moved
+tickets carrying **lane 1's** number on **account 2's** terminal.
+
+What closes it, in two places, because a task can be registered by hand and a runner can be started by hand:
+
+- `scripts/run-live-trading-trader.js` reads the lane's own row from `config/live-trading-lanes.json` whenever
+  `--lane` is passed, and refuses before the lock, the artifacts and the terminal: the magic must be the lane's, an
+  identity file must be passed when the row declares one, and the grid and the multiple must be the lane's. A lane id
+  the file does not carry is refused rather than guessed.
+- `scripts/register-live-trading-trader-task.ps1` computes the numbers the wrapper it would write actually carries
+  and refuses to register a task that disagrees with the lane's row - so `-Lane ftmo-2` without `-Magic`,
+  `-Lane ftmo-2 -Magic 20261004`, `-Lane ftmo-2` without `-ExpectIdentity`, `-Grid full` on the half lane,
+  `-RMultiple 5` on the three-to-one lane and `-Lane ftmo-1 -Magic 20261005` are all refusals, each naming the flag
+  and the lane's own value. `-Show` now prints the command line it would write (`loop_command`), which is the
+  read-only way to check what a task will carry without registering it.
+- A status the order tool **refused** is now a loud refusal of the run rather than a quiet "nothing to place": an
+  identity gate that stopped the attach, or a terminal that would not answer, leaves the account unproved, and a run
+  that reports a setup-free lane against an account it never proved is the reading this closes.
+
+
+`tests/live_trading_lane_isolation.test.js` (12 tests, all passing on the branch head) drives the **real runner**
+against the fake bridge in `tests/fixtures/fake-mt5`, and the **real registration script** with `-Show`:
+
+| Command line | Result | Proof that nothing was sent |
+| --- | --- | --- |
+| `--lane ftmo-1` (control, and armed) | reached a cancel, a close and a stop move | the fake bridge records TRADE_ACTION_REMOVE 8, DEAL 1 and SLTP 6, so the fixture really does ask for all three |
+| `--lane ftmo-2` | exit 2, "carries magic 20261005" | no send file, no bridge call counter (the terminal was never read), no journal, no log, state unchanged |
+| `--lane ftmo-2 --magic 20261004` | exit 2, the same refusal | as above |
+| `--lane ftmo-2 --magic 20261005` (no identity) | exit 2, "declares an identity file ... --expect-identity" | as above |
+| `--lane ftmo-2 ... --grid full` / `--r-multiple 5` | exit 2, "trades the half grid" / "trades 3 to one" | as above |
+| `--lane ftmo-1 --magic 20261005 --expect-identity ...` | exit 2, "`--lane ftmo-1` carries magic 20261004" | as above |
+| `--lane ftmo-3` | exit 2, "not one of the lanes" | as above |
+| correct lane-2 flags, attached to lane 1's terminal | exit 1, `status: refused`, `identity_mismatch` in the journal | no send, no order answered |
+
+The wrapper half of that file registers nothing: it runs `-Show`, and asserts the live wrapper file is byte-identical
+before and after all six refusals. Lane 1's generated command line is asserted unchanged - no `--magic`, no `--grid`,
+no `--r-multiple`, no `--expect-identity` - so a flag that is only written when a lane asks for it stays that way.
+
+
+## 10. Chart visibility, and what the page does when every level is off the scale
+
+Two questions were open: the browser failure on `US100.cash`, and what a reader sees when the whole ladder is outside
+the bars. Both are now answered by fixtures rather than by the published artifacts, because the artifact drifts and a
+test that follows it fails for reasons that are not about the page.
+
+- **Why `live_trading_levels_visibility.browser.test.js` failed on this branch.** Its per-symbol test read the
+  committed ladder and the committed feed and required two drawn lines each side of every symbol's bars. On
+  2026-11-07 the committed `US100.cash` ladder ran 27751.59 to 33522.81 while the live bid was 26990.44: every line
+  was above the price, so "two below" could not be satisfied by any page, correct or not. The test was measuring the
+  artifact, not the chart.
+- **The fix, and what it now proves.** The per-symbol test uses a frozen fixture built inside the test: forty
+  synthetic M5 bars around a fixed price for each of EURUSD, XAUUSD, US100.cash and BTCUSD, and a 22-line ladder built
+  through `lib/l2l_levels_store.js` from two seeds 2% either side of that price. All four symbols draw at least two
+  marked lines above their bars and two below, on the first paint, with no Fit levels press (3/3 green).
+- **The account switch, on the picture.** `tests/live_trading_lane_selector.browser.test.js` also asserts, on the
+  same symbol drawn twice: none of lane 1's level labels survives the switch; the half grid's card draws dashed
+  midpoints *in addition to* the marked lines, and each midpoint sits between a marked line above it and one below
+  it; the open position's band is drawn at the selected lane's own entry; and the closed trade's position-size tool
+  states that lane's own lot (0.05 on lane 2, gone after switching back).
+- **When every real level is outside the visible range** (the test
+  `a ladder entirely outside the visible range is stated on the edge, not drawn where it is not`, with the frozen
+  27751.59-33522.81 ladder back in place): the page widens its price scale to hold the **two nearest lines on the side
+  that has them** and draws those two. Nothing is clamped onto the candles, because a clamped line would read as a
+  level at a price it does not have. The remaining lines are counted on **one edge tab** naming the side, the count
+  and the nearest price (`▲ 20 levels above · nearest 28301.23 · click to fit`), the caption reads
+  `2/22 lines in view (20 above, 0 below)` with the ladder's bounds, the newest close stays tagged on the scale, and
+  the candles keep drawing, compressed by however far those two nearest lines are. One click on the tab is Fit levels
+  and draws all 22. A one-sided ladder is therefore never invisible, and never drawn at a price it does not have.
 
