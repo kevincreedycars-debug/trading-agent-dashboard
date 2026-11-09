@@ -611,10 +611,12 @@ test("the shipped lanes file is the publisher's own default and names both accou
   const config = lanes.loadLanes(configPath);
 
   assert.deepEqual(config.lanes.map((lane) => lane.id), ["ftmo-1", "ftmo-2"]);
-  // Account 1 is the lane this checkout runs; account 2 is parked until its terminal exists, and says so rather
-  // than failing as a missing snapshot.
+  // Account 1 is the lane this checkout runs; account 2 is switched on now that its own terminal is installed and
+  // signed in, and its row is what makes the publisher read that account's snapshot and refuse it if it is another
+  // account. Switching it off again is the same one line, and a parked lane says so rather than failing as a
+  // missing snapshot.
   assert.equal(config.lanes[0].enabled, true);
-  assert.equal(config.lanes[1].enabled, false);
+  assert.equal(config.lanes[1].enabled, true);
   // Each lane's snapshot and heartbeat land on their own paths beside the lanes document, which is what stops one
   // account's read being published under the other's name.
   assert.equal(config.lanes[0].published, "data/live-trading.json");
