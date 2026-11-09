@@ -18649,6 +18649,14 @@ function setupLiveTradingChart(panel) {
       liveTradingChartSwallowClick = false;
       return;
     }
+    // The performance panel's tab strip: a press moves the one breakdown that is shown. Handled before the
+    // chart's own controls because it is a plain button strip with nothing else under the pointer.
+    const performanceTab = event.target.closest("[data-live-performance-tab]");
+    if (performanceTab) {
+      liveTradingPerformanceTab = performanceTab.dataset.livePerformanceTab || "weekday";
+      applyLiveTradingPerformanceTab(panel);
+      return;
+    }
     // The Open positions table's own control, at the top so a press can never be read as something else. The
     // Close now link is left to the browser: that navigation is how the ticket reaches the close link
     // registered on this machine, so its default is never prevented, and the note below it says what the page
@@ -18813,6 +18821,28 @@ function setupLiveTradingChart(panel) {
   // the caret out of the box the reader is typing in. An empty or out-of-range box falls back to the
   // default rather than to a number nobody chose. The publishing box is read the same way and for the same
   // reason; its values are only acted on when one of its buttons is pressed.
+  // The tab strip is a tablist, so the arrow keys move between its three tabs and Home and End jump to the
+  // ends. Only the selected tab is in the tab order, which is what makes one press of Tab leave the strip
+  // instead of walking through it.
+  panel.addEventListener("keydown", event => {
+    const tab = event.target.closest?.("[data-live-performance-tab]");
+    if (!tab) return;
+    const keys = LIVE_TRADING_PERFORMANCE_TABS.map(entry => entry.key);
+    const at = keys.indexOf(tab.dataset.livePerformanceTab);
+    if (at < 0) return;
+    let next = null;
+    if (event.key === "ArrowRight") next = keys[(at + 1) % keys.length];
+    else if (event.key === "ArrowLeft") next = keys[(at - 1 + keys.length) % keys.length];
+    else if (event.key === "Home") next = keys[0];
+    else if (event.key === "End") next = keys[keys.length - 1];
+    if (!next) return;
+    event.preventDefault();
+    liveTradingPerformanceTab = next;
+    applyLiveTradingPerformanceTab(panel);
+    const focus = panel.querySelector(`[data-live-performance-tab="${next}"]`);
+    if (focus && typeof focus.focus === "function") focus.focus();
+  });
+
   panel.addEventListener("input", event => {
     const input = event.target?.closest?.("[data-live-ladder-above], [data-live-ladder-below]");
     if (!input) {
@@ -19590,6 +19620,218 @@ function liveTradingClosedTrades(data) {
   `;
 }
 
+// ---- FTMO 1 performance: one total, three readings of it ------------------------------------------------
+// The panel states what the closed trades add up to, sliced by the three questions a reader actually asks of a
+// fortnight: which day, which rule, which instrument. The arithmetic is in lib/live_trading_performance.js so
+// the page and the node check share one implementation, and every row is drawn from `closed_trades` - the same
+// block the Closed trades table prints - so the panel and the table cannot disagree about a count or a total.
+// It reads the published snapshot and nothing else: no account, no broker, no order, and no number of its own.
+const LIVE_TRADING_PERFORMANCE_TABS = Object.freeze([
+  { key: "weekday", label: "Weekday", column: "Close day \u00b7 London time" },
+  { key: "strategy", label: "Strategy", column: "Strategy" },
+  { key: "asset", label: "Asset", column: "Asset" }
+]);
+let liveTradingPerformanceTab = "weekday";
+
+function liveTradingPerformanceMoney(value, currency) {
+  const signed = liveTradingSigned(value, 2);
+  if (signed === displayDash()) return signed;
+  return `${signed}${currency}`;
+}
+
+// A rate is blank, not zero, when nothing was traded: a day with no trades and a day that lost every trade are
+// different facts, and printing 0.0% for both is what makes a table stop being read.
+function liveTradingPerformancePercent(value) {
+  const numeric = Number(value);
+  if (value === null || value === undefined || !Number.isFinite(numeric)) return "";
+  return `${numeric.toFixed(1)}%`;
+}
+
+// The two dates beside the title are printed by the aggregation module, so the label cannot drift from the
+// period it describes; the exact stamps the snapshot states stay on the element's title so the shorter line
+// loses nothing.
+function liveTradingPerformancePeriod(summary) {
+  const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
+  if (!performance || !summary) return "";
+  return performance.periodLabel(summary.period);
+}
+
+function liveTradingPerformancePeriodExact(summary) {
+  const from = summary?.period?.fromUtc ? liveTradingDateTimeLabel(summary.period.fromUtc) : "";
+  const to = summary?.period?.toUtc ? liveTradingDateTimeLabel(summary.period.toUtc) : "";
+  if (!from || !to) return "";
+  return `${from} \u2192 ${to} UTC`;
+}
+
+function liveTradingPerformanceRows(rows, currency) {
+  return rows.map(row => {
+    const tone = liveTradingToneClass(row.net);
+    return `
+      <tr${row.trades === 0 ? " class=\"live-trading-performance-idle\"" : ""}>
+        <th scope="row">${escapeHtml(row.label)}</th>
+        <td class="num">${escapeHtml(String(row.trades))}</td>
+        <td class="num">${escapeHtml(liveTradingPerformancePercent(row.sharePct))}</td>
+        <td class="num">${escapeHtml(String(row.wins))}</td>
+        <td class="num">${escapeHtml(String(row.losses))}</td>
+        <td class="num">${escapeHtml(String(row.breakeven))}</td>
+        <td class="num live-trading-performance-rate">${escapeHtml(liveTradingPerformancePercent(row.winRatePct))}</td>
+        <td class="num${tone}">${escapeHtml(liveTradingPerformanceMoney(row.net, currency))}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+
+function liveTradingPerformancePanel(data) {
+  const trades = Array.isArray(data?.closed_trades) ? data.closed_trades : [];
+  const currency = data?.account?.currency ? ` ${data.account.currency}` : "";
+  const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
+  const summary = performance ? performance.summarise(trades, { history: data?.history || {} }) : null;
+  const period = summary ? liveTradingPerformancePeriod(summary) : "";
+  const periodExact = summary ? liveTradingPerformancePeriodExact(summary) : "";
+  const head = `
+    <div class="live-trading-table-head">
+      <div class="live-trading-performance-title">
+        <h3 id="liveTradingPerformanceHeading">FTMO 1 Performance</h3>
+        <p class="live-trading-performance-period"${
+          periodExact ? ` title="${escapeHtml(periodExact)}"` : ""
+        }>${
+          period ? escapeHtml(period) : "Reporting period not stated by this snapshot"
+        }</p>
+      </div>
+      <p class="live-trading-table-meta">Closed positions only &middot; net after recorded costs</p>
+    </div>
+  `;
+
+  if (!summary) {
+    return `
+      <section class="live-trading-performance" aria-labelledby="liveTradingPerformanceHeading">
+        ${head}
+        <p class="live-trading-table-empty">The performance reader did not load, so this panel states no figures rather than guessing them.</p>
+      </section>
+    `;
+  }
+
+  if (!summary.trades) {
+    return `
+      <section class="live-trading-performance" aria-labelledby="liveTradingPerformanceHeading">
+        ${head}
+        <p class="live-trading-table-empty">${
+          Array.isArray(data?.closed_trades)
+            ? "Nothing closed on this account inside the window above, so there is no breakdown to show."
+            : "This snapshot carries no closed-trade history yet, so there is no performance to break down."
+        }</p>
+      </section>
+    `;
+  }
+
+  const totals = summary.totals;
+  const totalsStrip = `
+    <dl class="live-trading-performance-totals">
+      <div>
+        <dt>Net P&amp;L</dt>
+        <dd class="live-trading-performance-value${liveTradingToneClass(totals.net)}">${escapeHtml(liveTradingPerformanceMoney(totals.net, currency))}</dd>
+      </div>
+      <div>
+        <dt>Win rate</dt>
+        <dd class="live-trading-performance-value">${escapeHtml(liveTradingPerformancePercent(totals.winRatePct) || displayDash())}</dd>
+      </div>
+      <div>
+        <dt>Closed trades</dt>
+        <dd class="live-trading-performance-value">${escapeHtml(String(totals.trades))}</dd>
+      </div>
+    </dl>
+  `;
+
+  const tabs = LIVE_TRADING_PERFORMANCE_TABS.map(tab => {
+    const selected = liveTradingPerformanceTab === tab.key;
+    return `
+      <button
+        type="button"
+        role="tab"
+        class="live-trading-performance-tab${selected ? " is-active" : ""}"
+        id="liveTradingPerformanceTab-${tab.key}"
+        aria-selected="${selected ? "true" : "false"}"
+        aria-controls="liveTradingPerformanceBody-${tab.key}"
+        tabindex="${selected ? "0" : "-1"}"
+        data-live-performance-tab="${tab.key}">${escapeHtml(tab.label)}</button>
+    `;
+  }).join("");
+
+  const bodies = LIVE_TRADING_PERFORMANCE_TABS.map(tab => {
+    const rows = tab.key === "weekday" ? summary.weekday : tab.key === "strategy" ? summary.strategy : summary.asset;
+    const selected = liveTradingPerformanceTab === tab.key;
+    return `
+      <div
+        class="live-trading-table-scroll live-trading-performance-body"
+        id="liveTradingPerformanceBody-${tab.key}"
+        role="tabpanel"
+        aria-labelledby="liveTradingPerformanceTab-${tab.key}"
+        data-live-performance-body="${tab.key}"${selected ? "" : " hidden"}>
+        <table class="live-trading-table live-trading-performance-table">
+          <thead>
+            <tr>
+              <th scope="col">${escapeHtml(tab.column)}</th>
+              <th scope="col" class="num">Closed trades</th>
+              <th scope="col" class="num">Share of trades %</th>
+              <th scope="col" class="num">Wins</th>
+              <th scope="col" class="num">Losses</th>
+              <th scope="col" class="num">Breakeven</th>
+              <th scope="col" class="num">Win rate %</th>
+              <th scope="col" class="num">Net P&amp;L</th>
+            </tr>
+          </thead>
+          <tbody>${liveTradingPerformanceRows(rows, currency)}</tbody>
+        </table>
+      </div>
+    `;
+  }).join("");
+
+  const notes = [];
+  if (summary.unattributed.length) {
+    const names = summary.unattributed.map(entry => escapeHtml(entry.comment)).join(", ");
+    notes.push(`${summary.unattributed.length === 1 ? "One close carries" : `${summary.unattributed.length} closes carry`} a comment that names no rule (${names}), so ${summary.unattributed.length === 1 ? "it is" : "they are"} counted under Unknown strategy and kept in the totals.`);
+  }
+  if (summary.unplaced > 0) {
+    notes.push(`${summary.unplaced} closed trade${summary.unplaced === 1 ? "" : "s"} could not be placed on a London day and ${summary.unplaced === 1 ? "is" : "are"} in the total only.`);
+  }
+  if (totals.unclassified > 0) {
+    notes.push(`${totals.unclassified} carried no readable net, so ${totals.unclassified === 1 ? "it is" : "they are"} in the trade count but in no outcome.`);
+  }
+  const windowDays = Number(summary.period.windowDays);
+
+  return `
+    <section class="live-trading-performance" aria-labelledby="liveTradingPerformanceHeading">
+      ${head}
+      ${totalsStrip}
+      <div class="live-trading-table-head live-trading-performance-tab-head">
+        <div class="live-trading-performance-tabs" role="tablist" aria-label="FTMO 1 performance breakdown">${tabs}</div>
+        <p class="live-trading-table-meta">One breakdown at a time</p>
+      </div>
+      ${bodies}
+      <p class="live-trading-performance-hint">Scroll the table sideways for every column.</p>
+      <p class="live-trading-table-caption">Read from the ${escapeHtml(String(summary.trades))} closed positions of FTMO account 1 in this snapshot, the same rows the Closed trades table prints, so each tab adds back to ${escapeHtml(liveTradingPerformanceMoney(totals.net, currency))} across ${escapeHtml(String(summary.trades))} trades. A trade sits on the day it closed in ${escapeHtml(summary.weekdayZone || "London")}; a win is a net above zero, a loss below it and a breakeven exactly zero, so the three counts add up to the row's own trades and the win rate is its wins over all of them. A share is the row's trades over the account's ${escapeHtml(String(summary.trades))}. Net is profit plus commission plus swap, in ${escapeHtml(data?.account?.currency || "the account currency")}.${windowDays > 0 ? ` The snapshot reads a ${escapeHtml(String(windowDays))}-day window, so a trade that closed before it began is not in these figures.` : ""}${notes.length ? ` ${notes.join(" ")}` : ""}</p>
+    </section>
+  `;
+}
+
+// One breakdown is shown at a time, and the press that changes it is a press on this panel's own tab strip.
+// The selected tab is held above the render so a five-minute refresh does not send the reader back to Weekday
+// while they are reading the strategy rows.
+function applyLiveTradingPerformanceTab(panel) {
+  if (!panel) return;
+  panel.querySelectorAll("[data-live-performance-tab]").forEach(tab => {
+    const selected = tab.dataset.livePerformanceTab === liveTradingPerformanceTab;
+    tab.classList.toggle("is-active", selected);
+    tab.setAttribute("aria-selected", selected ? "true" : "false");
+    tab.tabIndex = selected ? 0 : -1;
+  });
+  panel.querySelectorAll("[data-live-performance-body]").forEach(body => {
+    body.hidden = body.dataset.livePerformanceBody !== liveTradingPerformanceTab;
+  });
+}
+
+
 function renderLiveTrading(data) {
   const panel = document.getElementById("liveTradingPanel");
   const updated = document.getElementById("liveTradingUpdated");
@@ -19645,11 +19887,13 @@ function renderLiveTrading(data) {
 
     ${liveTradingRulePanel(data, ruleState)}
 
-    <div class="live-trading-grid">${cards}</div>
+    ${liveTradingPerformancePanel(data)}
 
     ${liveTradingPositions(data)}
 
     ${liveTradingClosedTrades(data)}
+
+    <div class="live-trading-grid">${cards}</div>
 
     <div class="live-trading-provenance">
       <p><b>Read-only, except one ask.</b> Quotes, account facts, M5/H1/H4 candles, and a read-back of what was executed. This section has no order code and holds no broker connection: it cannot place, modify or cancel anything, and neither can the snapshot it renders. The one thing a reader can do here is ask for an open position of this lane's own to be taken out, from the Close column of the table below; the page leaves that ask in one of two places and can send no order itself.</p>
