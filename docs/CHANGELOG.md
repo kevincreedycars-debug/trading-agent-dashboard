@@ -25,6 +25,11 @@
   before and after; no uncaught error and every asset the page references loads. No sideways scroll at 1440px
   or 414px, and the first table's header and body column widths match at both. Guards on the research branch
   stay green: `npm run test:usd-layer1` 27 of 27.
+- Deployed as `d04ad2a7` on `main`, which is what the published site serves. Live page
+  `usd-layer1-backtester.html` and live data `data/usd-layer1-backtester/run-v1.json` both answer 200, the
+  served artefact is the pinned bytes (2,653,887 bytes, same sha256), `index.html` carries the page twice (top
+  bar and side rail), and a fresh browser on the live page opens the reported EUR/USD 49.86% into its 367 dated
+  rows with the arithmetic above and no uncaught error.
 
 ## 2026-11-03 - Research Library: upload and download with no research-account sign-in
 
