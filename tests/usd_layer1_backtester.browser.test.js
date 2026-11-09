@@ -188,6 +188,8 @@ test("each test tab, the drill-down and the candle replay answer their own quest
     }
     const differenceText = await page.textContent("[data-usd-l1-call-difference='true']");
     assert.match(differenceText, /\d+ dates/, "the 697-against-490 explanation names its counts");
+    const convictionButtons = await page.$$(".usd-l1-conviction-table button[data-usd-l1-evidence^='conviction']");
+    assert.ok(convictionButtons.length > 0, "the conviction table's figures open their dates too");
 
     // Tests 3 and 4: four accounts each, an equity curve each, and the demo labelled as a demo.
     for (const id of ["l2l_full_5r", "l2l_half_3r"]) {

@@ -16011,8 +16011,17 @@ function renderUsdL1TabStrip() {
   `;
 }
 
-function usdL1ConvictionTable(byConviction = {}, label) {
+function usdL1ConvictionTable(byConviction = {}, label, context = null) {
   const levels = [1, 2, 3, 4, 5];
+  // Where the table belongs to one market and one model, every figure opens the dates behind it.
+  const cell = (level, key, value, render, decimals = 0) => {
+    if (!context || !context.market || !context.model) return render;
+    return usdL1EvidenceButton(
+      `conviction|${context.market}|${context.model}|${level}`,
+      render,
+      `Conviction ${level} ${key} for ${context.model} on ${context.market}`
+    );
+  };
   return `
     <table class="usd-l1-table usd-l1-conviction-table">
       <caption>${escapeHtml(label)}</caption>
@@ -16033,18 +16042,32 @@ function usdL1ConvictionTable(byConviction = {}, label) {
           return `
             <tr data-usd-l1-conviction-row="${level}">
               <th scope="row">${level}</th>
-              <td>${usdL1Number(entry.scored, 0)}</td>
-              <td>${usdL1Number(entry.hits, 0)}</td>
-              <td>${usdL1Number(entry.misses, 0)}</td>
-              <td>${usdL1Number(entry.flat, 0)}</td>
-              <td>${usdL1Percent(entry.accuracy_pct)}</td>
+              <td>${cell(level, "scored", entry.scored, usdL1Number(entry.scored, 0))}</td>
+              <td>${cell(level, "right", entry.hits, usdL1Number(entry.hits, 0))}</td>
+              <td>${cell(level, "wrong", entry.misses, usdL1Number(entry.misses, 0))}</td>
+              <td>${cell(level, "flat", entry.flat, usdL1Number(entry.flat, 0))}</td>
+              <td>${context && context.market && context.model
+                ? usdL1EvidenceButton(
+                    `conviction|${context.market}|${context.model}|${level}`,
+                    usdL1Percent(entry.accuracy_pct),
+                    `Conviction ${level} accuracy for ${context.model} on ${context.market}`
+                  )
+                : usdL1Percent(entry.accuracy_pct)}</td>
               <td>${usdL1Percent(entry.lower_bound_pct)}</td>
             </tr>
           `;
         }).join("")}
         <tr class="usd-l1-uncalled-row">
           <th scope="row">no call</th>
-          <td colspan="5">${usdL1Number(byConviction.uncalled?.no_call, 0)} sessions</td>
+          <td colspan="5">${
+            context && context.model
+              ? usdL1EvidenceButton(
+                  `nocall|${context.model}|any`,
+                  `${usdL1Number(byConviction.uncalled?.no_call, 0)} sessions`,
+                  `${context.model}: every no-call date`
+                )
+              : `${usdL1Number(byConviction.uncalled?.no_call, 0)} sessions`
+          }</td>
           <td>—</td>
         </tr>
       </tbody>
@@ -16168,11 +16191,13 @@ function renderUsdL1FourMarketTab(test = {}, payload = {}) {
       <div class="usd-l1-test-grid">
         <article class="usd-l1-test-card">${usdL1ConvictionTable(
           models.current?.markets?.[firstMarket]?.by_conviction,
-          `Current model by conviction — ${models.current?.markets?.[firstMarket]?.label || firstMarket}`
+          `Current model by conviction — ${models.current?.markets?.[firstMarket]?.label || firstMarket}`,
+          { market: firstMarket, model: "current" }
         )}</article>
         <article class="usd-l1-test-card">${usdL1ConvictionTable(
           models.challenger?.markets?.[firstMarket]?.by_conviction,
-          `Challenger by conviction — ${models.challenger?.markets?.[firstMarket]?.label || firstMarket}`
+          `Challenger by conviction — ${models.challenger?.markets?.[firstMarket]?.label || firstMarket}`,
+          { market: firstMarket, model: "challenger" }
         )}</article>
       </div>
     </section>
