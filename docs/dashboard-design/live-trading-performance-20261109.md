@@ -1,4 +1,4 @@
-# Live Trading view: reading order and an FTMO 1 performance panel (2026-11-09, prepared, not published)
+# Live Trading view: reading order and an FTMO 1 performance panel (2026-11-09, published)
 
 Owner's ask, in his words: move the four instrument cards below Closed Trades, put an "FTMO 1 Performance" panel
 above Open Positions with three tabs (Weekday default, Strategy, Asset), make the figures traceable, keep it
@@ -134,4 +134,51 @@ checkout was read or written, no data file changed, no existing number moved, an
 from the block the Closed trades table already prints. If the owner wants this to be a permanent reporting
 surface with its own guarantees, it belongs to that lane as a documented rule rather than to a design commit.
 Publishing stays a separate, single-purpose commit on his go-ahead.
+
+## Published, and what the live site serves
+
+Owner's go-ahead came on 2026-11-09 with one addition (the reporting dates beside the title) and one decision
+(the live-trading lane owns the performance calculations from here). Published as one commit,
+`7caae161` "live-trading: read FTMO 1's performance above the individual trades", rebased onto the live tip
+`8ecb08fb` and fast-forwarded to `main` without force; the live lane kept publishing data files around it.
+
+Two things went wrong on the way and were fixed before the push:
+
+- The first browser run after the change failed `backtesting_development_release.browser.test.js` ("Backtest
+  Engine" button never appeared) and it reproduced on an archive of my own commit, not on a pristine
+  `origin/main` archive. Cause: I had rewritten `index.html` through PowerShell, which put a UTF-8 BOM in front
+  of `<!DOCTYPE html>`; a server that sends no content type (as that test's server does not) then renders the
+  page as plain text. The BOM was stripped, `index.html` is now a 3-line diff against `main`, and the test
+  passes. Worth remembering: a BOM is invisible in review and breaks sniffing.
+- `refresh_progress.browser.test.js` threw 2 failures in one full run; 26/26 in isolation on both my commit and
+  a pristine archive. Load-sensitive, as it was in the earlier run.
+
+### Served, read back over HTTPS at 2026-11-09T21:33Z (snapshot 2026-11-09T21:30Z)
+
+| page | bytes | git blob | sha256 (16) |
+| --- | --- | --- | --- |
+| `index.html` | 30,151 | `cdcb16713e37` | `0e3abdeaf23a0866` |
+| `styles.css` | 277,290 | `c7811491fa44` | `bba07f5247702ac8` |
+| `script.js` | 1,063,764 | `8173bac71a37` | `063980a191a01ddc` |
+| `lib/live_trading_performance.js` | 10,724 | `920943ee7752` | `a796732e5dfd8b01` |
+
+Each live blob equals the blob on `main` at that moment, so the site is serving the pushed bytes and not an
+older build. (The page grew by one `<script>` and a longer cache-buster; the later backtester-page commit from
+another lane is why the live `index.html` is not byte-identical to the file I pushed.)
+
+Live read, headless, at 1440x900 and 390x844 on `#live-trading`:
+
+- Section order in `#liveTradingPanel`: chart, rule panel, performance panel (index 5), Open positions (6),
+  Closed trades (7), instrument cards (8); exactly two `.live-trading-table-panel` elements, so the read-back
+  and close-control suites still find their tables.
+- Dates beside the title: `26 Oct 2026 - 09 Nov 2026 UTC · 14-day window`, same row as the heading, tooltip
+  `2026-10-26 21:30Z → 2026-11-09 21:30Z UTC` for the live snapshot; no horizontal overflow at 390px.
+- Reconciliation against the live Closed trades line `38 closed in the last 14 days · net +167.11 USD`: totals
+  `+167.11 USD / 28.9% / 38`, and every tab sums to 38 trades and 16,711 cents (weekday, strategy, asset).
+
+The drift-back guard lives in `tests/live_trading_performance.browser.test.js`: it fails if the dates leave the
+heading's row, if that row stops being a wrapping flex row, if the tooltip loses the exact stamps, if the panel
+drops below Open positions, if the instrument cards climb back above Closed trades, or if any tab stops adding
+up to the Closed trades figures.
+
 
