@@ -1,8 +1,17 @@
 # ICE US Dollar Index - sample and fee request (draft, 2026-11-07)
 
-Status: **draft only, not sent**. One letter to ICE Data Indices asking for a ten-date sample and a fee
-schedule for the official US Dollar Index (USDX, ticker DXY) at two session endpoints per date. Nothing in the
-USD session study scores a DXY factor until this answers, and no derived series is published either way.
+Status: **approved by the owner on 2026-11-08 and assembled for sending; not yet sent, because no outbound mail
+channel exists in the checkout** (no SMTP client, no mail credentials, and the standing rule is that no external
+message is sent from here). The send-ready body is the short form below, unchanged; a copy is held outside the
+repository at `.local/outbox/ice-dxy-sample-and-fee-request.txt` and as a mail file
+`.local/outbox/ice-dxy-sample-and-fee-request.eml`, with the recipient address left for the sender because no
+published licensing address has been verified in this checkout. The authorisation covers this enquiry only: no
+purchase, no trial acceptance and no data use follows from a reply without the owner's separate decision, and
+the next step when a sample arrives is to count how many saved calls it can actually score before any price is
+discussed.
+One letter to ICE Data Indices asking for a ten-date sample and a fee schedule for the official US Dollar Index
+(USDX, ticker DXY) at two session endpoints per date. Nothing in the USD session study scores a DXY factor until
+this answers, and no derived series is published either way.
 Background and the sourcing decision live in `feasibility_audit_usd_vs_25factor_20261107.md` section 11; this
 file is only the outbound ask.
 
