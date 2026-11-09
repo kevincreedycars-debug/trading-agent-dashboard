@@ -44,6 +44,15 @@
   is a report, not an intervention: the feed's own stale guards and the trader's own guards already refuse to
   act on a stale snapshot, and starting a second producer would be a worse answer than a line in a log.
 
+  Lane identity is a path, not a process name. The terminal this task keeps alive is
+  C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe and nothing else, because a second lane runs a
+  second copy of the same terminal64.exe out of its own install folder. Counting processes by name made the two
+  indistinguishable: with a second terminal up, a dead lane-1 terminal read as "ok terminal running", so the one
+  thing this script exists to notice was the one thing it could no longer see. When a process carries the
+  terminal's name but its executable path cannot be read - another user's process, a protected process, a race
+  on exit - the script writes that down and takes no action at all: no startup task, no reboot. A missed
+  recovery is a line in a log; a wrong reboot ends the session both lanes are trading in.
+
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run-live-trading-watchdog.ps1
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run-live-trading-watchdog.ps1 -WhatIfAction
@@ -51,6 +60,10 @@
 param(
   # The terminal the lane reads. Its presence is the whole liveness question.
   [string] $TerminalProcess = "terminal64",
+  # And this is the lane: the one executable that counts as alive. Two lanes run two copies of terminal64.exe, so
+  # the name alone cannot answer the question; the path can. Empty means the lane's own identity is unknown, and
+  # the run then reports instead of recovering.
+  [string] $TerminalPath = "C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe",
   [string] $StartupTask = "LiveTradingTerminalStartup",
   # The snapshot whose age is reported. -SnapshotMinutes 0 disables the report and changes nothing else.
   [string] $Snapshot = "C:\live-trading\runtime\data\live-trading.json",
@@ -78,6 +91,77 @@ function Write-Line {
   Add-Content -LiteralPath $Log -Value $line
   Write-Output $line
 }
+
+# Every process carrying the terminal's name, each with the executable path when Windows will give it up. A path
+# comes back $null rather than throwing when the process belongs to someone else, is protected, or exits between the
+# enumeration and the read, so the caller can tell "not this lane" apart from "cannot say".
+function Get-TerminalCandidate {
+  param([string] $TerminalProcess)
+  $found = @()
+  foreach ($proc in @(Get-Process -Name $TerminalProcess -ErrorAction SilentlyContinue)) {
+    $path = $null
+    try { $path = $proc.Path } catch { $path = $null }
+    if (-not $path) { $path = $null }
+    $found += [pscustomobject]@{ Id = $proc.Id; SessionId = $proc.SessionId; Path = $path }
+  }
+  ,$found
+}
+
+# The liveness question, answered by path. running = one process whose executable is exactly the lane's terminal;
+# unknown = none matches but a process carrying the name has a path that could not be read; missing = neither. The
+# three are kept apart because the last two ask for opposite things: missing is what recovery exists for, unknown
+# is the case where recovering could kill a lane that is fine.
+function Resolve-TerminalLiveness {
+  param([object[]] $Candidates = @(), [string] $TerminalPath)
+  $wanted = ([string]$TerminalPath).Trim().TrimEnd('\')
+  $matched = @()
+  $others = @()
+  $unreadable = @()
+  foreach ($candidate in @($Candidates)) {
+    if (-not $candidate) { continue }
+    $path = [string]$candidate.Path
+    if ($path -and $wanted -and [string]::Equals($path.TrimEnd('\'), $wanted, [System.StringComparison]::OrdinalIgnoreCase)) {
+      $matched += $candidate
+    } elseif (-not $path) {
+      $unreadable += $candidate
+    } else {
+      $others += $candidate
+    }
+  }
+  if ($matched.Count -gt 0) { $state = "running" }
+  elseif ($unreadable.Count -gt 0) { $state = "unknown" }
+  else { $state = "missing" }
+  [pscustomobject]@{
+    State = $state
+    Wanted = $wanted
+    Matched = @($matched)
+    Others = @($others)
+    Unreadable = @($unreadable)
+  }
+}
+
+# What this run should do about it. Kept apart from the acting, and from the host, so all five answers can be read
+# in a test: none, report-only, start-task, hold, reboot. Only the last two of those touch anything.
+function Resolve-WatchdogDecision {
+  param($Liveness, [int] $SignedOnCount, $LastRebootUtc, [int] $RebootCooldownMinutes, [datetime] $Now)
+  if (-not $Liveness.Wanted) {
+    return [pscustomobject]@{ Action = "report-only"; Reason = "no lane terminal path is configured, so there is nothing to compare the running terminals against" }
+  }
+  if ($Liveness.State -eq "running") {
+    return [pscustomobject]@{ Action = "none"; Reason = "the lane's terminal is running" }
+  }
+  if ($Liveness.State -eq "unknown") {
+    return [pscustomobject]@{ Action = "report-only"; Reason = "a process carrying the terminal's name is running but its executable path cannot be read, so whether the lane's terminal is alive cannot be said" }
+  }
+  if ($SignedOnCount -gt 0) {
+    return [pscustomobject]@{ Action = "start-task"; Reason = "the lane's terminal is missing and a session is signed on to start it in" }
+  }
+  if ($LastRebootUtc -and (($Now - $LastRebootUtc).TotalMinutes -lt $RebootCooldownMinutes)) {
+    return [pscustomobject]@{ Action = "hold"; Reason = "the lane's terminal is missing, nobody is signed on, and the reboot cooldown has not passed" }
+  }
+  return [pscustomobject]@{ Action = "reboot"; Reason = "the lane's terminal is missing and nobody is signed on, so only auto-logon can bring the session back" }
+}
+
 
 # One signed-on session answers two questions: can another terminal be started in it, and did auto-logon work at
 # the last boot. It is read once, here, so both answers come from the same look at the host.
@@ -136,10 +220,19 @@ if (Test-Path -LiteralPath $RollbackFile) {
   }
 }
 
-$terminal = @(Get-Process -Name $TerminalProcess -ErrorAction SilentlyContinue)
-if ($terminal.Count -gt 0) {
-  $where = ($terminal | ForEach-Object { "pid=" + $_.Id + " session=" + $_.SessionId }) -join " "
-  Write-Line ("ok terminal running " + $where)
+$liveness = Resolve-TerminalLiveness -Candidates @(Get-TerminalCandidate -TerminalProcess $TerminalProcess) -TerminalPath $TerminalPath
+# Every line below names what else is running, because the reason this script reads paths is that two terminals exist.
+# Capped, so a host full of same-named processes cannot turn one log line into a page.
+$otherCount = @($liveness.Others).Count
+$otherText = (@($liveness.Others) | Select-Object -First 4 | ForEach-Object { "pid=" + $_.Id + " " + $_.Path }) -join "; "
+if ($otherCount -gt 4) { $otherText = $otherText + "; and " + ($otherCount - 4) + " more" }
+$unreadableText = (@($liveness.Unreadable) | ForEach-Object { "pid=" + $_.Id }) -join ", "
+
+if ($liveness.State -eq "running") {
+  $here = $liveness.Matched[0]
+  $elsewhere = ""
+  if ($otherText) { $elsewhere = "; other terminals running: " + $otherText }
+  Write-Line ("ok terminal running " + $TerminalPath + " pid=" + $here.Id + " session=" + $here.SessionId + $elsewhere)
   if ($SnapshotMinutes -gt 0 -and (Test-Path -LiteralPath $Snapshot)) {
     $age = [int]($now - (Get-Item -LiteralPath $Snapshot).LastWriteTimeUtc).TotalMinutes
     if ($age -ge $SnapshotMinutes) {
@@ -149,24 +242,8 @@ if ($terminal.Count -gt 0) {
   exit 0
 }
 
-# The terminal is gone. The session read at the top is the answer to whether another could be started.
-if ($signedOn.Count -gt 0) {
-  Write-Line ("missing terminal, " + $signedOn.Count + " signed-on session(s); starting " + $StartupTask)
-  if (-not $WhatIfAction) {
-    $null = & schtasks.exe /run /tn $StartupTask 2>&1
-    $waited = 0
-    while ($waited -lt $StartupGraceSeconds) {
-      Start-Sleep -Seconds 5
-      $waited += 5
-      if (@(Get-Process -Name $TerminalProcess -ErrorAction SilentlyContinue).Count -gt 0) {
-        Write-Line ("recovered: terminal came back after " + $waited + " seconds")
-        exit 0
-      }
-    }
-    Write-Line ("startup task ran but no terminal appeared within " + $StartupGraceSeconds + " seconds")
-  }
-}
-
+# The lane's terminal is not running. What that costs depends on the session read at the top of the file, and on
+# whether a process exists whose path could not be read - the one case where acting could end a lane that is fine.
 $lastReboot = $null
 if (Test-Path -LiteralPath $RebootMarker) {
   $text = (Get-Content -LiteralPath $RebootMarker -Raw)
@@ -179,16 +256,51 @@ if (Test-Path -LiteralPath $RebootMarker) {
     }
   }
 }
-if ($lastReboot -and ($now - $lastReboot).TotalMinutes -lt $RebootCooldownMinutes) {
-  Write-Line ("missing terminal, nobody signed on; last watchdog reboot was " +
-    [int]($now - $lastReboot).TotalMinutes + " minutes ago, holding until the cooldown passes")
-  exit 0
-}
 
-Write-Line ("missing terminal and no signed-on session; rebooting so auto-logon restores the desktop and " +
-  $StartupTask + " starts the terminal")
-if ($WhatIfAction) { exit 0 }
-Set-Content -LiteralPath $RebootMarker -Value $now.ToString("o")
-& shutdown.exe /r /t 30 /f
-exit 0
+$decision = Resolve-WatchdogDecision -Liveness $liveness -SignedOnCount $signedOn.Count -LastRebootUtc $lastReboot -RebootCooldownMinutes $RebootCooldownMinutes -Now $now
+
+# Exactly two branches act, and neither is reachable from "unknown": the decision answers report-only there, because
+# a startup task or a reboot on a wrong guess would end the session the other lane is trading in.
+switch ($decision.Action) {
+  "start-task" {
+    Write-Line ("missing terminal, " + $signedOn.Count + " signed-on session(s); starting " + $StartupTask +
+      $(if ($otherText) { "; other terminals running: " + $otherText } else { "" }))
+    if (-not $WhatIfAction) {
+      $null = & schtasks.exe /run /tn $StartupTask 2>&1
+      $waited = 0
+      while ($waited -lt $StartupGraceSeconds) {
+        Start-Sleep -Seconds 5
+        $waited += 5
+        $back = Resolve-TerminalLiveness -Candidates @(Get-TerminalCandidate -TerminalProcess $TerminalProcess) -TerminalPath $TerminalPath
+        if ($back.State -eq "running") {
+          Write-Line ("recovered: terminal came back after " + $waited + " seconds")
+          exit 0
+        }
+      }
+      Write-Line ("startup task ran but no terminal at " + $TerminalPath + " appeared within " + $StartupGraceSeconds + " seconds")
+    }
+    exit 0
+  }
+  "reboot" {
+    Write-Line ("missing terminal and no signed-on session; rebooting so auto-logon restores the desktop and " +
+      $StartupTask + " starts the terminal")
+    if ($WhatIfAction) { exit 0 }
+    Set-Content -LiteralPath $RebootMarker -Value $now.ToString("o")
+    & shutdown.exe /r /t 30 /f
+    exit 0
+  }
+  "hold" {
+    Write-Line ("missing terminal, nobody signed on; last watchdog reboot was " +
+      [int]($now - $lastReboot).TotalMinutes + " minutes ago, holding until the cooldown passes")
+    exit 0
+  }
+  "report-only" {
+    $detail = $decision.Reason
+    if ($unreadableText) { $detail = $detail + " (" + $unreadableText + " running as " + $TerminalProcess + ")" }
+    if ($otherText) { $detail = $detail + " (readable terminals: " + $otherText + ")" }
+    Write-Line ($detail + "; no startup task and no reboot")
+    exit 0
+  }
+  default { exit 0 }
+}
 

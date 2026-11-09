@@ -209,6 +209,32 @@ Lane 1 was re-read after the clone and had not moved: same `HEAD`, same trader b
 `2026-11-03T12:29:39Z`, the 18:50:01Z tick returning `0` with the next at 18:55Z, and the 18:51:30Z heartbeat still
 `armed:true` on `ftmo-1` with 0 positions and 1 working order. A clone writes only under `C:\ftmo2`.
 
+### The pin against the branch head, 2026-11-09T19:05Z
+
+`git diff --stat be5954d2..<the branch tip>` answers whether the pin still describes the branch, and on this branch the
+answer is one file:
+
+```text
+docs/live-trading/LANE2_VPS_RUNBOOK.md | 143 +++++++++++++++++++++++++++++++--
+```
+
+Documentation only - no script, no `config/live-trading-lanes.json`, no test - so lane 2 keeps `be5954d2` as its tested
+runtime pin and this document is read from the tip.
+
+The watchdog correction of stage 5a is the first change since to touch a script, and it does not move the pin. That file
+is lane 1's runtime, not lane 2's: lane 2 runs no watchdog, and the two files lane 2 does run - the trader and its task
+registration - are still identical to the pin:
+
+```text
+git -C C:\ftmo2 diff --stat be5954d2 -- scripts/run-live-trading-trader.js scripts/register-live-trading-trader-task.ps1 config/live-trading-lanes.json
+   (no output)
+git -C C:\ftmo2 rev-parse HEAD:scripts/run-live-trading-trader.js   -> 1c528e542271194bcf15f77950fc96f241db2791
+```
+
+So the rule stands with one clarification: a tip that touches the trader, its registration, the lanes file or the gate
+is the signal to re-pin and re-run stages 1, 3 and 4; a tip that touches the host's watchdog is a lane-1 change and
+stage 5a.
+
 ## 2. The second terminal and the identity file
 
 One terminal per account. Lane 1's terminal is never opened, re-logged or reconfigured in this stage.
@@ -401,9 +427,61 @@ consequences follow from a second terminal, and they are recorded here rather th
 So stage 5 registers **no** lane-2 watchdog, and lane 2 is not added to the existing one by editing its arguments:
 `-TerminalProcess` names a process, both terminals are called `terminal64`, and a name cannot express the difference. A
 per-lane liveness test needs a path-based check inside the script, which lives in lane 1's deployed checkout - so it is a
-lane-1 change and a separate decision, deliberately outside this runbook. Until it exists, lane 1's liveness is judged
-the way the monitor already judges it, from the published heartbeat, and lane 2's the same way from
-`data/live-trading-trader.ftmo-2.json` once stage 6 has published it.
+lane-1 change. It has now been written and tested offline (stage 5a below), and it is applied only after the operator
+has read it: until then lane 1's liveness is judged the way the monitor already judges it, from the published
+heartbeat, and lane 2's the same way from `data/live-trading-trader.ftmo-2.json` once stage 6 has published it.
+
+### 5a. The watchdog correction: one file, and it is lane 1's
+
+The version running on the host is `C:\live-trading\runtime\scripts\run-live-trading-watchdog.ps1`, and it is **byte
+for byte** the version in this repository at `be5954d2` and at the branch tip - blob `798e7537cfe0`, SHA-256
+`806360e8d7e3`. That is what makes an offline change safe to prepare: the file was read off the host and compared, not
+assumed.
+
+The change adds `-TerminalPath` (default `C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe`) and asks
+liveness by path: `running` when a process's executable is exactly that file, `unknown` when no process matches but one
+carrying the name has a path Windows will not give up, `missing` when there is no such process at all. Only `missing`
+can start `LiveTradingTerminalStartup` or reboot; `unknown` writes a line naming the pid and does neither, because a
+wrong reboot ends the session both lanes trade in. The new blob is `de6264269100fd7f28c325fbe74f072d207c802e`.
+
+```powershell
+# 5a-1. Read-only first: what the host says today, and what it would say with the new file (no writes to the task).
+Get-ScheduledTask -TaskName LiveTradingWatchdog | Select-Object -ExpandProperty Actions
+Get-Process -Name terminal64 -ErrorAction SilentlyContinue | ForEach-Object { "$($_.Id) $($_.SessionId) $($_.Path)" }
+
+# 5a-2. The change. One file, backed up beside its own state folder, arguments untouched, no task re-registration.
+#       The candidate copy is scp'd from this PC; nothing else on the host is written.
+$dst = 'C:\live-trading\runtime\scripts\run-live-trading-watchdog.ps1'
+$src = 'C:\live-trading\state\run-live-trading-watchdog.lane2-candidate.ps1'
+Copy-Item -LiteralPath $dst -Destination 'C:\live-trading\state\run-live-trading-watchdog.pre-lane2-20261109.ps1' -Force
+git -C C:\live-trading\runtime hash-object $src                                  # must be de6264269100fd7f...
+Copy-Item -LiteralPath $src -Destination $dst -Force
+git -C C:\live-trading\runtime hash-object $dst                                  # must equal the same blob
+
+# 5a-3. Verification. -WhatIfAction takes no action and still writes the line it would have written.
+powershell -NoProfile -ExecutionPolicy Bypass -File $dst -WhatIfAction
+#   expected, verbatim in shape: ok terminal running C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe
+#   pid=<lane 1's pid> session=1        (and, once stage 2 is done: "; other terminals running: pid=<p> ...Terminal 2\...")
+# Then leave the scheduled task alone: the next 10-minute run proves it, one line in
+# C:\live-trading\logs\live-trading-watchdog.log naming the path rather than just "ok terminal running pid=...".
+
+# 5a-4. Rollback, if any line looks wrong. The file is tracked and was unmodified, so git restores the exact bytes.
+Copy-Item -LiteralPath 'C:\live-trading\state\run-live-trading-watchdog.pre-lane2-20261109.ps1' -Destination $dst -Force
+git -C C:\live-trading\runtime hash-object $dst                                  # back to 798e7537cfe0
+# and confirm: git -C C:\live-trading\runtime status --porcelain scripts/run-live-trading-watchdog.ps1 -> empty
+```
+
+**What is not produced on the host**: the `unknown` case. Making a real process refuse its path would mean running one
+under another account or protecting it, and neither is worth doing on the host that is trading. The three-way answer and
+all five decisions are held by `tests/live_trading_watchdog_lane_identity.test.js`, which lifts the three functions out
+of the file and runs them on made-up processes: both terminals up, lane 1 gone with lane 2 up, no terminal at all
+(signed on and not), a path that cannot be read (signed on and not), a match beside an unreadable one, path case and
+trailing separator, an empty lane path, and the reboot cooldown either side. It also reads the statement tree to prove
+`schtasks.exe` sits in the `start-task` branch and `shutdown.exe` in the `reboot` branch, so no route through the file
+reaches either without the decision having chosen it.
+
+**Stage 5a passes when** the host file hashes to `de6264269100fd7f...`, one `-WhatIfAction` run names lane 1's path,
+and the next scheduled run's log line does too. The rollback above returns the host to what it ran before.
 
 
 ## 6. Publishing the lane-2 dashboard (not arming it)
