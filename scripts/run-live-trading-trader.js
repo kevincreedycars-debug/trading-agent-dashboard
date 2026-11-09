@@ -2089,6 +2089,10 @@ function traderStatus(record, { nowMs } = {}) {
     // it already holds, and an identity-checked lane refuses to send from a terminal it cannot prove.
     strategy: record?.strategy ?? null,
     entries_paused: record?.strategy?.entries_paused === true,
+    // The caps this run actually carried, so the page can print the cap in force rather than one it keeps for
+    // itself. `max_per_day` is the number the operator set on the registration; the trade day beside it says
+    // which day that count belongs to and on whose clock.
+    caps: record?.caps ?? null,
     duration_seconds: record?.duration_seconds ?? null
   };
 }
