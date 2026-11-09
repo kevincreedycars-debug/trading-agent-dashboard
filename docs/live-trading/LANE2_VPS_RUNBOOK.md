@@ -13,6 +13,28 @@ carrying the failure forward.
 and any reboot of the host. A reboot takes lane 1 down with lane 2, which is why the lane-2 watchdog must judge itself
 by its own snapshot and heartbeat and never by "is `terminal64` running".
 
+## Reaching the host from this PC
+
+The door is a key, not a password: key-only `sshd`, and the host's firewall narrowed to this machine's address.
+
+```powershell
+ssh -i "D:\trading-agent-dashboard-codex\.local\vps-access\id_ed25519" -o BatchMode=yes Administrator@158.220.87.240 "hostname"
+# -> VMI3697641
+```
+
+That session arrives as `VMI3697641\Administrator` and is enough for every read and file write in stages 0, 1, 3, 4
+and 5. It is **not** enough for the two GUI acts in stage 2: `sshd` starts its processes outside the desktop session
+lane 1's terminal lives in, so the second terminal and its login dialog have to be opened over RDP -
+`mstsc /v:158.220.87.240`, user `Administrator`, password in this PC's DPAPI store as `VPS_RDP_PASSWORD`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.trading-agent-dashboard\scripts\validate-credentials.ps1" -Scope vps-host
+# VPS_HOST, VPS_RDP_USER, VPS_RDP_PASSWORD -> all present, checked 2026-11-09
+```
+
+A **disconnected** RDP window keeps its session, which is why closing the window is safe and signing out is not:
+signing out ends the terminal and every interactive task with it, and the watchdog's answer to that is a reboot.
+
 **The revision these commands were written against:** branch `live-trading/lane2-half-l2l-20261107`, commit
 `be5954d2` - the commit whose lanes file names account 2 - cut from `origin/main` `4faf3f35`. The executable code was
 tested at `f08ce075`, and every commit after it changes the lanes file, this document or its tests and never
@@ -55,9 +77,12 @@ Get-ScheduledTaskInfo -TaskName LiveTradingTraderTick019
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\export-live-trading-effective-config.ps1 -RepoRoot C:\live-trading\runtime -Out C:\live-trading\tmp\effective-lane1.json
 Get-Content C:\live-trading\tmp\effective-lane1.json -Raw
 
-# 5. Lane 1's own heartbeat, and the snapshot it is trading from.
-Get-Content C:\live-trading\data\live-trading-trader.ftmo-1.json -Raw
-Get-Content C:\live-trading\data\live-trading.json -Raw | ConvertFrom-Json | Select-Object generated_at_utc, account
+# 5. Lane 1's own heartbeat, and the snapshot it is trading from. The live status is written by the loop into the
+#    runtime checkout's tmp\ (the lanes file's `trader_status`); the copy under publisher\data\ is the last published
+#    one, so read the runtime's and treat the publisher's as the thing stage 6 must leave unchanged.
+Get-Content C:\live-trading\runtime\tmp\live-trading-trader-status.json -Raw
+Get-Content C:\live-trading\publisher\data\live-trading-trader.ftmo-1.json -Raw
+Get-Content C:\live-trading\runtime\data\live-trading.json -Raw | ConvertFrom-Json | Select-Object generated_at_utc, account
 ```
 
 **Stage 0 passes when** the heartbeat says `armed: true`, its `lane` is `ftmo-1`, its `strategy.magic` is `20261004`,
@@ -87,6 +112,35 @@ explain the difference:
 | snapshot | `data/live-trading.json` generated `2026-11-09T18:10:20.913Z`, four instruments, every one available with a fresh M5 block (19-21 s old) |
 | code | `checkout_head` `c5abd0ac`, `git_blob` `f43ac5ea318fb5e8c87bf55a6a88b76cc1eb6958`, `sha256` `b6422a72...` |
 | publication | lane 1 `published`, lane 2 `disabled`; the newest publish commit is `2026-11-09T18:10:57Z`, so the cadence is live |
+
+### Read on the host itself, 2026-11-09T18:46Z (read-only)
+
+Taken over the ssh session above, so these are the values stage 0 is meant to **reproduce** rather than the values it
+is trying to establish. Nothing was written: `git --no-optional-locks status` so no index refresh, no fetch against
+the host's checkout, no task, no terminal start, no publish.
+
+| What | Value |
+| --- | --- |
+| who | `VMI3697641\Administrator`, host clock `2026-11-09T18:46:18Z` |
+| lane 1 checkout | `HEAD c5abd0ac5ef5de6eb80bb5500d518fe5a4cbb4bd`, and its own stale `origin/main f20582b4...` (no fetch made) |
+| lane 1 trader file | `git hash-object` -> `f43ac5ea318fb5e8c87bf55a6a88b76cc1eb6958`, which is `origin/main`'s blob and **not** `HEAD`'s |
+| `git status --porcelain` | ` M data/live-trading.json`, ` M scripts/run-live-trading-trader.js`, `?? scripts/register-orchestrator-refresh-task.ps1`, `?? scripts/trigger-orchestrator-refresh.ps1` |
+| that drift, explained | the 2026-11-05 one-file deploy copied `main`'s trader into the checkout and left `HEAD` at `c5abd0ac`; the two untracked scripts are the orchestrator-refresh fix run out of the checkout rather than committed. Neither line is lane 2's |
+| lane-1 trader task | `LiveTradingTraderTick019`, principal `Administrator`, state `Running`, last result `267009` (`0x41301` = still running), next run 18:50Z |
+| what that task runs | `wscript.exe "...\.trading-agent-dashboard\scripts\run-hidden.vbs" "cmd.exe /c C:\live-trading\runtime\tmp\live-trading-trader-run.cmd"` |
+| that wrapper's flags | `--once --align --settle-seconds 90 --confirm-live --quiet --lane "ftmo-1" --max-per-day 4 --terminal "...\FTMO Global Markets MT5 Terminal" --published C:\live-trading\publisher` |
+| lane-1 heartbeat | `runtime\tmp\live-trading-trader-status.json`: `at_utc 18:46:30.018Z`, `armed:true`, `lane ftmo-1`, `nothing_to_place`, 0 positions / 1 working order (`ours: 1`), `***614` with `server: null` |
+| publisher copy | `publisher\data\live-trading-trader.ftmo-1.json` written 18:26:32Z; publisher checkout `9666ecb0`, clean |
+| tasks on the host | `LiveTradingHostBuild` (SYSTEM), `LiveTradingLane-ftmo1` (Administrator), `LiveTradingPublishLanes019` (Administrator), `LiveTradingRefresh0600` (SYSTEM), `LiveTradingTerminalStartup` (Administrator), `LiveTradingTraderTick019` (Administrator), `LiveTradingWatchdog` (SYSTEM) |
+| terminal installs | **one**: `C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe`; its data folder `81A933A9AFC5DE3C23B15CAB19C63850` names that install, beside `Common` and `Community` |
+| `C:\live-trading\state` | one file, `autologon-rollback.json`, 518 bytes |
+| `C:\ftmo2` | did not exist before stage 1 |
+| disk and runtimes | 72.8 GB free of 99.6; `C:\Program Files\Python313\python.exe`, `C:\Program Files\nodejs\node.exe` |
+| git credentials on the host | `credential.helper = store --file C:/live-trading/.git-credentials`, so a clone is non-interactive; run it with `GIT_TERMINAL_PROMPT=0` so a credential failure stops instead of waiting |
+
+The two answers stage 0's export was there to settle: the lane-1 tasks run as **`Administrator`** - not SYSTEM - so
+that is the principal the lane-2 identity file's ACL has to grant, and the host's `LiveTradingWatchdog` already
+exists, which is the subject of the note after stage 5.
 
 **Lane 1 is healthy as of that reading, and one thing in it still needs explaining before stage 1.** The heartbeat's
 `git_blob` (`f43ac5ea`) is `origin/main`'s trader, while the commit it says it ran at (`c5abd0ac`) carries a different
@@ -128,6 +182,32 @@ Get-Content config\live-trading-lanes.json -Raw | ConvertFrom-Json |
 Lane 2 must read `False` under `enabled` at this point - the page still draws it as parked, and stage 6 is the only
 place that switch moves.
 
+### Done on the host, 2026-11-09T18:52Z
+
+The branch was pushed to `origin` as `live-trading/lane2-half-l2l-20261107` first, because the clone has to be able to
+reach the commit it pins - a commit that exists only on this PC is not a pin, it is a copy. Then, over the ssh session:
+
+```text
+git clone https://github.com/kevincreedycars-debug/trading-agent-dashboard.git C:\ftmo2
+git -C C:\ftmo2 fetch --all --prune
+git -C C:\ftmo2 checkout --detach be5954d2      -> HEAD is now at be5954d2
+git -C C:\ftmo2 rev-parse HEAD                  -> be5954d2e2ff694d55b0137e0721fbe30466a860
+git -C C:\ftmo2 hash-object scripts/run-live-trading-trader.js            -> 1c528e542271194bcf15f77950fc96f241db2791
+git -C C:\ftmo2 hash-object scripts/register-live-trading-trader-task.ps1 -> c0bcc9bddb419d0a14ccc101de7a67c815ecae47
+git -C C:\ftmo2 status --porcelain              -> empty
+```
+
+Both blobs equal the table at the top of this file, so stage 1 has passed on the host. The checkout is **detached at
+`be5954d2`**, the commit that names account 2 and changes no script, while this document is read from the branch tip
+(`599c7e36` and later) - the two are expected to differ, and only a difference in the two blobs above would be a
+failure. The lanes file in `C:\ftmo2` read back as `ftmo-2`: `enabled False`, `magic 20261005`,
+`strategy {grid: half, r_multiple: 3}`, `***841` on `FTMO-Server3`, `root ../ftmo2`, terminal
+`C:\Program Files\FTMO Global Markets MT5 Terminal 2`, tasks `LiveTradingLane-ftmo2` / `LiveTradingTraderTick-ftmo2` /
+`LiveTradingTerminalStartup-ftmo2`, identity `C:\live-trading\state\lane-ftmo2-identity.json`.
+
+Lane 1 was re-read after the clone and had not moved: same `HEAD`, same wrapper, `LiveTradingTraderTick019` still
+`Running`. A clone writes only under `C:\ftmo2`.
+
 ## 2. The second terminal and the identity file
 
 One terminal per account. Lane 1's terminal is never opened, re-logged or reconfigured in this stage.
@@ -156,6 +236,16 @@ Get-ChildItem "$env:APPDATA\MetaQuotes\Terminal" -Directory |
 python C:\ftmo2\tools\mt5-bridge\live-trading-account-probe.py --path 'C:\Program Files\FTMO Global Markets MT5 Terminal'
 python C:\ftmo2\tools\mt5-bridge\live-trading-account-probe.py --path 'C:\Program Files\FTMO Global Markets MT5 Terminal 2'
 ```
+
+**The installer sitting in `C:\Users\Administrator\Downloads\ftmo5setup.exe` is the one step in this runbook that can
+hurt lane 1, so it is not run from an ssh session and never with defaults.** Its default destination is
+`C:\Program Files\FTMO Global Markets MT5 Terminal` - lane 1's own folder, the terminal lane 1's loop reads every five
+minutes. A default double-click therefore rewrites the installation that is trading, and may restart the terminal under
+a running tick. Run it from the **RDP desktop**, and in the wizard's settings step set the destination to
+`C:\Program Files\FTMO Global Markets MT5 Terminal 2` before Install. If this build's wizard offers no destination, cancel
+it and stop - do not install over lane 1 to keep going, because that is the trade this runbook exists to avoid. A
+hand-copied install folder is the fallback, and it is a different arrangement from the one stage 2a's proof assumes, so
+it would have to be proved by 2a rather than assumed.
 
 **Stage 2 stops here until account 2 is signed in.** The login is entered in the terminal's own dialog, not in a
 script:
@@ -197,9 +287,12 @@ New-Item -ItemType Directory -Force -Path C:\live-trading\state | Out-Null
 notepad C:\live-trading\state\lane-ftmo2-identity.json
 icacls C:\live-trading\state\lane-ftmo2-identity.json /inheritance:r /grant:r "Administrators:F" "SYSTEM:F"
 
-# If the lane-2 tasks run under a dedicated account rather than SYSTEM or Administrators - check the lane-1 task's
-# principal in stage 0's export - that account has to be added with read rights, or the gate refuses at the first run:
+# If the lane-2 tasks run under a dedicated account rather than SYSTEM or Administrators, that account has to be
+# added with read rights or the gate refuses at the first run:
 #   icacls C:\live-trading\state\lane-ftmo2-identity.json /grant:r "<task-principal>:(R)"
+# Stage 0 settled which it is: the lane-1 tasks run as VMI3697641\Administrator, and a lane-2 task registered the same
+# way is covered by Administrators:F, so no fourth entry is needed. Register the lane-2 tasks under that same
+# principal rather than under SYSTEM, which has never had a session and cannot see the terminal.
 
 # terminal_path must end in terminal64.exe, not in the folder: the gate compares it with the path the terminal
 # reports for its own executable, and a folder never resolves to an executable.
@@ -291,6 +384,25 @@ Get-Content C:\ftmo2\tmp\live-trading-trader-run.cmd
 
 Start it once by hand (`Start-ScheduledTask -TaskName LiveTradingTraderTick-ftmo2`) and read
 `C:\ftmo2\tmp\live-trading-trader.log` - it must still report `"armed":false`.
+
+### The watchdog already on the host, and why lane 2 stays out of it
+
+`LiveTradingWatchdog` exists: SYSTEM, a boot trigger plus every ten minutes, running
+`C:\live-trading\runtime\scripts\run-live-trading-watchdog.ps1`. Its whole question is "is a process named `terminal64`
+running", and its answers are to start `LiveTradingTerminalStartup`, or to reboot the host when nobody is signed on. Two
+consequences follow from a second terminal, and they are recorded here rather than discovered later:
+
+- once lane 2's terminal exists, a dead **lane-1** terminal looks alive to that task, because it counts processes by
+  name. From that moment lane 1's liveness is no longer watched by it, and its reboot path is no longer reachable
+  either;
+- the reverse is equally true: lane 2's terminal dying is invisible to it.
+
+So stage 5 registers **no** lane-2 watchdog, and lane 2 is not added to the existing one by editing its arguments:
+`-TerminalProcess` names a process, both terminals are called `terminal64`, and a name cannot express the difference. A
+per-lane liveness test needs a path-based check inside the script, which lives in lane 1's deployed checkout - so it is a
+lane-1 change and a separate decision, deliberately outside this runbook. Until it exists, lane 1's liveness is judged
+the way the monitor already judges it, from the published heartbeat, and lane 2's the same way from
+`data/live-trading-trader.ftmo-2.json` once stage 6 has published it.
 
 
 ## 6. Publishing the lane-2 dashboard (not arming it)
