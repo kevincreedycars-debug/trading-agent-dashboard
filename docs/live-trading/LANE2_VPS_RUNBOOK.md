@@ -14,8 +14,9 @@ and any reboot of the host. A reboot takes lane 1 down with lane 2, which is why
 by its own snapshot and heartbeat and never by "is `terminal64` running".
 
 **The revision these commands were written against:** branch `live-trading/lane2-half-l2l-20261107`, commit
-`f08ce075e7f535896e6c66363bace16ebd54fa6e`, cut from `origin/main` `4faf3f35`. The two files that decide what may be
-sent hash to:
+`be5954d2`, cut from `origin/main` `4faf3f35`. The executable code was tested at `f08ce075`; `be5954d2` and the two
+commits before it change only the lanes file's account-2 identity and this document, so the blobs below are the whole
+of what decides whether a send is possible. They hash to:
 
 | file | git blob |
 | --- | --- |
@@ -114,7 +115,16 @@ git hash-object scripts\run-live-trading-trader.js
 **Stage 1 passes when** `git rev-parse HEAD` is the tested commit and the two `git hash-object` answers are the blobs
 in the table at the top of this file.
 `config/live-trading-lanes.json` in this checkout must carry `ftmo-2` with `root: "../ftmo2"`, `magic: 20261005`,
-`strategy: { grid: "half", r_multiple: 3 }` and `expect_identity` naming the file stage 2 will make.
+`strategy: { grid: "half", r_multiple: 3 }`, `expect_identity` naming the file stage 2 will make, and its masked
+identity `account_login_masked: "***841"` on `account_server: "FTMO-Server3"`:
+
+```powershell
+Get-Content config\live-trading-lanes.json -Raw | ConvertFrom-Json |
+  Select-Object -ExpandProperty lanes | Select-Object id, enabled, magic, account_login_masked, account_server
+```
+
+Lane 2 must read `False` under `enabled` at this point - the page still draws it as parked, and stage 6 is the only
+place that switch moves.
 
 ## 2. The second terminal and the identity file
 
@@ -159,6 +169,14 @@ script:
 4. Tick **Save account information**, press **OK**. Nothing else is typed anywhere: not in PowerShell, not in a
    wrapper, not in a task argument, not in the identity file, not into any file in `C:\ftmo2`.
 
+**The dialog is the only place those two values appear, and it is the only screen not to capture.** The password field
+draws dots, but the **Login** field draws the full account number, so a screenshot taken while the dialog is open puts
+an unmasked account number into the evidence folder. Capture the terminal after it has connected - chart, Market Watch
+and the status bar - not the dialog. The rest of the credential trail is closed by construction: the identity file
+holds the login because it has to compare it and is ACL'd to `Administrators` and `SYSTEM`, the journal and the logs
+carry only `***841`, and `scripts/validate_live_trading_feed.js` refuses a snapshot whose account block carries a
+`login`, `password` or `investor_password` key at all.
+
 **Why the read-only password is the right one for this stage.** MT5's read-only credential is the **investor
 password**. Signed in with it, the terminal reads accounts, symbols and history normally - the identity gate, the
 probe, the feed and the unarmed trader run all work - but the server will refuse any trade request, so "lane 2 cannot
@@ -176,6 +194,10 @@ New-Item -ItemType Directory -Force -Path C:\live-trading\state | Out-Null
 #    "terminal_path": "C:\\Program Files\\FTMO Global Markets MT5 Terminal 2\\terminal64.exe"}
 notepad C:\live-trading\state\lane-ftmo2-identity.json
 icacls C:\live-trading\state\lane-ftmo2-identity.json /inheritance:r /grant:r "Administrators:F" "SYSTEM:F"
+
+# If the lane-2 tasks run under a dedicated account rather than SYSTEM or Administrators - check the lane-1 task's
+# principal in stage 0's export - that account has to be added with read rights, or the gate refuses at the first run:
+#   icacls C:\live-trading\state\lane-ftmo2-identity.json /grant:r "<task-principal>:(R)"
 
 # terminal_path must end in terminal64.exe, not in the folder: the gate compares it with the path the terminal
 # reports for its own executable, and a folder never resolves to an executable.
