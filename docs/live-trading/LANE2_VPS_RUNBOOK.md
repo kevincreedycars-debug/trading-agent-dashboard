@@ -264,7 +264,35 @@ python C:\ftmo2\tools\mt5-bridge\live-trading-account-probe.py --path 'C:\Progra
 python C:\ftmo2\tools\mt5-bridge\live-trading-account-probe.py --path 'C:\Program Files\FTMO Global Markets MT5 Terminal 2'
 ```
 
-**The installer sitting in `C:\Users\Administrator\Downloads\ftmo5setup.exe` is the one step in this runbook that can
+### 2r. The installer, on the RDP desktop
+
+The destination is **`C:\Program Files\FTMO Global Markets MT5 Terminal 2`** - the folder, not `terminal64.exe`, and
+not lane 1's folder, which differs from it by four characters and a space.
+
+1. Connect by RDP to `158.220.87.240` as `Administrator` (the interactive desktop, not the ssh session - the wizard needs
+   a window and lane 1's terminal must not be restarted from under a running tick).
+2. In Explorer go to `C:\Users\Administrator\Downloads` and check `ftmo5setup.exe` is still there: 4,744,320 bytes,
+   SHA-256 `34F80A78DE65029992F99AC7C16F84383E8CFF4B82CBA02F1E04CDE816B2568D`. Run it, allow the elevation prompt.
+3. First screen: **Next**. Licence: **Next**. On the **Destination Folder** screen, click **Browse** (or edit the path
+   field) and set it to `C:\Program Files\FTMO Global Markets MT5 Terminal 2` - **exactly that**, keeping the ` 2`.
+   Compare it character by character with `C:\Program Files\FTMO Global Markets MT5 Terminal`, which is lane 1's
+   folder and must not appear in this field.
+4. **Next**, then **Install**, then **Finish**, leaving the "Launch" box as it is.
+5. If any screen of this build has no destination field at all, cancel the wizard and stop: report it rather than
+   installing over lane 1, and the hand-copied-folder fallback becomes a separate proof of 2a rather than an assumption.
+6. Open `C:\Program Files\FTMO Global Markets MT5 Terminal 2\terminal64.exe`. First run opens FTMO's "Open an Account"
+   wizard - close it; the login dialog is what the next step uses.
+7. Then sign in as **stage 2's numbered list** says: **File → Login to Trade Account**, login `***841` (all digits),
+   password the account's **investor** password, server `FTMO-Server3`, **Save account information** ticked, **OK**.
+   Do not screenshot the dialog - the Login field is unmasked - and type nothing into any file or shell.
+
+Baseline read before the install, so the second install is visible as a new thing rather than assumed: one running
+terminal (`pid=3136`, `C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe`), one MT5 data folder,
+`%APPDATA%\MetaQuotes\Terminal\81A933A9AFC5DE3C23B15CAB19C63850` (beside `Common` and `Community`, neither of which is
+an install), and 73 GB free on `C:`. After step 6 there must be **two** install folders under `C:\Program Files` and
+**two** hash folders under `%APPDATA%\MetaQuotes\Terminal`, each naming its own install in `origin.txt`.
+
+
 hurt lane 1, so it is not run from an ssh session and never with defaults.** Its default destination is
 `C:\Program Files\FTMO Global Markets MT5 Terminal` - lane 1's own folder, the terminal lane 1's loop reads every five
 minutes. A default double-click therefore rewrites the installation that is trading, and may restart the terminal under
@@ -482,6 +510,33 @@ reaches either without the decision having chosen it.
 
 **Stage 5a passes when** the host file hashes to `de6264269100fd7f...`, one `-WhatIfAction` run names lane 1's path,
 and the next scheduled run's log line does too. The rollback above returns the host to what it ran before.
+
+### Applied on the host, 2026-11-09T19:23-19:31Z
+
+Run over the ssh session, in the order 5a-2 and 5a-3 give, with the swap done by `[System.IO.File]::Replace` so the
+scheduled run at `19:31:33` could not read a half-written file.
+
+| Reading | Value |
+| --- | --- |
+| deployed file before | blob `798e7537cfe09957ff188333d20f6ac9c287f134` - the committed lane-1 file, so nothing local was unrecorded |
+| candidate, as scp'd | blob `de6264269100fd7f28c325fbe74f072d207c802e` |
+| deployed file after | blob `de6264269100fd7f28c325fbe74f072d207c802e` |
+| backup, `C:\live-trading\state\run-live-trading-watchdog.pre-lane2-20261109.ps1` | blob `798e7537cfe09957ff188333d20f6ac9c287f134` |
+| parse of the deployed file on the host | clean |
+| `-WhatIfAction` at `19:23:44Z` | `ok terminal running C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe pid=3136 session=1` |
+| scheduled run `19:31:33Z` | the same line, naming the path; `LastTaskResult 0`, next run `19:41:31` |
+| lane 1's heartbeat at `19:31:30Z` | `armed: true`, `lane: ftmo-1`, `status: nothing_to_place`, 14 s old |
+
+The line changed from `ok terminal running pid=3136 session=1` to `ok terminal running C:\...\MT5 Terminal\terminal64.exe
+pid=3136 session=1`, which is the whole point: the same pid, now identified by the file it was started from. No task was
+re-registered, no argument changed, and the rollback copy is in `state\` beside the identity file.
+
+`C:\live-trading\runtime` now carries `M scripts/run-live-trading-watchdog.ps1` in `git status`, and that line is this
+change - it is the only new one. The other four were already there on 2026-11-09T18:46Z and are lane 1's own
+business: `M data/live-trading.json` (the snapshot is rewritten every feed run), `M scripts/run-live-trading-trader.js`,
+and two untracked `scripts/*orchestrator-refresh*` files. When lane 1 next pulls, the deployed file returns to the
+committed version only if `dc53dc3e` reaches `origin/main` first; until then a pull would show a conflict-free
+overwrite of this file back to `798e7537cfe0`, which is the rollback rather than a fault.
 
 
 ## 6. Publishing the lane-2 dashboard (not arming it)
