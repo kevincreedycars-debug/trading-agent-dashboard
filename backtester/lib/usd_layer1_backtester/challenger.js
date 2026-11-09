@@ -15,15 +15,19 @@
  * adjudication must bump the version string and refreeze; nothing here may be tuned against results.
  */
 
+const votes = require("../../../lib/usd_l1_votes");
+
 const VERSION = "usd-layer1-challenger-v0";
 const FROZEN_ON = "2026-11-08";
 const FROZEN_BEFORE = "the first date of the development window was scored";
 
 /**
- * A mechanism is one input, one threshold and one declared USD direction. `vote` is +1 for bullish
- * USD, -1 for bearish, 0 for no signal. Every mechanism weighs 1.
+ * A mechanism is one input, one threshold and one declared USD direction. `vote_spec` is an ordered list
+ * of branches; the first branch an input satisfies decides the vote, +1 for bullish USD, -1 for bearish,
+ * 0 for no reading. Every mechanism weighs 1. The spec is the rule, so the dashboard panel can re-run the
+ * same rule on the values saved in the artefact through the same interpreter (`lib/usd_l1_votes.js`).
  */
-const MECHANISMS = Object.freeze([
+const MECHANISM_SPECS = Object.freeze([
   Object.freeze({
     id: "vix_regime",
     label: "VIX level and risk regime",
@@ -31,7 +35,7 @@ const MECHANISMS = Object.freeze([
     input: "vix_level",
     rule: "VIX above 25 is safe-haven USD demand; below 16 is risk-on pressure",
     threshold: "25 / 16",
-    vote: (value) => (value > 25 ? 1 : value < 16 ? -1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 25, usd: 1 }, { when: "lt", value: 16, usd: -1 }])
   }),
   Object.freeze({
     id: "vix_momentum",
@@ -40,25 +44,25 @@ const MECHANISMS = Object.freeze([
     input: "vix_d5_chg",
     rule: "a 5-day VIX rise of more than one index point bids USD; a fall of the same size releases it",
     threshold: "1 index point",
-    vote: (value) => (value > 1 ? 1 : value < -1 ? -1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 1, usd: 1 }, { when: "lt", value: -1, usd: -1 }])
   }),
   Object.freeze({
     id: "us_2y",
     label: "US 2-year yield 5-day change",
-    factor: "live.f2-us-2y-yield-delta",
+    factor: "live.f2-us-2y-delta",
     input: "us_2y_d5_bps",
     rule: "front-end yields up more than 5bp support USD; down more than 5bp oppose it",
     threshold: "5 bp",
-    vote: (value) => (value > 5 ? 1 : value < -5 ? -1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 5, usd: 1 }, { when: "lt", value: -5, usd: -1 }])
   }),
   Object.freeze({
     id: "us_10y_real",
     label: "US 10-year real yield 5-day change",
-    factor: "live.f4-us-10y-real-yield-delta",
+    factor: "live.f4-real-yield-delta",
     input: "us_10y_real_d5_bps",
     rule: "real yields up more than 5bp support USD; down more than 5bp oppose it",
     threshold: "5 bp",
-    vote: (value) => (value > 5 ? 1 : value < -5 ? -1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 5, usd: 1 }, { when: "lt", value: -5, usd: -1 }])
   }),
   Object.freeze({
     id: "broad_dollar_momentum",
@@ -69,7 +73,7 @@ const MECHANISMS = Object.freeze([
       "the dollar's own 5-day move continues: a rise above 0.15% is read as USD strength and a fall as " +
       "weakness; FRED DTWEXBGS stands in for ICE DXY and is labelled as such everywhere",
     threshold: "0.15%",
-    vote: (value) => (value > 0.15 ? 1 : value < -0.15 ? -1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 0.15, usd: 1 }, { when: "lt", value: -0.15, usd: -1 }])
   }),
   Object.freeze({
     id: "gold",
@@ -78,38 +82,45 @@ const MECHANISMS = Object.freeze([
     input: "gold_d5_pct",
     rule: "gold up more than 0.5% is a hedge bid against USD; down more than 0.5% is the reverse",
     threshold: "0.5%",
-    vote: (value) => (value > 0.5 ? -1 : value < -0.5 ? 1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 0.5, usd: -1 }, { when: "lt", value: -0.5, usd: 1 }])
   }),
   Object.freeze({
     id: "equities",
     label: "NAS100 5-day change",
-    factor: "live.f10-equity-regime",
+    factor: "live.f10-equity-versus-usd",
     input: "nasdaq100_d5_pct",
     rule: "equities up more than 0.5% is risk-on and reads against USD; down more than 0.5% reads for it",
     threshold: "0.5%",
-    vote: (value) => (value > 0.5 ? -1 : value < -0.5 ? 1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 0.5, usd: -1 }, { when: "lt", value: -0.5, usd: 1 }])
   }),
   Object.freeze({
     id: "eurusd_mirror",
     label: "EUR/USD 5-day change",
-    factor: "live.f3-us-de-2y-spread-delta (relative-rates read, expressed in the traded pair)",
+    factor: "live.f3-us-de-2y-spread-delta",
     input: "eurusd_d5_pct",
     rule:
       "EUR/USD is USD inverted: a rise above 0.15% is read as USD weakness and a fall as USD strength; it " +
       "stands in for the German 2-year leg the current model cannot reconstruct, and says so",
     threshold: "0.15%",
-    vote: (value) => (value > 0.15 ? -1 : value < -0.15 ? 1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 0.15, usd: -1 }, { when: "lt", value: -0.15, usd: 1 }])
   }),
   Object.freeze({
     id: "usdjpy_mirror",
     label: "USD/JPY 5-day change",
-    factor: "live.f9-dollar-smile (funding-currency read)",
+    factor: "live.f9-dollar-smile",
     input: "usdjpy_d5_pct",
     rule: "USD/JPY is USD direct: a rise above 0.15% is read as USD strength and a fall as weakness",
     threshold: "0.15%",
-    vote: (value) => (value > 0.15 ? 1 : value < -0.15 ? -1 : 0)
+    vote_spec: Object.freeze([{ when: "gt", value: 0.15, usd: 1 }, { when: "lt", value: -0.15, usd: -1 }])
   })
 ]);
+
+/** The frozen mechanism list, each with its vote rule attached as a function for the engine's own use. */
+const MECHANISMS = Object.freeze(
+  MECHANISM_SPECS.map((mechanism) =>
+    Object.freeze({ ...mechanism, vote: (value) => votes.interpretVote(mechanism.vote_spec, value) })
+  )
+);
 
 /** Every input deliberately left out of version 0, and the reason it cannot be used yet. */
 const EXCLUDED_INPUTS = Object.freeze([
@@ -177,14 +188,14 @@ const RULES = Object.freeze({
 });
 
 function convictionFor(agreement, participation) {
-  for (const band of RULES.conviction_bands) {
-    if (agreement >= band.min_agreement && participation >= band.min_participation) return band.conviction;
-  }
-  return 1;
+  return votes.convictionFor(RULES, agreement, participation);
 }
 
 /**
  * Score one 05:00 snapshot.
+ *
+ * The rules are declarative (`vote_spec`) and the interpreter is shared with the dashboard panel, so the
+ * panel re-runs this same rule on the values saved in the artefact instead of re-implementing it.
  *
  * @param {object} snapshot a snapshot from `snapshots.buildSnapshots`.
  * @returns {object} the challenger's call record: direction, raw equal-weight score, conviction 1-5,
@@ -192,72 +203,12 @@ function convictionFor(agreement, participation) {
  */
 function evaluate(snapshot) {
   const values = (snapshot && snapshot.values) || {};
-  const votes = MECHANISMS.map((mechanism) => {
-    const raw = values[mechanism.input];
-    const hasValue = Number.isFinite(raw);
-    return {
-      id: mechanism.id,
-      label: mechanism.label,
-      factor: mechanism.factor,
-      input: mechanism.input,
-      rule: mechanism.rule,
-      threshold: mechanism.threshold,
-      weight: RULES.equal_weight,
-      value: hasValue ? raw : null,
-      vote: hasValue ? mechanism.vote(raw) : null,
-      state: hasValue ? "usable" : "missing"
-    };
-  });
-
-  const usable = votes.filter((entry) => entry.state === "usable");
-  const missing = votes.filter((entry) => entry.state === "missing").map((entry) => entry.input);
-  const participation = usable.length / MECHANISMS.length;
-  const net = usable.reduce((total, entry) => total + entry.vote, 0);
-  const agreement = usable.length ? Math.abs(net) / usable.length : 0;
-
-  const base = {
+  const record = votes.evaluateFromSpecs({ mechanisms: MECHANISMS, rules: RULES, values });
+  return {
     model: VERSION,
     frozen_on: FROZEN_ON,
-    mechanisms: votes,
     excluded_inputs: EXCLUDED_INPUTS,
-    usable_mechanisms: usable.length,
-    mechanism_count: MECHANISMS.length,
-    participation: Math.round(participation * 10000) / 10000,
-    agreement: Math.round(agreement * 10000) / 10000,
-    raw_score: net,
-    missing_inputs: missing,
-    inputs_used: usable.map((entry) => entry.input)
-  };
-
-  if (usable.length < RULES.min_usable_mechanisms) {
-    return {
-      ...base,
-      direction: "NO_CALL",
-      conviction: null,
-      reason:
-        `only ${usable.length} of ${MECHANISMS.length} mechanisms had a value at this cutoff and the frozen ` +
-        `minimum is ${RULES.min_usable_mechanisms}, so no call is made and the missing inputs are named`
-    };
-  }
-
-  if (agreement < RULES.agreement_deadband) {
-    return {
-      ...base,
-      direction: "NO_CALL",
-      conviction: null,
-      reason:
-        `the mechanisms split ${net > 0 ? "+" : ""}${net} across ${usable.length} live inputs, inside the frozen ` +
-        `${RULES.agreement_deadband} agreement deadband, so the day is recorded as no call rather than a coin toss`
-    };
-  }
-
-  return {
-    ...base,
-    direction: net > 0 ? "BULLISH" : "BEARISH",
-    conviction: convictionFor(agreement, participation),
-    reason:
-      `${usable.length} of ${MECHANISMS.length} mechanisms live, net ${net > 0 ? "+" : ""}${net} ` +
-      `(${Math.round(agreement * 100)}% agreement, ${Math.round(participation * 100)}% participation)`
+    ...record
   };
 }
 
@@ -266,6 +217,7 @@ module.exports = {
   FROZEN_ON,
   FROZEN_BEFORE,
   MECHANISMS,
+  MECHANISM_SPECS,
   EXCLUDED_INPUTS,
   RULES,
   convictionFor,

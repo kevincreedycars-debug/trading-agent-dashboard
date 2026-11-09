@@ -12,6 +12,7 @@ const accounts = require("../lib/usd_layer1_backtester/accounts");
 const outcomes = require("../lib/usd_layer1_backtester/outcomes");
 const tests = require("../lib/usd_layer1_backtester/tests");
 const run = require("../lib/usd_layer1_backtester/run");
+const factors = require("../lib/usd_layer1_backtester/factors");
 const { assertResearchPath, ALLOWED_ROOT } = require("../scripts/lib/research_path_guard");
 
 /**
@@ -287,6 +288,157 @@ test("a trade that is still working is carried as open, never counted as a fill"
   assert.equal(account.ending_balance, 100000);
   assert.equal(account.skipped.length, 1);
   assert.match(account.skipped[0].reason, /still working/);
+});
+
+test("all 25 registered factors are accounted for, once each, with a rule or a stated exclusion", () => {
+  const accounting = factors.buildFactorAccounting();
+  assert.equal(accounting.factor_count, 25, "the catalogue registers 25 chains");
+  assert.equal(accounting.rows.length, 25);
+  const ids = accounting.rows.map((row) => row.factor_id);
+  assert.equal(new Set(ids).size, 25, "no factor may be counted twice");
+  const allowed = ["used", "combined", "abstain", "excluded"];
+  for (const row of accounting.rows) {
+    assert.ok(allowed.includes(row.treatment), `${row.factor_id} has an unknown treatment`);
+    assert.ok(row.treatment_label, `${row.factor_id} needs a printed label`);
+    assert.ok(row.reason && row.reason.length > 20, `${row.factor_id} needs a stated reason`);
+    if (row.treatment === "excluded") {
+      assert.equal(row.mechanisms.length, 0, `${row.factor_id} is excluded but names a mechanism`);
+      assert.equal(row.implemented_rule, "no rule reads it");
+    } else {
+      assert.ok(row.mechanisms.length > 0, `${row.factor_id} is used but names no mechanism`);
+      assert.ok(row.implemented_rule.length > 10, `${row.factor_id} needs its implemented rule`);
+      const mechanismIds = row.treatment === "abstain" ? [] : row.mechanisms;
+      for (const id of mechanismIds) {
+        assert.ok(
+          challenger.MECHANISMS.some((mechanism) => mechanism.id === id),
+          `${row.factor_id} names a mechanism that does not exist: ${id}`
+        );
+      }
+      if (row.treatment === "abstain") {
+        assert.match(row.implemented_rule, /abstain/i, "the abstention factor must state its gate");
+      }
+    }
+  }
+  const counts = accounting.counts;
+  assert.equal(
+    counts.used + counts.combined + counts.abstain + counts.excluded,
+    25,
+    "the treatment counts must add up to the catalogue"
+  );
+  assert.equal(counts.abstain, 1, "exactly one factor is the abstention data-quality gate");
+});
+
+test("every mechanism points at a registered factor id, so the join is real", () => {
+  const accounting = factors.buildFactorAccounting();
+  const registered = new Set(accounting.rows.map((row) => row.factor_id));
+  for (const mechanism of challenger.MECHANISMS) {
+    assert.ok(
+      registered.has(mechanism.factor),
+      `${mechanism.id} names factor ${mechanism.factor}, which the catalogue does not carry`
+    );
+  }
+});
+
+test("the assumption ledger names research, assumptions and fitted parameters with their dates", () => {
+  const ledger = factors.buildAssumptionLedger({
+    flatBands: { EURUSD: { flat_band_pct: 0.1, sample: 255, rule: "20th percentile" } },
+    splits: tests.SPLITS
+  });
+  assert.ok(ledger.rows.length >= 8);
+  for (const row of ledger.rows) {
+    assert.ok(["research", "assumption", "fitted"].includes(row.class), `${row.parameter} has no class`);
+    assert.ok(row.value && row.source && row.dates, `${row.parameter} needs value, source and dates`);
+  }
+  assert.equal(ledger.counts.research, 1, "only the VIX chain has delivered research to cite");
+  const fitted = ledger.rows.filter((row) => row.class === "fitted");
+  assert.equal(fitted.length, 1, "the flat bands are the only fitted numbers in the run");
+  assert.match(fitted[0].parameter, /flat band/i);
+  assert.match(fitted[0].dates, new RegExp(tests.SPLITS.development.start));
+  assert.match(fitted[0].dates, new RegExp(tests.SPLITS.development.end));
+});
+
+test("the preliminary label and the work needed to finish the challenger are both stated", () => {
+  const status = factors.buildChallengerStatus({ accounting: factors.buildFactorAccounting() });
+  assert.equal(status.preliminary, true);
+  assert.match(status.label, /preliminary/i);
+  assert.ok(status.why_preliminary.length >= 3);
+  assert.ok(status.completing_work.length >= 5);
+  assert.ok(status.completing_work.some((item) => /24 chain adjudications/i.test(item)));
+  assert.match(status.guardrail, /new version/i);
+});
+
+test("the published artefact reproduces every daily call and every total from its own saved inputs", () => {
+  const published = artefact();
+  assert.ok(published.reproduction, "the artefact must carry its own reproduction check");
+  assert.equal(published.reproduction.checked_sessions, published.sessions.length);
+  assert.equal(published.reproduction.challenger.matches, published.sessions.length);
+  assert.equal(published.reproduction.current.matches, published.sessions.length);
+  assert.equal(published.reproduction.totals.match, true);
+  assert.match(published.reproduction.verdict, /matched/);
+  for (const session of published.sessions.slice(0, 25)) {
+    assert.ok(session.saved_inputs && Object.keys(session.saved_inputs).length > 0, `${session.date} has no saved inputs`);
+    assert.ok(Array.isArray(session.input_meta), `${session.date} has no input provenance`);
+    assert.ok(Array.isArray(session.models.challenger.mechanisms), `${session.date} has no mechanism trace`);
+    assert.ok(Array.isArray(session.models.current.factors), `${session.date} has no current-model trace`);
+  }
+});
+
+test("the artefact carries the rule table the panel re-runs, not just the results", () => {
+  const published = artefact();
+  const rules = published.run.challenger_rules;
+  assert.equal(rules.interpreter, "usd-l1-votes-v1");
+  assert.equal(rules.conviction_bands.length, 5, "five conviction bands");
+  assert.equal(rules.gates.length, 2, "two abstention gates");
+  assert.ok(rules.missing_data_rules.length >= 3);
+  for (const mechanism of published.run.challenger_mechanisms) {
+    assert.ok(
+      Array.isArray(mechanism.vote_spec) && mechanism.vote_spec.length >= 2,
+      `${mechanism.id} needs a vote spec`
+    );
+    assert.ok(Number.isFinite(mechanism.weight), `${mechanism.id} needs a weight`);
+  }
+  const results = published.results;
+  assert.equal(results.dates_processed, published.sessions.length);
+  assert.match(results.headline_dates, /dates processed/);
+  assert.equal(results.tests.length, 4);
+  assert.equal(results.tests[0].status_label, "0 scored \u00b7 awaiting DXY prices");
+  const four = results.tests.find((entry) => entry.id === "four_markets");
+  assert.equal(Object.keys(four.markets).length, 4, "test 2 covers the four markets");
+  for (const [key, entry] of Object.entries(four.markets)) {
+    assert.ok(entry.current.scored > 0, `${key} needs a scored count`);
+    assert.ok(entry.current.hits <= entry.current.scored, `${key} hits cannot exceed scored calls`);
+    assert.ok(entry.challenger.hits <= entry.challenger.scored, `${key} challenger hits cannot exceed scored`);
+  }
+  const factorRows = published.factor_accounting.rows;
+  assert.equal(factorRows.length, 25);
+  assert.equal(published.assumption_ledger.counts.fitted, 1);
+  assert.equal(published.challenger_status.preliminary, true);
+});
+
+test("the panel's own re-run reproduces a stored call from the saved inputs", () => {
+  const published = artefact();
+  const votes = require("../../lib/usd_l1_votes");
+  const session = published.sessions.find(
+    (entry) => entry.models.challenger.direction !== "NO_CALL" && entry.models.challenger.conviction === 5
+  );
+  assert.ok(session, "the run must contain at least one full-conviction call to re-run");
+  const fresh = votes.evaluateFromSpecs({
+    mechanisms: published.run.challenger_mechanisms,
+    rules: published.run.challenger_rules,
+    values: session.saved_inputs
+  });
+  assert.equal(fresh.direction, session.models.challenger.direction);
+  assert.equal(fresh.conviction, session.models.challenger.conviction);
+  assert.equal(fresh.raw_score, session.models.challenger.raw_score);
+  const noCall = published.sessions.find((entry) => entry.models.challenger.direction === "NO_CALL");
+  assert.ok(noCall, "the run must contain a no-call day");
+  const reRunNoCall = votes.evaluateFromSpecs({
+    mechanisms: published.run.challenger_mechanisms,
+    rules: published.run.challenger_rules,
+    values: noCall.saved_inputs
+  });
+  assert.equal(reRunNoCall.direction, "NO_CALL");
+  assert.match(reRunNoCall.reason, /mechanisms|deadband/);
 });
 
 test("the four accounts are the four slots the brief names", () => {

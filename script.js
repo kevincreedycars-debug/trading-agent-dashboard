@@ -15844,7 +15844,7 @@ function setupArchitectureControls() {
   });
 }
 
-const usdLayer1BacktesterUrl = "./data/usd-layer1-backtester/run-v1.json?v=20261108-usd-l1-backtester";
+const usdLayer1BacktesterUrl = "./data/usd-layer1-backtester/run-v1.json?v=20261109-usd-l1-call-trace";
 let usdLayer1Data = null;
 let usdLayer1LoadError = null;
 let usdLayer1Request = null;
@@ -15853,7 +15853,10 @@ const usdLayer1State = {
   tab: "dxy_direction",
   selectedDate: null,
   sessionFilter: "all",
-  demoSession: null
+  demoSession: null,
+  workedDate: null,
+  reRun: null,
+  evidence: null
 };
 
 function usdL1Text(value, fallback = "—") {
@@ -15916,7 +15919,7 @@ function renderUsdL1Progress(payload = {}) {
       <div class="usd-l1-progress-metrics">
         ${renderBacktestKpiMetric("Run version", usdL1Text(run.run_version), usdL1Text(run.challenger_version, ""), "Frozen parameter set and challenger version this artefact was built with")}
         ${renderBacktestKpiMetric("Date range", `${usdL1Text(run.date_range?.start)} → ${usdL1Text(run.date_range?.end)}`, "05:00 London sessions", "Every session runs from 05:00 London to 05:00 London the next local date")}
-        ${renderBacktestKpiMetric("Sessions processed", `${processed} / ${eligible}`, "eligible sessions", "Eligible means a weekday 05:00 London start with a reconstructed snapshot")}
+        ${renderBacktestKpiMetric("Dates processed", `${usdL1Number(payload.results?.dates_processed ?? processed, 0)} dates`, "05:00 London sessions", "Every eligible weekday 05:00 session was processed; a processed date is not a scored call, and each test carries its own scored count below")}
         ${renderBacktestKpiMetric("Last update", usdL1Text(formatDashboardTime(run.last_update)), "", "Timestamp stamped into the saved research artefact")}
       </div>
       <ol class="usd-l1-stage-list">
@@ -16049,25 +16052,38 @@ function usdL1ConvictionTable(byConviction = {}, label) {
   `;
 }
 
-function renderUsdL1DxyTab(test = {}) {
+function renderUsdL1DxyTab(test = {}, payload = {}) {
   const official = test.official_series || {};
   const models = test.models || {};
+  const header = payload.results?.tests?.find((entry) => entry.id === "dxy_direction") || {};
   const card = (key, label) => `
     <article class="usd-l1-test-card" data-usd-l1-dxy-model="${escapeHtml(key)}">
       <p class="eyebrow">${escapeHtml(label)}</p>
-      <p class="usd-l1-test-headline">${usdL1Number(models[key]?.awaiting_prices_sessions ?? models[key]?.calls_made, 0)}<span> calls ready to score</span></p>
-      <p class="usd-l1-test-copy">${usdL1Number(models[key]?.overall?.scored, 0)} scored · ${usdL1Number(models[key]?.overall?.flat, 0)} flat · ${usdL1Percent(models[key]?.overall?.accuracy_pct)} accuracy</p>
+      <p class="usd-l1-test-headline">${usdL1EvidenceButton(
+        `calls|${key}`,
+        `${usdL1Number(models[key]?.awaiting_prices_sessions ?? models[key]?.calls_made, 0)} calls ready to score`
+      )}</p>
+      <p class="usd-l1-test-copy">${usdL1Number(models[key]?.overall?.scored, 0)} scored ·
+        ${usdL1Number(models[key]?.overall?.flat, 0)} flat · ${usdL1Percent(
+          models[key]?.overall?.accuracy_pct
+        )} accuracy — none of these can be filled until the official series exists</p>
       ${usdL1ConvictionTable(models[key]?.by_conviction, `${label} by conviction`)}
     </article>
   `;
   return `
     <section class="usd-l1-test-body" data-usd-l1-test-body="dxy_direction">
-      <article class="usd-l1-blocker-card">
-        <p class="eyebrow">Blocked</p>
-        <h3>${usdL1Text(official.required_series)} is not in this checkout</h3>
+      <article class="usd-l1-blocker-card" data-usd-l1-dxy-status="${escapeHtml(header.status || "blocked")}">
+        <p class="eyebrow">Status</p>
+        <h3>${escapeHtml(header.status_label || "0 scored · awaiting DXY prices")}</h3>
+        <p class="usd-l1-test-copy">${usdL1Text(official.required_series)} is not in this checkout, so no session can be
+          priced at either 05:00 endpoint. The calls exist and are counted; the accuracy column is empty because the
+          outcome does not.</p>
         <p class="usd-l1-test-copy">${usdL1Text(test.blocker?.reason || official.why_it_cannot_stand_in)}</p>
-        <p class="usd-l1-test-copy muted">What exists instead: ${usdL1Text(official.what_exists_instead)}. It carries the challenger's dollar-momentum mechanism and is labelled as a substitution there; it is refused for this test.</p>
-        <p class="usd-l1-test-copy muted">Unblocks when: ${usdL1Text(official.unblock_condition)} — owner: ${usdL1Text(official.blocker_owner)}</p>
+        <p class="usd-l1-test-copy muted">What exists instead: ${usdL1Text(official.what_exists_instead)}. It carries
+          the challenger's dollar-momentum mechanism and is labelled as a substitution there; it is refused for this
+          test.</p>
+        <p class="usd-l1-test-copy muted">Missing input: ${escapeHtml(header.missing_input || official.unblock_condition || "")}
+          — owner: ${usdL1Text(official.blocker_owner)}</p>
       </article>
       <div class="usd-l1-test-grid">
         ${card("current", "Current model")}
@@ -16077,10 +16093,11 @@ function renderUsdL1DxyTab(test = {}) {
   `;
 }
 
-function renderUsdL1FourMarketTab(test = {}) {
+function renderUsdL1FourMarketTab(test = {}, payload = {}) {
   const models = test.models || {};
   const comparisons = (test.comparisons && test.comparisons.markets) || {};
   const marketKeys = Object.keys(models.challenger?.markets || models.current?.markets || {});
+  const header = payload.results?.tests?.find((entry) => entry.id === "four_markets") || {};
   const row = (key) => {
     const current = models.current?.markets?.[key];
     const challenger = models.challenger?.markets?.[key];
@@ -16088,29 +16105,39 @@ function renderUsdL1FourMarketTab(test = {}) {
     return `
       <tr data-usd-l1-market="${escapeHtml(key)}">
         <th scope="row">${escapeHtml(current?.label || challenger?.label || key)}</th>
-        <td>${usdL1Percent(current?.overall?.accuracy_pct)}<span class="usd-l1-sample">n=${usdL1Number(current?.overall?.scored, 0)}</span></td>
-        <td>${usdL1Number(current?.overall?.flat, 0)}</td>
-        <td>${usdL1Percent(challenger?.overall?.accuracy_pct)}<span class="usd-l1-sample">n=${usdL1Number(challenger?.overall?.scored, 0)}</span></td>
-        <td>${usdL1Number(challenger?.overall?.flat, 0)}</td>
-        <td>+${usdL1Number(compare.corrected, 0)} / −${usdL1Number(compare.spoiled, 0)}</td>
-        <td>${usdL1Number(compare.matched, 0)}</td>
-        <td><span class="usd-l1-chip none">blocked</span></td>
+        <td>${usdL1EvidenceButton(`result|${key}|current|hit`, `${usdL1Number(current?.overall?.hits, 0)}`)} /
+          ${usdL1EvidenceButton(`result|${key}|current|scored`, `${usdL1Number(current?.overall?.scored, 0)}`)}
+          · ${usdL1PercentButton(`result|${key}|current|scored`, current?.overall?.accuracy_pct)}</td>
+        <td>${usdL1EvidenceButton(`result|${key}|current|flat`, `${usdL1Number(current?.overall?.flat, 0)}`)}</td>
+        <td>${usdL1EvidenceButton(`result|${key}|challenger|hit`, `${usdL1Number(challenger?.overall?.hits, 0)}`)} /
+          ${usdL1EvidenceButton(`result|${key}|challenger|scored`, `${usdL1Number(challenger?.overall?.scored, 0)}`)}
+          · ${usdL1PercentButton(`result|${key}|challenger|scored`, challenger?.overall?.accuracy_pct)}</td>
+        <td>${usdL1EvidenceButton(`result|${key}|challenger|flat`, `${usdL1Number(challenger?.overall?.flat, 0)}`)}</td>
+        <td>${usdL1EvidenceButton(`comparison|${key}|corrected`, `+${usdL1Number(compare.corrected, 0)}`)} /
+          ${usdL1EvidenceButton(`comparison|${key}|spoiled`, `−${usdL1Number(compare.spoiled, 0)}`)}</td>
+        <td>${usdL1EvidenceButton(`comparison|${key}|matched`, `${usdL1Number(compare.matched, 0)}`)}</td>
+        <td><span class="usd-l1-chip none">pending test ①</span></td>
       </tr>
     `;
   };
   const firstMarket = marketKeys[0];
+  const currentNoCall = usdL1NoCallSessions(payload, "current", "any").length;
+  const challengerThin = usdL1NoCallSessions(payload, "challenger", "min_usable").length;
+  const challengerSplit = usdL1NoCallSessions(payload, "challenger", "deadband").length;
   return `
     <section class="usd-l1-test-body" data-usd-l1-test-body="four_markets">
       <p class="usd-l1-test-intro">${usdL1Text(test.question)}</p>
-      <p class="usd-l1-test-copy muted">${usdL1Text(test.outcome_reads)} Accuracy counts only sessions with a call and a move outside the frozen flat band, and the flat count sits beside it so noise is never counted as a hit.</p>
+      <p class="usd-l1-test-copy muted">${usdL1Text(test.outcome_reads)} Accuracy counts only sessions with a call and a
+        move outside the frozen flat band, and the flat count sits beside it so noise is never counted as a hit.
+        ${usdL1Text(header.scoring_note || "")}</p>
       <table class="usd-l1-table usd-l1-four-market-table">
         <caption>Direction across four markets — ${usdL1Number(test.usable_sessions, 0)} sessions with a scorable move</caption>
         <thead>
           <tr>
             <th scope="col">Market</th>
-            <th scope="col">Current accuracy</th>
+            <th scope="col">Current correct / scored</th>
             <th scope="col">Current flat</th>
-            <th scope="col">Challenger accuracy</th>
+            <th scope="col">Challenger correct / scored</th>
             <th scope="col">Challenger flat</th>
             <th scope="col">Corrected / spoiled</th>
             <th scope="col">Matched dates</th>
@@ -16121,10 +16148,32 @@ function renderUsdL1FourMarketTab(test = {}) {
           ${marketKeys.map(row).join("")}
         </tbody>
       </table>
-      <p class="usd-l1-test-copy muted">The final column is the second view the brief asks for: accuracy restricted to calls DXY later proved right. It needs the same licensed series test ① is waiting for, so it is reported as blocked rather than quietly dropped.</p>
+      <article class="usd-l1-test-card usd-l1-call-difference" data-usd-l1-call-difference="true">
+        <p class="eyebrow">Why the challenger called ${usdL1Number(header.calls_ready?.challenger ?? payload.results?.calls?.challenger, 0)}
+          dates and the current model called ${usdL1Number(payload.results?.calls?.current, 0)}</p>
+        <p class="usd-l1-test-copy">The current model abstained on
+          ${usdL1EvidenceButton("nocall|current|any", `${usdL1Number(currentNoCall, 0)} dates`)} because it returned
+          NO_CLEAR_BIAS. The challenger abstained on
+          ${usdL1EvidenceButton("nocall|challenger|min_usable", `${usdL1Number(challengerThin, 0)} dates`)} for thin data
+          (fewer than ${usdL1Number(payload.run?.challenger_rules?.min_usable_mechanisms, 0)} of
+          ${usdL1Number(asArray(payload.run?.challenger_mechanisms).length, 0)} mechanisms had a value) and on
+          ${usdL1EvidenceButton("nocall|challenger|deadband", `${usdL1Number(challengerSplit, 0)} dates`)} because the
+          mechanisms split inside the ${usdL1Number(rules_agreement_deadband_pct(payload), 0)}% deadband. Two different
+          definitions of silence, not two different data sets.</p>
+        <p class="usd-l1-test-copy muted">${usdL1Text(header.comparison_note || "")}</p>
+      </article>
+      <p class="usd-l1-test-copy muted">The final column is the second view the brief asks for: accuracy restricted to
+        calls DXY later proved right. It needs the same licensed series test ① is waiting for, so it is reported as
+        pending rather than quietly dropped.</p>
       <div class="usd-l1-test-grid">
-        <article class="usd-l1-test-card">${usdL1ConvictionTable(models.current?.markets?.[firstMarket]?.by_conviction, `Current model by conviction — ${models.current?.markets?.[firstMarket]?.label || firstMarket}`)}</article>
-        <article class="usd-l1-test-card">${usdL1ConvictionTable(models.challenger?.markets?.[firstMarket]?.by_conviction, `Challenger by conviction — ${models.challenger?.markets?.[firstMarket]?.label || firstMarket}`)}</article>
+        <article class="usd-l1-test-card">${usdL1ConvictionTable(
+          models.current?.markets?.[firstMarket]?.by_conviction,
+          `Current model by conviction — ${models.current?.markets?.[firstMarket]?.label || firstMarket}`
+        )}</article>
+        <article class="usd-l1-test-card">${usdL1ConvictionTable(
+          models.challenger?.markets?.[firstMarket]?.by_conviction,
+          `Challenger by conviction — ${models.challenger?.markets?.[firstMarket]?.label || firstMarket}`
+        )}</article>
       </div>
     </section>
   `;
@@ -16250,26 +16299,64 @@ function renderUsdL1LineToLineTab(payload = {}, test = {}) {
   const variantKey = test.id === "l2l_half_3r" ? "half" : "full";
   const variant = (payload.execution_demo?.variants || {})[variantKey] || {};
   const totals = variant.totals || {};
+  const header = payload.results?.tests?.find((entry) => entry.id === test.id) || {};
+  const accountRows = accounts.filter((account) => account.geometry === variantKey);
   return `
     <section class="usd-l1-test-body" data-usd-l1-test-body="${escapeHtml(test.id || "")}">
       <p class="usd-l1-test-intro">${usdL1Text(test.question)}</p>
       <article class="usd-l1-blocker-card">
-        <p class="eyebrow">Scored grid blocked</p>
+        <p class="eyebrow">Scored grid blocked — ${escapeHtml(header.status_label || "")}</p>
         <h3>No session can be executed line-to-line across the four markets yet</h3>
         <ul class="usd-l1-blocker-list">
           ${blockerList.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
         </ul>
-        <p class="usd-l1-test-copy muted">Geometry this lane will use when the data arrives: ${usdL1Text(geometry.grid)}; target ${usdL1Text(geometry.target)}; ${usdL1Text(geometry.stop)}.</p>
+        <p class="usd-l1-test-copy muted">Missing input: ${escapeHtml(header.missing_input || "")} ·
+          usable dates: ${escapeHtml(header.usable_dates || `${usdL1Number(test.usable_sessions, 0)} of 725 sessions`)}</p>
+        <p class="usd-l1-test-copy muted">Geometry this lane will use when the data arrives: ${usdL1Text(geometry.grid)};
+          target ${usdL1Text(geometry.target)}; ${usdL1Text(geometry.stop)}.</p>
       </article>
       <div class="usd-l1-test-grid usd-l1-l2l-grid">
         <article class="usd-l1-test-card">
           <p class="eyebrow">Demo ledger totals</p>
-          <p class="usd-l1-test-copy">${usdL1Number(totals.fills, 0)} fills · ${usdL1Number(totals.targets, 0)} targets · ${usdL1Number(totals.stops, 0)} stops · ${usdL1Number(totals.working, 0)} still working · ${usdL1Signed(totals.rGross, 2, "R")} gross</p>
-          <p class="usd-l1-test-copy muted">Execution demo: gross of spread, commission and slippage, two sessions, one pair, one call direction. Not a scored result.</p>
+          <p class="usd-l1-test-copy">${usdL1Number(totals.fills, 0)} fills · ${usdL1Number(totals.targets, 0)} targets ·
+            ${usdL1Number(totals.stops, 0)} stops · ${usdL1Number(totals.working, 0)} still working ·
+            ${usdL1Signed(totals.rGross, 2, "R")} gross</p>
+          <p class="usd-l1-test-copy muted">Execution demo: gross of spread, commission and slippage, two sessions, one
+            pair, one call direction. Not a scored result.</p>
+        </article>
+        <article class="usd-l1-test-card">
+          <p class="eyebrow">Win rate, net R, balance and drawdown per account</p>
+          <ul class="usd-l1-method-list">
+            ${accountRows
+              .map(
+                (account) => `
+                <li><b>${escapeHtml(account.label || account.id)}</b><span>
+                  ${usdL1EvidenceButton(
+                    `trades|${variantKey}|${account.id}`,
+                    `${usdL1Number(account.wins, 0)} winning / ${usdL1Number(
+                      (account.wins || 0) + (account.losses || 0),
+                      0
+                    )} closed`
+                  )} ·
+                  ${usdL1Percent(
+                    (account.wins || 0) + (account.losses || 0)
+                      ? ((account.wins || 0) / ((account.wins || 0) + (account.losses || 0))) * 100
+                      : null
+                  )} win rate · net ${usdL1Signed(account.total_r, 2, "R")} ·
+                  £${usdL1Number(account.ending_balance, 2)} from £${usdL1Number(account.starting_balance, 2)} at
+                  ${usdL1Number(account.risk_per_trade_pct, 0)}% risk per fill · max drawdown
+                  £${usdL1Number(account.max_drawdown, 2)}</span></li>
+              `
+              )
+              .join("") || `<li><span>no account belongs to this geometry yet</span></li>`}
+          </ul>
+          <p class="usd-l1-test-copy muted">Each figure opens its trade ledger; the replay below walks the same trades
+            bar by bar.</p>
         </article>
         <article class="usd-l1-test-card">
           <p class="eyebrow">What would make this scored</p>
-          <p class="usd-l1-test-copy">An archived 5-minute tape and a pre-session level ladder for each market, plus a reconstructed 05:00 call for those dates. The four accounts would then run on the same dates for both models.</p>
+          <p class="usd-l1-test-copy">An archived 5-minute tape and a pre-session level ladder for each market, plus a
+            reconstructed 05:00 call for those dates. The four accounts would then run on the same dates for both models.</p>
         </article>
       </div>
       ${usdL1AccountTable(accounts)}
@@ -16283,8 +16370,8 @@ function renderUsdL1LineToLineTab(payload = {}, test = {}) {
 
 function renderUsdL1TestBody(payload = {}) {
   const tests = payload.tests || {};
-  if (usdLayer1State.tab === "dxy_direction") return renderUsdL1DxyTab(tests.dxy_direction);
-  if (usdLayer1State.tab === "four_markets") return renderUsdL1FourMarketTab(tests.four_markets);
+  if (usdLayer1State.tab === "dxy_direction") return renderUsdL1DxyTab(tests.dxy_direction, payload);
+  if (usdLayer1State.tab === "four_markets") return renderUsdL1FourMarketTab(tests.four_markets, payload);
   if (usdLayer1State.tab === "l2l_full_5r") return renderUsdL1LineToLineTab(payload, tests.l2l_full_5r);
   return renderUsdL1LineToLineTab(payload, tests.l2l_half_3r);
 }
@@ -16507,6 +16594,1011 @@ function mountUsdL1Replay() {
   }
 }
 
+/**
+ * Evidence behind every percentage.
+ *
+ * A percentage on this panel is a button. Clicking it opens the list of dates (or trades) that produced the
+ * numerator and denominator, computed here from the same session rows the tables were built from, so the
+ * reader can recount them. The arithmetic is printed as `hits / scored = pct` rather than as a bare figure.
+ */
+function usdL1EvidenceButton(spec, label, title = "") {
+  const shown = label === null || label === undefined || label === "" ? "—" : String(label);
+  return `<button type="button" class="usd-l1-pct" data-usd-l1-evidence="${escapeHtml(spec)}" title="${escapeHtml(
+    title || `Show the dates behind ${shown}`
+  )}">${escapeHtml(shown)}</button>`;
+}
+
+function usdL1PercentButton(spec, value, decimals = 2, title = "") {
+  if (!Number.isFinite(value)) return usdL1EvidenceButton(spec, "—", title);
+  return usdL1EvidenceButton(spec, usdL1Percent(value, decimals), title);
+}
+
+/** The session-level sentence shown beside a date in the evidence list. */
+function usdL1EvidenceDetail(session, marketKey, model) {
+  const call = (session.models || {})[model] || {};
+  const outcome = (session.outcomes || {})[marketKey] || {};
+  const result = ((session.results || {})[model] || {})[marketKey] || "unscored";
+  const callText = call.direction === "NO_CALL"
+    ? "no call"
+    : `${call.direction}${Number.isFinite(call.conviction) ? ` c${call.conviction}` : ""}`;
+  const moveText = outcome.direction
+    ? `${outcome.direction}${Number.isFinite(outcome.move_pct) ? ` ${usdL1Signed(outcome.move_pct, 2, "%")}` : ""}`
+    : "no outcome";
+  return `${model} ${callText} · ${marketKey} ${moveText} · ${result}`;
+}
+
+/** Every session that produced a given result for one model and market. */
+function usdL1SessionsByResult(payload, marketKey, model, wanted) {
+  return asArray(payload.sessions)
+    .filter((session) => {
+      const result = ((session.results || {})[model] || {})[marketKey];
+      if (wanted === "scored") return result === "hit" || result === "miss";
+      return result === wanted;
+    })
+    .map((session) => ({ date: session.date, detail: usdL1EvidenceDetail(session, marketKey, model) }));
+}
+
+/** The same-date comparison: challenger right where the current model was wrong, and the reverse. */
+function usdL1ComparisonSessions(payload, marketKey, kind) {
+  const sessions = asArray(payload.sessions);
+  const pick = (session, model) => ((session.results || {})[model] || {})[marketKey];
+  return sessions
+    .filter((session) => {
+      const current = pick(session, "current");
+      const challenger = pick(session, "challenger");
+      const currentScored = current === "hit" || current === "miss";
+      const challengerScored = challenger === "hit" || challenger === "miss";
+      if (!currentScored || !challengerScored) return false;
+      if (kind === "corrected") return challenger === "hit" && current === "miss";
+      if (kind === "spoiled") return challenger === "miss" && current === "hit";
+      return current === challenger;
+    })
+    .map((session) => ({
+      date: session.date,
+      detail: `${usdL1EvidenceDetail(session, marketKey, "current")} vs ${pick(session, "challenger")} for the challenger`
+    }));
+}
+
+/** Sessions where one model called at a given conviction, with the result beside it. */
+function usdL1ConvictionSessions(payload, marketKey, model, level) {
+  return asArray(payload.sessions)
+    .filter((session) => {
+      const call = (session.models || {})[model] || {};
+      if (call.direction === "NO_CALL") return false;
+      return call.conviction === Number(level);
+    })
+    .map((session) => ({ date: session.date, detail: usdL1EvidenceDetail(session, marketKey, model) }));
+}
+
+/** Every date one model made a call at all, which is what test 1 is waiting to score. */
+function usdL1CallSessions(payload, model) {
+  return asArray(payload.sessions)
+    .filter((session) => {
+      const call = (session.models || {})[model] || {};
+      return call.direction && call.direction !== "NO_CALL";
+    })
+    .map((session) => ({
+      date: session.date,
+      detail: `${session.models[model].direction}${
+        Number.isFinite(session.models[model].conviction) ? ` c${session.models[model].conviction}` : ""
+      } · ${session.models[model].reason || ""}`
+    }));
+}
+
+/** The no-call days, split by the gate that stopped them, for the 697-against-490 explanation. */
+function usdL1NoCallSessions(payload, model, gate) {
+  const rules = payload.run?.challenger_rules || {};
+  const minimum = Number.isFinite(rules.min_usable_mechanisms) ? rules.min_usable_mechanisms : 6;
+  return asArray(payload.sessions)
+    .filter((session) => {
+      const call = (session.models || {})[model] || {};
+      if (call.direction && call.direction !== "NO_CALL") return false;
+      if (model === "current") return gate === "any";
+      const usable = Number.isFinite(call.usable_mechanisms) ? call.usable_mechanisms : 0;
+      if (gate === "min_usable") return usable < minimum;
+      if (gate === "deadband") return usable >= minimum;
+      return true;
+    })
+    .map((session) => ({ date: session.date, detail: `${model} no call · ${((session.models || {})[model] || {}).reason || ""}` }));
+}
+/**
+ * Resolve one evidence spec into the dates or trades behind a figure, with its arithmetic.
+ *
+ * Specs are written by the render code beside the number they belong to, so a percentage cannot appear on
+ * the panel without a way to recount it.
+ */
+function usdL1Resolution(payload, spec) {
+  const parts = String(spec || "").split("|");
+  const kind = parts[0] || "";
+  const sessions = asArray(payload.sessions);
+  const labels = {};
+  asArray(payload.run?.markets).forEach((market) => {
+    labels[market.key] = market.label;
+  });
+
+  if (kind === "result") {
+    const market = parts[1];
+    const model = parts[2];
+    const wanted = parts[3] || "scored";
+    const rows = usdL1SessionsByResult(payload, market, model, wanted);
+    const scored = usdL1SessionsByResult(payload, market, model, "scored");
+    const hits = usdL1SessionsByResult(payload, market, model, "hit");
+    return {
+      title: `${labels[market] || market} · ${model} · ${wanted.replace("_", " ")}`,
+      arithmetic: `${hits.length} correct / ${scored.length} scored = ${usdL1Percent(
+        scored.length ? (hits.length / scored.length) * 100 : null
+      )} — every date below is one row of the four-market table`,
+      rows,
+      empty: `${model} has no ${wanted.replace("_", " ")} sessions for ${market}`
+    };
+  }
+
+  if (kind === "comparison") {
+    const market = parts[1];
+    const which = parts[2] || "corrected";
+    const rows = usdL1ComparisonSessions(payload, market, which);
+    const corrected = usdL1ComparisonSessions(payload, market, "corrected").length;
+    const spoiled = usdL1ComparisonSessions(payload, market, "spoiled").length;
+    const matched = usdL1ComparisonSessions(payload, market, "matched").length;
+    return {
+      title: `${labels[market] || market} · same-date comparison · ${which}`,
+      arithmetic:
+        `corrected ${corrected} · spoiled ${spoiled} · matched ${matched} · net ${usdL1Signed(
+          corrected - spoiled,
+          0
+        )} on ${corrected + spoiled + matched} sessions where both models were scoreable`,
+      rows,
+      empty: `no ${which} session for ${market}`
+    };
+  }
+
+  if (kind === "conviction") {
+    const market = parts[1];
+    const model = parts[2];
+    const level = parts[3];
+    const rows = usdL1ConvictionSessions(payload, market, model, level);
+    const scored = rows.filter((row) => /· hit$/.test(row.detail) || /· miss$/.test(row.detail));
+    const hits = rows.filter((row) => /· hit$/.test(row.detail));
+    return {
+      title: `${labels[market] || market} · ${model} · conviction ${level}`,
+      arithmetic: `${rows.length} sessions called at conviction ${level} · ${hits.length} correct / ${
+        scored.length
+      } scored = ${usdL1Percent(scored.length ? (hits.length / scored.length) * 100 : null)}`,
+      rows,
+      empty: `no conviction-${level} calls for ${model} on ${market}`
+    };
+  }
+
+  if (kind === "calls") {
+    const model = parts[1];
+    const rows = usdL1CallSessions(payload, model);
+    return {
+      title: `${model} · every date with a call`,
+      arithmetic: `${rows.length} calls made of ${sessions.length} dates processed · ${usdL1Percent(
+        sessions.length ? (rows.length / sessions.length) * 100 : null
+      )} coverage`,
+      rows,
+      empty: "no calls"
+    };
+  }
+
+
+  if (kind === "nocall") {
+    const model = parts[1];
+    const gate = parts[2] || "any";
+    const rows = usdL1NoCallSessions(payload, model, gate);
+    const rules = payload.run?.challenger_rules || {};
+    const arithmetic = model === "current"
+      ? `${rows.length} no-call dates of ${sessions.length} — the current model returned NO_CLEAR_BIAS`
+      : gate === "min_usable"
+        ? `${rows.length} dates had fewer than ${rules.min_usable_mechanisms ?? 6} mechanisms with a value, so the minimum-data gate stopped the call`
+        : `${rows.length} dates had enough data but the mechanisms split inside the ${rules.agreement_deadband_pct ?? 20}% deadband, so the day was recorded as no call`;
+    return {
+      title: `${model} · no-call dates · ${gate}`,
+      arithmetic,
+      rows,
+      empty: "no no-call dates in this bucket"
+    };
+  }
+
+  if (kind === "trades") {
+    const variantKey = parts[1] || "full";
+    const accountId = parts[2];
+    const accounts = asArray(payload.execution_demo?.accounts);
+    const account = accounts.find((entry) => entry.id === accountId) || accounts[0] || {};
+    const trades = asArray(account.trades);
+    const rows = trades.map((trade) => ({
+      date: trade.sessionDate || trade.id,
+      detail: `${trade.id} · ${trade.side} ${trade.market} from ${trade.level} · stop ${trade.stop} · target ${trade.target} · exit ${trade.exitPrice} (${trade.exitReason}) · ${usdL1Signed(trade.rGross, 2, "R")} · £${usdL1Signed(trade.pnl, 2)}`
+    }));
+    const closed = (account.wins || 0) + (account.losses || 0);
+    return {
+      title: `${account.label || accountId || variantKey} · trade ledger`,
+      arithmetic:
+        `${usdL1Number(account.wins, 0)} winning / ${usdL1Number(closed, 0)} closed = win rate ${usdL1Percent(
+          closed ? ((account.wins || 0) / closed) * 100 : null
+        )} · net ${usdL1Signed(account.total_r, 2, "R")} · ending balance £${usdL1Number(account.ending_balance, 2)} ` +
+        `from £${usdL1Number(account.starting_balance, 2)} at ${usdL1Number(account.risk_per_trade_pct, 0)}% risk per fill · ` +
+        `max drawdown £${usdL1Number(account.max_drawdown, 2)}`,
+      rows,
+      empty: "this account has no trades"
+    };
+  }
+
+  return { title: "Nothing to show", arithmetic: "unknown evidence spec", rows: [], empty: "unknown evidence spec" };
+}
+
+/** The drawer that lists the dates or trades behind the number that was clicked. */
+function renderUsdL1Evidence(payload, spec) {
+  if (!spec) return "";
+  const resolution = usdL1Resolution(payload, spec);
+  return `
+    <section class="usd-l1-evidence" data-usd-l1-evidence-panel="${escapeHtml(spec)}">
+      <div class="usd-l1-evidence-head">
+        <div>
+          <p class="eyebrow">Behind this number</p>
+          <h4>${escapeHtml(resolution.title)}</h4>
+        </div>
+        <button type="button" class="usd-l1-evidence-close" data-usd-l1-evidence-close="true" aria-label="Close">Close</button>
+      </div>
+      <p class="usd-l1-evidence-arithmetic"><code>${escapeHtml(resolution.arithmetic)}</code></p>
+      ${resolution.rows.length
+        ? `<ol class="usd-l1-evidence-list" data-usd-l1-evidence-count="${resolution.rows.length}">
+            ${resolution.rows
+              .map((row) => `<li><b>${escapeHtml(row.date)}</b><span>${escapeHtml(row.detail)}</span></li>`)
+              .join("")}
+          </ol>`
+        : `<p class="usd-l1-test-copy muted">${escapeHtml(resolution.empty)}</p>`}
+    </section>
+  `;
+}
+
+/**
+ * The results at the top of the panel.
+ *
+ * "dates processed" is stated on its own, and each test carries its own scored count beside it, so a
+ * processed date is never mistaken for a scored call.
+ */
+function renderUsdL1Results(payload = {}) {
+  const results = payload.results || {};
+  const tests = asArray(results.tests);
+  const calls = results.calls || {};
+  const four = tests.find((test) => test.id === "four_markets") || {};
+  const row = (test) => {
+    const summary = test.id === "four_markets"
+      ? `current ${usdL1Number(test.scored?.current, 0)} · challenger ${usdL1Number(
+          test.scored?.challenger,
+          0
+        )} scored sessions`
+      : test.id === "dxy_direction"
+        ? `current ${usdL1Number(test.calls_ready?.current, 0)} · challenger ${usdL1Number(
+            test.calls_ready?.challenger,
+            0
+          )} calls waiting`
+        : `current ${usdL1Number(test.scored?.current, 0)} · challenger ${usdL1Number(
+            test.scored?.challenger,
+            0
+          )} closed trades`;
+    return `
+      <tr data-usd-l1-results-test="${escapeHtml(test.id)}" class="usd-l1-results-${escapeHtml(test.status || "")}">
+        <th scope="row">${test.ordinal ? `${test.ordinal}. ` : ""}${escapeHtml(test.label || test.id)}</th>
+        <td><span class="usd-l1-status ${escapeHtml(test.status || "")}">${escapeHtml(
+          test.status_label || test.status || ""
+        )}</span></td>
+        <td>${escapeHtml(summary)}</td>
+        <td>${test.missing_input ? escapeHtml(test.missing_input) : "—"}</td>
+      </tr>
+    `;
+  };
+  const demoLedgerLink = (test) => {
+    const variantKey = test.id === "l2l_half_3r" ? "half" : "full";
+    const account = asArray(payload.execution_demo?.accounts).find((entry) => entry.geometry === variantKey);
+    if (!account) return "—";
+    const label = `${usdL1Number(account.wins, 0)} winning / ${usdL1Number(
+      (account.wins || 0) + (account.losses || 0),
+      0
+    )} closed · £${usdL1Number(account.ending_balance, 2)}`;
+    return usdL1EvidenceButton(
+      `trades|${variantKey}|${account.id}`,
+      label,
+      "Show the demo trade ledger and its arithmetic"
+    );
+  };
+  return `
+    <section class="usd-l1-results" data-usd-l1-results="true">
+      <div class="usd-l1-results-head">
+        <div>
+          <p class="eyebrow">Results</p>
+          <h3><span data-usd-l1-dates-processed="${results.dates_processed || 0}">${escapeHtml(
+            results.headline_dates || `${usdL1Number(results.dates_processed, 0)} dates processed`
+          )}</span></h3>
+          <p class="usd-l1-test-copy muted">A processed date is a 05:00 London session both models were asked about.
+            A scored call is a date where the model called and the outcome was outside the frozen flat band. They are
+            counted separately below, per test, and every number opens the dates behind it.</p>
+        </div>
+        <ul class="usd-l1-results-calls">
+          <li>${usdL1EvidenceButton(
+            "calls|current",
+            `${usdL1Number(calls.current, 0)} calls`,
+            "Current model: every date with a call"
+          )}<span>current model</span></li>
+          <li>${usdL1EvidenceButton(
+            "calls|challenger",
+            `${usdL1Number(calls.challenger, 0)} calls`,
+            "Challenger: every date with a call"
+          )}<span>challenger</span></li>
+        </ul>
+      </div>
+      <table class="usd-l1-table usd-l1-results-table">
+        <caption>Four tests, four separate scored counts</caption>
+        <thead>
+          <tr>
+            <th scope="col">Test</th>
+            <th scope="col">Status</th>
+            <th scope="col">Scored</th>
+            <th scope="col">What is missing</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tests.map(row).join("")}
+        </tbody>
+      </table>
+      <table class="usd-l1-table usd-l1-results-detail">
+        <caption>Test 2 by market, with the same-date comparison</caption>
+        <thead>
+          <tr>
+            <th scope="col">Market</th>
+            <th scope="col">Current correct / scored</th>
+            <th scope="col">Challenger correct / scored</th>
+            <th scope="col">Corrected / spoiled</th>
+            <th scope="col">DXY was correct</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(four.markets || {})
+            .map(
+              ([key, entry]) => `
+              <tr data-usd-l1-results-market="${escapeHtml(key)}">
+                <th scope="row">${escapeHtml(entry.label || key)}</th>
+                <td>${usdL1EvidenceButton(
+                  `result|${key}|current|hit`,
+                  `${usdL1Number(entry.current?.hits, 0)}`
+                )} / ${usdL1EvidenceButton(`result|${key}|current|scored`, `${usdL1Number(entry.current?.scored, 0)}`)}
+                  · ${usdL1PercentButton(`result|${key}|current|scored`, entry.current?.accuracy_pct)}</td>
+                <td>${usdL1EvidenceButton(
+                  `result|${key}|challenger|hit`,
+                  `${usdL1Number(entry.challenger?.hits, 0)}`
+                )} / ${usdL1EvidenceButton(
+                  `result|${key}|challenger|scored`,
+                  `${usdL1Number(entry.challenger?.scored, 0)}`
+                )} · ${usdL1PercentButton(`result|${key}|challenger|scored`, entry.challenger?.accuracy_pct)}</td>
+                <td>${usdL1EvidenceButton(
+                  `comparison|${key}|corrected`,
+                  `+${usdL1Number(entry.comparison?.corrected, 0)}`
+                )} / ${usdL1EvidenceButton(
+                  `comparison|${key}|spoiled`,
+                  `−${usdL1Number(entry.comparison?.spoiled, 0)}`
+                )}</td>
+                <td><span class="usd-l1-chip none">pending DXY</span></td>
+              </tr>
+            `
+            )
+            .join("")}
+        </tbody>
+      </table>
+      <p class="usd-l1-test-copy muted" data-usd-l1-demo-ledger="true">Tests 3 and 4 have no scored trade yet. The
+        two-day demo ledger is labelled separately:
+        ${asArray(results.tests)
+          .filter((test) => test.id === "l2l_full_5r" || test.id === "l2l_half_3r")
+          .map(
+            (test) =>
+              ` <span class="usd-l1-demo-line">${escapeHtml(test.label)}: ${demoLedgerLink(test)} · net ${usdL1Signed(
+                test.demo?.r_gross,
+                2,
+                "R"
+              )} gross over ${usdL1Number(test.demo?.closed, 0)} closed of ${usdL1Number(test.demo?.fills, 0)} fills</span>`
+          )
+          .join("")}</p>
+    </section>
+  `;
+}
+
+/**
+ * "How this call was made": every factor accounted for, the rule that implements it, and where each frozen
+ * parameter came from.
+ *
+ * The three tables answer the three questions a reader has to be able to ask of a research model: what does it
+ * read, what does it do with what it reads, and who decided that.
+ */
+function renderUsdL1CallMethod(payload = {}) {
+  const run = payload.run || {};
+  const rules = run.challenger_rules || {};
+  const mechanisms = asArray(run.challenger_mechanisms);
+  const accounting = payload.factor_accounting || {};
+  const ledger = payload.assumption_ledger || {};
+  const status = payload.challenger_status || {};
+  const currentRules = run.current_model_rules || {};
+  const counts = accounting.counts || {};
+  const treatmentTone = (treatment) =>
+    treatment === "used" ? "hit" : treatment === "combined" ? "flat" : treatment === "abstain" ? "none" : "miss";
+  const classTone = (klass) => (klass === "research" ? "hit" : klass === "fitted" ? "miss" : "flat");
+
+  return `
+    <section class="usd-l1-method" data-usd-l1-call-method="true">
+      <div class="usd-l1-method-head">
+        <div>
+          <p class="eyebrow">How this call was made</p>
+          <h3>${escapeHtml(run.challenger_version || "challenger")}: ${usdL1Number(mechanisms.length, 0)} mechanisms,
+            ${usdL1Number(accounting.factor_count, 0)} registered factors, one rule table</h3>
+          <p class="usd-l1-test-copy muted">${escapeHtml(status.label || "")}</p>
+        </div>
+        <div class="usd-l1-method-badges">
+          <span class="usd-l1-chip ${status.preliminary ? "flat" : "hit"}">${status.preliminary ? "preliminary" : "final"}</span>
+          <span class="usd-l1-chip none">frozen ${escapeHtml(run.challenger_frozen_on || "")}</span>
+          <span class="usd-l1-chip none">${escapeHtml(rules.interpreter || "")}</span>
+        </div>
+      </div>
+
+      <div class="usd-l1-method-grid">
+        <article class="usd-l1-method-card">
+          <h4>Why it is labelled preliminary</h4>
+          <ul class="usd-l1-method-list">
+            ${asArray(status.why_preliminary).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        </article>
+        <article class="usd-l1-method-card">
+          <h4>What would complete the challenger</h4>
+          <ul class="usd-l1-method-list">
+            ${asArray(status.completing_work).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+          <p class="usd-l1-test-copy muted">${escapeHtml(status.guardrail || "")}</p>
+        </article>
+      </div>
+
+      <h4 class="usd-l1-method-title">The ${usdL1Number(mechanisms.length, 0)} mechanisms, as implemented</h4>
+      <table class="usd-l1-table usd-l1-method-table">
+        <caption>Each row is one input, one cut-off and one declared USD direction; every weight is ${usdL1Number(
+          rules.equal_weight,
+          0
+        )}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Mechanism</th>
+            <th scope="col">Factor it implements</th>
+            <th scope="col">Input at 05:00</th>
+            <th scope="col">Cut-off</th>
+            <th scope="col">Vote rule</th>
+            <th scope="col">Weight</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${mechanisms
+            .map(
+              (mechanism) => `
+              <tr data-usd-l1-mechanism="${escapeHtml(mechanism.id)}">
+                <th scope="row">${escapeHtml(mechanism.label)}<span class="usd-l1-sample">${escapeHtml(
+                  mechanism.id
+                )}</span></th>
+                <td><code>${escapeHtml(mechanism.factor)}</code></td>
+                <td><code>${escapeHtml(mechanism.input)}</code></td>
+                <td>${escapeHtml(mechanism.threshold)}</td>
+                <td>${escapeHtml(mechanism.rule)}${asArray(mechanism.vote_spec).length
+                  ? `<span class="usd-l1-vote-spec">${mechanism.vote_spec
+                      .map((branch) => `${branch.when} ${branch.value} → ${branch.usd > 0 ? "+1" : "−1"}`)
+                      .join(" · ")} · otherwise 0</span>`
+                  : ""}</td>
+                <td>${usdL1Number(mechanism.weight, 0)}</td>
+              </tr>
+            `
+            )
+            .join("")}
+        </tbody>
+      </table>
+
+      <h4 class="usd-l1-method-title">The rule that turns votes into a call</h4>
+      <div class="usd-l1-method-grid">
+        <article class="usd-l1-method-card">
+          <h5>Abstention gates</h5>
+          <ul class="usd-l1-method-list">
+            ${asArray(rules.gates)
+              .map((gate) => `<li><b>${escapeHtml(gate.rule)}</b><span>${escapeHtml(gate.why)}</span></li>`)
+              .join("")}
+          </ul>
+        </article>
+        <article class="usd-l1-method-card">
+          <h5>Missing-data rules</h5>
+          <ul class="usd-l1-method-list">
+            ${asArray(rules.missing_data_rules).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        </article>
+      </div>
+      <table class="usd-l1-table usd-l1-band-table">
+        <caption>Five conviction bands: agreement is how one-sided the live mechanisms were, participation is how
+          many of them had a value</caption>
+        <thead>
+          <tr><th scope="col">Conviction</th><th scope="col">Needs agreement</th><th scope="col">Needs participation</th><th scope="col">Meaning</th></tr>
+        </thead>
+        <tbody>
+          ${asArray(rules.conviction_bands)
+            .map(
+              (band) => `
+              <tr data-usd-l1-band="${band.conviction}">
+                <th scope="row">${usdL1ConvictionPips(band.conviction)}</th>
+                <td>≥ ${usdL1Number(band.min_agreement * 100, 0)}%</td>
+                <td>≥ ${usdL1Number(band.min_participation * 100, 0)}%</td>
+                <td>${escapeHtml((run.conviction && run.conviction.band_meanings?.[band.conviction]) || "")}</td>
+              </tr>
+            `
+            )
+            .join("")}
+        </tbody>
+      </table>
+
+      <h4 class="usd-l1-method-title">All ${usdL1Number(accounting.factor_count, 0)} registered factors, and what this
+        model does with each</h4>
+      <p class="usd-l1-test-copy muted">${escapeHtml(accounting.note || "")} Joined to
+        <code>${escapeHtml(accounting.source?.path || "the registered catalogue")}</code> by factor id, so the research
+        decision and the implemented rule sit in the same row. ${usdL1Number(counts.used, 0)} used ·
+        ${usdL1Number(counts.combined, 0)} combined · ${usdL1Number(counts.abstain, 0)} abstain ·
+        ${usdL1Number(counts.excluded, 0)} excluded.</p>
+      <table class="usd-l1-table usd-l1-factor-table">
+        <caption>Every factor, its treatment, the rule that implements it and why</caption>
+        <thead>
+          <tr>
+            <th scope="col">Factor</th>
+            <th scope="col">Treatment</th>
+            <th scope="col">Implemented by</th>
+            <th scope="col">Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${asArray(accounting.rows)
+            .map(
+              (row) => `
+              <tr data-usd-l1-factor="${escapeHtml(row.factor_id)}" class="usd-l1-factor-${escapeHtml(row.treatment)}">
+                <th scope="row">${escapeHtml(row.factor_label)}<span class="usd-l1-sample">${escapeHtml(row.factor_id)}</span></th>
+                <td><span class="usd-l1-chip ${treatmentTone(row.treatment)}">${escapeHtml(row.treatment_label)}</span></td>
+                <td>${row.mechanisms?.length
+                  ? `<code>${row.mechanisms.map((id) => escapeHtml(id)).join("</code> <code>")}</code>${
+                      row.weight_total ? ` · weight ${usdL1Number(row.weight_total, 0)}` : ""
+                    }<span class="usd-l1-factor-rule">${escapeHtml(row.implemented_rule || "")}</span>`
+                  : `<span class="usd-l1-missing">no rule reads it</span>`}</td>
+                <td>${escapeHtml(row.reason)}</td>
+              </tr>
+            `
+            )
+            .join("")}
+        </tbody>
+      </table>
+
+      <h4 class="usd-l1-method-title">Where every frozen parameter came from</h4>
+      <p class="usd-l1-test-copy muted">${usdL1Number(ledger.counts?.research, 0)} from research ·
+        ${usdL1Number(ledger.counts?.assumption, 0)} developer assumptions · ${usdL1Number(ledger.counts?.fitted, 0)} fitted
+        on data. A fitted parameter is only ever measured on development dates, and the dates are named.</p>
+      <table class="usd-l1-table usd-l1-ledger-table">
+        <caption>Parameter, class, source and the date it was fixed</caption>
+        <thead>
+          <tr>
+            <th scope="col">Parameter</th>
+            <th scope="col">Value</th>
+            <th scope="col">Class</th>
+            <th scope="col">Source and dates</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${asArray(ledger.rows)
+            .map(
+              (row) => `
+              <tr data-usd-l1-ledger="${escapeHtml(row.parameter)}" class="usd-l1-ledger-${escapeHtml(row.class)}">
+                <th scope="row">${escapeHtml(row.parameter)}</th>
+                <td>${escapeHtml(row.value)}</td>
+                <td><span class="usd-l1-chip ${classTone(row.class)}">${escapeHtml(
+                  ledger.classes?.[row.class] || row.class
+                )}</span></td>
+                <td>${escapeHtml(row.source)}<span class="usd-l1-ledger-dates">${escapeHtml(row.dates)}${
+                  row.note ? ` · ${escapeHtml(row.note)}` : ""
+                }</span></td>
+              </tr>
+            `
+            )
+            .join("")}
+        </tbody>
+      </table>
+
+      <h4 class="usd-l1-method-title">What the current model does, for comparison</h4>
+      <article class="usd-l1-method-card usd-l1-current-rules" data-usd-l1-current-rules="true">
+        <p class="usd-l1-test-copy">${escapeHtml(currentRules.version || "")} · ${escapeHtml(currentRules.scale || "")}</p>
+        <ul class="usd-l1-method-list">
+          ${asArray(currentRules.missing_data_rules).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          ${asArray(currentRules.substitutions)
+            .map(
+              (entry) =>
+                `<li><b>${escapeHtml(entry.factor)}:</b> ${escapeHtml(entry.stands_in)} — ${escapeHtml(entry.why)}</li>`
+            )
+            .join("")}
+        </ul>
+        <p class="usd-l1-test-copy muted">Its 0-100 conviction is banded onto the shared 1-5 scale for comparison only:
+          ${asArray(currentRules.conviction_mapping?.bands)
+            .map((band) => `${band.conviction} at ${band.min}+`)
+            .join(" · ")}. ${escapeHtml(currentRules.factor_source || "")}</p>
+      </article>
+    </section>
+  `;
+}
+
+/** Dates where the two models disagreed, with the case where the challenger was right first. */
+function usdL1WorkedCandidates(payload = {}) {
+  const sessions = asArray(payload.sessions);
+  const results = (session, model) => Object.values((session.results || {})[model] || {});
+  const opposite = sessions.filter((session) => {
+    const current = session.models?.current?.direction;
+    const challenger = session.models?.challenger?.direction;
+    return current && challenger && current !== "NO_CALL" && challenger !== "NO_CALL" && current !== challenger;
+  });
+  const best =
+    opposite.find(
+      (session) =>
+        results(session, "challenger").includes("hit") && results(session, "current").includes("miss")
+    ) || opposite[0] || null;
+  const noCalls = sessions.filter((session) => (session.models?.challenger?.direction || "NO_CALL") === "NO_CALL");
+  const minimum = payload.run?.challenger_rules?.min_usable_mechanisms ?? 6;
+  return {
+    opposite,
+    best,
+    noCallDeadband:
+      noCalls.find((session) => (session.models?.challenger?.usable_mechanisms ?? 0) >= minimum) || null,
+    noCallThin: noCalls.find((session) => (session.models?.challenger?.usable_mechanisms ?? 0) < minimum) || null,
+    noCallCount: noCalls.length
+  };
+}
+
+/**
+ * Re-run the challenger's call from the values saved beside the session, with the interpreter the engine uses.
+ *
+ * This is the panel's half of the reproduction promise: the rules come from the artefact, the values come from
+ * the row, and the only code involved is `lib/usd_l1_votes.js`.
+ */
+function usdL1Recompute(payload = {}, date) {
+  const session = asArray(payload.sessions).find((entry) => entry.date === date);
+  const rules = payload.run?.challenger_rules || {};
+  const mechanisms = asArray(payload.run?.challenger_mechanisms);
+  if (!session || !window.UsdL1Votes || !mechanisms.length) {
+    return { ok: false, reason: "the rules or the saved inputs are unavailable, so nothing was re-run" };
+  }
+  let fresh;
+  try {
+    fresh = window.UsdL1Votes.evaluateFromSpecs({
+      mechanisms,
+      rules: { ...rules, conviction_bands: asArray(rules.conviction_bands) },
+      values: session.saved_inputs || {}
+    });
+  } catch (error) {
+    return { ok: false, reason: error?.message || String(error) };
+  }
+  const stored = session.models?.challenger || {};
+  const fields = [];
+  if (fresh.direction !== stored.direction) fields.push("direction");
+  if ((fresh.conviction ?? null) !== (stored.conviction ?? null)) fields.push("conviction");
+  if (fresh.raw_score !== stored.raw_score) fields.push("raw score");
+  return {
+    ok: fields.length === 0,
+    fields,
+    date,
+    inputs_used: asArray(fresh.inputs_used),
+    fresh: {
+      direction: fresh.direction,
+      conviction: fresh.conviction,
+      raw_score: fresh.raw_score,
+      agreement: fresh.agreement,
+      participation: fresh.participation,
+      usable_mechanisms: fresh.usable_mechanisms,
+      reason: fresh.reason
+    },
+    stored: {
+      direction: stored.direction,
+      conviction: stored.conviction,
+      raw_score: stored.raw_score,
+      agreement: stored.agreement,
+      participation: stored.participation,
+      usable_mechanisms: stored.usable_mechanisms,
+      reason: stored.reason
+    }
+  };
+}
+
+/**
+ * "Prove a historical call end to end": the values, their source and print date, each mechanism's contribution,
+ * the arithmetic, and what the other model read that morning.
+ *
+ * The day is chosen from dates where the two models disagreed, and the panel re-runs the challenger's call from
+ * the saved values on request, so the call is demonstrated rather than narrated.
+ */
+function renderUsdL1WorkedCall(payload = {}) {
+  const candidates = usdL1WorkedCandidates(payload);
+  const selected = usdLayer1State.workedDate || (candidates.best || {}).date || null;
+  const session = asArray(payload.sessions).find((entry) => entry.date === selected);
+  const legend = asArray(payload.input_source_legend);
+  const definitions = new Map(asArray(payload.run?.challenger_mechanisms).map((entry) => [entry.id, entry]));
+  const picker = `
+    <div class="usd-l1-worked-picker" role="group" aria-label="Pick a disagreeing day">
+      ${candidates.opposite
+        .slice(0, 8)
+        .map(
+          (entry) => `
+          <button type="button" class="usd-l1-filter${entry.date === selected ? " active" : ""}"
+            data-usd-l1-worked-date="${escapeHtml(entry.date)}">${escapeHtml(entry.date)}
+            <span>${escapeHtml(entry.models.current.direction)} vs ${escapeHtml(entry.models.challenger.direction)}</span>
+          </button>
+        `
+        )
+        .join("")}
+    </div>
+  `;
+
+  if (!session) {
+    return `
+      <section class="usd-l1-worked" data-usd-l1-worked="true">
+        <p class="eyebrow">Prove a historical call end to end</p>
+        <div class="usd-l1-empty">No date where both models called in opposite directions exists in this run, so no
+          worked call can be shown. ${usdL1Number(candidates.opposite.length, 0)} dates carry a disagreement of any kind.</div>
+      </section>
+    `;
+  }
+
+  const current = session.models?.current || {};
+  const challenger = session.models?.challenger || {};
+  const metaByKey = new Map(asArray(session.input_meta).map((row) => [row[0], row]));
+  const inputRows = () => {
+    const keys = [
+      ...new Set(
+        asArray(challenger.mechanisms)
+          .map((entry) => (definitions.get(entry[0]) || {}).input)
+          .filter(Boolean)
+          .concat(["gold_price", "nasdaq100_price"])
+      )
+    ];
+    return keys
+      .map((key) => {
+        const meta = metaByKey.get(key);
+        const value = session.saved_inputs ? session.saved_inputs[key] : null;
+        return `
+          <tr data-usd-l1-worked-input="${escapeHtml(key)}">
+            <th scope="row"><code>${escapeHtml(key)}</code></th>
+            <td>${Number.isFinite(value) ? escapeHtml(String(value)) : `<span class="usd-l1-missing">missing</span>`}</td>
+            <td>${meta ? escapeHtml(String(meta[1] || "")) : "—"}</td>
+            <td>${meta && Number.isFinite(meta[2]) ? `${usdL1Number(meta[2], 0)} business days` : "—"}</td>
+            <td>${meta && Number.isFinite(meta[3]) ? escapeHtml(legend[meta[3]] || "") : "—"}</td>
+          </tr>
+        `;
+      })
+      .join("");
+  };
+  const mechanismRows = () => {
+    let running = 0;
+    const stored = new Map(asArray(challenger.mechanisms).map((entry) => [entry[0], entry]));
+    return asArray(payload.run?.challenger_mechanisms)
+      .map((definition) => {
+        const entry = stored.get(definition.id) || [definition.id, null, null];
+        if (Number.isFinite(entry[2])) running += entry[2];
+        const vote = !Number.isFinite(entry[2])
+          ? "no vote"
+          : entry[2] > 0
+            ? "+1 USD"
+            : entry[2] < 0
+              ? "−1 USD"
+              : "0 (inside cut-off)";
+        return `
+          <tr data-usd-l1-worked-mechanism="${escapeHtml(definition.id)}">
+            <th scope="row">${escapeHtml(definition.label)}<span class="usd-l1-sample">${escapeHtml(
+              definition.input
+            )}</span></th>
+            <td>${Number.isFinite(entry[1]) ? escapeHtml(String(entry[1])) : `<span class="usd-l1-missing">missing</span>`}</td>
+            <td>${escapeHtml(definition.threshold)}</td>
+            <td>${vote}</td>
+            <td>${Number.isFinite(entry[2]) ? usdL1Number(definition.weight, 0) : "—"}</td>
+            <td>${usdL1Signed(running, 0)}</td>
+          </tr>
+        `;
+      })
+      .join("");
+  };
+  const band = rules_conviction_bands(payload).find(
+    (entry) =>
+      (challenger.agreement || 0) >= entry.min_agreement &&
+      (challenger.participation || 0) >= entry.min_participation
+  );
+  const reRun = usdLayer1State.reRun && usdLayer1State.reRun.date === session.date ? usdLayer1State.reRun : null;
+  const currentFactors = asArray(current.factors).filter((entry) => entry[1] && entry[1] !== "NEUTRAL");
+  const liveMechanisms = asArray(challenger.mechanisms).filter((entry) => Number.isFinite(entry[2]) && entry[2] !== 0);
+  const outcomeRows = asArray(payload.run?.markets)
+    .map((market) => {
+      const outcome = (session.outcomes || {})[market.key] || {};
+      return `
+        <tr data-usd-l1-worked-outcome="${escapeHtml(market.key)}">
+          <th scope="row">${escapeHtml(market.label)}</th>
+          <td>${outcome.direction
+            ? `${escapeHtml(outcome.direction)}${
+                Number.isFinite(outcome.move_pct) ? ` (${usdL1Signed(outcome.move_pct, 2, "%")})` : ""
+              }`
+            : "no 05:00 bar"}</td>
+          <td>${Number.isFinite(outcome.flat_band_pct) ? usdL1Percent(outcome.flat_band_pct) : "—"}</td>
+          <td>${usdL1ResultChip((session.results?.current || {})[market.key])}</td>
+          <td>${usdL1ResultChip((session.results?.challenger || {})[market.key])}</td>
+        </tr>
+      `;
+    })
+    .join("");
+  const workedTop = `
+    <div class="usd-l1-worked-head">
+      <div>
+        <p class="eyebrow">Prove a historical call end to end</p>
+        <h3>${escapeHtml(session.date)} · ${escapeHtml(session.split)} · current called
+          ${escapeHtml(current.direction || "no call")}, challenger called ${escapeHtml(challenger.direction || "no call")}</h3>
+        <p class="usd-l1-test-copy muted">Cutoff ${escapeHtml(session.cutoff_at_utc)} (${escapeHtml(
+          session.cutoff_offset_abbrev
+        )}) → endpoint ${escapeHtml(session.endpoint_at_utc)}. Every value below is read from this session row.</p>
+      </div>
+      <button type="button" class="usd-l1-rerun" data-usd-l1-rerun="${escapeHtml(session.date)}">Re-run from the saved inputs</button>
+    </div>
+    ${picker}
+    ${reRun
+      ? `<p class="usd-l1-rerun-result ${reRun.ok ? "ok" : "fail"}" data-usd-l1-rerun-result="${escapeHtml(session.date)}">${
+          reRun.ok
+            ? `Re-ran from the saved inputs: ${escapeHtml(reRun.fresh.direction)} at conviction ${usdL1Text(
+                reRun.fresh.conviction
+              )}, raw score ${usdL1Signed(reRun.fresh.raw_score, 0)} — identical to the stored call.`
+            : `Re-ran from the saved inputs and did not reproduce: ${escapeHtml(
+                asArray(reRun.fields).join(", ") || reRun.reason || "unknown"
+              )}`
+        }</p>`
+      : ""}
+  `;
+  const workedInputs = `
+    <div class="usd-l1-worked-grid">
+      <section class="usd-l1-worked-section">
+        <h4>1. What was available by 05:00 London</h4>
+        <table class="usd-l1-table usd-l1-worked-inputs">
+          <caption>Value, print date, staleness and source for every input the mechanisms read</caption>
+          <thead>
+            <tr><th scope="col">Input</th><th scope="col">Value</th><th scope="col">Print date</th><th scope="col">Staleness</th><th scope="col">Source</th></tr>
+          </thead>
+          <tbody>${inputRows()}</tbody>
+        </table>
+        <p class="usd-l1-test-copy muted">Missing at this cutoff:
+          ${asArray(challenger.missing_inputs).length
+            ? asArray(challenger.missing_inputs).map((item) => `<code>${escapeHtml(item)}</code>`).join(" ")
+            : "nothing the challenger reads"}</p>
+      </section>
+      <section class="usd-l1-worked-section">
+        <h4>2. Each mechanism's contribution</h4>
+        <table class="usd-l1-table usd-l1-worked-mechanisms">
+          <caption>Value, cut-off, vote, weight and the running total</caption>
+          <thead>
+            <tr><th scope="col">Mechanism</th><th scope="col">Value</th><th scope="col">Cut-off</th><th scope="col">Vote</th><th scope="col">Weight</th><th scope="col">Running total</th></tr>
+          </thead>
+          <tbody>${mechanismRows()}</tbody>
+        </table>
+      </section>
+    </div>
+  `;
+  const workedCalc = `
+    <div class="usd-l1-worked-grid">
+      <section class="usd-l1-worked-section">
+        <h4>3. The calculation</h4>
+        <ul class="usd-l1-method-list usd-l1-worked-calc">
+          <li><b>Net score</b><span>${usdL1Signed(challenger.raw_score, 0)} from ${usdL1Number(
+            challenger.usable_mechanisms,
+            0
+          )} live mechanisms of ${usdL1Number(
+            asArray(payload.run?.challenger_mechanisms).length,
+            0
+          )}; a positive net is a bullish USD reading</span></li>
+          <li><b>Agreement</b><span>${usdL1Percent(
+            Number.isFinite(challenger.agreement) ? challenger.agreement * 100 : null,
+            0
+          )} — |net| ÷ live mechanisms, against a ${usdL1Number(
+            rules_agreement_deadband_pct(payload),
+            0
+          )}% deadband floor</span></li>
+          <li><b>Participation</b><span>${usdL1Percent(
+            Number.isFinite(challenger.participation) ? challenger.participation * 100 : null,
+            0
+          )} — live mechanisms ÷ all mechanisms, against a minimum of ${usdL1Number(
+            payload.run?.challenger_rules?.min_usable_mechanisms,
+            0
+          )} live</span></li>
+          <li><b>Conviction</b><span>${
+            band
+              ? `band ${band.conviction} needs ${usdL1Number(band.min_agreement * 100, 0)}% agreement and ${usdL1Number(
+                  band.min_participation * 100,
+                  0
+                )}% participation`
+              : "no band matched, so no call"
+          } → ${usdL1ConvictionPips(challenger.conviction)}</span></li>
+          <li><b>Result</b><span>${escapeHtml(challenger.direction || "no call")}${
+            Number.isFinite(challenger.conviction) ? ` at conviction ${challenger.conviction}` : ""
+          } · ${escapeHtml(challenger.reason || "")}</span></li>
+        </ul>
+      </section>
+      <section class="usd-l1-worked-section">
+        <h4>4. Why the current model read it differently</h4>
+        <p class="usd-l1-test-copy">The current model called
+          <b>${escapeHtml(current.direction_label || current.direction || "no call")}</b> at raw conviction
+          ${usdL1Text(current.conviction_raw)} on its own 0-100 scale (banded to ${usdL1Text(current.conviction)}),
+          with a net weight of ${usdL1Signed(current.net_weight, 2)} across ${usdL1Number(
+            current.factors_live,
+            0
+          )} non-neutral factors. ${escapeHtml(current.reason || "")}</p>
+        <ul class="usd-l1-method-list">
+          ${currentFactors
+            .map(
+              (factor) =>
+                `<li><b>${escapeHtml(factor[0])}</b><span>${escapeHtml(factor[1])} · weight ${usdL1Number(
+                  factor[2],
+                  0
+                )}</span></li>`
+            )
+            .join("") || `<li><span>every factor in the current model's book was neutral this morning</span></li>`}
+        </ul>
+        <p class="usd-l1-test-copy muted">The challenger's live mechanisms were
+          ${
+            liveMechanisms.length
+              ? liveMechanisms.map((entry) => `${escapeHtml(entry[0])} ${entry[2] > 0 ? "+1" : "−1"}`).join(", ")
+              : "none"
+          }. The two models disagreed because they read different books: the challenger gives every mechanism one
+          equal vote and abstains on thin or split mornings, while the current model weights its own factors and still
+          labels a lean when its book is unbalanced.</p>
+      </section>
+    </div>
+  `;
+  const workedOutcomes = `
+    <section class="usd-l1-worked-section">
+      <h4>5. What happened next</h4>
+      <table class="usd-l1-table usd-l1-worked-outcomes">
+        <caption>A USD-bullish call predicts down for all four markets; a flat session is never a hit</caption>
+        <thead>
+          <tr><th scope="col">Market</th><th scope="col">Session move</th><th scope="col">Flat band</th><th scope="col">Current</th><th scope="col">Challenger</th></tr>
+        </thead>
+        <tbody>${outcomeRows}</tbody>
+      </table>
+    </section>
+    <p class="usd-l1-test-copy muted" data-usd-l1-no-call-example="true">A no-call example from the same run:
+      ${
+        candidates.noCallDeadband
+          ? `${escapeHtml(candidates.noCallDeadband.date)} — ${escapeHtml(
+              candidates.noCallDeadband.models.challenger.reason || ""
+            )}`
+          : "no deadband no-call date is present"
+      }${
+        candidates.noCallThin
+          ? ` · ${escapeHtml(candidates.noCallThin.date)} — ${escapeHtml(
+              candidates.noCallThin.models.challenger.reason || ""
+            )}`
+          : ""
+      }</p>
+  `;
+  return `
+    <section class="usd-l1-worked" data-usd-l1-worked="true" data-usd-l1-worked-date="${escapeHtml(session.date)}">
+      ${workedTop}
+      ${workedInputs}
+      ${workedCalc}
+      ${workedOutcomes}
+    </section>
+  `;
+}
+
+/** The five conviction bands, in the order the artefact declares them. */
+function rules_conviction_bands(payload = {}) {
+  return asArray(payload.run?.challenger_rules?.conviction_bands);
+}
+
+/** The agreement deadband as a whole percentage, whichever form the artefact carries. */
+function rules_agreement_deadband_pct(payload = {}) {
+  const rules = payload.run?.challenger_rules || {};
+  if (Number.isFinite(rules.agreement_deadband_pct)) return rules.agreement_deadband_pct;
+  return Number.isFinite(rules.agreement_deadband) ? Math.round(rules.agreement_deadband * 100) : null;
+}
+
 function renderUsdL1Backtester(payload = null) {
   const updated = document.getElementById("usdLayer1Updated");
   if (updated) {
@@ -16537,11 +17629,15 @@ function renderUsdL1Backtester(payload = null) {
   }
 
   panel.innerHTML = `
+    ${renderUsdL1Results(payload)}
     ${renderUsdL1Progress(payload)}
+    ${renderUsdL1CallMethod(payload)}
+    ${renderUsdL1WorkedCall(payload)}
     ${renderUsdL1Coverage(payload)}
     ${renderUsdL1TabStrip()}
     ${renderUsdL1TestBody(payload)}
     ${renderUsdL1SessionList(payload)}
+    ${renderUsdL1Evidence(payload, usdLayer1State.evidence)}
   `;
   mountUsdL1Replay();
 }
@@ -16609,6 +17705,38 @@ function setupUsdL1Controls() {
       else if (action === "prev") usdL1ReplayController.previous();
       else if (action === "next") usdL1ReplayController.next();
       else if (action === "last") usdL1ReplayController.setStep(last);
+      return;
+    }
+
+    if (event.target.closest("[data-usd-l1-evidence-close]")) {
+      usdLayer1State.evidence = null;
+      renderUsdL1Backtester(usdLayer1Data);
+      return;
+    }
+
+    const evidenceButton = event.target.closest("button[data-usd-l1-evidence]");
+    if (evidenceButton) {
+      const spec = evidenceButton.dataset.usdL1Evidence || "";
+      usdLayer1State.evidence = usdLayer1State.evidence === spec ? null : spec;
+      renderUsdL1Backtester(usdLayer1Data);
+      const drawer = document.querySelector("[data-usd-l1-evidence-panel]");
+      if (drawer && typeof drawer.scrollIntoView === "function") drawer.scrollIntoView({ block: "nearest" });
+      return;
+    }
+
+    const workedButton = event.target.closest("button[data-usd-l1-worked-date]");
+    if (workedButton) {
+      usdLayer1State.workedDate = workedButton.dataset.usdL1WorkedDate || null;
+      usdLayer1State.reRun = null;
+      renderUsdL1Backtester(usdLayer1Data);
+      return;
+    }
+
+    const reRunButton = event.target.closest("[data-usd-l1-rerun]");
+    if (reRunButton) {
+      usdLayer1State.reRun = usdL1Recompute(usdLayer1Data || {}, reRunButton.dataset.usdL1Rerun || null);
+      renderUsdL1Backtester(usdLayer1Data);
+      return;
     }
   });
 }

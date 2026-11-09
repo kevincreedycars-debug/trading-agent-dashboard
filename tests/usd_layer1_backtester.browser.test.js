@@ -102,11 +102,15 @@ test("the USD Layer 1 backtester panel renders saved research, not a live run", 
     });
     assert.equal(northStarFirst, true, "the North Star sits above everything the panel renders");
 
-    // Progress: run version, date range, sessions processed out of eligible, current stage and each stage.
+    // Progress: run version, date range, dates processed, current stage and each stage.
     const progressText = await page.textContent("[data-usd-l1-progress='true']");
     assert.match(progressText, new RegExp(artefact.run.run_version));
     assert.match(progressText, new RegExp(artefact.run.challenger_version));
-    assert.match(progressText, new RegExp(`${artefact.run.sessions_processed} / ${artefact.run.sessions_eligible}`));
+    assert.match(
+      progressText,
+      new RegExp(`${artefact.results.dates_processed} dates`),
+      "the panel states dates processed rather than a bare fraction"
+    );
     assert.equal(
       (await page.textContent("[data-usd-l1-progress='true'] h3")).trim(),
       artefact.progress.current_stage_label
@@ -172,16 +176,18 @@ test("each test tab, the drill-down and the candle replay answer their own quest
     assert.match(dxyText, /ICE US Dollar Index|cash DXY/);
     assert.equal((await page.$$("[data-usd-l1-dxy-model='challenger'] [data-usd-l1-conviction-row]")).length, 5);
 
-    // Test 2: four markets, a sample size beside every percentage, and the blocked DXY column.
+    // Test 2: four markets, correct / scored beside every percentage, and the pending DXY column.
     await page.click("[data-usd-l1-tab='four_markets']");
     await page.waitForSelector("[data-usd-l1-test-body='four_markets']");
     const marketRows = await page.$$eval("[data-usd-l1-market]", (nodes) =>
       nodes.map((node) => node.textContent.replace(/\s+/g, " ")));
     assert.equal(marketRows.length, 4, "EUR/USD, XAU/USD, BTC/USD and NAS100 each get a row");
     for (const rowText of marketRows) {
-      assert.match(rowText, /n=\d+/, "every accuracy carries its sample count");
-      assert.match(rowText, /blocked/, "the DXY-confirmed column reports its blocker");
+      assert.match(rowText, /\d+ \/ \d+ · [\d.]+%/, "every accuracy carries its numerator and denominator");
+      assert.match(rowText, /pending test/, "the DXY-confirmed column reports its pending state");
     }
+    const differenceText = await page.textContent("[data-usd-l1-call-difference='true']");
+    assert.match(differenceText, /\d+ dates/, "the 697-against-490 explanation names its counts");
 
     // Tests 3 and 4: four accounts each, an equity curve each, and the demo labelled as a demo.
     for (const id of ["l2l_full_5r", "l2l_half_3r"]) {
@@ -209,6 +215,122 @@ test("each test tab, the drill-down and the candle replay answer their own quest
   }
 });
 
+
+test("the results sit at the top, every factor is accounted for and a call re-runs from its saved inputs", async () => {
+  const before = sha256(fs.readFileSync(artefactPath, "utf8"));
+  const server = serveRepo();
+  await listenSafe(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+  const page = await context.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+
+  try {
+    await page.goto(base, { waitUntil: "networkidle" });
+    await page.waitForTimeout(600);
+    await page.getByRole("button", { name: "USD L1 Backtester" }).click();
+    await page.waitForSelector("[data-usd-l1-results='true']", { timeout: 20000 });
+
+    // 1. The results block leads the panel and states dates processed on its own.
+    const order = await page.evaluate(() => {
+      const results = document.querySelector("[data-usd-l1-results='true']");
+      const method = document.querySelector("[data-usd-l1-call-method='true']");
+      const progress = document.querySelector("[data-usd-l1-progress='true']");
+      return {
+        resultsTop: results.getBoundingClientRect().top,
+        progressTop: progress.getBoundingClientRect().top,
+        methodTop: method.getBoundingClientRect().top
+      };
+    });
+    assert.ok(order.resultsTop < order.progressTop, "the results block comes before the progress strip");
+    assert.ok(order.progressTop < order.methodTop, "the call method follows the progress strip");
+    const datesProcessed = await page.getAttribute("[data-usd-l1-dates-processed]", "data-usd-l1-dates-processed");
+    assert.equal(Number(datesProcessed), artefact.results.dates_processed);
+    assert.match(
+      (await page.textContent("[data-usd-l1-dates-processed]")).trim(),
+      /^\d+ dates processed$/,
+      "the headline states dates processed and nothing else"
+    );
+    const resultRows = await page.$$eval("[data-usd-l1-results-test]", (nodes) =>
+      nodes.map((node) => node.getAttribute("data-usd-l1-results-test")));
+    assert.deepEqual(resultRows, ["dxy_direction", "four_markets", "l2l_full_5r", "l2l_half_3r"]);
+    const dxyStatus = await page.textContent("[data-usd-l1-results-test='dxy_direction'] .usd-l1-status");
+    assert.equal(dxyStatus.trim(), "0 scored · awaiting DXY prices");
+
+    // 2. Every one of the 25 factors is accounted for, with its treatment and the rule that implements it.
+    const factorRows = await page.$$eval("[data-usd-l1-factor]", (nodes) =>
+      nodes.map((node) => node.textContent.replace(/\s+/g, " ")));
+    assert.equal(factorRows.length, 25, "all twenty-five registered factors are listed");
+    const treatmentPattern = /Used to decide whether to abstain|Combined with another factor|Excluded|Used/;
+    const treatments = new Set();
+    for (const rowText of factorRows) {
+      const match = rowText.match(treatmentPattern);
+      assert.ok(match, "every factor carries one of the four treatments");
+      treatments.add(match[0]);
+    }
+    assert.equal(treatments.size, 4, "all four treatments appear in the table");
+    const methodText = await page.textContent("[data-usd-l1-call-method='true']");
+    assert.match(methodText, /preliminary/i, "the model is labelled preliminary");
+    assert.match(methodText, /What would complete the challenger/i);
+    assert.match(methodText, /Fitted on data/i, "the fitted parameters are labelled as fitted");
+    assert.equal((await page.$$("[data-usd-l1-band]")).length, 5, "five conviction bands are shown");
+
+    // 3. The worked call shows its inputs, its mechanism contributions and its arithmetic.
+    const worked = await page.textContent("[data-usd-l1-worked='true']");
+    assert.match(worked, /What was available by 05:00 London/);
+    assert.match(worked, /Each mechanism's contribution/);
+    assert.match(worked, /Why the current model read it differently/);
+    assert.match(worked, /no-call example/i);
+    assert.equal(
+      (await page.$$("[data-usd-l1-worked-mechanism]")).length,
+      artefact.run.challenger_mechanisms.length,
+      "every mechanism is traced for the worked day"
+    );
+    assert.ok((await page.$$("[data-usd-l1-worked-input]")).length >= 5, "the input table lists traced inputs");
+
+    // 4. Re-running from the saved inputs reproduces the stored call, in the browser.
+    await page.click("[data-usd-l1-rerun]");
+    await page.waitForSelector("[data-usd-l1-rerun-result]", { timeout: 20000 });
+    const reRun = (await page.textContent("[data-usd-l1-rerun-result]")).trim();
+    assert.match(reRun, /identical to the stored call/, `the re-run must reproduce: ${reRun}`);
+    assert.ok(!/did not reproduce/.test(reRun));
+
+    // 5. Any percentage opens the dates behind it, with its numerator and denominator.
+    await page.click("[data-usd-l1-results-market='EURUSD'] [data-usd-l1-evidence='result|EURUSD|challenger|scored']");
+    await page.waitForSelector("[data-usd-l1-evidence-panel]", { timeout: 20000 });
+    const arithmetic = (await page.textContent(".usd-l1-evidence-arithmetic")).replace(/\s+/g, " ");
+    const eurusd = artefact.results.tests.find((entry) => entry.id === "four_markets").markets.EURUSD.challenger;
+    assert.match(
+      arithmetic,
+      new RegExp(`${eurusd.hits} correct / ${eurusd.scored} scored`),
+      `the drawer prints the artefact's own numerator and denominator: ${arithmetic}`
+    );
+    const listed = await page.getAttribute(".usd-l1-evidence-list", "data-usd-l1-evidence-count");
+    assert.equal(Number(listed), eurusd.scored, "the drawer lists one row per scored session");
+
+    // 6. A trade figure opens its ledger, with its own arithmetic.
+    await page.click("[data-usd-l1-tab='l2l_full_5r']");
+    await page.waitForSelector("[data-usd-l1-test-body='l2l_full_5r'] [data-usd-l1-evidence^='trades']", {
+      timeout: 20000
+    });
+    await page.click("[data-usd-l1-test-body='l2l_full_5r'] [data-usd-l1-evidence^='trades']");
+    await page.waitForSelector("[data-usd-l1-evidence-panel^='trades']", { timeout: 20000 });
+    const tradeArithmetic = await page.textContent(
+      "[data-usd-l1-evidence-panel^='trades'] .usd-l1-evidence-arithmetic"
+    );
+    assert.match(tradeArithmetic, /winning \/ \d+ closed/, "the ledger states its win rate arithmetic");
+    assert.match(tradeArithmetic, /ending balance £/, "the ledger states its ending balance");
+    assert.match(tradeArithmetic, /max drawdown £/, "the ledger states its drawdown");
+
+    assert.deepEqual(pageErrors, [], "the panel renders without a page error");
+    assert.equal(sha256(fs.readFileSync(artefactPath, "utf8")), before, "the panel only reads the artefact");
+  } finally {
+    await browser.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
 
 test("the candle replay steps through close, order, fill, stop, target and exit", async () => {
   const server = serveRepo();

@@ -9728,3 +9728,269 @@ body {
   .usd-l1-stage { grid-template-columns: 1fr; }
 }
 
+
+/* ---- USD Layer 1: results, call trace and evidence drawer (research panel) ---- */
+
+.usd-l1-results,
+.usd-l1-method,
+.usd-l1-worked {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+.usd-l1-results-head,
+.usd-l1-method-head,
+.usd-l1-worked-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.usd-l1-results-head h3,
+.usd-l1-method-head h3,
+.usd-l1-worked-head h3 {
+  margin: 4px 0 6px;
+  font-size: 20px;
+}
+
+.usd-l1-results-calls {
+  display: flex;
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.usd-l1-results-calls li {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-end;
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.usd-l1-results-table,
+.usd-l1-results-detail {
+  margin-bottom: 14px;
+}
+
+.usd-l1-results-blocked td:first-of-type .usd-l1-status,
+.usd-l1-status.blocked {
+  background: rgba(214, 96, 96, 0.14);
+  color: #d66060;
+}
+
+.usd-l1-status {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: rgba(120, 140, 160, 0.16);
+  color: var(--ink-muted);
+}
+
+.usd-l1-status.scored {
+  background: rgba(86, 170, 120, 0.16);
+  color: #4f9c6d;
+}
+
+.usd-l1-pct {
+  appearance: none;
+  border: 0;
+  border-bottom: 1px dashed var(--ink-faint);
+  background: none;
+  padding: 0 1px;
+  font: inherit;
+  color: var(--navy-mid);
+  cursor: pointer;
+}
+
+.usd-l1-pct:hover,
+.usd-l1-pct:focus-visible {
+  color: var(--ink);
+  border-bottom-style: solid;
+}
+
+.usd-l1-demo-line {
+  display: inline-block;
+  margin-left: 6px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+}
+
+.usd-l1-evidence {
+  border: 1px solid var(--navy-pale);
+  border-radius: 16px;
+  background: var(--panel);
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.usd-l1-evidence-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.usd-l1-evidence-head h4 { margin: 2px 0 0; font-size: 15px; }
+
+.usd-l1-evidence-close {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--ink-muted);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.usd-l1-evidence-arithmetic {
+  margin: 10px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.usd-l1-evidence-arithmetic code {
+  font-family: var(--mono);
+  color: var(--ink);
+  background: rgba(120, 140, 160, 0.12);
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: inline-block;
+}
+
+.usd-l1-evidence-list {
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0 0 0 16px;
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+.usd-l1-evidence-list b { font-family: var(--mono); font-weight: 500; }
+.usd-l1-evidence-list span { margin-left: 8px; color: var(--ink-muted); }
+
+.usd-l1-method-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.usd-l1-method-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.usd-l1-method-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(120, 140, 160, 0.05);
+}
+
+.usd-l1-method-card h4,
+.usd-l1-method-card h5 { margin: 0 0 8px; font-size: 13px; }
+
+.usd-l1-method-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.usd-l1-method-list b { display: block; font-weight: 600; }
+.usd-l1-method-list span { color: var(--ink-muted); }
+
+.usd-l1-method-title {
+  margin: 18px 0 8px;
+  font-size: 13px;
+}
+
+.usd-l1-method-table td,
+.usd-l1-factor-table td,
+.usd-l1-ledger-table td {
+  font-size: 11.5px;
+  vertical-align: top;
+}
+
+.usd-l1-vote-spec,
+.usd-l1-factor-rule,
+.usd-l1-ledger-dates {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-muted);
+}
+
+.usd-l1-worked-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.usd-l1-worked-picker .usd-l1-filter span {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+
+.usd-l1-rerun {
+  appearance: none;
+  border: 1px solid var(--navy-pale);
+  background: none;
+  color: var(--navy-mid);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.usd-l1-rerun-result {
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+
+.usd-l1-rerun-result.ok { background: rgba(86, 170, 120, 0.14); color: #4f9c6d; }
+.usd-l1-rerun-result.fail { background: rgba(214, 96, 96, 0.14); color: #d66060; }
+
+.usd-l1-worked-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.usd-l1-worked-section h4 { margin: 0 0 8px; font-size: 13px; }
+.usd-l1-worked-inputs td,
+.usd-l1-worked-mechanisms td,
+.usd-l1-worked-outcomes td { font-size: 11.5px; }
+
+.usd-l1-worked-calc li b { font-family: var(--mono); }
+
+@media (max-width: 820px) {
+  .usd-l1-results-head,
+  .usd-l1-method-head,
+  .usd-l1-worked-head { flex-direction: column; }
+}

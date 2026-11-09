@@ -166,3 +166,51 @@ counted as one of the four tests.
    nothing in v0 may be tuned against these results in the meantime.
 4. A German 2-year series cache, a US event history that reaches the cutoff and historical Fed-bias snapshots
    would let the current model's own F3, F7 and F8 speak, and therefore let it reach its own high bands.
+
+## The call trace, added 2026-11-09
+
+The panel now demonstrates the run rather than describing it. Four blocks were added, in this order, and each one
+is rendered from the same committed artefact the tables use:
+
+1. **Results at the top.** ``725 dates processed`` stands alone, and each test carries its own scored count beside
+   it: test 1 shows ``0 scored · awaiting DXY prices`` with the number of calls waiting per model, test 2 shows
+   correct / scored and accuracy per market per model, tests 3 and 4 show ``0 closed trades scored · demo only``
+   with the demo ledger named separately. The ``725 / 725`` fraction is gone, because a processed date is not a
+   scored call.
+2. **How this call was made.** The nine mechanisms as implemented (input, cut-off, vote rule, weight), the two
+   abstention gates, the missing-data rules, the five conviction bands, all 25 registered factors joined to the
+   rule that implements each one, and an assumption ledger that classes every frozen parameter as research,
+   developer assumption or fitted, with the dates. Challenger v0 is labelled preliminary, with the work needed to
+   complete it listed beside the label.
+3. **Prove a historical call end to end.** A day where the models disagreed is picked by default (the first one
+   where the challenger was right and the current model wrong), and the panel shows the values available by 05:00
+   with their print date, staleness and source; every mechanism's vote and running total; the net, agreement,
+   participation and the band the conviction came from; the current model's own factor signals and weights; the
+   four market outcomes; and two no-call examples with the gate that stopped them. **Re-run from the saved inputs**
+   re-executes the challenger's rule over the values saved in that row through ``lib/usd_l1_votes.js``, the same
+   interpreter the engine uses, and prints whether the call reproduced.
+4. **Evidence behind every percentage.** Every percentage and count on the panel is a button. Clicking one lists
+   the dates (or the trades) behind it and prints the arithmetic as ``hits / scored = pct``, computed in the panel
+   from the same session rows the tables were built from.
+
+### The rule is data, and the artefact carries it
+
+Mechanisms now declare a ``vote_spec`` (an ordered list of ``when/value/usd`` branches) instead of a closure, and
+``lib/usd_l1_votes.js`` interprets those declarations for both the engine and the browser. Three factor references
+were corrected to the catalogue's own ids (``live.f2-us-2y-delta``, ``live.f4-real-yield-delta``,
+``live.f10-equity-versus-usd``) so the 25-factor join is real rather than plausible; no weight, threshold, gate or
+band changed, so challenger v0 is the same model it was.
+
+### Reproduction is checked before the artefact is written
+
+``backtester/lib/usd_layer1_backtester/reproduce.js`` round-trips every session row through JSON, feeds the saved
+inputs back through both models, and re-derives each market's hits and scored count from the stored per-market
+results. The result is committed inside the artefact: 725 of 725 challenger calls, 725 of 725 current-model calls
+and every published total reproduce. The panel shows the engine-side verdict and re-runs the challenger itself.
+
+### The 25-factor account, in one line each
+
+Eight factors are used by a named mechanism, six are read only through another factor's mechanism (so no morning
+is counted twice), one is the data-quality abstention gate, and ten are excluded with a stated reason (four of them
+for want of an input that does not exist at the cutoff). The full table is in the artefact under
+``factor_accounting`` and printed on the panel.
