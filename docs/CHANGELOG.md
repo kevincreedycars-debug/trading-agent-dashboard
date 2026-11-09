@@ -1,4 +1,31 @@
 # Changelog
+## 2026-11-10 - USD Layer 1 Backtester published as a page of its own
+
+- Why: the panel was finished on `research/usd-session-20261013`, but the published dashboard is served from
+  `main`, which does not carry it, so a reader of the live site could not open the work at all. The owner chose
+  a standalone page cut from current `main` over a merge of the research branch.
+- What was built: `usd-layer1-backtester.html` and `usd-l1-panel.js`. The panel is the dashboard's own code,
+  moved unchanged: the renderers, the five small helpers they call, and a boot hook. The rules stay in
+  `lib/usd_l1_votes.js`, the candle replay in `lib/usd_l1_replay.js` with the vendored Three.js build and its
+  2D fallback, and the numbers in `data/usd-layer1-backtester/run-v1.json`, pinned at 2,653,887 bytes, sha256
+  `53c1cf1e8ef939c53c4c40d0825abc13ff5c6c75c8eeec7660d4f935bd50e68a`. Because the docs quote that hash and the
+  page reads the file as saved, `data/usd-layer1-backtester/** -text` was added so line endings are never
+  rewritten in either direction.
+- What the page shows: the North Star above the panel and a visible "Preliminary challenger v0" stamp; one
+  saved run read only, 725 dates processed stated alone, a separate scored count per test, the four tests as
+  tabs, every percentage a button that opens the dates behind it with its numerator and denominator, one
+  disagreeing call shown end to end and re-run from its saved inputs, and test ① and ②'s DXY-confirmed column
+  and tests ③ and ④ shown with their exact blockers instead of a number.
+- Navigation: `index.html` gains a `USD L1 Backtester` entry in the top bar list and in the side rail, both
+  pointing at the new page. Nothing else on the dashboard changed.
+- Tests: fresh-browser check of the page as served from the site root. The panel states 725 dates; the stamp
+  and the North Star are visible; EUR/USD's reported 49.86% opens 367 dates with the arithmetic
+  "183 correct / 367 scored"; the challenger's 261 opens its own 261; a conviction cell opens its own dates;
+  the worked 2024-01-18 call re-runs to "identical to the stored call"; the artefact's sha256 is unchanged
+  before and after; no uncaught error and every asset the page references loads. No sideways scroll at 1440px
+  or 414px, and the first table's header and body column widths match at both. Guards on the research branch
+  stay green: `npm run test:usd-layer1` 27 of 27.
+
 ## 2026-11-03 - Research Library: upload and download with no research-account sign-in
 
 - Why: the owner asked for the simplest workflow - open the published dashboard, sign nothing in, download

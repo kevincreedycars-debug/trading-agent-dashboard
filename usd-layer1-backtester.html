@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>USD Layer 1 Backtester &mdash; current model versus the 25-factor challenger</title>
+<meta name="description" content="The USD Layer 1 backtester as a page of its own: one saved run, 725 London sessions, the current model against the preliminary 25-factor challenger v0, with four tests, an evidence drawer behind every percentage and a re-run of any call from its saved inputs. Research only.">
+<!-- Visual work in this project consults $trading-dashboard-aesthetic-rules and $dashboard-layout-safety-rules first. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=20261110-usd-l1-standalone-v1">
+</head>
+<body>
+<!-- SHARED-NAV:START -->
+<header class="topbar site-nav">
+  <div class="topbar-brand">Asset Directional Movement Dashboard</div>
+  <div class="topbar-meta">
+    <a class="topbar-link" href="dashboard-northstar.html" target="_top">North Star Brief</a>
+    <a class="topbar-link" href="standing-dashboard.html" target="_top">Standing Dashboard</a>
+    <a class="topbar-link" href="gold.html" target="_top">Gold</a>
+    <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
+    <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="topbar-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <a class="topbar-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
+    <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
+  </div>
+</header>
+<aside class="side-rail site-nav" aria-label="Primary navigation">
+  <div class="side-rail-head">
+    <span class="side-rail-mark">ADM</span>
+    <span class="side-rail-label">Control Room</span>
+  </div>
+  <nav class="tab-bar side-rail-tabs" aria-label="Site navigation">
+    <span class="side-rail-group">Operate</span>
+    <a class="tab-button" href="index.html#overview" target="_top">Overview</a>
+    <a class="tab-button" href="index.html#USD" target="_top">USD</a>
+    <a class="tab-button" href="index.html#EUR" target="_top">EUR</a>
+    <a class="tab-button" href="gold.html#direction" target="_top">Gold</a>
+    <a class="tab-button" href="index.html#SILVER" target="_top">Silver</a>
+    <a class="tab-button" href="index.html#NQ" target="_top">NQ</a>
+    <a class="tab-button" href="index.html#BTC" target="_top">BTC</a>
+    <a class="tab-button" href="index.html#WTI" target="_top">WTI</a>
+    <a class="tab-button" href="index.html#GBP" target="_top">GBP</a>
+    <a class="tab-button" href="index.html#layer2" target="_top">Pair Analysis</a>
+    <span class="side-rail-group">Live</span>
+    <a class="tab-button" href="index.html#live-trading" target="_top">Live Trading</a>
+    <span class="side-rail-group">Evidence</span>
+    <a class="tab-button" href="index.html#research-library" target="_top">Research Library</a>
+    <a class="tab-button" href="index.html#backtest" target="_top">Backtest / Accuracy</a>
+    <a class="tab-button" href="index.html#backtest-engine" target="_top">Backtest Engine</a>
+    <a class="tab-button" href="index.html#research-proof-map" target="_top">Research Proof Map</a>
+    <a class="tab-button" href="index.html#factor-edge-lab" target="_top">Factor Edge Lab</a>
+    <a class="tab-button" href="index.html#shadow-logic-backtest" target="_top">Shadow Logic Backtest</a>
+    <span class="side-rail-group">System</span>
+    <a class="tab-button" href="index.html#architecture" target="_top">Architecture</a>
+    <a class="tab-button" href="index.html#live-trade-logic" target="_top">Live Trade Logic</a>
+    <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <a class="side-rail-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
+  </nav>
+  <div class="side-rail-foot">
+    <span class="side-rail-status-dot" aria-hidden="true"></span>
+    <span>Published dashboard</span>
+  </div>
+</aside>
+<style id="shared-nav-css">
+/* Values copied from the published styles.css nav subset (.topbar*, .side-rail*, .tab-bar, .tab-button),
+   scoped to .site-nav so no page's own rules can leak in or be disturbed. The rail splits in two again
+   by structure: inside .dashboard-frame it is the grid column it already was (sticky, 58px under the bar);
+   as a direct child of <body> it is fixed to the left edge and the following blocks are shifted clear.
+   Under 901px the rail becomes the horizontal strip it already becomes on the dashboard, and the block
+   still adds nothing that needs a script. */
+.site-nav.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:22px;min-height:58px;padding:0 32px;background:rgba(5,8,13,.92);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(18px)}
+.site-nav.topbar .topbar-brand{color:#f5f8fc;font-family:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif;font-size:17px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.site-nav.topbar .topbar-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.site-nav.topbar .topbar-meta span{border:1px solid rgba(255,255,255,.08);border-radius:999px;color:#d8e4f3;background:rgba(7,11,17,.84);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;white-space:nowrap}
+.site-nav.topbar .topbar-dual-clock{font-variant-numeric:tabular-nums}
+.site-nav.topbar .topbar-link{display:inline-flex;align-items:center;border:1px solid rgba(94,161,255,.22);border-radius:999px;color:#d8e4f3;background:rgba(94,161,255,.1);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;text-decoration:none;transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease}
+.site-nav.topbar .topbar-link:hover,.site-nav.topbar .topbar-link:focus-visible{background:rgba(94,161,255,.18);border-color:rgba(94,161,255,.36);color:#fff}
+.site-nav.side-rail{display:flex;flex-direction:column;min-width:0;padding:18px 12px 16px;border-right:1px solid rgba(142,169,198,.15);background:linear-gradient(180deg,rgba(12,18,27,.98),rgba(7,12,19,.99))}
+.site-nav .side-rail-head{display:flex;align-items:center;gap:10px;min-width:0;padding:0 8px 18px;border-bottom:1px solid rgba(142,169,198,.13)}
+.site-nav .side-rail-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(236,182,85,.42);border-radius:8px;background:rgba(185,137,39,.12);color:#f2c86f;font-family:"IBM Plex Mono",Consolas,monospace;font-size:10px;font-weight:700;letter-spacing:.08em}
+.site-nav .side-rail-label,.site-nav .side-rail-group,.site-nav .side-rail-foot{font-family:"IBM Plex Mono",Consolas,monospace;text-transform:uppercase}
+.site-nav .side-rail-label{min-width:0;color:#e9f0f8;font-size:11px;font-weight:700;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-tabs{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0;margin:0;padding:15px 0;overflow-y:auto;overflow-x:hidden;border:0;border-radius:0;background:transparent;box-shadow:none}
+.site-nav .side-rail-group{display:block;margin:14px 8px 6px;color:#697f96;font-size:9px;font-weight:700;letter-spacing:.14em}
+.site-nav .side-rail-group:first-child{margin-top:0}
+.site-nav .side-rail-tabs .tab-button{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 14px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;text-transform:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
+.site-nav .side-rail-tabs .tab-button::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:transparent}
+.site-nav .side-rail-tabs .tab-button:hover{border-color:rgba(116,155,198,.22);background:rgba(78,113,150,.13);color:#f2f7fb}
+.site-nav .side-rail-tabs .tab-button.active{border-color:rgba(212,164,68,.2);background:linear-gradient(90deg,rgba(190,139,41,.22),rgba(190,139,41,.06));color:#f3cf81;box-shadow:inset 0 1px 0 rgba(255,228,159,.06)}
+.site-nav .side-rail-tabs .tab-button.active::before{background:#e4af4d}
+/* The rail's outbound entries keep a tab's shape, so the rail still reads as one column, but the marker bar is
+   the link blue and an arrow sits at the right edge where a tab shows nothing. */
+.site-nav .side-rail-tabs .side-rail-link{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 28px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
+.site-nav .side-rail-tabs .side-rail-link::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:rgba(94,161,255,.8)}
+.site-nav .side-rail-tabs .side-rail-link::after{content:"\2197";position:absolute;top:50%;right:11px;transform:translateY(-50%);color:#7fade8;font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;line-height:1}
+.site-nav .side-rail-tabs .side-rail-link:hover,.site-nav .side-rail-tabs .side-rail-link:focus-visible{border-color:rgba(94,161,255,.3);background:rgba(78,113,150,.18);color:#f2f7fb}
+.site-nav .side-rail-foot{display:flex;align-items:center;gap:8px;min-width:0;padding:14px 8px 0;border-top:1px solid rgba(142,169,198,.13);color:#8095aa;font-size:9px;font-weight:600;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#48c69a;box-shadow:0 0 12px rgba(72,198,154,.62)}
+@media (min-width:901px){
+.site-nav.side-rail{position:sticky;top:58px;height:calc(100vh - 58px)}
+body > aside.site-nav.side-rail{position:fixed;left:0;top:58px;width:232px;height:calc(100vh - 58px);z-index:19;overflow-y:auto}
+body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232px)}
+}
+@media (max-width:900px){
+.site-nav.side-rail{position:sticky;top:58px;z-index:19;display:block;width:100%;height:auto;padding:0;border-right:0;border-bottom:1px solid rgba(142,169,198,.16)}
+.site-nav .side-rail-head,.site-nav .side-rail-foot,.site-nav .side-rail-group{display:none}
+.site-nav .side-rail-tabs{display:flex;flex-direction:row;gap:6px;margin:0;padding:9px 16px;box-sizing:border-box;max-width:100%;contain:paint;overflow-x:auto;overflow-y:hidden}
+.site-nav .side-rail-tabs .tab-button{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
+.site-nav .side-rail-tabs .tab-button::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+.site-nav .side-rail-tabs .side-rail-link{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
+.site-nav .side-rail-tabs .side-rail-link::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+.site-nav .side-rail-tabs .side-rail-link::after{display:none}
+}
+@media (max-width:780px){
+.site-nav.topbar{position:static;flex-wrap:wrap;min-height:0;gap:12px;padding:14px 18px}
+.site-nav.topbar .topbar-brand,.site-nav.topbar .topbar-meta{width:100%;justify-content:flex-start}
+.site-nav.topbar .topbar-brand{white-space:normal;overflow-wrap:anywhere}
+.site-nav.topbar .topbar-link{order:-1}
+}
+</style>
+<!-- SHARED-NAV:END -->
+
+<main class="usd-l1-page" data-usd-l1-page="standalone">
+  <section class="section-header backtest-title">
+    <div>
+      <p class="eyebrow">USD Layer 1 Backtester</p>
+      <h2>Current model versus the 25-factor challenger</h2>
+      <p class="usd-l1-page-stamp">
+        <span class="usd-l1-chip flat" data-usd-l1-page-label="challenger">Preliminary challenger v0</span>
+        <span class="usd-l1-page-stamp-note">One saved run artefact, read only. Rebuild it with <code>node backtester/scripts/run_usd_layer1_backtest.js --publish</code>, then check the reproduction gate before publishing.</span>
+      </p>
+    </div>
+    <p id="usdLayer1Updated" role="status">Loading saved research results...</p>
+  </section>
+
+  <section class="backtest-panel usd-l1-panel" aria-label="USD Layer 1 backtester: research panel">
+        <article class="usd-l1-north-star" data-usd-l1-north-star="true">
+          <p class="eyebrow">North Star</p>
+          <p class="usd-l1-north-star-text">Does one independent USD call at 05:00 London, built from the 25-factor research, improve on our current model? We measure four things: &#9312; DXY directional accuracy, &#9313; how often EUR/USD, gold, BTC/USD and NAS100 move opposite the USD call, &#9314; full-level L2L trading results at 5R, and &#9315; half-level L2L trading results at 3R. Both trade simulations start at &pound;100,000 and risk 1% of the account balance per filled trade.</p>
+          <p class="usd-l1-north-star-note">Research only. Neither model is published as a live call, and no figure here is an edge claim.</p>
+        </article>
+    <div id="usdLayer1Panel" class="usd-l1-root" data-usd-l1-root="true" aria-live="polite"></div>
+  </section>
+</main>
+
+<script src="lib/vendor/three.min.js?v=20261110-usd-l1-standalone-v1"></script>
+<script src="lib/usd_l1_votes.js?v=20261110-usd-l1-standalone-v1"></script>
+<script src="lib/usd_l1_replay.js?v=20261110-usd-l1-standalone-v1"></script>
+<script src="usd-l1-panel.js?v=20261110-usd-l1-standalone-v1"></script>
+</body>
+</html>
