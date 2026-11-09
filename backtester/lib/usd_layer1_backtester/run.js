@@ -345,8 +345,7 @@ function buildResults({ tests, coverage, dates, demo }) {
       comparison: {
         corrected: comparison.corrected || 0,
         spoiled: comparison.spoiled || 0,
-        matched: comparison.matched || 0,
-        both_scored: comparison.both_scored || 0
+        matched: comparison.matched || 0
       }
     };
   }
