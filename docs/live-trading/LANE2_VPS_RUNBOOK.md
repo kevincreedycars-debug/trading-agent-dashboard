@@ -65,6 +65,39 @@ must find it unchanged except for its timestamps.
 **If stage 0 does not pass, stop.** A lane-1 fault found now is not a lane-2 problem, and fixing it inside this
 runbook would be exactly the coupling the two-checkout layout exists to avoid.
 
+### What lane 1 was recorded as, read-only, on 2026-11-09
+
+Read from `origin/main` **after `git fetch`** - the branch's own copy of `data/` was two days behind, so the fetch is
+part of taking the reading rather than a courtesy. Stage 0's commands on the host have to reproduce these values or
+explain the difference:
+
+| What | Recorded value |
+| --- | --- |
+| host | `vmi3697641`, win32, checkout named `runtime` |
+| lane 1's runtime path | `C:\live-trading\runtime` |
+| terminal | `C:\Program Files\FTMO Global Markets MT5 Terminal` |
+| tasks | `LiveTradingTraderTick019`, `LiveTradingLane-ftmo1`, `LiveTradingTerminalStartup` |
+| heartbeat | `at_utc` `2026-11-09T18:06:30.008Z`, `armed: true`, `lane: ftmo-1`, `status: nothing_to_place` |
+| account | `***614` in the heartbeat (its `server` is null there), `***614` on `FTMO-Server` in the snapshot |
+| the account itself | FTMO Global Markets Ltd, USD, leverage 30, balance and equity `10152.15`, free margin `10152.15` |
+| working | 0 open positions and **1 working order**, all carrying lane 1's magic |
+| snapshot | `data/live-trading.json` generated `2026-11-09T18:10:20.913Z`, four instruments, every one available with a fresh M5 block (19-21 s old) |
+| code | `checkout_head` `c5abd0ac`, `git_blob` `f43ac5ea318fb5e8c87bf55a6a88b76cc1eb6958`, `sha256` `b6422a72...` |
+| publication | lane 1 `published`, lane 2 `disabled`; the newest publish commit is `2026-11-09T18:10:57Z`, so the cadence is live |
+
+**Lane 1 is healthy as of that reading, and one thing in it still needs explaining before stage 1.** The heartbeat's
+`git_blob` (`f43ac5ea`) is `origin/main`'s trader, while the commit it says it ran at (`c5abd0ac`) carries a different
+trader blob (`164eb0d4`). So lane 1's checkout is running a trader file that does not match its own recorded HEAD -
+either a deploy copied files in, or the checkout was pulled without its HEAD moving - and stage 0's
+`git status --porcelain` is where that shows up. It is a lane-1 question, not made worse by lane 2, but it belongs in
+the handoff rather than in a surprise after both lanes are live.
+
+What it does **not** mean: lane 1 is running this branch. This branch's trader is `1c528e542271194bcf15f77950fc96f241db2791`
+and its registration script is `c0bcc9bddb419d0a14ccc101de7a67c815ecae47`; both are this branch's own changes, neither is
+on `main`, and lane 2 is the only lane that will ever run them. `main` is 161 commits ahead of this branch's base and
+**none of them touches `scripts/`, `config/`, `tools/`, `lib/`, `script.js` or `tests/`** - they are data publishes - so
+pinning lane 2 here pins the code without pinning a two-day-old tree.
+
 ## 1. Lane 2's checkout, pinned to a commit
 
 ```powershell
@@ -88,29 +121,75 @@ in the table at the top of this file.
 One terminal per account. Lane 1's terminal is never opened, re-logged or reconfigured in this stage.
 
 ```powershell
-# 2a. The terminal, its own install and its own startup file.
-Test-Path 'C:\Program Files\FTMO Global Markets MT5 Terminal 2'
-# Market Watch must hold EURUSD, XAUUSD, US100.cash and BTCUSD: a cold terminal serves only what it holds or has been
-# told to subscribe, and a symbol it does not serve comes back unavailable rather than mispriced.
+# 2a. The two installations are different installations, not one installed twice. Run all four lines and compare:
+#     the executable paths, the hashes, and the data folder each install owns.
+'C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe'
+'C:\Program Files\FTMO Global Markets MT5 Terminal 2\terminal64.exe'
+Get-FileHash 'C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe'   -Algorithm SHA256 | Select-Object Hash
+Get-FileHash 'C:\Program Files\FTMO Global Markets MT5 Terminal 2\terminal64.exe' -Algorithm SHA256 | Select-Object Hash
 
-# 2b. Which account it is really logged into, read-only. The probe prints the masked login, the server and the four
-#     symbols' availability, tradability and volume_min - it places nothing.
+# The data directories. A non-portable MT5 keeps its account, history and profile under a per-install hash, and each
+# of those folders records the install it belongs to in origin.txt. Two installs must appear as two hashes, each
+# naming its own path; one hash appearing twice means the second terminal is sharing the first one's data.
+Get-ChildItem "$env:APPDATA\MetaQuotes\Terminal" -Directory |
+  Select-Object Name, @{ n = 'origin'; e = { (Get-Content (Join-Path $_.FullName 'origin.txt') -ErrorAction SilentlyContinue) } } |
+  Where-Object { $_.origin } | Format-Table -AutoSize
+
+# 2b. Market Watch must hold EURUSD, XAUUSD, US100.cash and BTCUSD: a cold terminal serves only what it holds or has
+#     been told to subscribe, and a symbol it does not serve comes back unavailable rather than mispriced.
+
+# 2c. Which account each terminal is really logged into, read-only. The probe prints the masked login, the server,
+#     the terminal path and the four symbols' availability, tradability, min volume and spread - it places nothing.
+#     Run it against lane 1's terminal too: the two readings must name two different accounts.
+python C:\ftmo2\tools\mt5-bridge\live-trading-account-probe.py --path 'C:\Program Files\FTMO Global Markets MT5 Terminal'
 python C:\ftmo2\tools\mt5-bridge\live-trading-account-probe.py --path 'C:\Program Files\FTMO Global Markets MT5 Terminal 2'
+```
 
-# 2c. The identity file: made here, by hand, from 2b's numbers, and never committed.
+**Stage 2 stops here until account 2 is signed in.** The login is entered in the terminal's own dialog, not in a
+script:
+
+1. On the VPS, open `C:\Program Files\FTMO Global Markets MT5 Terminal 2\terminal64.exe`. If the second install has
+   never run, it opens on the FTMO "Open an Account" wizard; close the wizard, the login dialog is what is wanted.
+2. Menu **File → Login to Trade Account**. The dialog has three fields: **Login** (the full account number, all
+   digits), **Password** (the **read-only / investor password** for this stage), and **Server**.
+3. **Server**: pick `FTMO-Server3` from the list. If `FTMO-Server3` is not listed, the terminal has not downloaded
+   FTMO's server list yet: **File → Open an Account** → type `FTMO` in the broker search → the servers appear → close
+   that wizard without creating anything, then reopen **File → Login to Trade Account** and `FTMO-Server3` will be in
+   the dropdown.
+4. Tick **Save account information**, press **OK**. Nothing else is typed anywhere: not in PowerShell, not in a
+   wrapper, not in a task argument, not in the identity file, not into any file in `C:\ftmo2`.
+
+**Why the read-only password is the right one for this stage.** MT5's read-only credential is the **investor
+password**. Signed in with it, the terminal reads accounts, symbols and history normally - the identity gate, the
+probe, the feed and the unarmed trader run all work - but the server will refuse any trade request, so "lane 2 cannot
+send" is enforced by the account and not only by a flag. It also sets `account.trade_allowed` false, which
+`scripts/prepare-live-trading-host.ps1` reads when it checks that a lane may trade; that check is therefore expected
+to fail while this login is in place, and **stage 7 re-logs this terminal with the account's master (trading)
+password before arming**. If the intent is rather to arm in the same session, sign in with the master password here
+and treat the unarmed stages as the only guard.
+
+```powershell
+# 2d. The identity file: made here, by hand, from 2c's numbers, and never committed.
 New-Item -ItemType Directory -Force -Path C:\live-trading\state | Out-Null
-#   {"login": <the account's login as an integer>, "server": "<the server 2b printed>",
-#    "terminal_path": "C:\\Program Files\\FTMO Global Markets MT5 Terminal 2"}
+#   {"login": <the full account number as an integer - all of it, this file is private>, 
+#    "server": "FTMO-Server3",
+#    "terminal_path": "C:\\Program Files\\FTMO Global Markets MT5 Terminal 2\\terminal64.exe"}
 notepad C:\live-trading\state\lane-ftmo2-identity.json
 icacls C:\live-trading\state\lane-ftmo2-identity.json /inheritance:r /grant:r "Administrators:F" "SYSTEM:F"
 
-# 2d. The gate, read-only, before anything is registered: the tool checks the terminal against that file.
+# terminal_path must end in terminal64.exe, not in the folder: the gate compares it with the path the terminal
+# reports for its own executable, and a folder never resolves to an executable.
+
+# 2e. The gate, read-only, before anything is registered: the tool checks the terminal against that file.
 python C:\ftmo2\tools\mt5-bridge\live-trading-order.py status --expect-identity C:\live-trading\state\lane-ftmo2-identity.json --journal C:\ftmo2\tmp\live-trading-orders.log
 ```
 
-**Stage 2 passes when** 2d exits 0 and its `identity` block names the masked login from 2b, and `icacls` shows only
-`Administrators` and `SYSTEM`. An `identity_mismatch` here means the terminal is on the wrong account: fix that before
-stage 3, and register nothing yet.
+**Stage 2 passes when** 2e exits 0 and its `identity` block names `***841` on `FTMO-Server3` at the lane-2
+`terminal64.exe`; 2a showed two distinct install paths, two data folders each naming its own install, and 2c showed
+lane 1's terminal still on `***614`; and `icacls` shows only `Administrators` and `SYSTEM`. An `identity_mismatch`
+here means the terminal is on the wrong account or the identity file names the wrong terminal: fix that before stage 3,
+and register nothing yet.
+
 
 ## 3. A lane-2 feed-only reading (no trader, no task)
 
@@ -124,9 +203,21 @@ node scripts\validate_live_trading_feed.js data\live-trading.json
 Get-Content data\live-trading.json -Raw | ConvertFrom-Json | Select-Object generated_at_utc, account, instrument_count
 ```
 
-**Stage 3 passes when** the validator exits 0, the snapshot's `account.login_masked` is account 2's, its
-`instrument_count` is 4, and every instrument reports `available: true`. It writes only under `C:\ftmo2`; lane 1's
-snapshot in `C:\live-trading\data` is not touched and the page still serves lane 1's numbers unchanged.
+**Stage 3 passes when** all six of these hold, because "fresh data on all four instruments" is the step that decides
+whether stages 4 and 6 have anything real to show:
+
+1. the validator exits 0;
+2. the snapshot's `account.login_masked` is `***841` and its `account.server` is `FTMO-Server3` - the snapshot's own
+   account block, not the lanes file's;
+3. `instrument_count` is 4, and the four symbols are exactly EURUSD, XAUUSD, US100.cash and BTCUSD;
+4. every instrument reports `available: true` and an `m5` block whose `stale` is `false`;
+5. every instrument's `m5.bar_age_seconds` is under `660` (the validator's own M5 freshness limit) - a stale M5 block
+   with `stale: true` and a note is legal in the schema but is **not** a pass here, since the rule reads M5 crossings;
+6. `generated_at_utc` is within the document's own `stale_after_seconds` of the clock, and the run printed no
+   `refresh_attempts` above 1 for a symbol it then described as fresh.
+
+It writes only under `C:\ftmo2`; lane 1's snapshot in `C:\live-trading\data` is not touched and the page still serves
+lane 1's numbers unchanged.
 
 ## 4. An unarmed trader run, by hand
 
@@ -199,9 +290,15 @@ git -C . log -1 --stat
 Get-Content data\live-trading-trader.ftmo-2.json -Raw
 ```
 
-Then open the page and switch the selector to **FTMO 2 · 0.5 L2L**: the chips must read account 2's masked login, the
-tables must show its tickets, and the four cards must draw the dashed midpoints. Switching back must restore lane 1
+Then open the page and switch the selector to **FTMO 2 · 0.5 L2L**: the chips must read `***841 / FTMO-Server3`, the
+tables must show its tickets, and the four cards - EURUSD, XAUUSD, US100.cash, BTCUSD - must draw the original marked
+lines **plus** the dashed midpoints, with the entry band at lane 2's own entry. Switching back must restore lane 1
 exactly. If the page says parked, missing or stale, that is the true state - read the notice rather than the numbers.
+
+The publisher now holds account 2's identity (`***841` on `FTMO-Server3`, in `config/live-trading-lanes.json`), so a
+lane-2 snapshot taken from the wrong account is **refused** rather than published: `6b` fails with the snapshot's
+account named beside the lanes file's. That refusal is the point of naming the account before the terminal exists, and
+it is the reason stage 2's `2e` comes before this stage rather than after it.
 
 **Stage 6 passes when** `data/live-trading-lanes.json` reports both lanes `published`, `data/live-trading.account2.json`
 carries account 2's masked login, and stage 0's lane-1 values are unchanged (same commit, same wrapper, same task,

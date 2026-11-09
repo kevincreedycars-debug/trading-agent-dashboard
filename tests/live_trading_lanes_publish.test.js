@@ -648,9 +648,12 @@ test("the shipped lanes file holds the masked identity and no credential", () =>
   // Account 1 is configured, so it carries the masked login and server the page already shows and nothing more.
   assert.match(document.lanes[0].account_login_masked, /^\*{3}\d{3}$/);
   assert.match(document.lanes[0].account_server, /^FTMO-Server$/);
-  // Account 2 has no terminal yet, so it names no account at all rather than a placeholder that would pass an
-  // identity check against the wrong thing.
-  assert.equal(document.lanes[1].account_login_masked, null);
-  assert.equal(document.lanes[1].account_server, null);
+  // Account 2 now names its own account - the second FTMO login arrived on 2026-11-07 - and it is still only the
+  // masked login the page shows plus the server, never the full number. Naming it here is what makes the publisher's
+  // identity guard able to reject a snapshot taken from the wrong account rather than accept one silently.
+  assert.match(document.lanes[1].account_login_masked, /^\*{3}\d{3}$/);
+  assert.equal(document.lanes[1].account_server, "FTMO-Server3");
+  assert.notEqual(document.lanes[1].account_login_masked, document.lanes[0].account_login_masked);
+  assert.notEqual(document.lanes[1].account_server, document.lanes[0].account_server);
 });
 
