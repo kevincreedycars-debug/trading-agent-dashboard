@@ -205,8 +205,9 @@ failure. The lanes file in `C:\ftmo2` read back as `ftmo-2`: `enabled False`, `m
 `C:\Program Files\FTMO Global Markets MT5 Terminal 2`, tasks `LiveTradingLane-ftmo2` / `LiveTradingTraderTick-ftmo2` /
 `LiveTradingTerminalStartup-ftmo2`, identity `C:\live-trading\state\lane-ftmo2-identity.json`.
 
-Lane 1 was re-read after the clone and had not moved: same `HEAD`, same wrapper, `LiveTradingTraderTick019` still
-`Running`. A clone writes only under `C:\ftmo2`.
+Lane 1 was re-read after the clone and had not moved: same `HEAD`, same trader blob, the wrapper file untouched since
+`2026-11-03T12:29:39Z`, the 18:50:01Z tick returning `0` with the next at 18:55Z, and the 18:51:30Z heartbeat still
+`armed:true` on `ftmo-1` with 0 positions and 1 working order. A clone writes only under `C:\ftmo2`.
 
 ## 2. The second terminal and the identity file
 
