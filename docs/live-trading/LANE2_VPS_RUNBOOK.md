@@ -14,9 +14,11 @@ and any reboot of the host. A reboot takes lane 1 down with lane 2, which is why
 by its own snapshot and heartbeat and never by "is `terminal64` running".
 
 **The revision these commands were written against:** branch `live-trading/lane2-half-l2l-20261107`, commit
-`be5954d2`, cut from `origin/main` `4faf3f35`. The executable code was tested at `f08ce075`; `be5954d2` and the two
-commits before it change only the lanes file's account-2 identity and this document, so the blobs below are the whole
-of what decides whether a send is possible. They hash to:
+`be5954d2` - the commit whose lanes file names account 2 - cut from `origin/main` `4faf3f35`. The executable code was
+tested at `f08ce075`, and every commit after it changes the lanes file, this document or its tests and never
+`scripts/`. So the two blobs below are the whole of what decides whether a send is possible: **pin the host checkout at
+`be5954d2` or a later documentation-only commit, and verify the blobs either way**, because a checkout is only the
+revision this runbook was tested against when the bytes that read the terminal hash to these.
 
 | file | git blob |
 | --- | --- |
