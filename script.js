@@ -16141,10 +16141,490 @@ function liveTradingLaneRows() {
   return Array.isArray(lanes) ? lanes.filter(row => row && typeof row === "object" && row.id) : [];
 }
 
+function liveTradingDrawData(fallback = null) {
+  const view = liveTradingLaneView();
+  // The primary lane draws the object the render was handed - which is its own snapshot on every ordinary call,
+  // and a caller's snapshot when one is passed in (the readback tests, and any hand render of a re-read feed).
+  if (view.id === "ftmo-1") return fallback || liveTradingData || {};
+  if (view.state === "ok" || view.state === "stale") return view.data || {};
+  return {};
+}
+
+// Ticket actions are offered only against a lane whose snapshot is inside its window: a Close pressed on a stale
+// table is an act against an account this page can no longer see.
+function liveTradingLaneActionsAllowed() {
+  // Lane 1's own staleness is drawn by the banner above it and its loop refuses a stale feed before it trades; a
+  // second lane has no such loop behind the page, so its actions are offered only against a snapshot this page can
+  // date. The gate is therefore on the lane that is not the primary one, and it says why.
+  const view = liveTradingLaneView();
+  return view.id === "ftmo-1" ? !view.data?.meta?.error : view.state === "ok";
+}
+
+function liveTradingLaneSelector(view = liveTradingLaneView()) {
+  const buttons = LIVE_TRADING_LANES.map(lane => {
+    const laneView = liveTradingLaneView(lane.id);
+    const badge = laneView.state === "ok"
+      ? ""
+      : `<i class="live-trading-lane-badge ${laneView.state}">${escapeHtml(laneView.state.toUpperCase())}</i>`;
+    const pressed = lane.id === view.id ? "true" : "false";
+    return `
+      <button type="button" class="live-trading-lane-button${lane.id === view.id ? " active" : ""}" data-live-lane="${escapeHtml(lane.id)}" aria-pressed="${pressed}" title="${escapeHtml(`${lane.label}: ${lane.note}`)}">
+        <span class="live-trading-lane-label">${escapeHtml(lane.label)}</span>
+        <span class="live-trading-lane-note">${escapeHtml(lane.note)}</span>${badge}
+      </button>`;
+  }).join("");
+  return `
+    <section class="live-trading-lane-selector" aria-label="FTMO account">
+      <div class="live-trading-lane-buttons" role="group" aria-label="Which account's charts and tables to draw">${buttons}</div>
+      <p class="live-trading-lane-caption">One selector for the whole tab: the four charts, their overlays, the rule panel and every table below them follow it. ${escapeHtml(view.detail || "")}</p>
+    </section>
+  `;
+}
+
+// ---- One account's own status, beside the selector ------------------------------------------------------
+// The selector says which account is drawn; this asks the harder question - is anything actually looking at
+// it, and may it trade - and answers it for the account on screen, never for the other one. Its word comes
+// from three artifacts and nothing else: the lane's snapshot (feed age, account, terminal permissions), the
+// lane's published heartbeat (was a loop there, when did it last run, what did it do, on what rules, with what
+// cap) and the lanes file itself (which account and which rule that lane is supposed to be on).
+//
+// "Live - armed" is reserved for a state every one of those has to agree on: a fresh feed, a fresh heartbeat
+// from a run that is armed, a verified account, rules that match, trading permitted at the terminal, entries
+// not paused and a last tick that did not fail. A healthy `nothing_to_place` tick counts - the rule has no
+// confirmed row most days, and that is the loop working rather than the loop silent. Anything less says which
+// of those it is, because a status that only knows "live" and "not live" is one a reader stops trusting.
+const LIVE_TRADING_STATUS_TICK_MS = 15000;
+// Words a run's own record can carry when the run did not do its job. `nothing_to_place`, `placed`,
+// `planned`, `nothing_to_close` and `answered` are all a working loop saying what it found.
+const LIVE_TRADING_STATUS_FAILED_RUNS = ["refused", "send_failed", "error", "failed", "lock_held", "unknown"];
+let liveTradingStatusOpen = false;
+
+// The clock the operator reads tickets in: the same instant the heartbeat states in UTC, said in UK time.
+// `Intl` carries the GMT/BST switch, so a tick either side of the October change is right without a table.
+function liveTradingUkLabel(value) {
+  if (!value) return displayDash();
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    }).formatToParts(parsed).reduce((carry, part) => {
+      carry[part.type] = part.value;
+      return carry;
+    }, {});
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} UK`;
+  } catch {
+    // A browser without the time zone database still says the instant, in the UTC the record itself states.
+    return `${liveTradingDateTimeLabel(value)} UTC`;
+  }
+}
+
+// What the lane is set to trade, from the lanes file, and what the heartbeat itself claims when it says
+// anything at all. The lanes file is the published statement of the rule; a heartbeat that restates it is a
+// second witness, and a heartbeat that restates it differently is a lane running a rule nobody configured.
+function liveTradingStatusRules(view, heartbeat, row) {
+  const rowMagic = Number(row?.magic);
+  const magic = Number.isFinite(rowMagic) && rowMagic > 0 ? rowMagic : null;
+  const stated = heartbeat?.strategy && typeof heartbeat.strategy === "object" ? heartbeat.strategy : null;
+  const statedGrid = stated?.grid === "half" ? "half" : stated?.grid === "full" ? "full" : null;
+  const statedMultiple = Number(stated?.r_multiple);
+  const statedMagic = Number(stated?.magic);
+  const differences = [];
+  if (statedGrid && statedGrid !== view.grid) {
+    differences.push(`the heartbeat says the ${statedGrid} grid, the lanes file says ${view.grid}`);
+  }
+  if (Number.isFinite(statedMultiple) && statedMultiple > 0 && statedMultiple !== view.rMultiple) {
+    differences.push(`the heartbeat says ${statedMultiple}R, the lanes file says ${view.rMultiple}R`);
+  }
+  if (Number.isFinite(statedMagic) && statedMagic > 0 && magic !== null && statedMagic !== magic) {
+    differences.push(`the heartbeat says magic ${statedMagic}, the lanes file says ${magic}`);
+  }
+  return {
+    grid: view.grid,
+    rMultiple: view.rMultiple,
+    magic,
+    statedByHeartbeat: Boolean(statedGrid) || Number.isFinite(statedMultiple) || Number.isFinite(statedMagic),
+    identityChecked: stated?.identity_checked === true,
+    identityStated: typeof stated?.identity_checked === "boolean",
+    differences,
+    match: differences.length === 0
+  };
+}
+
+// The terminal's own answer about whether this account may trade, as the snapshot carries it. The snapshot
+// publishes the terminal's flags, not the server's opinion of the login: a read-only investor login is
+// refused by the broker on a send and is not visible here, which the panel says in as many words.
+function liveTradingStatusPermission(snapshot) {
+  const terminal = snapshot?.terminal || {};
+  const known = typeof terminal.trade_allowed === "boolean";
+  const connected = terminal.connected === true;
+  const allowed = terminal.trade_allowed === true;
+  const apiDisabled = terminal.tradeapi_disabled === true;
+  let label;
+  if (!known) label = "not stated by the snapshot";
+  else if (!connected) label = "terminal disconnected, so nothing can be sent";
+  else if (apiDisabled) label = "trading API disabled at the terminal";
+  else if (!allowed) label = "terminal has algo trading switched off";
+  else label = "terminal connected, algo trading allowed";
+  return { known, connected, allowed, apiDisabled, granted: known && connected && allowed && !apiDisabled, label };
+}
+
+// One lane's status, decided in one place so the button, the panel and the tests cannot disagree. The
+// precedence is deliberate: a wrong account outranks everything (nothing else it says can be trusted), then
+// a terminal nobody is logged into, then entries switched off, then silence, and only then whether the loop
+// is armed. An unarmed lane is reported as monitoring rather than as broken: it ran, it read, it placed
+// nothing, and that is the arrangement until the operator arms it.
+function liveTradingLaneStatus(view = liveTradingLaneView(), options = {}) {
+  const row = view.row || liveTradingLaneRecord(view.id);
+  const heartbeat = liveTradingLaneHeartbeat(row);
+  const snapshot = view.data || null;
+  const rules = liveTradingStatusRules(view, heartbeat, row);
+  const permission = liveTradingStatusPermission(snapshot);
+  const account = snapshot?.account || {};
+  const expectedLogin = row?.account_login_masked || null;
+  const expectedServer = row?.account_server || null;
+  const actualLogin = account.login_masked || null;
+  const actualServer = account.server || null;
+  const heartbeatLogin = heartbeat.account?.login_masked || null;
+  const feedAge = snapshot ? liveTradingAgeSeconds(snapshot) : null;
+  const feedWindow = Number(snapshot?.stale_after_seconds) > 0 ? Number(snapshot.stale_after_seconds) : 900;
+  const accountDiffs = [];
+  if (expectedLogin && actualLogin && expectedLogin !== actualLogin) {
+    accountDiffs.push(`the snapshot is ${actualLogin}, the lanes file says ${expectedLogin}`);
+  }
+  if (expectedServer && actualServer && expectedServer.toLowerCase() !== actualServer.toLowerCase()) {
+    accountDiffs.push(`the snapshot is on ${actualServer}, the lanes file says ${expectedServer}`);
+  }
+  if (actualLogin && heartbeatLogin && actualLogin !== heartbeatLogin) {
+    accountDiffs.push(`the heartbeat names ${heartbeatLogin} beside a snapshot of ${actualLogin}`);
+  }
+  const mismatched = accountDiffs.length > 0;
+  const awaitingLogin = !mismatched && snapshot !== null && (!actualLogin || snapshot?.terminal?.connected === false);
+  const entriesPaused = heartbeat.entriesPaused === true;
+  const capPerDay = heartbeat.caps && Number.isFinite(Number(heartbeat.caps.max_per_day))
+    ? Number(heartbeat.caps.max_per_day)
+    : null;
+  const armed = heartbeat.armed === true && heartbeat.present === true;
+  const tickFailed = LIVE_TRADING_STATUS_FAILED_RUNS.includes(String(heartbeat.status || "").toLowerCase());
+  const feedFresh = view.state === "ok";
+  const base = {
+    id: view.id,
+    label: view.label,
+    note: view.note,
+    armed,
+    entriesPaused,
+    capPerDay,
+    rules,
+    permission,
+    account: {
+      masked: actualLogin,
+      server: actualServer,
+      expectedLogin,
+      expectedServer,
+      match: !mismatched,
+      differences: accountDiffs
+    },
+    feed: {
+      present: snapshot !== null,
+      ageSeconds: feedAge,
+      windowSeconds: feedWindow,
+      fresh: feedFresh
+    },
+    tick: {
+      present: heartbeat.present === true,
+      at: heartbeat.writtenAt,
+      ukAt: liveTradingUkLabel(heartbeat.writtenAt),
+      ageSeconds: heartbeat.ageSeconds,
+      windowSeconds: heartbeat.windowSeconds,
+      fresh: heartbeat.present === true && !heartbeat.stale,
+      status: heartbeat.status,
+      reason: heartbeat.reason,
+      host: heartbeat.host,
+      staleReason: heartbeat.staleReason || null,
+      identityChecked: rules.identityStated ? rules.identityChecked : null
+    }
+  };
+  const decide = (state, headline, tone, detail) => ({ ...base, state, headline, tone, detail });
+
+  if (view.state === "parked") {
+    return decide("parked", "Parked", "muted", `${view.label} is switched off in the lanes file, so nothing publishes its feed and no loop trades it.`);
+  }
+  if (view.state === "missing") {
+    return decide("unknown", "Status unknown", "muted", `This page carries no snapshot for ${view.label}, so there is no feed age, account or permission to report - and none of the other account's figures stands in for them.`);
+  }
+  if (!row) {
+    // The lanes document has not landed yet, or it does not name this lane. Without its row there is no
+    // configured account to compare the feed against, so there is no honest word to print either.
+    return decide("unknown", "Status unknown", "muted", `The lanes document carries no row for ${view.label} on this page yet, so there is nothing to check its account, rule or loop against.`);
+  }
+  if (mismatched) {
+    return decide("mismatch", "Account mismatch", "error", `The account behind this lane's feed is not the account the lanes file names: ${accountDiffs.join("; ")}. Nothing on this lane is reported as live while that is true.`);
+  }
+  if (awaitingLogin) {
+    const why = actualLogin
+      ? "its terminal reports itself disconnected"
+      : "its snapshot carries no login";
+    return decide("awaiting", "Awaiting login", "waiting", `${view.label}'s terminal is not signed in: ${why}. The feed can only say what the terminal tells it, so the account and its permissions stay blank until somebody signs in.`);
+  }
+  if (entriesPaused) {
+    return decide("paused", "Entries paused", "waiting", "This lane is registered with entries paused: it still reads, closes and moves stops, but it leaves no new limit. What is already working can still fill at the broker.");
+  }
+  if (!feedFresh || !base.tick.fresh) {
+    const why = !feedFresh
+      ? `The feed is ${feedAge === null ? "of unknown age" : liveTradingAgeLabel(feedAge)}, outside its ${Math.round(feedWindow / 60)} minute window`
+      : base.tick.present
+        ? `The last heartbeat is ${heartbeat.unknownAge ? "of unknown age" : liveTradingAgeLabel(heartbeat.ageSeconds)}, outside the ${Math.round(heartbeat.windowSeconds / 60)} minute window`
+        : "No heartbeat has ever been published for this lane";
+    const last = base.tick.present
+      ? ` It last reported ${String(heartbeat.status || "unknown").replace(/_/g, " ")}${heartbeat.armed ? ", armed" : ", not armed"}.`
+      : "";
+    return decide("stale", "Stale", "stale", `${why}.${last} Nothing here shows a loop watching this account now.`);
+  }
+  if (armed && !permission.granted) {
+    return decide("blocked", "Trading blocked", "stale", `The loop is armed but the terminal would not take a trade: ${permission.label}.`);
+  }
+  if (armed && !rules.match) {
+    return decide("rules", "Rules differ", "stale", `The loop that last ran is not trading the rule the lanes file publishes: ${rules.differences.join("; ")}.`);
+  }
+  if (armed && tickFailed) {
+    return decide("failed", "Last tick failed", "stale", `The last run reported ${String(heartbeat.status || "unknown").replace(/_/g, " ")}${heartbeat.reason ? `: ${heartbeat.reason}` : ""}. An armed lane whose last tick failed is not reported as live until a tick succeeds.`);
+  }
+  if (armed) {
+    return decide("live", "Live \u00b7 armed", "live", `A run this page can date wrote ${liveTradingAgeSpan(heartbeat.ageSeconds)} ago on ${heartbeat.host || "its host"} and reported ${String(heartbeat.status || "nothing_to_place").replace(/_/g, " ")}; the feed is ${liveTradingAgeLabel(feedAge)} and the terminal allows trading. A healthy tick counts, whether it placed anything or not.`);
+  }
+  return decide("monitoring", "Monitoring \u00b7 unarmed", "waiting", `A verified dry run: the loop read the account and placed nothing, ${liveTradingAgeSpan(heartbeat.ageSeconds)} ago on ${heartbeat.host || "its host"}, against a feed ${liveTradingAgeLabel(feedAge)}, with the terminal allowing trading. Armed is false, so no entry can be sent from this lane whatever the rule finds.`);
+}
+
+
+// ---- The status button and its panel ---------------------------------------------------------------------
+// The button carries the one word the requirement fixes, and pressing it opens the facts behind that word:
+// the account, the server, how old the feed is, when the last tick was in UK time, what that tick reported,
+// what the terminal permits, which rule is loaded, what cap the run carried and why the word is the word. It
+// fetches nothing, writes nothing and sends nothing. What it does do is re-read the page's own holding on a
+// clock, so the ages it prints are the ages now rather than the ages at the last fetch.
+let liveTradingStatusClock = null;
+
+function liveTradingStatusRuleText(status) {
+  const rules = status.rules;
+  const seat = `${rules.grid} grid \u00b7 ${rules.rMultiple}R${rules.magic ? ` \u00b7 magic ${rules.magic}` : ""}`;
+  if (!rules.match) return `${seat} - the heartbeat disagrees: ${rules.differences.join("; ")}`;
+  return rules.statedByHeartbeat
+    ? `${seat} - restated by the heartbeat that ran`
+    : `${seat} - from the lanes file; the heartbeat does not restate them`;
+}
+
+function liveTradingStatusCapText(status) {
+  if (status.capPerDay === null) return "not stated by the heartbeat";
+  if (status.capPerDay <= 0) return `0 a day - entries stop at the cap`;
+  return `${status.capPerDay} a day, as the last run recorded it`;
+}
+
+function liveTradingStatusMarkup(status) {
+  const fresh = status.feed.fresh ? "fresh" : "stale";
+  const tickTone = status.tick.fresh ? "" : "stale";
+  const accountTone = status.account.match ? "" : "stale";
+  const permissionTone = status.permission.granted ? "" : "stale";
+  const ruleTone = status.rules.match ? "" : "stale";
+  const outcome = status.tick.present
+    ? `${String(status.tick.status || "unknown").replace(/_/g, " ")}${status.armed ? ", armed" : ", unarmed"}`
+    : "no tick published yet";
+  const rows = [
+    liveTradingLaneRow("Account", `${status.account.masked || "not stated"} on ${status.account.server || "not stated"}`, accountTone),
+    liveTradingLaneRow("Feed age", status.feed.present
+      ? `${liveTradingAgeLabel(status.feed.ageSeconds)} - ${status.feed.fresh ? `inside the ${Math.round(status.feed.windowSeconds / 60)}m window` : `outside the ${Math.round(status.feed.windowSeconds / 60)}m window`}`
+      : "no snapshot on this page", fresh === "fresh" ? "" : "stale"),
+    liveTradingLaneRow("Last tick (UK)", status.tick.present
+      ? `${status.tick.ukAt} (${liveTradingAgeLabel(status.tick.ageSeconds)})`
+      : "never", tickTone),
+    liveTradingLaneRow("Tick outcome", status.tick.present
+      ? `${outcome}${status.tick.reason ? ` - ${status.tick.reason}` : ""}`
+      : "nothing has run against this lane", tickTone),
+    liveTradingLaneRow("Trading permission", status.permission.granted
+      ? `${status.permission.label} (the broker's own limit on a read-only login is not visible to the terminal)`
+      : status.permission.label, permissionTone),
+    liveTradingLaneRow("Loaded rules", liveTradingStatusRuleText(status), ruleTone),
+    liveTradingLaneRow("Effective cap", liveTradingStatusCapText(status)),
+    liveTradingLaneRow("Identity check", status.tick.identityChecked === true
+      ? "verified against the lane's private identity file before every send"
+      : status.tick.identityChecked === false
+        ? "not configured - the run did not name an identity file"
+        : "not stated by the heartbeat")
+  ].join("");
+  const open = liveTradingStatusOpen ? " is-open" : "";
+  return `
+    <section class="live-trading-status ${escapeHtml(status.tone)}" id="liveTradingStatus" data-live-status-state="${escapeHtml(status.state)}">
+      <div class="live-trading-status-bar">
+        <button type="button" class="live-trading-status-button ${escapeHtml(status.tone)}${open}" data-live-status-toggle aria-expanded="${liveTradingStatusOpen ? "true" : "false"}" aria-controls="liveTradingStatusPanel">
+          <span class="live-trading-status-eyebrow">${escapeHtml(status.label)} status</span>
+          <span class="live-trading-status-word">${escapeHtml(status.headline)}</span>
+          <span class="live-trading-status-meta">${escapeHtml(status.account.masked || "no account yet")}${status.account.server ? ` \u00b7 ${escapeHtml(status.account.server)}` : ""} \u00b7 feed ${escapeHtml(liveTradingAgeLabel(status.feed.ageSeconds))}</span>
+        </button>
+        <p class="live-trading-status-caption">Read-only. This button asks the page what it already holds: the account, the feed age, the last tick and the rule the loop runs. It fetches nothing, writes nothing and can send no order.</p>
+      </div>
+      <div class="live-trading-status-panel${open}" id="liveTradingStatusPanel"${liveTradingStatusOpen ? "" : " hidden"}>
+        <p class="live-trading-status-verdict"><b>${escapeHtml(status.headline)}</b> ${escapeHtml(status.detail)}</p>
+        <div class="live-trading-lane-rows">${rows}</div>
+      </div>
+    </section>
+  `;
+}
+
+// Repainting the slot alone, rather than the whole tab, is what makes the ages move while somebody is
+// looking: no fetch, no re-render of the charts, and nothing else on the page touched.
+function renderLiveTradingStatus() {
+  const slot = document.getElementById("liveTradingStatusSlot");
+  if (!slot) return;
+  slot.innerHTML = liveTradingStatusMarkup(liveTradingLaneStatus(liveTradingLaneView()));
+}
+
+function installLiveTradingStatusClock() {
+  if (liveTradingStatusClock !== null) return;
+  liveTradingStatusClock = setInterval(() => {
+    // A tab that is not showing the live-trading section has no slot to repaint, and a hidden tab is not
+    // being read: both cost nothing and leave the clock running for when it is shown again.
+    if (!document.getElementById("liveTradingStatusSlot")) return;
+    renderLiveTradingStatus();
+  }, LIVE_TRADING_STATUS_TICK_MS);
+}
+
+function toggleLiveTradingStatus() {
+  liveTradingStatusOpen = !liveTradingStatusOpen;
+  renderLiveTradingStatus();
+}
+
+
+// box: parked, missing and stale are three different facts and each one is stated.
+function liveTradingLaneNotice(view) {
+  if (view.state === "ok") return "";
+  const tone = view.tone === "error" ? "error" : view.tone === "fresh" ? "fresh" : "stale";
+  const heading = view.state === "stale"
+    ? `${view.label} is stale`
+    : view.state === "parked" ? `${view.label} is parked` : `${view.label} has no snapshot here`;
+  return `
+    <div class="live-trading-lane-notice ${tone}">
+      <b>${escapeHtml(heading)}</b>
+      <p>${escapeHtml(view.detail)}</p>
+    </div>
+  `;
+}
+
+// The ladder a lane trades: the lines the snapshot carries, and - for a lane whose snapshot does not carry the
+// marked file - the ladder this page published, joined by symbol, which is the join the loop makes. The primary
+// lane is left exactly as it was: its snapshot's own levels, applied by the page when the ladder is read.
+function liveTradingInstrumentLevels(instrument) {
+  const own = liveTradingChartLevelsFor(instrument);
+  if (own.length) return own;
+  const published = Array.isArray(liveTradingLevelsData?.instruments)
+    ? liveTradingLevelsData.instruments.find(row => row?.symbol === instrument?.symbol)
+    : null;
+  return Array.isArray(published?.levels) ? published.levels : [];
+}
+
+// The same ladder, as the grid the selected lane trades: `lib/l2l_strategy.js` is the module the loop and the
+// checker read, so a midpoint drawn here is the midpoint a ticket would be placed at.
+function liveTradingGridLevels(instrument) {
+  const view = liveTradingLaneView();
+  const own = liveTradingChartLevelsFor(instrument);
+  const levels = own.length || view.id === "ftmo-1" ? own : liveTradingInstrumentLevels(instrument);
+  if (view.grid !== "half" || !liveTradingStrategy || typeof liveTradingStrategy.gridLevels !== "function") {
+    return levels;
+  }
+  return liveTradingStrategy.gridLevels(levels, "half");
+}
+
+// Switching lanes is page state only, and it repaints from the read the page already holds: no fetch, no write.
+function liveTradingSelectLane(id) {
+  if (!LIVE_TRADING_LANES.some(lane => lane.id === id)) return;
+  liveTradingSelectedLane = id;
+  liveTradingClose.pending = null;
+  liveTradingClose.pending_position = null;
+  renderLiveTrading(liveTradingData || {});
+}
+
 function liveTradingLaneEnabled(lane) {
   // Enabled is the default in the lanes file and here: only an explicit false parks a lane, so a document
   // written before the flag existed does not read as "everything disabled".
   return !lane || lane.enabled !== false;
+}
+
+// ---- Which lane the tab draws -----------------------------------------------------------------------------
+// One selector above the charts, two accounts, and every number below it - the four charts, their overlays, the
+// rule panel, the tables, the heartbeat and the ticket actions - read from that one choice. The primary lane is
+// this page's own snapshot (`liveTradingData`); a second lane reads the snapshot the publisher carries for it.
+//
+// A lane that is parked, missing or stale is drawn as exactly that, and a lane-2 chart never falls back to lane
+// 1's numbers: the one thing a two-account page must not do is show one account's prices under the other's name.
+const LIVE_TRADING_LANES = [
+  { id: "ftmo-1", label: "FTMO 1 \u00b7 L2L", note: "the marked ladder, five to one" },
+  { id: "ftmo-2", label: "FTMO 2 \u00b7 0.5 L2L", note: "the half grid, three to one" }
+];
+let liveTradingSelectedLane = "ftmo-1";
+
+// The lanes document's own row for a lane. Named apart from `liveTradingLaneRow(label, value)`, which draws one
+// `<dt>/<dd>` line inside a card: two things called "lane row" would be one name too many.
+function liveTradingLaneRecord(id) {
+  return liveTradingLaneRows().find(row => row && row.id === id) || null;
+}
+
+function liveTradingLaneSnapshot(id) {
+  // The primary lane is this page's own snapshot, read live rather than from the copy `loadLiveTradingLanes` took:
+  // the page replaces `liveTradingData` whenever it re-joins the marked ladder, so a reference held at load would
+  // draw the levels from before the last mark.
+  if (id === "ftmo-1") return liveTradingData && !liveTradingData.meta?.error ? liveTradingData : null;
+  const snapshot = liveTradingLanes.snapshots[id];
+  if (snapshot && snapshot.present && snapshot.data) return snapshot.data;
+  return null;
+}
+
+// The four states a lane can be drawn in, in words:
+//   ok       a snapshot inside its own freshness window;
+//   stale    a snapshot whose window has passed - real numbers, but nobody is writing them now;
+//   missing  an enabled lane with no snapshot on this page;
+//   parked   a lane the lanes file marks enabled: false, so no loop trades it and nothing is published for it.
+function liveTradingLaneView(id = liveTradingSelectedLane) {
+  const entry = LIVE_TRADING_LANES.find(lane => lane.id === id) || { id, label: id, note: "" };
+  const row = liveTradingLaneRecord(id);
+  const snapshot = liveTradingLaneSnapshot(id);
+  const grid = row?.strategy?.grid === "half" ? "half" : "full";
+  const stated = Number(row?.strategy?.r_multiple);
+  const base = { id, label: entry.label, note: entry.note, row, data: null, grid, rMultiple: stated > 0 ? stated : 5 };
+  if (id !== "ftmo-1" && row && !liveTradingLaneEnabled(row)) {
+    return {
+      ...base,
+      state: "parked",
+      tone: "stale",
+      detail: `${entry.label} is parked in the lanes file (enabled: false): nothing is published for it and no loop trades it, so there is nothing to draw.`
+    };
+  }
+  if (!snapshot || snapshot.meta?.error) {
+    const why = snapshot?.meta?.error
+      ? `its snapshot could not be read (${snapshot.meta.error})`
+      : "this page carries no snapshot for it";
+    return {
+      ...base,
+      state: "missing",
+      tone: "error",
+      detail: `${entry.label} cannot be drawn: ${why}. Nothing is shown for it rather than lane 1's numbers.`
+    };
+  }
+  const freshness = liveTradingFreshness(snapshot);
+  if (freshness.tone === "fresh") {
+    return { ...base, data: snapshot, state: "ok", tone: "fresh", detail: freshness.detail };
+  }
+  return {
+    ...base,
+    data: snapshot,
+    state: "stale",
+    tone: freshness.tone === "error" ? "error" : "stale",
+    detail: `${freshness.detail} Its figures are drawn, labelled stale, and no ticket action is offered against them.`
+  };
 }
 
 // The code a heartbeat says wrote it. `git_blob` is the file as git hashes it, which is the number
@@ -16173,7 +16653,7 @@ function liveTradingHeartbeatCode(facts) {
 // The publisher copies the same facts into the lane's row, so a device holding an older commit still sees what
 // the loop last said instead of an empty card.
 function liveTradingLaneHeartbeat(lane) {
-  const artifact = liveTradingLanes.statuses[lane.id]?.data || null;
+  const artifact = liveTradingLanes.statuses[lane?.id]?.data || null;
   const summary = lane?.trader && typeof lane.trader === "object" ? lane.trader : null;
   const facts = artifact || (summary && (summary.written_at_utc || summary.armed !== undefined) ? summary : null);
   if (!facts) {
@@ -16192,7 +16672,11 @@ function liveTradingLaneHeartbeat(lane) {
       host: null,
       code: null,
       writtenAt: null,
-      publishedAt: null
+      publishedAt: null,
+      account: null,
+      strategy: null,
+      entriesPaused: false,
+      caps: null
     };
   }
   // Three missed ticks is the window, and no less than fifteen minutes: the loop runs on the M5 clock, so a
@@ -16242,7 +16726,14 @@ function liveTradingLaneHeartbeat(lane) {
     // A heartbeat with no readable time cannot be shown to be current, so it is treated as stale rather than
     // as healthy: silence is the one thing this card may not present as a running loop.
     stale: staleAtPublish || copyStale,
-    staleReason: staleAtPublish ? "loop" : copyStale ? "copy" : null
+    staleReason: staleAtPublish ? "loop" : copyStale ? "copy" : null,
+    // The run's own account and rule facts, so a lane's status can be read from the record rather than
+    // inferred from the lanes file alone. An older heartbeat carries none of them, which is stated as null
+    // rather than filled in with what the lanes file happens to say.
+    account: facts.account && typeof facts.account === "object" ? facts.account : null,
+    strategy: facts.strategy && typeof facts.strategy === "object" ? facts.strategy : null,
+    entriesPaused: facts.entries_paused === true,
+    caps: facts.caps && typeof facts.caps === "object" ? facts.caps : null
   };
 }
 
@@ -16968,7 +17459,7 @@ function liveTradingLadderExtensionPlan(instrument) {
 }
 
 function liveTradingChartInstrument() {
-  const instruments = Array.isArray(liveTradingData?.instruments) ? liveTradingData.instruments : [];
+  const instruments = Array.isArray(liveTradingDrawData()?.instruments) ? liveTradingDrawData().instruments : [];
   return instruments.find(instrument => instrument?.symbol === liveTradingChartSymbol) || instruments[0] || null;
 }
 
@@ -17568,8 +18059,8 @@ function liveTradingChartTrades(instrument, points, geometry, digits) {
   // passes neither still gets the markers, drawn without a box.
   const plotX0 = Number.isFinite(geometry?.plotX0) ? geometry.plotX0 : Math.min(...points.map((point, index) => xAt(index)), 0);
   const plotX1 = Number.isFinite(geometry?.plotX1) ? geometry.plotX1 : Math.max(...points.map((point, index) => xAt(index)), 0);
-  const trades = Array.isArray(liveTradingData?.closed_trades)
-    ? liveTradingData.closed_trades.filter(trade => trade?.symbol === instrument?.symbol)
+  const trades = Array.isArray(liveTradingDrawData()?.closed_trades)
+    ? liveTradingDrawData().closed_trades.filter(trade => trade?.symbol === instrument?.symbol)
     : [];
   const times = points.map(point => Date.parse(point.time_utc));
   if (!trades.length || !points.length) return { html: "", count: 0, offWindow: 0 };
@@ -17594,10 +18085,10 @@ function liveTradingChartTrades(instrument, points, geometry, digits) {
   // The position tool for one trade. Its size comes from the trade's own row and the instrument's own
   // contract facts, so nothing here is a number the page chose.
   const barWidth = points.length > 1 ? (plotX1 - plotX0) / points.length : 12;
-  const instrumentRow = Array.isArray(liveTradingData?.instruments)
-    ? liveTradingData.instruments.find(row => row?.symbol === instrument?.symbol) || {}
+  const instrumentRow = Array.isArray(liveTradingDrawData()?.instruments)
+    ? liveTradingDrawData().instruments.find(row => row?.symbol === instrument?.symbol) || {}
     : {};
-  const accountRow = liveTradingData?.account || {};
+  const accountRow = liveTradingDrawData()?.account || {};
   const sizers = [];
   let tools = 0;
 
@@ -17696,8 +18187,8 @@ function liveTradingChartTrades(instrument, points, geometry, digits) {
 // counted and named in the caption rather than hidden.
 function liveTradingChartOpenPositions(instrument, points, geometry, digits) {
   const { xAt, yAt, plotX0, plotX1, plotY0, plotY1 } = geometry;
-  const rows = Array.isArray(liveTradingData?.positions)
-    ? liveTradingData.positions.filter(row => row?.symbol === instrument?.symbol)
+  const rows = Array.isArray(liveTradingDrawData()?.positions)
+    ? liveTradingDrawData().positions.filter(row => row?.symbol === instrument?.symbol)
     : [];
   if (!rows.length || !points.length) return { html: "", count: 0, bracketed: 0, beforeWindow: 0 };
 
@@ -17793,7 +18284,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
     Number.isFinite(Number(bar?.low)) && Number.isFinite(Number(bar?.close)));
   const closes = (Array.isArray(block.close_series) ? block.close_series : [])
     .filter(point => Number.isFinite(Number(point?.close)));
-  const levels = liveTradingChartLevelsFor(instrument);
+  const levels = liveTradingGridLevels(instrument);
 
   // An OHLC-less snapshot still gets a close line rather than an empty box, so the chart appears from
   // the artifact that is published today and upgrades to candles when the producer next runs.
@@ -18009,8 +18500,11 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
     const label = String(level.label || level.name || "level");
     const tag = `${label} ${liveTradingPrice(price, digits)}`;
     const alerting = ladderAlert?.active === true && Math.abs(price - ladderAlert.level) < 1e-9;
-    return `<line x1="${plotX0}" y1="${ly.toFixed(2)}" x2="${plotX1}" y2="${ly.toFixed(2)}" class="live-trading-chart-level${alerting ? " alert" : ""}"></line>`
-      + `<text x="${plotX0 + 6}" y="${(ly - 6).toFixed(2)}" class="live-trading-chart-level-tag">${escapeHtml(tag)}</text>`
+    // A midpoint of the half grid is drawn as its own kind of line rather than as another marked level: the tag says
+    // so, and the strokes differ, so a reader can tell the ladder the user marked from the grid this lane trades.
+    const midpoint = level.role === "midpoint";
+    return `<line x1="${plotX0}" y1="${ly.toFixed(2)}" x2="${plotX1}" y2="${ly.toFixed(2)}" class="live-trading-chart-level${alerting ? " alert" : ""}${midpoint ? " midpoint" : ""}"></line>`
+      + `<text x="${plotX0 + 6}" y="${(ly - 6).toFixed(2)}" class="live-trading-chart-level-tag${midpoint ? " midpoint" : ""}">${escapeHtml(midpoint ? `midpoint ${liveTradingPrice(price, digits)}` : tag)}</text>`
       + `<rect x="${plotX1 + 2}" y="${(ly - 9).toFixed(2)}" width="${axisWidth - 4}" height="18" rx="3" class="live-trading-chart-level-box"></rect>`
       + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(ly + 4).toFixed(2)}" text-anchor="middle" class="live-trading-chart-level-box-text">${escapeHtml(liveTradingPrice(price, digits))}</text>`;
   }).join("");
@@ -18250,13 +18744,19 @@ function liveTradingRuleReadings(data, nowMs) {
     instruments: instruments.map(instrument => ({
       symbol: instrument.symbol,
       dashboard_asset: instrument.dashboard_asset,
-      levels: instrument.levels,
+      // A lane's snapshot may not carry the ladder at all: the page joins the marked file it holds, which is the
+      // same join the loop makes, so a lane-2 chart is read against the ladder lane 2 trades.
+      levels: liveTradingInstrumentLevels(instrument),
       m5: instrument.m5,
       point: instrument.point
     })),
     positions: Array.isArray(data?.positions) ? data.positions : [],
     calls: handed,
-    nowMs: now
+    nowMs: now,
+    // The rule the lane on screen trades: a half grid at three to one for the second account, the marked ladder at
+    // five to one for the first, both read from the same module the loops read.
+    rMultiple: liveTradingLaneView().rMultiple,
+    grid: liveTradingLaneView().grid
   });
   const bySymbol = {};
   rows.forEach(row => { bySymbol[row.symbol] = row; });
@@ -18661,6 +19161,18 @@ function setupLiveTradingChart(panel) {
     // Close now link is left to the browser: that navigation is how the ticket reaches the close link
     // registered on this machine, so its default is never prevented, and the note below it says what the page
     // handed over rather than what it knows.
+    const laneButton = event.target.closest("[data-live-lane]");
+    if (laneButton) {
+      liveTradingSelectLane(String(laneButton.dataset.liveLane || ""));
+      return;
+    }
+    // The status button beside the selector: it opens and closes the panel of facts behind its own word, for
+    // the account currently drawn. It changes no data and sends nothing.
+    const statusToggle = event.target.closest("[data-live-status-toggle]");
+    if (statusToggle) {
+      toggleLiveTradingStatus();
+      return;
+    }
     const closeAskButton = event.target.closest("[data-live-close-ask]");
     if (closeAskButton) {
       liveTradingOpenCloseConfirm(Number(closeAskButton.dataset.liveCloseAsk));
@@ -18674,7 +19186,7 @@ function setupLiveTradingChart(panel) {
     const closeLoopButton = event.target.closest("[data-live-close-loop]");
     if (closeLoopButton && !closeLoopButton.disabled) {
       const ticket = Number(closeLoopButton.dataset.liveCloseLoop);
-      const row = (Array.isArray(liveTradingData?.positions) ? liveTradingData.positions : [])
+      const row = (Array.isArray(liveTradingDrawData()?.positions) ? liveTradingDrawData().positions : [])
         .find(position => Number(position?.ticket) === ticket) || liveTradingClose.pending_position;
       askLiveTradingClose(ticket, row);
       return;
@@ -19001,7 +19513,7 @@ function liveTradingBarsCoverage(data) {
 // The card chart is the same reading at card size: mini candles when the snapshot carries OHLC bars,
 // and an area line of the closes when it carries only `close_series`. It replaces the strip of hanging
 // bars, which showed each close's direction but nothing a reader could line up with the M5 chart above.
-function liveTradingCardChart(m5, digits, symbol) {
+function liveTradingCardChart(m5, digits, symbol, levels = []) {
   const bars = (Array.isArray(m5?.bars) ? m5.bars : []).filter(bar =>
     Number.isFinite(Number(bar?.high)) && Number.isFinite(Number(bar?.low)) && Number.isFinite(Number(bar?.close)));
   const closes = (Array.isArray(m5?.close_series) ? m5.close_series : [])
@@ -19033,6 +19545,19 @@ function liveTradingCardChart(m5, digits, symbol) {
     min -= pad;
     max += pad;
   }
+  // The two nearest ladder lines, when they sit within twice the span the candles cover: a line the price is being
+  // read against belongs on the picture, and a line far outside it would flatten the candles into a stripe. This is
+  // why the cards show the ladder at all - the same convention the full chart uses, at card size.
+  const span = max - min;
+  const lastCloseValue = Number(points[points.length - 1].close);
+  const near = levels
+    .map(level => Number(level?.price))
+    .filter(Number.isFinite)
+    .filter(price => Math.abs(price - lastCloseValue) <= span * 2);
+  if (near.length) {
+    min = Math.min(min, ...near);
+    max = Math.max(max, ...near);
+  }
   const headroom = (max - min) * 0.08;
   min -= headroom;
   max += headroom;
@@ -19056,15 +19581,32 @@ function liveTradingCardChart(m5, digits, symbol) {
 
   const lastY = Math.min(plotY1, Math.max(plotY0, yAt(last.close)));
   const midY = (plotY0 + plotY1) / 2;
+  // The marked ladder, and on the half grid every midpoint between two lines: solid for a price the user marked,
+  // dashed for the line the second account's lane inserts. Only the lines the candles actually span are drawn, and
+  // the legend states which is which rather than leaving a reader to guess from the dash.
+  const drawn = levels.filter(level => Number.isFinite(Number(level?.price)));
+  const levelLines = drawn
+    .filter(level => Number(level.price) >= min && Number(level.price) <= max)
+    .map(level => {
+      const y = yAt(Number(level.price)).toFixed(2);
+      const midpoint = level.role === "midpoint";
+      return `<line x1="${plotX0}" y1="${y}" x2="${plotX1}" y2="${y}" class="live-trading-card-chart-level${midpoint ? " midpoint" : ""}"></line>`;
+    }).join("");
+  const hasMidpoints = drawn.some(level => level.role === "midpoint");
+  const legend = drawn.length
+    ? `<p class="live-trading-card-chart-legend"><span class="solid"></span>marked level${hasMidpoints ? ` <span class="dashed"></span>midpoint (0.5 grid)` : ""}</p>`
+    : "";
   const aria = `Last ${points.length} M5 ${candles ? "candles" : "closes"} for ${symbol || "instrument"}`;
   return `<div class="live-trading-card-chart">
       <svg class="live-trading-card-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escapeHtml(aria)}">
         <rect x="0" y="0" width="${width}" height="${height}" class="live-trading-card-chart-bg"></rect>
         <line x1="${plotX0}" y1="${midY.toFixed(2)}" x2="${plotX1}" y2="${midY.toFixed(2)}" class="live-trading-card-chart-grid"></line>
+        ${levelLines}
         ${marks}
         <line x1="${plotX0}" y1="${lastY.toFixed(2)}" x2="${plotX1}" y2="${lastY.toFixed(2)}" class="live-trading-card-chart-last"></line>
         <text x="${plotX1 + 8}" y="${(lastY + 4).toFixed(2)}" class="live-trading-card-chart-price ${tone}">${escapeHtml(liveTradingPrice(last.close, digits))}</text>
       </svg>
+      ${legend}
     </div>`;
 }
 
@@ -19144,7 +19686,7 @@ function liveTradingInstrumentCard(instrument, data) {
         <div><dt>Change</dt><dd>${escapeHtml(liveTradingSigned(m5.change_points, digits) + changePct)}</dd></div>
       </dl>
 
-      ${liveTradingCardChart(m5, digits, instrument.symbol)}
+      ${liveTradingCardChart(m5, digits, instrument.symbol, liveTradingGridLevels(instrument))}
 
       ${staleNote}
 
@@ -19197,6 +19739,11 @@ function liveTradingDurationLabel(seconds) {
 const liveTradingCloseLink = "l2lclose";
 
 function liveTradingCloseLaneMagic() {
+  // The magic of the lane on screen: the number the lanes document publishes for it, or - for a document written
+  // before the field existed - lane 1's own from the shared module.
+  const row = liveTradingLaneRecord(liveTradingSelectedLane);
+  const stated = Number(row?.magic);
+  if (Number.isFinite(stated) && stated > 0) return stated;
   return liveTradingStrategy ? Number(liveTradingStrategy.LANE_MAGIC) : null;
 }
 
@@ -19247,6 +19794,9 @@ function liveTradingCloseNote() {
 // account says whose it is, because the loop only ever takes out a ticket carrying its own magic.
 function liveTradingCloseCell(position) {
   const ticket = Number(position?.ticket);
+  if (!liveTradingLaneActionsAllowed()) {
+    return `<td class="live-trading-close-cell"><span class="live-trading-close-other" title="This lane's snapshot is not current on this page, so no action is offered against the account">unverified</span></td>`;
+  }
   if (!Number.isInteger(ticket) || ticket <= 0) {
     return `<td class="live-trading-close-cell"><span class="live-trading-close-other">${escapeHtml(displayDash())}</span></td>`;
   }
@@ -19289,7 +19839,7 @@ function liveTradingCloseCell(position) {
 // open until the reader cancels it or the position leaves the table.
 function liveTradingOpenCloseConfirm(ticket) {
   const numeric = Number(ticket);
-  const positions = Array.isArray(liveTradingData?.positions) ? liveTradingData.positions : [];
+  const positions = Array.isArray(liveTradingDrawData()?.positions) ? liveTradingDrawData().positions : [];
   liveTradingClose.pending = Number.isInteger(numeric) ? numeric : null;
   liveTradingClose.pending_position = positions.find(row => Number(row?.ticket) === numeric) || null;
   liveTradingClose.status = "";
@@ -19365,8 +19915,8 @@ async function askLiveTradingClose(ticket, position) {
     requestedBy: module_.REQUESTED_BY.dashboard,
     note: liveTradingCloseReason(),
     lane,
-    accountLoginMasked: liveTradingData?.account?.login_masked ?? null,
-    accountServer: liveTradingData?.account?.server ?? null
+    accountLoginMasked: liveTradingDrawData()?.account?.login_masked ?? null,
+    accountServer: liveTradingDrawData()?.account?.server ?? null
   });
   if (!built.ok) {
     liveTradingClose.tone = "error";
@@ -19420,6 +19970,87 @@ async function askLiveTradingClose(ticket, position) {
   liveTradingClose.tone = "waiting";
   liveTradingClose.status = `Asked: ticket ${ticket} is written into ${target.path} on ${target.branch}${commit}. The loop reads it on its next tick, within five minutes, and this row clears when a later snapshot shows the position gone.`;
   renderLiveTrading(liveTradingData || {});
+}
+
+// The lane's working entries: the limits the account has resting right now, with the size, the stop and the
+// target each one carries. The snapshot's `orders` block is what the terminal reported on the run that wrote it,
+// so this is a read-back rather than an instruction. When entries are paused the note says so and says the thing a
+// paused table can be mistaken about: a limit already resting is held by the broker, so it can still fill.
+function liveTradingWorkingOrders(data) {
+  const orders = Array.isArray(data?.orders) ? data.orders : [];
+  const view = liveTradingLaneView();
+  const paused = view.row?.trader?.strategy?.entries_paused === true || view.row?.trader?.entries_paused === true;
+  const note = paused
+    ? "Entries are paused on this lane: no new limit will be left, and a limit already resting can still fill because the broker holds it rather than the loop."
+    : "A working limit is held by the broker, not by the loop: it fills when the market reaches it, whether or not the loop is running.";
+  const head = `
+    <div class="live-trading-table-head">
+      <h3>Working entries</h3>
+      <p class="live-trading-table-meta">${
+        orders.length
+          ? `${orders.length} resting on ${escapeHtml(view.label)}`
+          : "None resting on this account."
+      }</p>
+    </div>
+  `;
+  if (!orders.length) {
+    return `
+      <section class="live-trading-table-panel">
+        ${head}
+        <p class="live-trading-table-empty">Nothing is resting, so there is no entry to read back. A limit the loop leaves appears here on the next producer run with the size, the stop and the target it carries.</p>
+        <p class="live-trading-table-note-line">${escapeHtml(note)}</p>
+      </section>
+    `;
+  }
+  const rows = orders.map(order => {
+    const side = ["buy", "sell"].includes(order?.side) ? order.side : "buy";
+    const digits = liveTradingDigitsFor(data, order?.symbol);
+    const own = [Number(view.row?.magic), Number(liveTradingStrategy?.LANE_MAGIC), Number(liveTradingStrategy?.HALF_LANE_MAGIC)]
+      .filter(Number.isFinite)
+      .includes(Number(order?.magic));
+    return `
+      <tr>
+        <th scope="row">
+          <span class="live-trading-asset">${escapeHtml(order?.dashboard_asset || order?.symbol || displayDash())}</span>
+          <span class="live-trading-table-symbol">${escapeHtml(order?.symbol || displayDash())}</span>
+        </th>
+        <td class="num">#${escapeHtml(String(order?.ticket ?? displayDash()))}</td>
+        <td><span class="live-trading-side ${side}">${escapeHtml(side.toUpperCase())}</span></td>
+        <td class="num">${escapeHtml(String(order?.type || displayDash()).replace(/^ORDER_TYPE_/, "").toLowerCase().replace(/_/g, " "))}</td>
+        <td class="num">${escapeHtml(String(order?.volume ?? displayDash()))}</td>
+        <td class="num">${escapeHtml(liveTradingPrice(order?.price_open, digits))}</td>
+        <td class="num">${escapeHtml(order?.stop_loss === null || order?.stop_loss === undefined ? displayDash() : liveTradingPrice(order.stop_loss, digits))}</td>
+        <td class="num">${escapeHtml(order?.take_profit === null || order?.take_profit === undefined ? displayDash() : liveTradingPrice(order.take_profit, digits))}</td>
+        <td class="num">${escapeHtml(liveTradingDateTimeLabel(order?.placed?.time_utc ?? order?.placed))}</td>
+        <td class="live-trading-table-note">${escapeHtml(own ? (order?.comment || "this lane's") : "another path's")}</td>
+      </tr>
+    `;
+  }).join("");
+  return `
+    <section class="live-trading-table-panel">
+      ${head}
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr>
+              <th scope="col">Trade</th>
+              <th scope="col">Ticket</th>
+              <th scope="col">Side</th>
+              <th scope="col">Type</th>
+              <th scope="col">Volume</th>
+              <th scope="col">Entry</th>
+              <th scope="col">Stop</th>
+              <th scope="col">Target</th>
+              <th scope="col">Placed (UTC)</th>
+              <th scope="col">Ticket owner</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">${escapeHtml(note)}</p>
+    </section>
+  `;
 }
 
 function liveTradingPositions(data) {
@@ -19620,7 +20251,7 @@ function liveTradingClosedTrades(data) {
   `;
 }
 
-// ---- FTMO 1 performance: one total, three readings of it ------------------------------------------------
+// ---- The performance panel: one total, three readings of it -----------------------------------------------
 // The panel states what the closed trades add up to, sliced by the three questions a reader actually asks of a
 // fortnight: which day, which rule, which instrument. The arithmetic is in lib/live_trading_performance.js so
 // the page and the node check share one implementation, and every row is drawn from `closed_trades` - the same
@@ -19682,8 +20313,11 @@ function liveTradingPerformanceRows(rows, currency) {
 }
 
 
-function liveTradingPerformancePanel(data) {
+function liveTradingPerformancePanel(data, laneView) {
   const trades = Array.isArray(data?.closed_trades) ? data.closed_trades : [];
+  // The panel draws whichever lane the selector is on, so its own labels name that lane instead of a fixed
+  // account: one account's totals printed under another's name is the one mistake a two-lane page cannot make.
+  const laneAccount = String(laneView?.label || "FTMO 1").split(" \u00b7 ")[0];
   const currency = data?.account?.currency ? ` ${data.account.currency}` : "";
   const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
   const summary = performance ? performance.summarise(trades, { history: data?.history || {} }) : null;
@@ -19692,7 +20326,7 @@ function liveTradingPerformancePanel(data) {
   const head = `
     <div class="live-trading-table-head">
       <div class="live-trading-performance-title">
-        <h3 id="liveTradingPerformanceHeading">FTMO 1 Performance</h3>
+        <h3 id="liveTradingPerformanceHeading">${escapeHtml(laneAccount)} Performance</h3>
         <p class="live-trading-performance-period"${
           periodExact ? ` title="${escapeHtml(periodExact)}"` : ""
         }>${
@@ -19805,12 +20439,12 @@ function liveTradingPerformancePanel(data) {
       ${head}
       ${totalsStrip}
       <div class="live-trading-table-head live-trading-performance-tab-head">
-        <div class="live-trading-performance-tabs" role="tablist" aria-label="FTMO 1 performance breakdown">${tabs}</div>
+        <div class="live-trading-performance-tabs" role="tablist" aria-label="${escapeHtml(laneAccount)} performance breakdown">${tabs}</div>
         <p class="live-trading-table-meta">One breakdown at a time</p>
       </div>
       ${bodies}
       <p class="live-trading-performance-hint">Scroll the table sideways for every column.</p>
-      <p class="live-trading-table-caption">Read from the ${escapeHtml(String(summary.trades))} closed positions of FTMO account 1 in this snapshot, the same rows the Closed trades table prints, so each tab adds back to ${escapeHtml(liveTradingPerformanceMoney(totals.net, currency))} across ${escapeHtml(String(summary.trades))} trades. A trade sits on the day it closed in ${escapeHtml(summary.weekdayZone || "London")}; a win is a net above zero, a loss below it and a breakeven exactly zero, so the three counts add up to the row's own trades and the win rate is its wins over all of them. A share is the row's trades over the account's ${escapeHtml(String(summary.trades))}. Net is profit plus commission plus swap, in ${escapeHtml(data?.account?.currency || "the account currency")}.${windowDays > 0 ? ` The snapshot reads a ${escapeHtml(String(windowDays))}-day window, so a trade that closed before it began is not in these figures.` : ""}${notes.length ? ` ${notes.join(" ")}` : ""}</p>
+      <p class="live-trading-table-caption">Read from the ${escapeHtml(String(summary.trades))} closed positions of ${escapeHtml(laneAccount)} in this snapshot, the same rows the Closed trades table prints, so each tab adds back to ${escapeHtml(liveTradingPerformanceMoney(totals.net, currency))} across ${escapeHtml(String(summary.trades))} trades. A trade sits on the day it closed in ${escapeHtml(summary.weekdayZone || "London")}; a win is a net above zero, a loss below it and a breakeven exactly zero, so the three counts add up to the row's own trades and the win rate is its wins over all of them. A share is the row's trades over the account's ${escapeHtml(String(summary.trades))}. Net is profit plus commission plus swap, in ${escapeHtml(data?.account?.currency || "the account currency")}.${windowDays > 0 ? ` The snapshot reads a ${escapeHtml(String(windowDays))}-day window, so a trade that closed before it began is not in these figures.` : ""}${notes.length ? ` ${notes.join(" ")}` : ""}</p>
     </section>
   `;
 }
@@ -19831,12 +20465,16 @@ function applyLiveTradingPerformanceTab(panel) {
   });
 }
 
-
-function renderLiveTrading(data) {
+function renderLiveTrading(passedData) {
   const panel = document.getElementById("liveTradingPanel");
   const updated = document.getElementById("liveTradingUpdated");
   if (!panel) return;
 
+  // Which lane the tab draws, decided once per render: every figure below - banner, charts, overlays, rule panel,
+  // tables and ticket actions - is read from this one view, so a button press cannot leave half the page on one
+  // account and half on the other.
+  const laneView = liveTradingLaneView();
+  const data = liveTradingDrawData(passedData);
   const freshness = liveTradingFreshness(data);
   const instruments = Array.isArray(data?.instruments) ? data.instruments : [];
   const account = data?.account || {};
@@ -19847,7 +20485,7 @@ function renderLiveTrading(data) {
   const ruleState = liveTradingRuleReadings(data);
 
   if (updated) {
-    updated.textContent = `${freshness.label} · snapshot ${data?.generated_at_utc || "unknown"}`;
+    updated.textContent = `${laneView.label} · ${freshness.label} · snapshot ${data?.generated_at_utc || "unknown"}`;
   }
 
   const accountChips = [
@@ -19874,10 +20512,16 @@ function renderLiveTrading(data) {
     : ", nothing marked yet";
 
   panel.innerHTML = `
+    ${liveTradingLaneSelector(laneView)}
+
+    <div id="liveTradingStatusSlot">${liveTradingStatusMarkup(liveTradingLaneStatus(laneView))}</div>
+
     <div class="live-trading-banner ${freshness.tone}">
       <span class="live-trading-badge ${freshness.tone}">${escapeHtml(freshness.label)}</span>
-      <p>${escapeHtml(freshness.detail)}</p>
+      <p>${escapeHtml(`${laneView.label}: ${freshness.detail}`)}</p>
     </div>
+
+    ${liveTradingLaneNotice(laneView)}
 
     ${liveTradingAccounts()}
 
@@ -19887,9 +20531,11 @@ function renderLiveTrading(data) {
 
     ${liveTradingRulePanel(data, ruleState)}
 
-    ${liveTradingPerformancePanel(data)}
+    ${liveTradingPerformancePanel(data, laneView)}
 
     ${liveTradingPositions(data)}
+
+    ${laneView.id === "ftmo-1" ? "" : liveTradingWorkingOrders(data)}
 
     ${liveTradingClosedTrades(data)}
 
@@ -19907,6 +20553,7 @@ function renderLiveTrading(data) {
   `;
 
   setupLiveTradingChart(panel);
+  installLiveTradingStatusClock();
 }
 
 // The Live Trade Logic tab: the rule the loop trades, in words rather than in columns. The Live Trading tab

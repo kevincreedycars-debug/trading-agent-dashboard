@@ -210,11 +210,11 @@ test("the reporting dates beside the title are the snapshot's own window, printe
 test("the Live Trading view keeps its reading order and loads the aggregation before the page script", () => {
   const script = fs.readFileSync(scriptPath, "utf8");
   const html = fs.readFileSync(indexPath, "utf8");
-  const render = script.slice(script.indexOf("function renderLiveTrading(data) {"));
+  const render = script.slice(script.indexOf("function renderLiveTrading(passedData) {"));
 
   const order = [
     "liveTradingChartShell(data, ruleState)",
-    "liveTradingPerformancePanel(data)",
+    "liveTradingPerformancePanel(data, laneView)",
     "liveTradingPositions(data)",
     "liveTradingClosedTrades(data)",
     "<div class=\"live-trading-grid\">${cards}</div>"
@@ -231,11 +231,18 @@ test("the Live Trading view keeps its reading order and loads the aggregation be
   // swap shows a single breakdown at a time.
   assert.match(script, /key: "weekday", label: "Weekday", column: "Close day \\u00b7 London time"/);
   assert.match(script, /let liveTradingPerformanceTab = "weekday";/);
-  assert.match(script, /<h3 id="liveTradingPerformanceHeading">FTMO 1 Performance<\/h3>\s*<p class="live-trading-performance-period"/);
+  // The panel draws whichever lane the selector is on, so its heading and its tab strip name that lane from the
+  // view rather than a typed account: FTMO 1's own page reads "FTMO 1 Performance" and lane 2's reads "FTMO 2".
+  assert.match(
+    script,
+    /<h3 id="liveTradingPerformanceHeading">\$\{escapeHtml\(laneAccount\)\} Performance<\/h3>\s*<p class="live-trading-performance-period"/
+  );
+
   // The dates are printed by the aggregation module rather than typed into the panel, so the line beside the
   // title cannot disagree with the window the rows were summed over.
   assert.match(script, /return performance\.periodLabel\(summary\.period\);/);
-  assert.match(script, /role="tablist" aria-label="FTMO 1 performance breakdown"/);
+  assert.match(script, /role="tablist" aria-label="\$\{escapeHtml\(laneAccount\)\} performance breakdown"/);
+
   assert.match(script, /Share of trades %/);
   assert.match(script, /Win rate %/);
 

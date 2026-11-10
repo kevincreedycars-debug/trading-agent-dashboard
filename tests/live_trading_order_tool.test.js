@@ -188,14 +188,16 @@ test("the removal the loop needs exists, and takes out only this path's own work
   // removal: a closing deal would be a different thing and would need a position to exist first.
   assert.match(source, /^ACTIONS = \("open", "close", "modify", "cancel", "status", "help"\)$/m);
   assert.match(source, /def plan_cancel\(args\):/);
-  assert.match(source, /def cancel_order\(mt5, args, journal\):/);
+  assert.match(source, /def cancel_order\(mt5, args, journal, guard=None\):/);
   assert.match(source, /"action": mt5\.TRADE_ACTION_REMOVE,/);
   // Only something still working, and only something this path left: a tool that removes what it did not
   // place is a tool that can remove anything.
   assert.match(source, /orders = mt5\.orders_get\(ticket=args\.ticket\)/);
   assert.match(source, /is not a working pending order on this account/);
   assert.match(source, /A position is closed with the close action rather than this one/);
-  assert.match(source, /carries magic \{int\(order\.magic\)\}, not this tool's \{MAGIC\}/);
+  // The ticket's ownership is read against this lane's own number, which `--magic` names: one constant for lane 1
+  // and the second account's own number beside it, never a number the caller has to remember.
+  assert.match(source, /carries magic \{int\(order\.magic\)\}, not this tool's \{args\.magic\}/);
   // One attempt, deliberately: a removal carries no price, so a requote cannot be the answer and a second
   // send would be asking to remove two things.
   assert.match(source, /result = mt5\.order_send\(request\)/);
@@ -258,7 +260,7 @@ test("the level change the breakeven rule needs exists, and reaches only this pa
   // carries no size, no entry and no exit: `TRADE_ACTION_SLTP` on the position's own ticket, which is not an order
   // and not a deal.
   assert.match(source, /def plan_modify\(args\):/);
-  assert.match(source, /def modify_order\(mt5, args, journal\):/);
+  assert.match(source, /def modify_order\(mt5, args, journal, guard=None\):/);
   assert.match(source, /"action": mt5\.TRADE_ACTION_SLTP,/);
   // Only a position this path placed, and only a position at all: the other two actions are named so a caller that
   // reached for the wrong one is told which to use.

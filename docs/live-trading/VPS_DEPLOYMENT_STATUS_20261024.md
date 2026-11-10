@@ -1004,7 +1004,7 @@ The one thing §14.4 left unproven was a full reboot. It was run at 14:00:02Z, w
 | 14:00:55 | `LiveTradingPublishLanes019` fired and exited 0 |
 | 14:01:15 | `LiveTradingTerminalStartup` fired through its logon trigger, +45 s after the logon |
 | 14:01:29 | terminal initialized from `startup.ini` |
-| 14:01:39 | `'511428614': authorized on FTMO-Server` |
+| 14:01:39 | terminal authorized on FTMO-Server as `***614` |
 | 14:01:40 | `synchronized ... 1 positions, 1 orders, 166 symbols`, `trading has been enabled - hedging mode` |
 | 14:05:02 | `LiveTradingTraderTick019` ran as `S4U` and reviewed both tickets |
 
@@ -1050,6 +1050,16 @@ warm restart does not:
 The reboot also re-answered §3's auto-logon question from the host's own behaviour rather than from a registry
 reading: `AutoAdminLogon=1`, `DefaultUserName=Administrator`, a stored password, and a session on the console one
 minute after boot.
+
+**The full login was published in this section and is masked here.** The 14:01:39 row carried the whole account
+number, which is the one thing every other line in this file states as `***614`. It was masked in a
+documentation-only edit on 2026-11-07; the rest of this document is unchanged. History is deliberately **not**
+rewritten: the commit that carried the number is in every clone and on the published branch already, so a rewrite
+would change the provenance of the page while leaving the exposure where it was. What that means is written down
+rather than repaired: the number was readable in the published tree from 2026-11-03 until this edit, so it is
+treated as exposed, and the protection on the account is its password, not its number. Re-checking that password
+and asking FTMO whether the account number itself can be changed is on the pre-arm checklist, not something this
+document can settle.
 
 ## 15. 2026-11-03, evening: the corner lamp, and the password that stopped being plaintext
 

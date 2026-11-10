@@ -572,7 +572,7 @@ test("the dashboard exposes the live section and loads the feed", () => {
   assert.match(html, /id="liveTradingView"/);
   assert.match(html, /id="liveTradingPanel"/);
   assert.match(script, /const liveTradingUrl = "\.\/data\/live-trading\.json/);
-  assert.match(script, /function renderLiveTrading\(data\)/);
+  assert.match(script, /function renderLiveTrading\(passedData\)/);
   assert.match(script, /if \(activeTab === "live-trading"\) renderLiveTrading\(liveTradingData \|\| \{\}\);/);
   assert.match(script, /fetchLocalJson\(liveTradingUrl\)/);
   assert.match(script, /5M STALE/);
@@ -704,7 +704,7 @@ test("the chart marks the executed trades the snapshot read back", () => {
   // The markers are placed from the read-back and from nothing else: the closed trades the snapshot carries
   // for the symbol on screen, each on the bar its own time falls in and at the price the terminal reported.
   assert.match(script, /function liveTradingChartTrades\(instrument, points, geometry, digits\) \{/);
-  assert.ok(script.includes("liveTradingData.closed_trades.filter(trade => trade?.symbol === instrument?.symbol)"));
+  assert.ok(script.includes("liveTradingDrawData().closed_trades.filter(trade => trade?.symbol === instrument?.symbol)"));
   // The marker size is a constant the browser test measures against, so the two cannot drift apart.
   assert.ok(script.includes("const size = 11;"));
   assert.ok(script.includes("const tradeView = liveTradingChartTrades(instrument, points, { xAt, yAt, plotX0, plotX1, plotY0, plotY1 }, digits);"));
@@ -742,7 +742,7 @@ test("the chart draws the position tool under a trade the terminal bracketed", (
   // The box is drawn from the trade's own row and the instrument's own contract facts, and only for a trade
   // the terminal reported both levels for.
   assert.ok(script.includes("const sizer = liveTradingPositionSizer(trade, instrumentRow, accountRow);"));
-  assert.ok(script.includes("const instrumentRow = Array.isArray(liveTradingData?.instruments)"));
+  assert.ok(script.includes("const instrumentRow = Array.isArray(liveTradingDrawData()?.instruments)"));
   assert.ok(script.includes('class="live-trading-chart-tool ${sizer.side}"'));
   assert.ok(script.includes('class="live-trading-chart-tool-band ${kind}"'));
   assert.ok(script.includes('class="live-trading-chart-tool-edge ${kind}"'));
@@ -789,7 +789,7 @@ test("the chart shades an open position's stop and target, and says on the chart
   // The shading is drawn from the read-back and from nothing else: the positions the snapshot carries for the
   // symbol on screen, an edge at each of the two prices the terminal reports and the entry through the middle.
   assert.match(script, /function liveTradingChartOpenPositions\(instrument, points, geometry, digits\) \{/);
-  assert.ok(script.includes("liveTradingData.positions.filter(row => row?.symbol === instrument?.symbol)"));
+  assert.ok(script.includes("liveTradingDrawData().positions.filter(row => row?.symbol === instrument?.symbol)"));
   assert.ok(script.includes('class="live-trading-chart-position-band"'));
   assert.ok(script.includes('class="live-trading-chart-position-edge ${kind}"'));
   assert.ok(script.includes('class="live-trading-chart-position-edge entry"'));
@@ -853,7 +853,7 @@ test("the cards chart the same M5 series instead of a hanging bar strip", () => 
   const script = fs.readFileSync(path.join(root, "script.js"), "utf8");
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
 
-  assert.match(script, /function liveTradingCardChart\(m5, digits, symbol\) \{/);
+  assert.match(script, /function liveTradingCardChart\(m5, digits, symbol, levels = \[\]\) \{/);
   // Mini candles when the snapshot carries OHLC bars, an area line of the closes when it does not.
   assert.ok(script.includes("const candles = bars.length > 0;"));
   assert.ok(script.includes('class="live-trading-card-chart-body ${cls}"'));

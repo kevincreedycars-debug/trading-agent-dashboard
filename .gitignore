@@ -33,3 +33,7 @@ id_ed25519
 # scripts/publish-live-trading-lanes.js and scripts/prepare-live-trading-host.ps1. It is machine-specific by
 # definition - the PC's roots are not the VPS's - so it is never committed.
 config/live-trading-lanes.local.json
+# Python's own bytecode caches: the fake MetaTrader5 fixture is run by the suite, and the compiled file it
+# leaves behind is a build artifact of the test machine, not source.
+__pycache__/
+*.pyc

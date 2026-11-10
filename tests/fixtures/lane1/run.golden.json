@@ -1,0 +1,161 @@
+{
+  "code": 0,
+  "status": "nothing_to_place",
+  "reason": "no pair was left a ticket this run: every row states why, whether that is the rule, the account or the market.",
+  "lane": null,
+  "armed": true,
+  "interval_seconds": 300,
+  "snapshot": {
+    "generated_at_utc": "2026-11-07T15:34:30.000Z",
+    "age_seconds": 30,
+    "stale_after_seconds": 900,
+    "instruments": 4
+  },
+  "terminal": {
+    "account": "***614",
+    "server": "FTMO-Server",
+    "positions_open": 2,
+    "orders_open": 0,
+    "ours": 2
+  },
+  "rule": {
+    "summary": {
+      "instruments": 4,
+      "confirmed": 0,
+      "waiting": 2,
+      "inTrade": 0,
+      "blocked": 2,
+      "noCall": 0,
+      "noLevels": 0,
+      "unavailable": 0
+    },
+    "taken_today": 0,
+    "reentries_today": 0,
+    "open_tickets": 2,
+    "rows": [
+      {
+        "symbol": "EURUSD",
+        "asset": "EUR",
+        "stage": "blocked",
+        "decision": "none",
+        "side": "short",
+        "level": null,
+        "entry": null,
+        "stop": null,
+        "target": null,
+        "risk": null,
+        "r_multiple": null,
+        "confirmation_time_utc": null,
+        "close": null,
+        "beyond_points": null,
+        "reason": "EURUSD already holds an open position, and the rule keeps one trade at a time on a pair."
+      },
+      {
+        "symbol": "XAUUSD",
+        "asset": "GOLD",
+        "stage": "waiting",
+        "decision": "none",
+        "side": "long",
+        "level": 4069.03,
+        "entry": null,
+        "stop": null,
+        "target": null,
+        "risk": null,
+        "r_multiple": null,
+        "confirmation_time_utc": "2026-11-06T21:45:00+00:00",
+        "close": 4066.55,
+        "beyond_points": null,
+        "reason": "Waiting for a M5 close above a marked level: the newest closed candle at 4066.55 has not crossed one, and the nearest line is 4069.03 (248 points) away."
+      },
+      {
+        "symbol": "US100.cash",
+        "asset": "NQ",
+        "stage": "waiting",
+        "decision": "none",
+        "side": "short",
+        "level": null,
+        "entry": null,
+        "stop": null,
+        "target": null,
+        "risk": null,
+        "r_multiple": null,
+        "confirmation_time_utc": "2026-11-06T21:45:00+00:00",
+        "close": 26990.44,
+        "beyond_points": null,
+        "reason": "Waiting for a M5 close below a marked level: the newest closed candle at 26990.44 has not crossed one, and no marked line is left in that direction."
+      },
+      {
+        "symbol": "BTCUSD",
+        "asset": "BTC",
+        "stage": "blocked",
+        "decision": "none",
+        "side": "long",
+        "level": null,
+        "entry": null,
+        "stop": null,
+        "target": null,
+        "risk": null,
+        "r_multiple": null,
+        "confirmation_time_utc": null,
+        "close": null,
+        "beyond_points": null,
+        "reason": "BTCUSD already holds an open position, and the rule keeps one trade at a time on a pair."
+      }
+    ]
+  },
+  "trades": {
+    "count": 0
+  },
+  "placements": [],
+  "pendings": [],
+  "positions": [
+    {
+      "symbol": "EURUSD",
+      "asset": "EUR",
+      "ticket": 810001,
+      "decision": "keep",
+      "entry": 1.11468,
+      "reason": "The short call for EUR is still standing, so this position stays: it is exited when the call turns against it, and until then its own stop and target are what answer it."
+    },
+    {
+      "symbol": "BTCUSD",
+      "asset": "BTC",
+      "ticket": 810002,
+      "decision": "keep",
+      "entry": 75837.8,
+      "reason": "The long call for BTC is still standing, so this position stays: it is exited when the call turns against it, and until then its own stop and target are what answer it."
+    }
+  ],
+  "stops": [
+    {
+      "symbol": "EURUSD",
+      "asset": "EUR",
+      "ticket": 810001,
+      "decision": "keep",
+      "rung": null,
+      "new_stop": null,
+      "entry": null,
+      "risk": null,
+      "reason": "The state file carries no placement for ticket 810001, so the risk this trade was placed with is not known here: its stop is left where it is rather than moved against a number this loop does not have."
+    },
+    {
+      "symbol": "BTCUSD",
+      "asset": "BTC",
+      "ticket": 810002,
+      "decision": "keep",
+      "rung": null,
+      "new_stop": null,
+      "entry": null,
+      "risk": null,
+      "reason": "The state file carries no placement for ticket 810002, so the risk this trade was placed with is not known here: its stop is left where it is rather than moved against a number this loop does not have."
+    }
+  ],
+  "tool": [
+    {
+      "action": "status",
+      "flags": {
+        "--journal": "<workdir>\\orders.log"
+      }
+    }
+  ]
+}

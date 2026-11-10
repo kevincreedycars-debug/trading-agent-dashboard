@@ -217,6 +217,14 @@ function loadLanes(configPath) {
       // publisher then serves the lanes that exist and says so, instead of stopping the account that does. The
       // default is enabled, so the flag has to be written to switch a lane off.
       enabled: lane?.enabled !== false,
+      // Which rule this lane trades and which ownership number its tickets carry. Published because the page has to
+      // draw the same grid the loop trades and has to know which tickets are this account's own; both are numbers
+      // and names, and neither says anything about a credential.
+      magic: Number.isFinite(Number(lane?.magic)) ? Number(lane.magic) : null,
+      strategy: {
+        grid: lane?.strategy?.grid === "half" ? "half" : "full",
+        r_multiple: Number.isFinite(Number(lane?.strategy?.r_multiple)) ? Number(lane.strategy.r_multiple) : null
+      },
       account_login_masked: typeof lane.account_login_masked === "string" ? lane.account_login_masked : null,
       account_server:
         typeof lane.account_server === "string" && lane.account_server.trim() ? lane.account_server.trim() : null
@@ -485,6 +493,10 @@ function publishLanes(options, deps = {}) {
         trader_status: row.trader_status?.published ?? null,
         account_login_masked: row.identity?.account_login_masked ?? lane.account_login_masked ?? null,
         account_server: row.identity?.account_server ?? lane.account_server ?? null,
+        // The rule this lane trades and the number its tickets carry, so the page can draw the grid the loop
+        // trades and read which tickets are this account's own.
+        magic: lane.magic ?? null,
+        strategy: lane.strategy ?? null,
         generated_at_utc: row.generated_at_utc ?? null,
         status: row.status ?? "disabled",
         trader: row.trader_status ?? { published: null, reason: "the lane is disabled, so no trader runs it" }

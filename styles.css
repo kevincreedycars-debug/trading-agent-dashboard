@@ -8511,8 +8511,63 @@ body {
 .live-trading-card-chart-price { font: 600 12px 'IBM Plex Mono', monospace; }
 .live-trading-card-chart-price.up { fill: #26a69a; }
 .live-trading-card-chart-price.down { fill: #ef5350; }
+/* The ladder drawn under the candles: a marked level solid, the half grid's midpoint dashed. Both are thin on
+   purpose - the candles are the reading and the lines are what it is read against. */
+.live-trading-card-chart-level { stroke: #4f7fb0; stroke-width: 1; stroke-dasharray: none; vector-effect: non-scaling-stroke; opacity: .75; }
+.live-trading-card-chart-level.midpoint { stroke: #8a6fc4; stroke-dasharray: 4 3; opacity: .85; }
+.live-trading-card-chart-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0 0; color: #8ea6c0; font: 500 10px 'IBM Plex Mono', monospace; }
+.live-trading-card-chart-legend .solid,
+.live-trading-card-chart-legend .dashed { display: inline-block; width: 18px; height: 0; border-top: 2px solid #4f7fb0; }
+.live-trading-card-chart-legend .dashed { border-top: 2px dashed #8a6fc4; }
 
-.live-trading-alert { margin: 0; padding: 8px 10px; border: 1px solid #7a5a24; border-left: 3px solid #e0a53c; border-radius: 8px; background: rgba(224, 165, 60, .08); color: #f0c274; font: 500 11px 'IBM Plex Mono', monospace; line-height: 1.5; overflow-wrap: anywhere; }
+/* The lane selector: one control above the charts, two accounts, and the state of each stated on its own button
+   rather than in a caption a reader might skip. */
+.live-trading-lane-selector { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid #233246; border-radius: 8px; background: #0a1420; }
+.live-trading-lane-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.live-trading-lane-button { display: grid; gap: 1px; padding: 7px 12px; border: 1px solid #233246; border-radius: 8px; background: #131722; color: #a9bdd4; font: 600 12px 'IBM Plex Mono', monospace; text-align: left; cursor: pointer; }
+.live-trading-lane-button:hover { border-color: #3d5a7a; }
+.live-trading-lane-button.active { border-color: #2f81f7; background: rgba(47, 129, 247, .12); color: #dbe6f3; }
+.live-trading-lane-button:focus-visible { outline: 2px solid #2f81f7; outline-offset: 2px; }
+.live-trading-lane-label { letter-spacing: .02em; }
+.live-trading-lane-note { color: #7f96ae; font: 500 10px 'IBM Plex Mono', monospace; }
+.live-trading-lane-badge { justify-self: start; margin-top: 2px; padding: 1px 5px; border-radius: 4px; font: 700 9px 'IBM Plex Mono', monospace; letter-spacing: .06em; }
+.live-trading-lane-badge.parked { background: rgba(224, 165, 60, .16); color: #f0c274; }
+.live-trading-lane-badge.missing { background: rgba(239, 83, 80, .16); color: #ff9b96; }
+.live-trading-lane-badge.stale { background: rgba(224, 165, 60, .16); color: #f0c274; }
+.live-trading-lane-caption { margin: 0; color: #90a4bb; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.live-trading-lane-notice { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid #7a5a24; border-left: 3px solid #e0a53c; border-radius: 8px; background: rgba(224, 165, 60, .08); }
+.live-trading-lane-notice b { color: #f0c274; font: 700 11px 'IBM Plex Mono', monospace; letter-spacing: .04em; }
+.live-trading-lane-notice p { margin: 0; color: #e6cfa2; font-size: 11.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.live-trading-lane-notice.error { border-color: #7a2a2a; border-left-color: #ef5350; background: rgba(239, 83, 80, .08); }
+.live-trading-lane-notice.error b { color: #ff9b96; }
+.live-trading-lane-notice.error p { color: #f3c3c0; }
+
+/* The status button beside the selector: one word for the account on screen, and on a press the facts behind
+   it. The left rule carries the tone so the word and the colour say the same thing. */
+.live-trading-status { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid #233246; border-left: 3px solid #35485f; border-radius: 8px; background: #0a1420; }
+.live-trading-status.live { border-left-color: #2b6b57; }
+.live-trading-status.waiting { border-left-color: #7a5a24; }
+.live-trading-status.stale { border-left-color: #b4742a; }
+.live-trading-status.error { border-left-color: #7a3a44; }
+.live-trading-status.muted { border-left-color: #35485f; }
+.live-trading-status-bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px 12px; min-width: 0; }
+.live-trading-status-button { display: grid; gap: 1px; padding: 7px 12px; border: 1px solid #233246; border-radius: 8px; background: #131722; color: #a9bdd4; font: 600 12px 'IBM Plex Mono', monospace; text-align: left; cursor: pointer; }
+.live-trading-status-button:hover { border-color: #3d5a7a; }
+.live-trading-status-button:focus-visible { outline: 2px solid #2f81f7; outline-offset: 2px; }
+.live-trading-status-button.is-open { border-color: #2f81f7; background: rgba(47, 129, 247, .12); }
+.live-trading-status-eyebrow { color: #7f96ae; font: 700 9px 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.live-trading-status-word { color: #dbe6f3; font: 700 13px 'IBM Plex Mono', monospace; letter-spacing: .02em; }
+.live-trading-status-button.live .live-trading-status-word { color: #7ef0c4; }
+.live-trading-status-button.waiting .live-trading-status-word { color: #f0c274; }
+.live-trading-status-button.stale .live-trading-status-word { color: #ffcf8a; }
+.live-trading-status-button.error .live-trading-status-word { color: #ff9aa4; }
+.live-trading-status-meta { color: #8ea6c0; font: 500 10px 'IBM Plex Mono', monospace; }
+.live-trading-status-caption { margin: 0; max-width: 62ch; color: #90a4bb; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.live-trading-status-panel { display: grid; gap: 8px; padding-top: 6px; border-top: 1px solid #1d2a3a; }
+.live-trading-status-panel[hidden] { display: none; }
+.live-trading-status-verdict { margin: 0; color: #c6d9ed; font: 500 11.5px/1.55 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-status-verdict b { color: #dbe6f3; }
+
 .live-trading-caption { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; color: #8ea6c0; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-empty { margin: 0; color: #a9bdd4; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 .live-trading-provenance { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid #233246; border-radius: 8px; background: #0a1420; }
