@@ -1,5 +1,37 @@
 # Session Notes
 
+2026-11-10 (lane 2 armed at the minimum lot; three limits sent; release `4d93757d`) - the owner confirmed the half-grid
+/3R ruleset and authorised live trading on FTMO account 2 at the smallest broker-permitted size, so
+`LiveTradingTraderTick-ftmo2` was re-registered with `-Arm` at 20:46Z and is now trading unarmed no more. The rules were
+checked against the deployed code rather than the prose: `lib/l2l_strategy.js` `halfGrid` (line 125) inserts one midpoint
+between every adjacent marked level and `gridLevels` (149) makes that the only list the reading uses, so every marked
+line and every midpoint is both a trigger and a target through `ticketGeometry` (232), where `risk = reward / 3`; the
+crossing is still the newest *closed* M5 bar finishing beyond a line the bar before it had not, in the call's side;
+`--max-per-day` counts *placed* trades in `Europe/Prague`, excludes refused attempts and excludes re-entry put-backs at a
+standing trade's trigger level; a signal bar is spent once by `symbol|signal_time_utc`, so a fresh crossing after a
+take-profit - the same level included - is a new signal on the same day but the same candle never becomes two tickets;
+the hold is the rule's own one ticket per pair with no cap across pairs, and the stop rungs are breakeven at 2R and a
+trail from 3R kept three times the placement risk behind the furthest price. Terminal 2's probe at 20:45Z reported
+`volume_min` 0.01 / `volume_step` 0.01 for EURUSD, XAUUSD, US100.cash and BTCUSD (`trade_mode full` on all four), and the
+order path needs no number to hit that: the trader passes no `--lots` and `live-trading-order.py`'s `resolve_volume` takes
+the symbol's own minimum, so every ticket is 0.01. The pre-arm checks passed on the account itself - `***841` on
+`FTMO-Server3`, terminal `...MT5 Terminal 2` connected, `account.trade_allowed` and `trade_expert` true, magic
+`20261005`, identity file matching, feed 20:41:31Z fresh, calls sealed 18:57Z all ACTIVE - so **no credential step was
+needed**: the login is a trading session, not the investor password. The registration is stage 7 with two corrections
+now edited into the runbook itself: `-Published C:\live-trading\publisher` (the publisher's checkout, where the calls and
+the ladder live) and the host's own `-HiddenRunner` under `C:\Users\Administrator\`. The armed ticks then did the rest:
+20:46:30Z `nothing_to_place`; 20:51:32Z BTCUSD buy limit 73657.005 / SL 73414.526667 / TP 74384.44 (order 199440753,
+`TRADE_RETCODE_DONE`); 20:56:32Z US100.cash buy limit 27751.59 / SL 27705.786667 / TP 27889 (order 199441238, DONE, and
+filled at 27750.88); 21:01:32Z XAUUSD sell limit 4033.29 / SL 4045.203333 / TP 3997.55 (order 199442155, DONE). All three
+are 0.01 lots, magic `20261005`, `l2l-rule-<asset>`; BTCUSD's *entry* is a midpoint with a marked target, US100.cash's
+*target* is a midpoint from a marked entry, XAUUSD's entry is a midpoint - the half grid working in both roles, each stop
+exactly one third of that ticket's distance. The publisher's 21:11:02Z run (`dc9a849c`) published both lanes and the
+hosted page read headlessly at 21:14Z shows FTMO account 2 tone `live`, "Live · armed", feed inside the window, "LOADED
+RULES half grid · 3R · magic 20261005", "EFFECTIVE CAP 4 a day, as the last run recorded it", identity verified, plus the
+filled US100.cash position and both working limits; lane 1 still reads `armed`/`nothing_to_place` with its own heartbeat
+and code hash untouched. Three of the four daily placements are spent, EURUSD is the remaining slot, and the deployed
+configuration, sizes, checks and tick evidence are recorded in `docs/live-trading/LANE2_ARMED_20261110.md`.
+
 2026-11-10 (lane 2 goes live unarmed on `main`; release `4d93757d`) - lane 2's FTMO 2 half-grid/3R release is merged
 and deployed: `C:\ftmo2` runs detached at `4d93757d`, its chained feed+trader task `LiveTradingTraderTick-ftmo2` exits
 0 every five minutes with `"armed":false`/`"status":"planned"` and no journal write beyond the read-only `status` line,

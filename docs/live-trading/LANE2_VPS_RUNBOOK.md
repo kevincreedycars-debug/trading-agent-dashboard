@@ -627,7 +627,7 @@ cd C:\ftmo2
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-live-trading-trader-task.ps1 
   -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 
   -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json 
-  -TaskName LiveTradingTraderTick-ftmo2 -ChainFeed -Published C:\ftmo2\data -Arm 
+  -TaskName LiveTradingTraderTick-ftmo2 -ChainFeed -Published C:\live-trading\publisher -Arm 
   -Terminal 'C:\Program Files\FTMO Global Markets MT5 Terminal 2' -HiddenRunner <the host's run-hidden.vbs>
 
 Get-Content C:\ftmo2\tmp\live-trading-trader-run.cmd      # must now carry --confirm-live, once
@@ -643,6 +643,13 @@ confirmed row - and the log's own `rows` state the reason per pair.
 **Lane 2's four-a-day cap** is whatever the user states before arming; `--max-per-day 4` is the offline default this
 branch was tested with and the value the registration above carries. Change it in the registration, not in the
 wrapper, so the scheduler and the loop's log cannot disagree.
+
+**The armed registration, as it was run on 2026-11-10**, is recorded in
+[LANE2_ARMED_20261110.md](LANE2_ARMED_20261110.md): the exact command (including the corrected `-Published` and the
+host's own `-HiddenRunner`), the four `volume_min` sizes read from Terminal 2, the rule checked line by line against
+the deployed code, the three limits the first armed ticks sent with their broker answers, and what the hosted page
+showed afterwards. Read that page before changing a flag here, because it is the only record of what lane 2 has
+actually sent.
 
 
 ## 8. Stopping lane 2 only, with its resting orders accounted for
