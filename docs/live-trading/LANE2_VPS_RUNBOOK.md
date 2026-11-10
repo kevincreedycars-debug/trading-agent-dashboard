@@ -425,7 +425,7 @@ cd C:\ftmo2
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-live-trading-trader-task.ps1 
   -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 
   -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json 
-  -TaskName LiveTradingTraderTick-ftmo2 -ChainFeed -Published C:\ftmo2\data 
+  -TaskName LiveTradingTraderTick-ftmo2 -ChainFeed -Published C:\live-trading\publisher 
   -Terminal 'C:\Program Files\FTMO Global Markets MT5 Terminal 2' -HiddenRunner <the host's run-hidden.vbs> -NoStart
 
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-live-trading-trader-task.ps1 -Show -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json -TaskName LiveTradingTraderTick-ftmo2
@@ -439,6 +439,37 @@ Get-Content C:\ftmo2\tmp\live-trading-trader-run.cmd
 
 Start it once by hand (`Start-ScheduledTask -TaskName LiveTradingTraderTick-ftmo2`) and read
 `C:\ftmo2\tmp\live-trading-trader.log` - it must still report `"armed":false`.
+
+### Registered on the host, 2026-11-10
+
+Registered with `-NoStart`, `-ChainFeed`, `-Published C:\live-trading\publisher`, lane 2's own terminal and the host's
+`run-hidden.vbs`, so the task is `LiveTradingTraderTick-ftmo2`, principal `Administrator`, `Interactive`, `Limited` -
+the same shape lane 1's task runs under.
+
+The first scheduled ticks exited 1 with an empty feed log, while the same wrapper run by hand under `cmd /c` produced a
+fresh snapshot and an `"armed":false` plan. A throwaway probe task that captured the scheduled run's own output named
+the fault in one line:
+
+```text
+Error: EPERM: operation not permitted, open 'C:\ftmo2\tmp\live-trading-feed.log'
+```
+
+A task registered `Limited` runs with a filtered token in which `BUILTIN\Administrators` is deny-only, so it may write
+only where the account itself is granted. `C:\live-trading\runtime` carries that grant - its
+`tmp\live-trading-feed.log` shows `VMI3697641\Administrator:(I)(F)` beside the built-in entries - while a fresh
+`C:\ftmo2` checkout carries only the inherited `Users:(RX)` on the same file. Two folders, granted on the host:
+
+```powershell
+icacls C:\ftmo2\tmp  /grant "VMI3697641\Administrator:(OI)(CI)F" /T
+icacls C:\ftmo2\data /grant "VMI3697641\Administrator:(OI)(CI)F" /T
+```
+
+The next scheduled tick exited 0: feed `2026-11-10T20:11:31Z`, trader `"armed":false`, `"status":"planned"`, journal
+unchanged apart from the read-only `status` line. A restage that reclones `C:\ftmo2` needs the same two grants; it is
+the one step of this stage a checkout cannot carry.
+
+`-Published` names the publisher's checkout rather than `C:\ftmo2\data`, because the calls, the ladder and the
+close-request log are read from the published tree, and lane 2's own `data` folder is not the tree the publisher writes.
 
 ### The watchdog already on the host, and why lane 2 stays out of it
 
@@ -573,6 +604,18 @@ it is the reason stage 2's `2e` comes before this stage rather than after it.
 **Stage 6 passes when** `data/live-trading-lanes.json` reports both lanes `published`, `data/live-trading.account2.json`
 carries account 2's masked login, and stage 0's lane-1 values are unchanged (same commit, same wrapper, same task,
 same heartbeat fields apart from timestamps). Publishing did **not** arm anything: re-read stage 5's log line.
+
+### Published on the host, 2026-11-10
+
+The publisher task `LiveTradingPublishLanes019` runs from `C:\live-trading\publisher` and force-resets that checkout to
+`origin/main` on every run, so the lane roots come from the ignored
+`C:\live-trading\publisher\config\live-trading-lanes.local.json` (`lane_roots`: `ftmo-1` `C:\live-trading\runtime`,
+`ftmo-2` `C:\ftmo2`). It has to be written **without a BOM**: a BOM makes the publisher exit 2 before it reads a lane.
+
+The 20:12:34Z run published both lanes in `e6673432`. `data/live-trading-lanes.json` reads ftmo-2 `enabled: true`,
+`published`, `***841` on `FTMO-Server3`, half grid at R3, magic `20261005`, beside lane 1's unchanged
+`***614`/`FTMO-Server` full grid at R5; `data/live-trading.account2.json` carries the four-instrument snapshot; and
+`data/live-trading-trader.ftmo-2.json` carries `"armed":false`, `"status":"planned"`, `"checkout_head":"4d93757d"`.
 
 ## 7. Arming lane 2 (last, and only with the FTMO reply in hand)
 
