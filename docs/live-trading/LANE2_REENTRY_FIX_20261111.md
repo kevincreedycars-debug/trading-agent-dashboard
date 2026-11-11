@@ -128,8 +128,8 @@ Every ticket below is **closed**: it is a record, not an order, so nothing was c
 | 199472143 | closed -1.90 at its stop | stop 73,511.52, i.e. 5R | placed by the put-back path; recorded |
 | 199488169 | closed -1.94 at its stop | stop 73,511.52, i.e. 5R | placed by the put-back path; recorded |
 | 199500177 | closed +1.21 by the loop on the call change | stop 73,511.52, i.e. 5R | placed by the put-back path; recorded |
-| 199453044 (EURUSD, open at 07:46Z) | stop at breakeven 1.11677 | original risk 0.0007033, one third of its 0.00211 reward | correct - placed by the fresh path |
-| 199521328 (US100.cash, working) | sell limit 28,163.82, stop 28,209.62, target 28,026.41 | 137.41 / 45.80 = 3.00 | correct - placed by the fresh path |
+| 199453044 (EURUSD, open at 07:46Z; closed +2.05 at 08:16Z) | stop at breakeven 1.11677 | original risk 0.0007033, one third of its 0.00211 reward | correct - placed by the fresh path |
+| 199521328 (US100.cash, working at 07:46Z; filled 08:03Z, stopped 08:34Z for -0.45) | sell limit 28,163.82, stop 28,209.62, target 28,026.41 | 137.41 / 45.80 = 3.00 | correct - placed by the fresh path |
 
 No open position and no working order came through the put-back path, so there was nothing live to correct.
 The dashboard now labels the three closed ones `put-back · 5R` on its Closed trades table, so the record says
