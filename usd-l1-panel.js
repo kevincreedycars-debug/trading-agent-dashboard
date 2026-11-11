@@ -2114,6 +2114,138 @@ function usdL1UnreadInputs(block = {}, payload = {}) {
  * before the session. It is deliberately a coverage card, not a result card: a tape that reproduces recorded
  * trades proves the archive contract, not an edge.
  */
+
+/**
+ * The recovered inputs: what was measured, what is still blocked, and what it changed.
+ *
+ * Three numbers lead, because they are the whole answer: how many of the ten input-free factors now carry a
+ * measurement, how many mornings that reached, and how many decisions moved. The third is a count produced by
+ * evaluating the frozen book twice, so this card can print a zero without asking anyone to take it on trust.
+ */
+function renderUsdL1Recovery(payload = {}) {
+  const block = payload.recovery;
+  if (!block || !block.totals) {
+    return `
+      <section class="usd-l1-results" data-usd-l1-recovery="missing">
+        <div class="usd-l1-results-head"><div><p class="eyebrow">Recovered inputs</p><h3>The recovery block is not in this artefact</h3></div></div>
+        <p class="usd-l1-test-copy muted">Rebuild it with <code>node backtester/scripts/run_usd_layer1_backtest.js --publish</code>.</p>
+      </section>
+    `;
+  }
+  const totals = block.totals || {};
+  const decision = block.decision_check || {};
+  const tape = block.tape || {};
+  const windows = block.windows || {};
+  const pct = (value) => (Number.isFinite(value) ? `${usdL1Number(value, 1)}%` : "-");
+  return `
+    <section class="usd-l1-results usd-l1-recovery" data-usd-l1-recovery="true">
+      <div class="usd-l1-results-head">
+        <div>
+          <p class="eyebrow">Recovered inputs - the ten factors that had none</p>
+          <h3>What the cached tapes can measure at 05:00, what is still blocked, and what it changed</h3>
+        </div>
+        <p class="usd-l1-test-copy muted">${escapeHtml(tape.file || "no tape")} - ${usdL1Number(tape.bars, 0)} bars, ${escapeHtml(tape.first_bar || "")} to ${escapeHtml(tape.last_bar || "")}</p>
+      </div>
+      <div class="usd-l1-stat-strip">
+        <span><strong>${usdL1Number(totals.factors_of_those_now_measured, 0)}</strong> of ${usdL1Number(totals.factors_previously_without_any_input, 0)} now carry a measured value</span>
+        <span><strong>${usdL1Number(totals.sessions_with_any_recovered_input, 0)}</strong> of ${usdL1Number(totals.sessions, 0)} mornings gained a usable input (${pct(totals.sessions_gained_pct)})</span>
+        <span><strong>${usdL1Number(totals.directional_or_trade_decisions_changed, 0)}</strong> calls changed, across ${usdL1Number(decision.dates_compared, 0)} mornings compared</span>
+        <span><strong>${usdL1Number(block.lookahead_violations, 0)}</strong> bars read after their cutoff</span>
+      </div>
+      <div class="usd-l1-audit-table-wrap">
+        <table class="usd-l1-table usd-l1-data-path-table">
+          <caption>A recovered input is a measurement, not a vote: every chain below is blocked by the 2026-11-04 adjudication and no mechanism reads it</caption>
+          <thead>
+            <tr>
+              <th scope="col">Chain</th>
+              <th scope="col">Measured</th>
+              <th scope="col">Mornings</th>
+              <th scope="col">First / last</th>
+              <th scope="col">Research</th>
+              <th scope="col">What the challenger does with it</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${asArray(block.factors)
+              .map(
+                (factor) => `
+                <tr data-usd-l1-recovered="${escapeHtml(factor.factor_id)}">
+                  <th scope="row"><span class="usd-l1-audit-label">${escapeHtml(factor.label)}</span><span class="usd-l1-audit-id">${escapeHtml(factor.factor_id)}</span></th>
+                  <td>${escapeHtml(asArray(factor.keys).join(", "))}</td>
+                  <td>${usdL1Number(factor.sessions_with_a_value, 0)} <span class="usd-l1-muted">(${pct(factor.coverage_pct)})</span></td>
+                  <td>${escapeHtml(factor.first || "-")} / ${escapeHtml(factor.last || "-")}</td>
+                  <td>${escapeHtml(factor.research_disposition || "-")}, sign ${escapeHtml(factor.sign || "unresolved")}</td>
+                  <td>${escapeHtml(factor.how_the_challenger_uses_it || "-")}</td>
+                </tr>
+              `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="usd-l1-audit-table-wrap">
+        <table class="usd-l1-table usd-l1-data-path-table">
+          <caption>Still blocked, with the exact blocker and what would unblock it - none of these is a coding gap</caption>
+          <thead>
+            <tr>
+              <th scope="col">Chain</th>
+              <th scope="col">Blocker</th>
+              <th scope="col">Evidence</th>
+              <th scope="col">Unblocks with</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${asArray(block.blocked)
+              .map(
+                (entry) => `
+                <tr data-usd-l1-blocked="${escapeHtml(entry.factor_id)}">
+                  <th scope="row"><span class="usd-l1-audit-label">${escapeHtml(entry.label)}</span><span class="usd-l1-audit-id">${escapeHtml(entry.factor_id)}</span></th>
+                  <td>${escapeHtml(entry.blocker)}</td>
+                  <td class="usd-l1-muted">${escapeHtml(entry.evidence || "-")}</td>
+                  <td>${escapeHtml(entry.unblocks_with || "-")}</td>
+                </tr>
+              `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="usd-l1-audit-table-wrap">
+        <table class="usd-l1-table usd-l1-data-path-table">
+          <caption>The price caches stop before the run does: what that costs, counted rather than described</caption>
+          <thead>
+            <tr>
+              <th scope="col">Instrument</th>
+              <th scope="col">Last bar</th>
+              <th scope="col">Sessions after it</th>
+              <th scope="col">Without a price</th>
+              <th scope="col">Gate blocked</th>
+              <th scope="col">Callable if the price existed</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${asArray(block.price_cache)
+              .map(
+                (row) => `
+                <tr data-usd-l1-price-cache="${escapeHtml(row.key)}">
+                  <th scope="row">${escapeHtml(row.label)}</th>
+                  <td>${escapeHtml(row.last_bar || "-")}</td>
+                  <td>${usdL1Number(row.sessions_after_last_bar, 0)}</td>
+                  <td>${usdL1Number(row.sessions_without_a_price, 0)}</td>
+                  <td>${usdL1Number(row.sessions_gate_blocked_with_a_price_missing, 0)}</td>
+                  <td>${usdL1Number(row.sessions_where_the_missing_price_was_the_shortfall_after_last_bar, 0)} <span class="usd-l1-muted">after the boundary</span></td>
+                </tr>
+              `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      <p class="usd-l1-test-copy muted">${escapeHtml(block.reading_note || "")} Windows: ${usdL1Number(windows.overnight_hours, 0)}-hour overnight range, ${usdL1Number(windows.volatility_bars, 0)} hourly bars for the volatility measure, ${usdL1Number(windows.volatility_reference_sessions, 0)} sessions of reference. ${escapeHtml(windows.convention_note || "")}</p>
+    </section>
+  `;
+}
+
 function renderUsdL1M5Coverage(payload = {}) {
   const card = payload.m5_coverage;
   if (!card || !card.available) {
@@ -2218,6 +2350,7 @@ function renderUsdL1Backtester(payload = null) {
     ${renderUsdL1CallMethod(payload)}
     ${renderUsdL1WorkedCall(payload)}
     ${renderUsdL1FactorDataPath(payload)}
+    ${renderUsdL1Recovery(payload)}
     ${renderUsdL1Coverage(payload)}
     ${renderUsdL1M5Coverage(payload)}
     ${renderUsdL1TabStrip()}
