@@ -394,3 +394,14 @@ Two readers were left on this workstation for the next one, both of which read t
 note where the line predates `last_exit_utc`), and `tmp/host/verify-after-wording.ps1` prints the last tick's trade
 rows with their decisions.
 
+
+### The served page
+
+The published `script.js` at `kevincreedycars-debug.github.io/trading-agent-dashboard` was read at 21:12Z and is
+byte-for-byte `origin/main:script.js`: `git hash-object` on the downloaded file and `git rev-parse
+origin/main:script.js` both read `50c2079f…`, 1,106,985 bytes. It carries `liveTradingReentryWording` and both lanes'
+sentences - lane 2's `re-entry · fixed level` and *are re-entry orders at the same fixed level*, lane 1's *put a
+standing trade back at the level it was triggered on* - so what a reader's browser runs is the ruling. The build that
+served it was still the previous one when the commits went in at 20:53Z, so a page read inside that first hour after a
+push can still show the old words; the reader is the served file, not the checkout.
+
