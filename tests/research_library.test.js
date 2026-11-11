@@ -37,6 +37,51 @@ function sha256(text) {
   return crypto.createHash("sha256").update(text).digest("hex");
 }
 
+test("the committed registry validates against the catalogue", () => {
+  assert.deepEqual(ResearchLibrary.validateDocuments(registry, catalog), []);
+});
+
+test("a cited document may name its chain without claiming a delivered stage", () => {
+  const chain = catalog.factor_chains.find(entry => entry.factor_id === "live.f1-vix-level");
+  const cited = JSON.parse(JSON.stringify(registry));
+  cited.documents.push({
+    document_id: "vix-adjudication-citation",
+    asset: "USD",
+    factor_id: "live.f1-vix-level",
+    topic_id: "usd-topic-vix-level-and-risk-regime",
+    chain_id: chain.chain_id,
+    stage: null,
+    document_type: "synthesis",
+    storage: "referenced",
+    reference_note: "cited from the 2026-11-04 package; the bytes stay in the hosted store",
+    provenance: { package_id: "usd-final-adjudication-20261104", stage_intent: "adjudication" },
+    public_download: false,
+    versions: [{ version: 1, sha256: "f".repeat(64), bytes: null, registered_at: "2026-11-10" }]
+  });
+  assert.deepEqual(ResearchLibrary.validateDocuments(cited, catalog), []);
+  assert.equal(
+    ResearchLibrary.chainProgress(chain, cited.documents, catalog).delivered_stages,
+    ResearchLibrary.chainProgress(chain, registry.documents, catalog).delivered_stages,
+    "a citation must not move a chain's stage count"
+  );
+
+  const unflagged = JSON.parse(JSON.stringify(cited));
+  delete unflagged.documents[unflagged.documents.length - 1].provenance;
+  assert.ok(
+    ResearchLibrary.validateDocuments(unflagged, catalog).some(problem => problem.includes("unknown stage")),
+    "without a stated stage intent the record is an unlinked stage document"
+  );
+
+  const claimed = JSON.parse(JSON.stringify(cited));
+  claimed.documents[claimed.documents.length - 1].stage = "adjudication";
+  assert.ok(
+    ResearchLibrary.validateDocuments(claimed, catalog).some(problem =>
+      problem.includes("must name the red_team document it judged")
+    ),
+    "claiming the stage brings the parent rule back"
+  );
+});
+
 test("the committed catalogue validates and carries eight assets with USD first", () => {
   assert.deepEqual(ResearchLibrary.validateCatalog(catalog), []);
   const assets = ResearchLibrary.listAssets(catalog);
