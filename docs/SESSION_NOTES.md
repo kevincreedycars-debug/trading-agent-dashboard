@@ -1,5 +1,20 @@
 # Session Notes
 
+2026-11-11 (lane 2's re-entry named, lane 1 left alone) - the owner answered the open question the other way round
+from a code change: lane 1 keeps everything it has (no crossing gate, its own put-back wording, its own checkout and
+task), and lane 2's ticket is called *a re-entry order at the same fixed level* on the page and in its notes. Both
+ladders stay fixed - the marked lines and the half grid's midpoints are the prices they already are - so a re-entry
+goes back on the level the trade was triggered at with the next marked line as its target at three to one. The word
+now comes from one place: `ticketKinds(trades, { rMultiple, reentryLabel })` in
+`lib/live_trading_performance.js` takes it from the caller, and `liveTradingReentryWording(view)` in `script.js`
+states lane 2's `re-entry · fixed level` and lane 1's `put-back`; `kind` stays the stable key, and the three
+historical bitcoin rows keep `put-back · 5R` (the owner's earlier call, now pinned by a test). The next natural
+re-entry is now checkable from one log row: `trade.last_exit_utc` (new - the instant the window opens, null where
+the newest ticket never filled), `trade.crossing.bar_time_utc` (the candle that re-armed the level),
+`trade.trigger_level` (the fixed entry) and `placements[].{entry, stop, target, r_multiple}` (what was sent). §11 of
+`docs/live-trading/LANE2_REENTRY_FIX_20261111.md` holds the ruling and the table of where each fact is written;
+`npm test` runs 869 tests with the same 4 pre-existing browser/DOM failures.
+
 2026-11-11 (lane 2 deployed at `3a2e6566`, the 04:31Z put-back answered, lane 2 now re-arms only on a fresh
 crossing) - the 3R put-back fix was deployed to `C:\ftmo2` from the project workstation with the key at
 `.local\vps-access\id_ed25519`, lane 2 only: detached at `3a2e6566`, `git status --short --untracked-files=no` empty,

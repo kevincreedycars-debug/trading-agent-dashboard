@@ -299,6 +299,35 @@ test("the three bitcoin put-backs are flagged at five to one on a lane whose rul
   assert.equal(laneOne.counts.fiveR, 0, "a five-to-one lane has no mismatch to flag");
 });
 
+// The lane's own word for the ticket that goes back on its level. Lane 2's second account states it as a re-entry
+// order at the same fixed level - the owner's wording of 2026-11-11 - so the module takes that word from the caller,
+// and the three historical five-to-one tickets keep the name the day they were read under.
+test("the lane names its own re-entry, and the three five-to-one rows keep the name they were read under", () => {
+  const rows = [
+    { position_id: 1, symbol: "BTCUSD", side: "buy", price_open: 73639.06, stop_loss: 73496.7, take_profit: 73938.6, opened: { time_utc: "2026-11-11T01:00:00+00:00" } },
+    { position_id: 2, symbol: "BTCUSD", side: "buy", price_open: 73653.88, stop_loss: 73511.52, take_profit: 73938.6, opened: { time_utc: "2026-11-11T02:00:00+00:00" } }
+  ];
+  const lane2 = performance.ticketKinds(rows, { rMultiple: 3, reentryLabel: "re-entry \u00b7 fixed level" });
+  const byId = new Map(lane2.rows.map(row => [row.position_id, row]));
+  assert.equal(byId.get(2).kind, "put-back", "the stable key does not move with the label");
+  assert.equal(byId.get(2).label, "re-entry \u00b7 fixed level");
+  assert.equal(byId.get(2).fiveR, false, "a three-to-one ticket on a three-to-one lane is not flagged");
+  assert.equal(lane2.reentryLabel, "re-entry \u00b7 fixed level");
+
+  // Lane 1 passes no word of its own and keeps the put-back, which is what its rule has called this since 2026-10-05.
+  const lane1 = performance.ticketKinds(rows, { rMultiple: 5 });
+  assert.equal(lane1.rows.find(row => row.position_id === 2).label, "put-back");
+  assert.equal(lane1.reentryLabel, "put-back");
+
+  // And the three bitcoin tickets of 2026-11-11 are flagged whichever word the lane uses: the flag states what the
+  // ticket measured, not what the lane calls it.
+  const historical = performance.ticketKinds(ACCOUNT2_DAY, { rMultiple: 3, reentryLabel: "re-entry \u00b7 fixed level" });
+  historical.rows.filter(row => row.fiveR).forEach(row => {
+    assert.equal(row.label, "put-back \u00b7 5R");
+    assert.equal(row.kind, "put-back");
+  });
+});
+
 test("a stop that has been moved to the entry leaves the multiple unstated rather than invented", () => {
   const rows = [{
     position_id: 1,
@@ -328,16 +357,24 @@ test("the committed lane-2 snapshot classifies into the same day: one row per cl
   });
 });
 
-test("the Closed trades table prints the kind and states what a put-back and a 5R flag mean", () => {
+test("the Closed trades table prints the kind and states what a re-entry and a 5R flag mean", () => {
   const script = fs.readFileSync(scriptPath, "utf8");
   const table = script.slice(script.indexOf("function liveTradingClosedTrades(data) {"));
   const cell = table.slice(0, table.indexOf("</table>"));
   assert.match(cell, /<th scope="col">Kind<\/th>/);
   assert.match(cell, /class="live-trading-kind\$\{kind\?\.fiveR \? " flag" : ""\}/);
-  assert.match(table, /performance\.ticketKinds\(trades, \{ rMultiple: laneView\.rMultiple \}\)/);
-  assert.match(table, /put a standing trade back at the level it was triggered on/);
+  assert.match(table, /performance\.ticketKinds\(trades, \{ rMultiple: laneView\.rMultiple, reentryLabel: reentry\.label \}\)/);
+  assert.match(table, /kindCounts\.putBack\} \$\{reentry\.counted\}/);
+  // Both lanes' words for it live in one function, and the two do not share a sentence: lane 2's second account
+  // states a re-entry order at the same fixed level, lane 1 keeps the put-back its own rule has always been.
+  const wording = script.slice(script.indexOf("function liveTradingReentryWording("));
+  const fn = wording.slice(0, wording.indexOf("\nfunction liveTradingClosedTrades"));
+  assert.match(fn, /view\?\.id === "ftmo-2"/);
+  assert.match(fn, /label: "re-entry \\u00b7 fixed level"/);
+  assert.match(fn, /are re-entry orders at the same fixed level/);
+  assert.match(fn, /put a standing trade back at the level it was triggered on/);
   // The panel counts the same labels rather than computing its own.
   const panel = script.slice(script.indexOf("function liveTradingPerformancePanel(data, laneView) {"));
-  assert.match(panel, /performance\.ticketKinds\(trades, \{ rMultiple: laneView\?\.rMultiple \}\)/);
+  assert.match(panel, /performance\.ticketKinds\(trades, \{ rMultiple: laneView\?\.rMultiple, reentryLabel: reentry\.label \}\)/);
 });
 

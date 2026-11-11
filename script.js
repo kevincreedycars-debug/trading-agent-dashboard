@@ -20162,17 +20162,44 @@ function liveTradingPositions(data) {
   `;
 }
 
+// What this lane calls the ticket that goes back on a level its own trade was triggered at. Lane 1's rule has
+// called it a put-back since 2026-10-05, and the owner keeps that name on it. The second account's lane re-enters
+// at the same fixed level - the level does not move, and the midpoint grid it is marked on does not either - and
+// the owner's word for it on 2026-11-11 is a re-entry order at the same fixed level, so that is what this page and
+// its notes say. The label is the table's own cell; `counted` and `instead` are the clause the captions need so
+// the sentence reads in that lane's words rather than in one lane's words with another lane's name dropped into it.
+function liveTradingReentryWording(view = liveTradingLaneView()) {
+  if (view?.id === "ftmo-2") {
+    return {
+      label: "re-entry \u00b7 fixed level",
+      counted: "are re-entry orders at the same fixed level",
+      instead: "rather than fresh crossings",
+      path: "re-entry"
+    };
+  }
+  return {
+    label: "put-back",
+    counted: "put a standing trade back at the level it was triggered on",
+    instead: "rather than opening on a fresh crossing",
+    path: "put-back"
+  };
+}
+
 function liveTradingClosedTrades(data) {
   const history = data?.history || {};
   const hasBlock = Array.isArray(data?.closed_trades);
   const trades = hasBlock ? data.closed_trades : [];
   // Which ticket each close came from, read by the same module the performance panel uses: the first trade this
   // lane opened on a pair and side inside the window is fresh, and a later one aiming at the same target is the
-  // same trade put back at its level. The geometry each ticket was placed with travels beside the label, which
-  // is what marks the three bitcoin put-backs of 2026-11-11 as five to one on a lane that trades three.
+  // same trade back on its level. The geometry each ticket was placed with travels beside the label, which is what
+  // marks the three bitcoin put-backs of 2026-11-11 as five to one on a lane that trades three. The label itself is
+  // the lane's own word for it: a put-back on lane 1, a re-entry order at the same fixed level on lane 2.
   const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
   const laneView = liveTradingLaneView();
-  const kinds = performance ? performance.ticketKinds(trades, { rMultiple: laneView.rMultiple }) : null;
+  const reentry = liveTradingReentryWording(laneView);
+  const kinds = performance
+    ? performance.ticketKinds(trades, { rMultiple: laneView.rMultiple, reentryLabel: reentry.label })
+    : null;
   const kindByRow = new Map((kinds?.rows || []).map(row => [String(row?.position_id ?? ""), row]));
   const windowDays = Number.isInteger(Number(history.window_days)) ? Number(history.window_days) : null;
   const windowLabel = windowDays
@@ -20241,7 +20268,7 @@ function liveTradingClosedTrades(data) {
 
   const kindCounts = kinds?.counts || null;
   const kindNote = kindCounts && trades.length
-    ? ` Kind reads the ticket rather than the loop's state file: ${kindCounts.fresh} of these ${trades.length} opened on a fresh crossing and ${kindCounts.putBack} put a standing trade back at the level it was triggered on${kindCounts.fiveR ? `, ${kindCounts.fiveR} of them at five to one - the geometry a build that left this lane's own multiple out of the put-back path produced` : ""}. The multiple in the tooltip is the target distance over the stop distance on the row's own prices, and it is left unstated where a stop has since been moved to the entry.`
+    ? ` Kind reads the ticket rather than the loop's state file: ${kindCounts.fresh} of these ${trades.length} opened on a fresh crossing and ${kindCounts.putBack} ${reentry.counted}${kindCounts.fiveR ? `, ${kindCounts.fiveR} of them at five to one - the geometry a build that left this lane's own multiple out of the ${reentry.path} path produced` : ""}. The multiple in the tooltip is the target distance over the stop distance on the row's own prices, and it is left unstated where a stop has since been moved to the entry.`
     : "";
   const balance = Number(data?.account?.balance);
   const reconcileNote = Number.isFinite(balance) && trades.length
@@ -20352,10 +20379,13 @@ function liveTradingPerformancePanel(data, laneView) {
   const currency = data?.account?.currency ? ` ${data.account.currency}` : "";
   const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
   const summary = performance ? performance.summarise(trades, { history: data?.history || {} }) : null;
-  // Which closes were the same trade put back at its level, and which were priced off this lane's own multiple:
-  // the same read the Closed trades table prints one row at a time, counted here so the panel and the table say
-  // the same thing about the day.
-  const kinds = performance ? performance.ticketKinds(trades, { rMultiple: laneView?.rMultiple }) : null;
+  // Which closes were the same trade back on its level, and which were priced off this lane's own multiple: the
+  // same read the Closed trades table prints one row at a time, counted here so the panel and the table say the
+  // same thing about the day - and in the same lane's word for it.
+  const reentry = liveTradingReentryWording(laneView);
+  const kinds = performance
+    ? performance.ticketKinds(trades, { rMultiple: laneView?.rMultiple, reentryLabel: reentry.label })
+    : null;
   const period = summary ? liveTradingPerformancePeriod(summary) : "";
   const periodExact = summary ? liveTradingPerformancePeriodExact(summary) : "";
   const head = `
@@ -20469,8 +20499,8 @@ function liveTradingPerformancePanel(data, laneView) {
   }
   if (kinds && kinds.counts.putBack > 0) {
     const laneR = kinds.laneMultiple === null ? null : kinds.laneMultiple;
-    notes.push(`${kinds.counts.putBack} of the ${trades.length} closes put a standing trade back at the level it was triggered on rather than opening on a fresh crossing${kinds.counts.fiveR
-      ? `, and ${kinds.counts.fiveR} of those measures five to one${laneR === null ? "" : ` on a lane whose rule is ${laneR} to one`} - the geometry a build that left this lane's own multiple out of the put-back path produced, kept in the row and not recomputed away`
+    notes.push(`${kinds.counts.putBack} of the ${trades.length} closes ${reentry.counted} ${reentry.instead}${kinds.counts.fiveR
+      ? `, and ${kinds.counts.fiveR} of those measures five to one${laneR === null ? "" : ` on a lane whose rule is ${laneR} to one`} - the geometry a build that left this lane's own multiple out of the ${reentry.path} path produced, kept in the row and not recomputed away`
       : ""}.`);
   }
   const windowDays = Number(summary.period.windowDays);

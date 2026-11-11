@@ -836,8 +836,10 @@ function tradeSummary(cycle) {
     target_reached: cycle.target_reached,
     ended: cycle.ended,
     ended_by: cycle.ended_by,
-    // The crossing a put-back waited for, when the lane asks for one, so the log line says which candle re-armed
-    // the level rather than only that a ticket was left.
+    // The account's own close of the previous attempt on this level - the instant the crossing window opens - and
+    // the crossing it waited for, when the lane asks for one, so one log line states the previous exit, the candle
+    // that re-armed the level and the ticket that followed, which is the set-up the owner checks.
+    last_exit_utc: cycle.last_exit_utc ?? null,
     crossing: cycle.crossing ?? null,
     reason: cycle.reason
   };
@@ -1009,6 +1011,10 @@ function tradeCycle(symbol, row, {
     ticket: ticket && ticket.stage === "confirmed" ? ticket.plan : null,
     ticket_stage: ticket ? ticket.stage : null,
     ticket_reason: ticket ? ticket.reason : null,
+    // Which candle re-armed the level, or the instant the window opened rather than a ticket: the log line is read
+    // by the owner to check the set-up in front of the ticket, so the exit time it is measured from travels with
+    // the crossing itself rather than only inside it.
+    last_exit_utc: lastExitMs === null ? null : new Date(lastExitMs).toISOString(),
     // The crossing the put-back waited for, when the lane asks for one: whether a closed candle finished beyond
     // the level after the last exit, which candle it was, and the instant the window opened. Null on a lane that
     // puts its level back whatever the candles are doing, and on a trade with no exit on it yet.

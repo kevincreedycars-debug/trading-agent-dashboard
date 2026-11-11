@@ -428,6 +428,7 @@ test("lane 2 waits for a fresh crossing before it puts a level back, and states 
   assert.match(row.reason, /has not been crossed afresh/);
   assert.equal(row.trade.crossing.crossed, false);
   assert.equal(row.trade.crossing.since_utc, "2026-11-07T11:55:00.000Z");
+  assert.equal(row.trade.last_exit_utc, "2026-11-07T11:55:00.000Z", "the exit the window is measured from travels with the row");
   assert.equal(run.heartbeat.strategy.reentry, "crossed");
 });
 
@@ -442,6 +443,7 @@ test("a closed candle beyond the level after the exit re-arms it, and lane 2's t
   const row = run.record.rule.rows.find(entry => entry.symbol === "US100.cash");
   assert.equal(row.trade.crossing.crossed, true);
   assert.equal(row.trade.crossing.bar_time_utc, "2026-11-07T12:00:00Z");
+  assert.equal(row.trade.last_exit_utc, "2026-11-07T11:55:00.000Z");
   assert.equal(run.record.placements[0].reentry, true);
   assert.equal(run.record.placements[0].r_multiple, 3);
 });
@@ -453,6 +455,34 @@ test("without the flag the level goes back whatever the candles are doing, and t
   const open = run.spawns.find(spawn => spawn.action === "open");
   assert.ok(open, "a lane that does not ask for a crossing puts its level back");
   assert.equal(run.heartbeat.strategy.reentry, "level");
+});
+
+// The four facts the owner asks for in front of a re-entry are carried by one row: the previous exit, the candle
+// that re-armed the level, the level the order goes back on, and the three prices the ticket is sent with. The
+// first three are the loop's reading; the last three are the placement row below. A trade with no exit on it yet
+// states no exit rather than a fabricated instant, and asks the candles nothing.
+test("the row states no previous exit when the newest ticket never filled, and asks nothing of the candles", () => {
+  const run = runLane2({ state: putBackState(), feed: feedFixture({ bars: noCrossingBars() }), extraArgs: ["--reentry-crossing"] });
+  assert.equal(run.code, 0, run.record.reason);
+  const row = run.record.rule.rows.find(entry => entry.symbol === "US100.cash");
+  assert.equal(row.trade.last_exit_utc, null);
+  assert.equal(row.trade.crossing, null);
+});
+
+test("the row states the previous exit, the re-arming candle, the fixed level and the prices the ticket was sent with", () => {
+  const run = runLane2({ state: putBackState(), feed: stoppedOutFeed(crossingBars()), extraArgs: ["--reentry-crossing"] });
+  const row = run.record.rule.rows.find(entry => entry.symbol === "US100.cash");
+  const placed = run.record.placements.find(entry => entry.placed);
+  assert.equal(row.trade.last_exit_utc, "2026-11-07T11:55:00.000Z");
+  assert.equal(row.trade.crossing.bar_time_utc, "2026-11-07T12:00:00Z");
+  assert.equal(row.trade.trigger_level, 100);
+  assert.equal(placed.level, 100);
+  assert.equal(placed.entry, 100);
+  assert.equal(placed.stop, 98.333333);
+  assert.equal(placed.target, 105);
+  assert.equal(placed.r_multiple, 3);
+  // Three to one, read off the sent ticket rather than off the rule that priced it.
+  assert.ok(Math.abs((placed.target - placed.entry) / (placed.entry - placed.stop) - 3) < 1e-6);
 });
 
 // The spent-signal question the audit of 2026-11-11 raised, stated as two tests: a put-back is the same trade

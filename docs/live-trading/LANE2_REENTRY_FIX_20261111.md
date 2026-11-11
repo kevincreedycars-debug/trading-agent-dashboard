@@ -203,6 +203,10 @@ Lane 1's checkout (`C:\live-trading\runtime`) was read and not touched.
 - Whether the dashboard's heartbeat URL should carry a cache-busting key, since a published heartbeat can sit
   behind a cached copy for a few minutes.
 
+**Answered on 2026-11-11 (see §11).** Lane 2's re-entry is called *a re-entry order at the same fixed level* in the
+dashboard and in the notes it prints; lane 1 keeps its own rules, put-back and all; both ladders - the marked lines
+and the half grid's midpoints - stay exactly as they are fixed. The four items above are still open.
+
 ## 10. The deploy, and the put-back it exposed
 
 The release went on to the host at 09:33Z-09:36Z on 2026-11-11, lane 2 only. `C:\ftmo2` was fetched and detached at
@@ -305,4 +309,53 @@ A healthy `nothing_to_place` tick is all this proves, and it is all it needed to
 it ran under, the account it left alone. The first put-back under the new rule will state `r_multiple: 3` and, if no
 candle has re-crossed the level since the exit, will not be a ticket at all - that row will read as a skip naming the
 wait, and `trade.crossing` in the log line will carry the candle it read or the instant the window opened.
+
+## 11. The owner's wording, and the lane he leaves alone
+
+Two rulings came back on 2026-11-11 after the deploy. Neither changes a rule; one changes a word, and the other
+confirms a lane is left as it is.
+
+- **Lane 1 keeps its own rules.** No crossing gate, no wording change to its rule, nothing re-registered. Its
+  checkout (`c5abd0ac`), task, state file, magic and heartbeat stay where they are.
+- **Lane 2's ticket is called a re-entry order at the same fixed level** in the dashboard and in the notes the page
+  prints. The word "put-back" leaves lane 2's page; it stays on lane 1's, because that lane's rule is unchanged.
+  The three historical bitcoin tickets keep the label they were read under (`put-back · 5R`), which is the owner's
+  earlier call and is now pinned by a test.
+- **Both ladders stay fixed.** The original L2L lines are the same prices they were, and the midpoints are the same
+  half-grid values: a re-entry goes back on the level the trade was triggered at, which does not move, and the
+  target is still the next marked line (never a midpoint) at the lane's own 3 to 1.
+- **The four facts to check on the next natural re-entry**: the previous exit time, the fresh M5 crossing time, the
+  fixed entry level, and the entry, stop and target the order was actually sent with.
+
+### What the page says now
+
+`lib/live_trading_performance.js` takes the word from its caller - `ticketKinds(trades, { rMultiple, reentryLabel })`
+- so the module holds no lane's vocabulary. `script.js` states it in one place,
+`liveTradingReentryWording(view)`: lane 2 reads `re-entry · fixed level` in the Kind column and *re-entry orders at
+the same fixed level* in the table caption and the performance note; lane 1 keeps `put-back` and *put a standing
+trade back at the level it was triggered on*. `kind` stays `put-back` as the stable key a style or a test reads, and
+a five-to-one ticket on a three-to-one lane keeps `put-back · 5R` whatever the lane calls its own re-entry.
+
+### What the next natural re-entry will show
+
+One row in `tmp/live-trading-trader.log` carries all four facts, because the loop writes them beside the decision:
+
+| Fact | Where it is written |
+| --- | --- |
+| Previous exit (the instant the crossing window opens) | `rule.rows[].trade.last_exit_utc`, ISO to the millisecond |
+| Fresh M5 crossing | `rule.rows[].trade.crossing.bar_time_utc` with `close`, `beyond_points` and `since_utc` beside it |
+| Fixed entry level | `rule.rows[].trade.trigger_level`, and `placements[].level`, `placements[].entry` |
+| Sent prices | `placements[].stop`, `placements[].target`, `placements[].r_multiple`, `placements[].order_ticket`, `placements[].placed_at_utc` |
+
+`last_exit_utc` is new here: until now the instant travelled only inside `crossing.since_utc`, which is null on a
+lane that does not ask for a crossing - so the row could state the crossing but not the exit it was measured from.
+A trade whose newest ticket never filled states `last_exit_utc: null` rather than an invented instant, and asks the
+candles nothing (`crossing: null`).
+
+Three tests hold it: the label test in `tests/live_trading_performance.test.js` (lane 2's word, lane 1's word, and
+the three `put-back · 5R` rows staying as they are), and two in `tests/live_trading_lane2.test.js` - one that reads
+the four facts off a re-entry that was sent, and one that states `null` where there is no exit yet. `npm test` runs
+869 tests with 4 failures, all of them the same pre-existing browser/DOM ones as before (the disabled-lane parked
+tone test fails on the previous revision with these changes stashed).
+
 
