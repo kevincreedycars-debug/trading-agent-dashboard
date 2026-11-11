@@ -792,8 +792,8 @@ function tradeCycles({
       closedTrades: ours,
       manualEnds,
       // The lane's own rule, so the ticket put back at the level is priced by the ladder and the multiple
-      // that lane trades rather than by the defaults lane 1 answers to. Lane 1 passes neither flag notice
-      // and gets the defaults it has always had.
+      // that lane trades rather than by the defaults lane 1 answers to. Lane 1 names neither flag and gets
+      // the defaults it has always had.
       grid,
       rMultiple
     }));
@@ -845,7 +845,14 @@ function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy,
 
 // One pair's trade, from the ticket this loop placed on it. Split out of `tradeCycles` only so this file keeps one
 // function per idea: everything below is the arithmetic of reading the two artifacts and the account's record.
-function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTrades = [], manualEnds = [], grid = DEFAULT_GRID, rMultiple = DEFAULT_R_MULTIPLE } = {}) {
+function tradeCycle(symbol, row, {
+  directions = {},
+  instrument = null,
+  closedTrades = [],
+  manualEnds = [],
+  grid = DEFAULT_GRID,
+  rMultiple = DEFAULT_R_MULTIPLE
+} = {}) {
   const asset = row?.asset || instrument?.dashboard_asset || null;
   const side = row?.side === "short" ? "short" : "long";
   const trigger = Number(row?.level ?? row?.entry);
