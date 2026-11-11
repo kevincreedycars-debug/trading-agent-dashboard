@@ -359,3 +359,38 @@ the four facts off a re-entry that was sent, and one that states `null` where th
 tone test fails on the previous revision with these changes stashed).
 
 
+
+### The deploy, and the re-entry it can now be checked against
+
+The revision went on to `C:\ftmo2` at 20:55Z the same evening, lane 2 only, the same way as §8 and §10: fetched,
+detached at `1858d675`, `git status --short --untracked-files=no` empty, and `scripts/run-live-trading-trader.js` is
+the commit's own blob `b462c531…` - `git rev-parse HEAD:scripts/run-live-trading-trader.js` and `git hash-object` in
+the checkout both read it, sha256 `fbcc0ca8…`. The state file is byte-identical before and after the switch
+(`45ce889d…`): nothing about the lane's own record moved. The state, the status and the run command were copied to
+`C:\ftmo2\tmp\predeploy-20261111\*.before-wording` first, and the run command is the line it was - `--grid half
+--r-multiple 3 --reentry-crossing --max-per-day 4`, no flag added or removed, since this change needs none.
+
+The first tick on it is `2026-11-11T20:56:32.273Z`: `nothing_to_place`, `armed: true`, `checkout_head: 1858d675`,
+`strategy.reentry: "crossed"`, terminal 0 positions / 0 orders / 0 of ours, and every trade row now states
+`last_exit_utc` - EURUSD `08:16:17Z`, XAUUSD `17:51:30Z`, US100 `09:29:35Z`, BTCUSD `06:11:35Z`. Lane 1 was read and
+not touched: `c5abd0ac`, one position and two orders of its own, no `reentry` field on its heartbeat.
+
+Two live rows are worth stating, because between them they are the check the owner asked for:
+
+- **The 14:01Z XAUUSD re-entry, already sent under the fixed build.** Ticket `199640256`, placed at
+  `14:01:35.317Z`: the previous exit was `01:34:15Z`, the candle that re-armed the level was the one closing
+  `13:50:00Z` (4032.52, 77 points beyond the 4033.29 line), the fixed level is 4033.29, and the order as sent was
+  entry 4033.29, stop 4045.203333, target 3997.55 - 11.913333 of risk for 35.74 of reward, exactly 3 to 1, with the
+  signal it carried still the `2026-11-10T20:55:00Z` bar. That log line predates `last_exit_utc`, so its exit time was
+  read from `crossing.since_utc`, which is the same instant.
+- **US100 is waiting on the same machinery now.** Level 28163.82 (short, placed `09:16:35.240Z`, ticket `199558825`,
+  exited at `09:29:35Z` at 28374.48), and the candle closing `14:50Z` read 28149.03, 1,479 points beyond the line, so
+  the crossing it needs is already behind it. It is still a skip, and honestly so: the level sits on the far side of
+  the market (28,373.03) for a short, where a sell limit would be a sell now, so the lane waits for price to trade
+  back to 28,163.82. The four facts will be on that row the moment it does.
+
+Two readers were left on this workstation for the next one, both of which read the log and place nothing:
+`tmp/host/reentry-report.ps1` prints the newest re-entry's four facts (falling back to `crossing.since_utc` with a
+note where the line predates `last_exit_utc`), and `tmp/host/verify-after-wording.ps1` prints the last tick's trade
+rows with their decisions.
+

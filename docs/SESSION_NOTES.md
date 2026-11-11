@@ -13,7 +13,12 @@ re-entry is now checkable from one log row: `trade.last_exit_utc` (new - the ins
 the newest ticket never filled), `trade.crossing.bar_time_utc` (the candle that re-armed the level),
 `trade.trigger_level` (the fixed entry) and `placements[].{entry, stop, target, r_multiple}` (what was sent). §11 of
 `docs/live-trading/LANE2_REENTRY_FIX_20261111.md` holds the ruling and the table of where each fact is written;
-`npm test` runs 869 tests with the same 4 pre-existing browser/DOM failures.
+`npm test` runs 869 tests with the same 4 pre-existing browser/DOM failures. The revision was deployed to `C:\ftmo2`
+the same evening at 20:55Z, lane 2 only - detached at `1858d675`, blob `b462c531…`, state byte-identical
+(`45ce889d…`), the run command unchanged, lane 1 read only at `c5abd0ac` - and the first tick on it,
+`20:56:32.273Z`, states `last_exit_utc` on all four trade rows. §11 of the doc also states the 14:01Z XAUUSD re-entry
+already sent under the fix (exit `01:34:15Z`, crossing `13:50:00Z` at 4032.52, level 4033.29, entry 4033.29, stop
+4045.203333, target 3997.55, exactly 3 to 1) and the US100 row that is waiting for price to return to 28,163.82.
 
 2026-11-11 (lane 2 deployed at `3a2e6566`, the 04:31Z put-back answered, lane 2 now re-arms only on a fresh
 crossing) - the 3R put-back fix was deployed to `C:\ftmo2` from the project workstation with the key at
