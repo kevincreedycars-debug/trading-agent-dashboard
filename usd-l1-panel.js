@@ -658,6 +658,15 @@ function renderUsdL1SessionList(payload = {}) {
             `).join("")}
         </div>
       </div>
+      <div class="usd-l1-date-jump">
+        <label class="usd-l1-test-copy muted" for="usdL1DateJump">Jump to any of the ${asArray(payload.sessions).length} reconstructed sessions</label>
+        <input id="usdL1DateJump" type="date" data-usd-l1-date-jump
+          min="${escapeHtml(asArray(payload.sessions)[0]?.date || "")}"
+          max="${escapeHtml(asArray(payload.sessions).slice(-1)[0]?.date || "")}"
+          value="${escapeHtml(selected || "")}">
+        <button type="button" class="usd-l1-filter" data-usd-l1-date-step="-1">Previous</button>
+        <button type="button" class="usd-l1-filter" data-usd-l1-date-step="1">Next</button>
+      </div>
       <p class="usd-l1-test-copy muted">${filtered.length} sessions match this filter; the most recent ${shown.length} are listed — the artefact keeps every one.</p>
       <div class="usd-l1-session-list" role="list">
         ${shown.map((session) => {
@@ -717,6 +726,7 @@ function renderUsdL1Drilldown(payload = {}, date) {
   }
   const current = session.models?.current || {};
   const challenger = session.models?.challenger || {};
+  const v1 = session.models?.challenger_v1 || {};
   const modelCard = (key, label, call) => `
     <article class="usd-l1-drill-card" data-usd-l1-drill-model="${key}">
       <p class="eyebrow">${escapeHtml(label)}</p>
@@ -769,7 +779,10 @@ function renderUsdL1Drilldown(payload = {}, date) {
       <section class="usd-l1-drill-section">
         <h4>What did each model call?</h4>
         ${modelCard("current", "Current model", current)}
-        ${modelCard("challenger", "Challenger", challenger)}
+        ${modelCard("challenger", "Challenger v0", challenger)}
+        ${v1.direction
+          ? modelCard("challenger_v1", "Challenger v1 (shared-source weighting)", v1)
+          : `<p class="usd-l1-test-copy muted">Challenger v1 has no call saved for this morning.</p>`}
       </section>
       <section class="usd-l1-drill-section">
         <h4>What happened next?</h4>
@@ -783,6 +796,135 @@ function renderUsdL1Drilldown(payload = {}, date) {
         <p class="usd-l1-test-copy muted">Test ① is unscored on every date until licensed cash DXY prices exist; this view uses each market's own one-hour tape instead.</p>
       </section>
     </div>
+    ${usdL1AuditSection(session, payload)}
+  `;
+}
+
+/** One status pill. The tone is the audit's own word for the class, not a colour chosen per factor. */
+function usdL1StatusChip(row) {
+  const tone = row && row.tone ? row.tone : "flat";
+  return `<span class="usd-l1-status ${escapeHtml(tone)}" title="${escapeHtml((row && row.status_label) || "")}">${escapeHtml(
+    (row && row.status_short) || "unknown"
+  )}</span>`;
+}
+
+/**
+ * The 25-factor audit for the selected morning.
+ *
+ * The arithmetic is `lib/usd_l1_audit.js`, the same file the engine used to build the aggregate counts, so this
+ * table cannot say something the run did not count. What the table adds to a single morning is the part an
+ * aggregate cannot show: which factor voted, which was live but inside its threshold, which had no print at
+ * 05:00, and which the research decided not to read at all.
+ */
+function usdL1AuditSection(session = {}, payload = {}) {
+  const factors = asArray(payload.factor_data_path?.factors);
+  const auditLib = typeof window !== "undefined" ? window.UsdL1Audit : null;
+  if (!factors.length || !auditLib) {
+    return `
+      <section class="usd-l1-audit-block" data-usd-l1-audit="unavailable">
+        <p class="usd-l1-test-copy muted">The 25-factor morning audit needs the factor data path and lib/usd_l1_audit.js; one of them is missing from this build.</p>
+      </section>
+    `;
+  }
+  let audit;
+  try {
+    audit = auditLib.auditMorning({ factors, session });
+  } catch (error) {
+    return `
+      <section class="usd-l1-audit-block" data-usd-l1-audit="error">
+        <p class="usd-l1-test-copy muted">${escapeHtml(error && error.message ? error.message : String(error))}</p>
+      </section>
+    `;
+  }
+  const counts = audit.summary.counts;
+  const filter = usdLayer1State.auditFilter || "all";
+  const rows = audit.rows.filter((row) => {
+    if (filter === "all") return true;
+    if (filter === "stale") return asArray(row.flags).includes("stale_print");
+    return row.kind === filter;
+  });
+  const filters = [
+    ["all", "All 25"],
+    ["direction", `Direction ${counts.voted_bull + counts.voted_bear}`],
+    ["neutral", `No trigger ${counts.no_trigger}`],
+    ["data", `Missing ${counts.missing + counts.no_input}`],
+    ["combined", `Counted elsewhere ${counts.counted_elsewhere}`],
+    ["excluded", `Excluded ${counts.excluded}`],
+    ["gate", `Gate ${counts.gate_passed + counts.gate_blocked}`],
+    ["stale", `Stale print ${audit.summary.factors_stale}`]
+  ];
+  const cellValue = (input) => {
+    if (!input.present) return `<span class="usd-l1-missing">no value</span>`;
+    const age = Number.isFinite(input.staleness_business_days)
+      ? ` Â· print ${escapeHtml(input.print_date || "?")} Â· ${input.staleness_business_days}bd`
+      : "";
+    return `${escapeHtml(String(input.value))}${age}`;
+  };
+  // AUDIT_RETURN
+  return `
+    <section class="usd-l1-audit-block" data-usd-l1-audit="${escapeHtml(audit.date || "")}">
+      <div class="usd-l1-audit-head">
+        <div>
+          <p class="eyebrow">All 25 factors on this morning</p>
+          <h4>${escapeHtml(audit.date || "")} Â· ${
+            audit.call && audit.call.direction
+              ? escapeHtml(`${audit.call.direction} at conviction ${audit.call.conviction}`)
+              : "no challenger call"
+          } Â· ${audit.call && Number.isFinite(audit.call.usable_mechanisms) ? `${audit.call.usable_mechanisms} mechanisms live` : "gate blocked"}</h4>
+        </div>
+        <p class="usd-l1-test-copy muted">${escapeHtml(
+          audit.call && audit.call.reason ? audit.call.reason : "This morning produced no challenger call."
+        )}</p>
+      </div>
+      <div class="usd-l1-audit-filters" role="group" aria-label="Filter the twenty-five factors">
+        ${filters
+          .map(
+            ([key, label]) =>
+              `<button type="button" class="usd-l1-filter${filter === key ? " active" : ""}" data-usd-l1-audit-filter="${key}">${escapeHtml(label)}</button>`
+          )
+          .join("")}
+      </div>
+      <div class="usd-l1-audit-table-wrap">
+        <table class="usd-l1-table usd-l1-audit-table">
+          <caption>${rows.length} of 25 factors shown Â· status, the value it read, the rule that reads it, and where the value came from</caption>
+          <thead>
+            <tr><th scope="col">Factor</th><th scope="col">Status</th><th scope="col">What it read at 05:00</th><th scope="col">Rule</th><th scope="col">Source</th></tr>
+          </thead>
+          <tbody>
+            ${rows
+              .map((row) => {
+                const reading = asArray(row.readings)[0] || null;
+                const inputs = asArray(row.inputs);
+                return `
+                  <tr data-usd-l1-audit-factor="${escapeHtml(row.factor_id)}" class="usd-l1-audit-row ${escapeHtml(row.tone)}">
+                    <th scope="row"><span class="usd-l1-audit-label">${escapeHtml(row.label)}</span><span class="usd-l1-audit-id">${escapeHtml(row.factor_id)}</span></th>
+                    <td>${usdL1StatusChip(row)}${asArray(row.flags)
+                      .map((flag) => `<span class="usd-l1-audit-flag" title="the print is older than its release allows, or part of its input is missing">${escapeHtml(flag.replace("_", " "))}</span>`)
+                      .join("")}</td>
+                    <td title="${escapeHtml(row.detail || "")}">${
+                      inputs.length
+                        ? inputs
+                            .map((input) => `<span class="usd-l1-audit-input">${escapeHtml(input.key)} ${cellValue(input)}</span>`)
+                            .join("<br>")
+                        : `<span class="usd-l1-missing">no staged input</span>`
+                    }</td>
+                    <td>${
+                      reading && reading.rule
+                        ? `<span class="usd-l1-audit-rule" title="${escapeHtml(reading.rule)}">${escapeHtml(reading.rule)}</span>`
+                        : `<span class="usd-l1-muted">not read</span>`
+                    }${reading && reading.threshold ? `<span class="usd-l1-audit-threshold">${escapeHtml(reading.threshold)}</span>` : ""}</td>
+                    <td>${inputs.length && inputs[0].source ? escapeHtml(inputs[0].source) : "â€”"}</td>
+                  </tr>
+                `;
+              })
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      <p class="usd-l1-test-copy muted">${escapeHtml(
+        `${counts.voted_bull} bullish Â· ${counts.voted_bear} bearish Â· ${counts.no_trigger} read but inside the threshold Â· ${counts.missing} missing Â· ${counts.no_input} with no staged input Â· ${counts.counted_elsewhere} counted through another factor Â· ${counts.excluded} excluded by the research.`
+      )}</p>
+    </section>
   `;
 }
 
@@ -1844,6 +1986,203 @@ function rules_agreement_deadband_pct(payload = {}) {
   return Number.isFinite(rules.agreement_deadband) ? Math.round(rules.agreement_deadband * 100) : null;
 }
 
+/**
+ * The before-and-after view of all twenty-five factors.
+ *
+ * "Before" is the share of sessions where the factor's own input existed at the cutoff; "after" is what the
+ * audit found it doing on those mornings. The two are deliberately separate: a factor can have full data and
+ * never vote, and reporting that as a data problem would hide a rule decision.
+ */
+function renderUsdL1FactorDataPath(payload = {}) {
+  const block = payload.factor_data_path;
+  if (!block || !asArray(block.factors).length) {
+    return `
+      <section class="usd-l1-results" data-usd-l1-data-path="missing">
+        <div class="usd-l1-results-head"><div><p class="eyebrow">Data path</p><h3>The 25-factor data path is not in this artefact</h3></div></div>
+        <p class="usd-l1-test-copy muted">Rebuild it with <code>node backtester/scripts/run_usd_layer1_backtest.js --publish</code>.</p>
+      </section>
+    `;
+  }
+  const totals = block.totals || {};
+  const days = block.days || {};
+  const effectLabel = {
+    direction: "Moves direction",
+    combined: "Counted elsewhere",
+    gate: "Gate only",
+    excluded: "Deliberately excluded",
+    unread: "No rule reads it"
+  };
+  const pct = (value) => (Number.isFinite(value) ? `${usdL1Number(value, 0)}%` : "-");
+  return `
+    <section class="usd-l1-results usd-l1-data-path" data-usd-l1-data-path="true">
+      <div class="usd-l1-results-head">
+        <div>
+          <p class="eyebrow">Data path - before and after</p>
+          <h3>What the engine reads, what it skips, and what the research says about each of the 25 factors</h3>
+        </div>
+        <p class="usd-l1-test-copy muted">${usdL1Number(block.sessions, 0)} sessions at 05:00 London - ${escapeHtml(block.date_range?.start || "")} to ${escapeHtml(block.date_range?.end || "")}</p>
+      </div>
+      <div class="usd-l1-stat-strip">
+        <span><strong>${usdL1Number(totals.with_at_least_one_session_of_data, 0)}</strong> of ${usdL1Number(totals.factors, 0)} factors had a value at some cutoff</span>
+        <span><strong>${usdL1Number(totals.that_voted_direction, 0)}</strong> ever moved direction</span>
+        <span><strong>${usdL1Number(totals.with_no_session_of_data, 0)}</strong> have no staged input at all</span>
+        <span><strong>${usdL1Number(days.sessions_with_every_staged_factor_present, 0)}</strong> of ${usdL1Number(block.sessions, 0)} mornings had every staged factor present</span>
+      </div>
+      <div class="usd-l1-audit-table-wrap">
+        <table class="usd-l1-table usd-l1-data-path-table">
+          <caption>Coverage is measured on the same sessions the run scored; a factor with data that never votes is a rule result, not a gap</caption>
+          <thead>
+            <tr>
+              <th scope="col">Factor</th>
+              <th scope="col">Effect</th>
+              <th scope="col">Value at 05:00</th>
+              <th scope="col">Bullish / bearish</th>
+              <th scope="col">No trigger</th>
+              <th scope="col">Missing</th>
+              <th scope="col">Stale print</th>
+              <th scope="col">Gap</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${asArray(block.factors)
+              .map(
+                (factor) => `
+                <tr data-usd-l1-dp-factor="${escapeHtml(factor.factor_id)}">
+                  <th scope="row"><span class="usd-l1-audit-label">${escapeHtml(factor.label)}</span><span class="usd-l1-audit-id">${escapeHtml(factor.factor_id)}</span></th>
+                  <td>${escapeHtml(effectLabel[factor.effect_kind] || factor.effect_kind || "-")}</td>
+                  <td>${pct(factor.data_coverage_pct)} <span class="usd-l1-muted">(${usdL1Number(factor.sessions_with_a_value, 0)}/${usdL1Number(factor.sessions, 0)})</span>${asArray(factor.inputs).length ? `<br><span class="usd-l1-muted">${escapeHtml(asArray(factor.inputs).map((input) => input.key).join(", "))}</span>` : ""}</td>
+                  <td>${usdL1Number(factor.sessions_voted_bull, 0)} / ${usdL1Number(factor.sessions_voted_bear, 0)}</td>
+                  <td>${usdL1Number(factor.sessions_no_trigger, 0)}</td>
+                  <td>${usdL1Number(factor.sessions_missing + factor.sessions_no_input, 0)}</td>
+                  <td>${usdL1Number(factor.sessions_stale, 0)}</td>
+                  <td>${escapeHtml(factor.gap_label || "-")}</td>
+                </tr>
+              `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      ${usdL1UnreadInputs(block, payload)}
+    </section>
+  `;
+}
+
+function usdL1UnreadInputs(block = {}, payload = {}) {
+  const unread = asArray(block.unread_inputs);
+  const probe = payload.shadow_inputs || null;
+  if (!unread.length) return "";
+  const armFor = (key) => (probe ? asArray(probe.arms).find((arm) => arm.key === key) || null : null);
+  const delta = (arm) => {
+    if (!arm || !Number.isFinite(arm.delta_pp)) return `<span class="usd-l1-muted">-</span>`;
+    const tone = arm.delta_pp > 0 ? "up" : arm.delta_pp < 0 ? "down" : "flat";
+    return `<span class="usd-l1-delta ${tone}">${arm.delta_pp > 0 ? "+" : ""}${usdL1Number(arm.delta_pp, 2)}pp</span>`;
+  };
+  return `
+    <div class="usd-l1-audit-table-wrap">
+      <table class="usd-l1-table usd-l1-unread-table">
+        <caption>${unread.length} series the cutoff holds and neither model reads; the probe column is exploratory and is not a challenger</caption>
+        <thead>
+          <tr><th scope="col">Series</th><th scope="col">Value at 05:00</th><th scope="col">Why it is not read</th><th scope="col">Probe: calls changed</th><th scope="col">Probe: accuracy vs v1</th></tr>
+        </thead>
+        <tbody>
+          ${unread
+            .map((input) => {
+              const arm = armFor(input.key);
+              return `
+                <tr data-usd-l1-unread="${escapeHtml(input.key)}">
+                  <th scope="row">${escapeHtml(input.key)}<span class="usd-l1-audit-id">${escapeHtml(input.reason_source === "research" ? "recorded exclusion" : "structural note")}</span></th>
+                  <td>${Number.isFinite(input.coverage_pct) ? `${usdL1Number(input.coverage_pct, 0)}%` : "-"} <span class="usd-l1-muted">of sessions${Number.isFinite(input.median_staleness_business_days) ? `, ${usdL1Number(input.median_staleness_business_days, 1)}bd median` : ""}</span></td>
+                  <td title="${escapeHtml(input.excluded_reason || "")}">${escapeHtml(String(input.excluded_reason || "no reason recorded").slice(0, 150))}${String(input.excluded_reason || "").length > 150 ? "..." : ""}</td>
+                  <td>${arm ? `${usdL1Number(arm.calls_changed, 0)} <span class="usd-l1-muted">(${usdL1Number(arm.new_calls, 0)} new, ${usdL1Number(arm.lost_calls, 0)} lost)</span>` : `<span class="usd-l1-muted">no shadow input</span>`}</td>
+                  <td>${arm ? `${Number.isFinite(arm.accuracy_pct) ? `${usdL1Number(arm.accuracy_pct, 1)}%` : "-"} ${delta(arm)}` : `<span class="usd-l1-muted">-</span>`}</td>
+                </tr>
+              `;
+            })
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+    ${probe
+      ? `<p class="usd-l1-test-copy muted">${escapeHtml(probe.label)} Frozen v1 scores ${usdL1Number(probe.baseline?.accuracy_pct, 1)}% on ${usdL1Number(probe.baseline?.scored, 0)} scored market-days; the combined probe scores ${usdL1Number(probe.combined?.accuracy_pct, 1)}% and changes ${usdL1Number(probe.combined?.calls_changed, 0)} calls. ${escapeHtml(asArray(probe.caveats)[0] || "")}</p>`
+      : ""}
+  `;
+}
+
+/**
+ * The five-minute archive card: usable dates per asset, mid versus bid/ask, and whether a level ladder existed
+ * before the session. It is deliberately a coverage card, not a result card: a tape that reproduces recorded
+ * trades proves the archive contract, not an edge.
+ */
+function renderUsdL1M5Coverage(payload = {}) {
+  const card = payload.m5_coverage;
+  if (!card || !card.available) {
+    return `
+      <section class="usd-l1-results" data-usd-l1-m5="missing">
+        <div class="usd-l1-results-head"><div><p class="eyebrow">Five-minute archive</p><h3>No archive status is recorded yet</h3></div></div>
+        <p class="usd-l1-test-copy muted">${escapeHtml((card && card.reason) || "Run backtester/scripts/verify_m5_archive.js to write data/usd-layer1-backtester/m5-archive-status.json.")}</p>
+      </section>
+    `;
+  }
+  const totals = card.totals || {};
+  const verified = card.verified_session || null;
+  return `
+    <section class="usd-l1-results usd-l1-m5" data-usd-l1-m5="true">
+      <div class="usd-l1-results-head">
+        <div>
+          <p class="eyebrow">Five-minute archive - coverage, not progress</p>
+          <h3>Usable dates per asset, mid versus bid/ask, and levels recorded before the session</h3>
+        </div>
+        <p class="usd-l1-test-copy muted">${escapeHtml(card.status || "")} - written ${escapeHtml(card.generated_at ? formatDashboardTime(card.generated_at) : "-")}</p>
+      </div>
+      <div class="usd-l1-stat-strip">
+        <span><strong>${usdL1Number(totals.instruments_with_mid_tape, 0)}</strong> of ${usdL1Number(totals.instruments, 0)} assets hold a mid-price tape</span>
+        <span><strong>${usdL1Number(totals.instruments_with_bid_ask, 0)}</strong> store bid and ask separately</span>
+        <span><strong>${usdL1Number(totals.dates_with_a_mid_tape, 0)}</strong> dates have a full mid tape, ${usdL1Number(totals.dates_with_a_partial_tape, 0)} partial</span>
+        <span><strong>${usdL1Number(totals.dates_with_pre_session_levels, 0)}</strong> dates have levels marked before the session</span>
+      </div>
+      <div class="usd-l1-audit-table-wrap">
+        <table class="usd-l1-table usd-l1-m5-table">
+          <caption>The archive holds ${asArray(card.sessions_held).length} sessions (${escapeHtml(asArray(card.sessions_held).join(", "))}); a full tape covers one whole 05:00-to-05:00 window</caption>
+          <thead>
+            <tr>
+              <th scope="col">Asset</th>
+              <th scope="col">Dates with a full mid tape</th>
+              <th scope="col">Bars</th>
+              <th scope="col">Bid / ask</th>
+              <th scope="col">Ladder before the session</th>
+              <th scope="col">Trades re-derived</th>
+              <th scope="col">Blocker</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${asArray(card.instruments)
+              .map(
+                (instrument) => `
+                <tr data-usd-l1-m5-asset="${escapeHtml(instrument.key)}">
+                  <th scope="row">${escapeHtml(instrument.label)}<span class="usd-l1-audit-id">${escapeHtml(instrument.feed_symbol || "")}</span></th>
+                  <td>${asArray(instrument.sessions_covered).length ? asArray(instrument.sessions_covered).map((date) => `<span class="usd-l1-audit-input">${escapeHtml(date)}</span>`).join("<br>") : `<span class="usd-l1-missing">none full</span>`}${asArray(instrument.sessions_partial).length ? `<br><span class="usd-l1-muted">partial: ${escapeHtml(asArray(instrument.sessions_partial).join(", "))}</span>` : ""}</td>
+                  <td>${usdL1Number(instrument.bars, 0)}</td>
+                  <td>${instrument.bid_ask ? "stored" : `<span class="usd-l1-missing">mid only</span>`}</td>
+                  <td>${instrument.ladder && instrument.ladder.pre_session ? `yes (${usdL1Number(instrument.ladder.levels, 0)} levels)` : `<span class="usd-l1-missing">no</span>${instrument.ladder && instrument.ladder.marked_at ? `<br><span class="usd-l1-muted">ladder dated ${escapeHtml(String(instrument.ladder.marked_at).slice(0, 10))}</span>` : ""}`}</td>
+                  <td>${usdL1Number(instrument.verified_trades, 0)}/${usdL1Number(instrument.recorded_trades, 0)}${instrument.verified_failures ? ` (${usdL1Number(instrument.verified_failures, 0)} failed)` : ""}</td>
+                  <td>${escapeHtml(instrument.blocker || "-")}</td>
+                </tr>
+              `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      ${verified
+        ? `<p class="usd-l1-test-copy muted">Execution check: ${escapeHtml(verified.symbol)} ${escapeHtml(verified.date)} has ${usdL1Number(verified.bars_present, 0)}/${usdL1Number(verified.bars_expected, 0)} bars (${usdL1Number(verified.coverage_pct, 2)}%) and re-derives ${usdL1Number(verified.trades_verified, 0)} of ${usdL1Number(verified.trades_checked, 0)} recorded trades with ${usdL1Number(verified.trades_failed, 0)} failures.</p>`
+        : ""}
+      <p class="usd-l1-test-copy muted">${escapeHtml(card.note || "")}</p>
+      ${asArray(card.missing).length ? `<p class="usd-l1-test-copy muted">Missing: ${asArray(card.missing).map((item) => escapeHtml(item)).join(" - ")}</p>` : ""}
+    </section>
+  `;
+}
+
 function renderUsdL1Backtester(payload = null) {
   const updated = document.getElementById("usdLayer1Updated");
   if (updated) {
@@ -1878,7 +2217,9 @@ function renderUsdL1Backtester(payload = null) {
     ${renderUsdL1Progress(payload)}
     ${renderUsdL1CallMethod(payload)}
     ${renderUsdL1WorkedCall(payload)}
+    ${renderUsdL1FactorDataPath(payload)}
     ${renderUsdL1Coverage(payload)}
+    ${renderUsdL1M5Coverage(payload)}
     ${renderUsdL1TabStrip()}
     ${renderUsdL1TestBody(payload)}
     ${renderUsdL1SessionList(payload)}
@@ -1935,6 +2276,26 @@ function setupUsdL1Controls() {
       return;
     }
 
+    const auditFilterButton = event.target.closest("[data-usd-l1-audit-filter]");
+    if (auditFilterButton) {
+      usdLayer1State.auditFilter = auditFilterButton.dataset.usdL1AuditFilter || "all";
+      renderUsdL1Backtester(usdLayer1Data);
+      return;
+    }
+
+    const dateStep = event.target.closest("[data-usd-l1-date-step]");
+    if (dateStep) {
+      const dates = asArray(usdLayer1Data && usdLayer1Data.sessions).map((session) => session.date);
+      if (dates.length) {
+        const current = usdLayer1State.selectedDate || dates[dates.length - 1];
+        const index = dates.indexOf(current);
+        const next = Math.min(dates.length - 1, Math.max(0, (index < 0 ? dates.length - 1 : index) + Number(dateStep.dataset.usdL1DateStep || 0)));
+        usdLayer1State.selectedDate = dates[next];
+        renderUsdL1Backtester(usdLayer1Data);
+      }
+      return;
+    }
+
     const demoSessionButton = event.target.closest("[data-usd-l1-demo-session]");
     if (demoSessionButton) {
       usdLayer1State.demoSession = demoSessionButton.dataset.usdL1DemoSession || null;
@@ -1982,6 +2343,13 @@ function setupUsdL1Controls() {
       usdLayer1State.reRun = usdL1Recompute(usdLayer1Data || {}, reRunButton.dataset.usdL1Rerun || null);
       renderUsdL1Backtester(usdLayer1Data);
       return;
+    }
+  });
+  panel.addEventListener("change", (event) => {
+    const jump = event.target.closest("[data-usd-l1-date-jump]");
+    if (jump) {
+      usdLayer1State.selectedDate = jump.value || null;
+      renderUsdL1Backtester(usdLayer1Data);
     }
   });
 }
