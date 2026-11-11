@@ -1,5 +1,23 @@
 # Session Notes
 
+2026-11-11 (lane 2's first day: seven trades closed, net −$13.49, one live finding; release `4d93757d` unchanged) - lane
+2 traded the whole first day unattended at 0.01 lots and every send came back `TRADE_RETCODE_DONE`. Seven positions
+closed: US100.cash +1.32 to its target, BTCUSD −2.75 to its stop, XAUUSD −10.80 to its stop, US100.cash +1.37 to its
+target after a breakeven move, then three BTCUSD re-entries at −1.90, −1.94 and +1.21, the last one closed by the loop
+itself at 06:11Z when Layer 1 turned `BEARISH_LEAN` for BTC and NQ together (that run also took back the unfilled
+US100.cash buy limit). Balance 10000.00 → 9986.48; the Prague day has spent all four of its placements (EURUSD 23:51Z,
+US100.cash 00:51Z, 03:11Z, 06:46Z) and the three BTCUSD tickets are re-entries, which the cap excludes - so every tick
+since 06:46Z reads `nothing_to_place` on the cap rather than on the ladder. At 07:56Z the account holds one EURUSD short
+whose stop is at breakeven (2R reached at 06:36Z) and one working US100.cash sell limit. **Finding, not fixed**: the
+three re-entries were priced at 5R rather than the lane's 3R, because `scripts/run-live-trading-trader.js` line 910 calls
+`strategy.reentryPlan({ symbol, side, entry: trigger, levels, point })` without the `rMultiple` every fresh plan gets and
+`lib/l2l_strategy.js` defaults it to `REWARD_R_MULTIPLE = 5`; the same ladder therefore put their stop at 73511.518
+instead of 73414.527, and two of the three stops are what the market then hit. Two stop moves were refused before
+sending for a different reason and correctly: the 2R touch of 73999.42 had already come back below the entry when the
+next tick read it, and a buy stop cannot sit above the market, so nothing was sent and no rung was spent - a trade that
+touches 2R and returns can end unprotected. The day's tickets, timings, arithmetic and both findings are in
+`docs/live-trading/LANE2_ARMED_20261110.md` §8.
+
 2026-11-10 (lane 2 armed at the minimum lot; three limits sent; release `4d93757d`) - the owner confirmed the half-grid
 /3R ruleset and authorised live trading on FTMO account 2 at the smallest broker-permitted size, so
 `LiveTradingTraderTick-ftmo2` was re-registered with `-Arm` at 20:46Z and is now trading unarmed no more. The rules were
