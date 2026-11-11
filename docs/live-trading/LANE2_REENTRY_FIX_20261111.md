@@ -277,10 +277,11 @@ The correction, on lane 2 only, is a flag rather than a rewrite:
 The flag was then added to `C:\ftmo2\tmp\live-trading-trader-run.cmd` and the revision carrying this code deployed the
 same way as §8, so the next tick states `reentry: "crossed"` in its heartbeat.
 
-- The revision is `126f1674`. `git status --short --untracked-files=no` is empty in `C:\ftmo2`, and
+- The revision is `126f1674`. `git status --short --untracked-files=no` was empty at the switch, and
   `scripts/run-live-trading-trader.js` is the commit's own blob `cd5797fa…` - `git rev-parse
   HEAD:scripts/run-live-trading-trader.js`, `git hash-object` in the checkout and `git hash-object` on this
-  workstation all read it, sha256 `de3902fc…`.
+  workstation all read it, sha256 `de3902fc…`. The only tracked modification the checkout carries afterwards is
+  `data/live-trading.json`, which the producer rewrites at the head of every tick.
 - The command line the task runs now reads `--lane "ftmo-2" --grid half --r-multiple 3 --reentry-crossing --magic
   20261005 --expect-identity … --max-per-day 4 --terminal … --published …`: the same line as before plus the flag,
   with the previous copy of the file kept at `C:\ftmo2\tmp\predeploy-20261111\live-trading-trader-run.cmd.before-reentry-crossing`.
