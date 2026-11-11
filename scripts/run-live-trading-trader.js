@@ -753,7 +753,15 @@ function closedAtItsTarget(row) {
 //
 // There is no candle reading left in this function: it is the state file and the account's record alone, which is
 // what the permanence ruling leaves.
-function tradeCycles({ state, directions = {}, joined, closedTrades = [], magic = ORDER_MAGIC } = {}) {
+function tradeCycles({
+  state,
+  directions = {},
+  joined,
+  closedTrades = [],
+  magic = ORDER_MAGIC,
+  grid = DEFAULT_GRID,
+  rMultiple = DEFAULT_R_MULTIPLE
+} = {}) {
   const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
   const instrumentBySymbol = new Map(instruments.filter(row => row?.symbol).map(row => [row.symbol, row]));
   const ours = (Array.isArray(closedTrades) ? closedTrades : []).filter(
@@ -782,7 +790,12 @@ function tradeCycles({ state, directions = {}, joined, closedTrades = [], magic 
       directions,
       instrument: instrumentBySymbol.get(symbol) || null,
       closedTrades: ours,
-      manualEnds
+      manualEnds,
+      // The lane's own rule, so the ticket put back at the level is priced by the ladder and the multiple
+      // that lane trades rather than by the defaults lane 1 answers to. Lane 1 passes neither flag notice
+      // and gets the defaults it has always had.
+      grid,
+      rMultiple
     }));
   }
   return cycles;
@@ -832,7 +845,7 @@ function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy,
 
 // One pair's trade, from the ticket this loop placed on it. Split out of `tradeCycles` only so this file keeps one
 // function per idea: everything below is the arithmetic of reading the two artifacts and the account's record.
-function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTrades = [], manualEnds = [] } = {}) {
+function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTrades = [], manualEnds = [], grid = DEFAULT_GRID, rMultiple = DEFAULT_R_MULTIPLE } = {}) {
   const asset = row?.asset || instrument?.dashboard_asset || null;
   const side = row?.side === "short" ? "short" : "long";
   const trigger = Number(row?.level ?? row?.entry);
@@ -840,7 +853,10 @@ function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTra
   const placedTicket = row?.order_ticket === undefined || row?.order_ticket === null
     ? null
     : Number(row.order_ticket);
-  const levels = strategy.readLevels(instrument?.levels);
+  // The ladder the lane trades: the marked one for lane 1, and the marked one with its midpoints for the
+  // second account. The target stated beside the trade has to come off the same grid the ticket is priced
+  // on, or the row would read as aiming at a line the loop would never send.
+  const levels = strategy.gridLevels(instrument?.levels, grid);
   const point = instrument?.point ?? null;
   const direction = directions && typeof directions === "object" ? directions[asset] : null;
   const callSide = strategy.sideForDirection(direction);
@@ -907,7 +923,14 @@ function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTra
         : targetReached
           ? "target-touched"
           : null;
-  const ticket = endedBy ? null : strategy.reentryPlan({ symbol, side, entry: trigger, levels, point });
+  // The ticket a standing trade is put back with, priced from the level it was triggered on. The level is
+  // handed in already gridded above, so the plan is asked for the raw ladder with the lane's own grid and
+  // multiple - until 2026-11-11 this call passed neither, and every put-back was priced at five to one on the
+  // marked ladder whatever lane asked for it. The paths that decide a fresh ticket always carried the lane's
+  // rule; this one is the same ticket for a trade already on, and takes the same two numbers.
+  const ticket = endedBy
+    ? null
+    : strategy.reentryPlan({ symbol, side, entry: trigger, levels: instrument?.levels, point, grid, rMultiple });
   return {
     symbol,
     asset,
@@ -2401,7 +2424,12 @@ function runOnce(options, deps = {}) {
       directions: calls.directions,
       joined,
       closedTrades: Array.isArray(feed?.closed_trades) ? feed.closed_trades : [],
-      magic: options.magic
+      magic: options.magic,
+      // The lane's own rule, so a ticket put back at the level a standing trade was triggered on is priced
+      // exactly as this run prices a fresh one. Lane 1 passes neither flag and keeps five to one on the
+      // marked ladder.
+      grid: options.grid,
+      rMultiple: options.rMultiple
     });
 
     // What this loop already has working, judged before anything new is placed: the entry stands while the call it

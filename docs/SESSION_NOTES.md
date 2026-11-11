@@ -1,5 +1,24 @@
 # Session Notes
 
+2026-11-11 (lane 2 put-backs fixed to the lane's own 3R on the half grid; the day audited; dashboard labels the
+kinds) - the 5R finding of lane 2's first day is fixed in `scripts/run-live-trading-trader.js`: `tradeCycles` /
+`tradeCycle` now take the run's `grid` and `rMultiple` and pass them to `strategy.reentryPlan`, so a ticket put
+back at a standing trade's level is priced exactly as a fresh one - half grid, three to one, stop 73,414.53 on the
+bitcoin ladder instead of 73,511.52. Lane 1 is untouched: it passes neither flag, the defaults are its five to
+one on the marked ladder, and the new tests assert both lanes on long and short put-backs. Reverting only the
+runner leaves the two lane-2 put-back tests red, which is what makes them regression tests rather than
+restatements. `lib/live_trading_performance.js` gained `ticketKinds`, and the hosted Live Trading tab now prints
+a Kind column (`fresh` / `put-back` / `put-back · 5R`) with the measured multiple in the row's title, counts the
+same labels in the performance panel, and states the balance-versus-sum explanation beside the closed trades.
+The audit of the three bitcoin put-backs is in `docs/live-trading/LANE2_REENTRY_FIX_20261111.md`: two of the
+three placements had a fresh crossing of 73,657.005 immediately before them and the third had none, none of them
+was placed after the trade had ended, and no lane-2 path reuses a spent signal - the put-back's exception to the
+spent-bar guard is by design and the ended-trade guard is now held by a test. `npm test` runs 857 tests with 4
+failures, all of them the same pre-existing browser/nav failures seen on a clean `main` (the subset of 10 that
+fails without these changes). **Not done**: the deploy to the host - this session had no SSH key for
+158.220.87.240, so the release is committed and pushed and section 8 of the document is the three commands to run on
+the VPS. The owner's open questions are unchanged and listed there.
+
 2026-11-11 (lane 2's first day: seven trades closed, net −$13.49, one live finding; release `4d93757d` unchanged) - lane
 2 traded the whole first day unattended at 0.01 lots and every send came back `TRADE_RETCODE_DONE`. Seven positions
 closed: US100.cash +1.32 to its target, BTCUSD −2.75 to its stop, XAUUSD −10.80 to its stop, US100.cash +1.37 to its

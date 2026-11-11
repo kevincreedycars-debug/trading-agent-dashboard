@@ -253,3 +253,91 @@ test("the Live Trading view keeps its reading order and loads the aggregation be
 });
 
 
+
+// ---- The kind of ticket a close came from ----------------------------------------------------------------
+// The seven closes of FTMO account 2's first unattended day, exactly as the published snapshot of
+// 2026-11-11T07:46:31Z carries them: the position, the three prices, the target every bitcoin ticket aimed at,
+// and the net. The values are the artifact's own, so this test fails if the reader stops agreeing with the day
+// the owner was shown.
+const ACCOUNT2_DAY = [
+  { position_id: 199441238, symbol: "US100.cash", dashboard_asset: "NQ", side: "buy", price_open: 27750.88, stop_loss: 27705.79, take_profit: 27889.0, net_profit: 1.32, opened: { time_utc: "2026-11-10T20:56:36+00:00" } },
+  { position_id: 199440753, symbol: "BTCUSD", dashboard_asset: "BTC", side: "buy", price_open: 73639.06, stop_loss: 73414.53, take_profit: 74384.44, net_profit: -2.75, opened: { time_utc: "2026-11-10T22:27:48+00:00" } },
+  { position_id: 199442155, symbol: "XAUUSD", dashboard_asset: "XAU", side: "sell", price_open: 4034.64, stop_loss: 4045.2, take_profit: 3997.55, net_profit: -10.8, opened: { time_utc: "2026-11-10T23:05:00+00:00" } },
+  { position_id: 199461331, symbol: "US100.cash", dashboard_asset: "NQ", side: "buy", price_open: 27888.93, stop_loss: 27843.2, take_profit: 28026.41, net_profit: 1.37, opened: { time_utc: "2026-11-11T00:51:35+00:00" } },
+  { position_id: 199472143, symbol: "BTCUSD", dashboard_asset: "BTC", side: "buy", price_open: 73653.88, stop_loss: 73511.52, take_profit: 74384.44, net_profit: -1.9, opened: { time_utc: "2026-11-11T01:55:07+00:00" } },
+  { position_id: 199488169, symbol: "BTCUSD", dashboard_asset: "BTC", side: "buy", price_open: 73655.21, stop_loss: 73511.52, take_profit: 74384.44, net_profit: -1.94, opened: { time_utc: "2026-11-11T02:51:28+00:00" } },
+  { position_id: 199500177, symbol: "BTCUSD", dashboard_asset: "BTC", side: "buy", price_open: 73653.0, stop_loss: 73511.52, take_profit: 74384.44, net_profit: 1.21, opened: { time_utc: "2026-11-11T04:57:20+00:00" } }
+];
+
+test("a close is fresh on its first ticket and a put-back when it re-aims at the same target", () => {
+  const kinds = performance.ticketKinds(ACCOUNT2_DAY, { rMultiple: 3 });
+  const byId = new Map(kinds.rows.map(row => [row.position_id, row]));
+
+  assert.equal(byId.get(199441238).kind, "fresh", "the first US100 ticket opened on a crossing");
+  assert.equal(byId.get(199461331).kind, "fresh", "the second US100 ticket aimed at a different line");
+  assert.equal(byId.get(199440753).kind, "fresh", "the first bitcoin ticket of the day is not a put-back");
+  assert.equal(byId.get(199472143).kind, "put-back");
+  assert.equal(byId.get(199488169).kind, "put-back");
+  assert.equal(byId.get(199500177).kind, "put-back");
+  assert.equal(byId.get(199442155).kind, "fresh");
+
+  assert.deepEqual(kinds.counts, { fresh: 4, putBack: 3, fiveR: 3, unstated: 0 });
+});
+
+test("the three bitcoin put-backs are flagged at five to one on a lane whose rule is three", () => {
+  const kinds = performance.ticketKinds(ACCOUNT2_DAY, { rMultiple: 3 });
+  const flagged = kinds.rows.filter(row => row.fiveR).map(row => row.position_id).sort();
+  assert.deepEqual(flagged, [199472143, 199488169, 199500177]);
+  kinds.rows.forEach(row => {
+    if (!row.fiveR) return;
+    assert.equal(row.label, "put-back \u00b7 5R");
+    assert.ok(Math.abs(row.multiple - 5) <= 0.5, `${row.position_id} measures ${row.multiple}`);
+  });
+  // The lane's own rule is named on the finding, and lane 1 - five to one by default - flags nothing at all.
+  assert.equal(kinds.laneMultiple, 3);
+  const laneOne = performance.ticketKinds(ACCOUNT2_DAY, { rMultiple: 5 });
+  assert.equal(laneOne.counts.fiveR, 0, "a five-to-one lane has no mismatch to flag");
+});
+
+test("a stop that has been moved to the entry leaves the multiple unstated rather than invented", () => {
+  const rows = [{
+    position_id: 1,
+    symbol: "EURUSD",
+    side: "sell",
+    price_open: 1.11677,
+    stop_loss: 1.11677,
+    take_profit: 1.11466,
+    opened: { time_utc: "2026-11-10T23:51:44+00:00" }
+  }];
+  const kinds = performance.ticketKinds(rows, { rMultiple: 3 });
+  assert.equal(kinds.rows[0].multiple, null);
+  assert.equal(kinds.rows[0].fiveR, false);
+  assert.equal(kinds.rows[0].label, "fresh");
+  assert.equal(kinds.counts.unstated, 1);
+});
+
+test("the committed lane-2 snapshot classifies into the same day: one row per close, one label each", () => {
+  const account2 = JSON.parse(fs.readFileSync(path.join(root, "data", "live-trading.account2.json"), "utf8"));
+  const trades = Array.isArray(account2.closed_trades) ? account2.closed_trades : [];
+  const kinds = performance.ticketKinds(trades, { rMultiple: 3 });
+  assert.equal(kinds.rows.length, trades.length);
+  assert.equal(kinds.counts.fresh + kinds.counts.putBack, trades.length);
+  assert.equal(kinds.rows.filter(row => row.fiveR).length, kinds.counts.fiveR);
+  trades.forEach((row, index) => {
+    assert.equal(kinds.rows[index].position_id, row.position_id, "the labels stay aligned with the rows they label");
+  });
+});
+
+test("the Closed trades table prints the kind and states what a put-back and a 5R flag mean", () => {
+  const script = fs.readFileSync(scriptPath, "utf8");
+  const table = script.slice(script.indexOf("function liveTradingClosedTrades(data) {"));
+  const cell = table.slice(0, table.indexOf("</table>"));
+  assert.match(cell, /<th scope="col">Kind<\/th>/);
+  assert.match(cell, /class="live-trading-kind\$\{kind\?\.fiveR \? " flag" : ""\}/);
+  assert.match(table, /performance\.ticketKinds\(trades, \{ rMultiple: laneView\.rMultiple \}\)/);
+  assert.match(table, /put a standing trade back at the level it was triggered on/);
+  // The panel counts the same labels rather than computing its own.
+  const panel = script.slice(script.indexOf("function liveTradingPerformancePanel(data, laneView) {"));
+  assert.match(panel, /performance\.ticketKinds\(trades, \{ rMultiple: laneView\?\.rMultiple \}\)/);
+});
+

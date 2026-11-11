@@ -121,9 +121,9 @@ function flagMap(args) {
 
 // One run of the loop against the fixtures. The identity file is only ever a path the run passes on here; the
 // tool is what reads it, and `tests/live_trading_identity_gate.test.js` is where that reading is proved.
-function runLane2({ extraArgs = [], feed = feedFixture(), state = null, statusPositions = [], statusOrders = [], laneOne = false } = {}) {
+function runLane2({ extraArgs = [], feed = feedFixture(), state = null, statusPositions = [], statusOrders = [], laneOne = false, direction = "BULLISH" } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lane2-trader-"));
-  fs.writeFileSync(path.join(dir, "layer1.json"), JSON.stringify(callsFixture()), "utf8");
+  fs.writeFileSync(path.join(dir, "layer1.json"), JSON.stringify(callsFixture(direction)), "utf8");
   fs.writeFileSync(path.join(dir, "l2l-levels.json"), JSON.stringify(levelsFixture()), "utf8");
   fs.writeFileSync(path.join(dir, "live-trading.json"), JSON.stringify(feed), "utf8");
   const identityPath = path.join(dir, "lane-ftmo2-identity.json");
@@ -284,8 +284,180 @@ test("a paused lane still manages what it already holds: the 2R breakeven is sti
   assert.equal(run.record.status, "stop_moved");
 });
 
-// The rule, asked directly with the day's state in front of it: a target taken in the morning does not spend the
-// afternoon's setup, a fresh bar is a fresh ticket, and the bar that was already taken is spent for ever.
+// The account's own record of the trade the pair is still in: one placement this loop made, at the level the
+// trade was triggered on. `tradeCycles` reads it, and the run prices the put-back from that level rather than
+// from a fresh crossing - which is the path that was left at five to one on the marked ladder until 2026-11-11.
+function putBackState({ side = "long", level = 100 } = {}) {
+  return {
+    placements: [{
+      symbol: "US100.cash",
+      asset: "NQ",
+      side,
+      signal_time_utc: "2026-11-07T11:00:00Z",
+      level,
+      entry: level,
+      stop: side === "long" ? level - 1 : level + 1,
+      target: side === "long" ? level + 3 : level - 3,
+      risk: 1,
+      r_multiple: 3,
+      placed: true,
+      order_ticket: 7000100,
+      placed_at_utc: "2026-11-07T11:30:00Z"
+    }],
+    cancellations: [],
+    closes: [],
+    moves: []
+  };
+}
+
+// The same three bars closing down through a line, with the account quoting under it, so a sell limit at 110 is
+// a ticket that can rest and whose target at 105 has not been reached.
+function shortFeedFixture() {
+  const feed = feedFixture({
+    bars: [
+      bar("2026-11-07T11:50:00Z", 110.6, 110.8, 110.4, 110.6),
+      bar("2026-11-07T11:55:00Z", 110.4, 110.5, 109.9, 110.2),
+      bar("2026-11-07T12:00:00Z", 110.0, 110.1, 109.4, 109.6)
+    ]
+  });
+  feed.instruments[0].quote = { bid: 108.9, ask: 109.1, spread_points: 2, market_state: "full" };
+  return feed;
+}
+
+test("a lane-2 put-back is priced on the half grid at three to one, the same ticket a fresh crossing gets", () => {
+  const run = runLane2({ state: putBackState() });
+  assert.equal(run.code, 0, run.record.reason);
+  assert.equal(run.record.status, "placed");
+  const open = run.spawns.find(spawn => spawn.action === "open");
+  assert.ok(open, "the standing trade was put back");
+  assert.equal(open.flags["--magic"], String(trader.HALF_LANE_MAGIC));
+  assert.equal(open.flags["--entry-price"], "100");
+  assert.equal(open.flags["--take-profit"], "105");
+  assert.equal(open.flags["--stop-loss"], "98.333333");
+  const row = run.record.rule.rows.find(entry => entry.symbol === "US100.cash");
+  assert.equal(row.reentry, true);
+  assert.equal(row.r_multiple, 3);
+  assert.equal(run.record.placements[0].reentry, true);
+  assert.equal(run.record.placements[0].r_multiple, 3);
+});
+
+test("lane 1's put-back is untouched: five to one on the marked ladder", () => {
+  const run = runLane2({ laneOne: true, state: putBackState() });
+  const open = run.spawns.find(spawn => spawn.action === "open");
+  assert.ok(open, "the primary lane put its trade back too");
+  assert.equal(open.flags["--entry-price"], "100");
+  assert.equal(open.flags["--take-profit"], "110");
+  assert.equal(open.flags["--stop-loss"], "98");
+  assert.equal(run.record.placements[0].r_multiple, 5);
+});
+
+test("a short put-back on lane 2 aims at the half-grid line below and stops a third back", () => {
+  const run = runLane2({
+    state: putBackState({ side: "short", level: 110 }),
+    feed: shortFeedFixture(),
+    direction: "BEARISH"
+  });
+  assert.equal(run.code, 0, run.record.reason);
+  const open = run.spawns.find(spawn => spawn.action === "open");
+  assert.ok(open, "the short trade was put back");
+  assert.equal(open.flags["--side"], "sell");
+  assert.equal(open.flags["--entry-price"], "110");
+  assert.equal(open.flags["--take-profit"], "105");
+  assert.equal(open.flags["--stop-loss"], "111.666667");
+});
+
+test("a short put-back on lane 1 keeps its five to one target on the marked line below", () => {
+  const run = runLane2({
+    laneOne: true,
+    state: putBackState({ side: "short", level: 110 }),
+    feed: shortFeedFixture(),
+    direction: "BEARISH"
+  });
+  const open = run.spawns.find(spawn => spawn.action === "open");
+  assert.ok(open, "lane 1 put the short back");
+  assert.equal(open.flags["--take-profit"], "100");
+  assert.equal(open.flags["--stop-loss"], "112");
+});
+
+// The spent-signal question the audit of 2026-11-11 raised, stated as two tests: a put-back is the same trade
+// put back at its own level and is deliberately not stopped by the signal-bar guard that a fresh ticket answers
+// to - while a trade that has ended can never be put back at all, so a spent bar cannot become a second trade.
+test("a put-back is not blocked by the spent-signal guard, and an ended trade is never put back", () => {
+  const bars = crossingBars();
+  const readings = readingsFor(bars);
+  const options = trader.parseArgs([
+    "--once", "--grid", "half", "--r-multiple", "3", "--magic", String(trader.HALF_LANE_MAGIC),
+    "--expect-identity", "tmp/lane2-identity.json"
+  ]);
+  // The standing trade's own placement carries the bar that opened it, and that bar is in the spent set above.
+  const state = putBackState();
+  state.placements[0].signal_time_utc = "2026-11-07T12:00:00Z";
+  const live = { positions: [], orders: [], ours: [] };
+
+  const standing = trader.decide({ readings, state, live, options, nowMs: NOW, cycles: trader.tradeCycles({
+    state,
+    directions: { NQ: "BULLISH" },
+    joined: { instruments: [{ symbol: "US100.cash", dashboard_asset: "NQ", levels: LEVELS, point: 0.01, quote: { bid: 100.9, ask: 101.1 }, m5: { bars } }] },
+    closedTrades: [],
+    magic: trader.HALF_LANE_MAGIC,
+    grid: "half",
+    rMultiple: 3
+  }) });
+  assert.equal(standing.candidates.length, 1, "the same trade is put back while it stands");
+  assert.equal(standing.candidates[0].confirmation_time_utc, "2026-11-07T12:00:00Z");
+
+  // The target taken: the account's own record shows the position closing at its take-profit, so the trade's
+  // turn is over and the level is not re-entered - no ticket, and no second trade from the same bar.
+  const ended = trader.tradeCycles({
+    state,
+    directions: { NQ: "BULLISH" },
+    joined: { instruments: [{ symbol: "US100.cash", dashboard_asset: "NQ", levels: LEVELS, point: 0.01, quote: { bid: 100.9, ask: 101.1 }, m5: { bars } }] },
+    closedTrades: [{
+      symbol: "US100.cash",
+      magic: trader.HALF_LANE_MAGIC,
+      comment: `${trader.COMMENT_PREFIX}nq`,
+      price_open: 100,
+      price_close: 105,
+      stop_loss: 98.333333,
+      take_profit: 105,
+      opened: { time_utc: "2026-11-07T11:40:00Z" },
+      closed: { time_utc: "2026-11-07T12:01:00Z" }
+    }],
+    magic: trader.HALF_LANE_MAGIC,
+    grid: "half",
+    rMultiple: 3
+  });
+  assert.equal(ended.get("US100.cash").ended_by, "target-fill");
+  const after = trader.decide({ readings, state, live, options, nowMs: NOW, cycles: ended });
+  assert.equal(after.rows[0].reentry, undefined, "a finished trade is judged as a fresh reading, not a put-back");
+});
+
+
+// two marked bitcoin lines either side of the midpoint 73,657.005 the half grid inserts, and the digits are the
+// symbol's own 2. The three put-backs of 2026-11-11 were stopped at 73,511.518 - five to one on the marked ladder -
+// and this is the same arithmetic at the lane's three.
+test("the broker-rounded target is the next half-grid level and the stop a third of the reward distance", () => {
+  const levels = [{ price: 72929.57, role: "seed", label: "seed 72929.57" }, { price: 74384.44, role: "seed", label: "seed 74384.44" }];
+  const instrument = { digits: 2, point: 0.01 };
+  const entry = 73657.005;
+  const plan = strategy.reentryPlan({ symbol: "BTCUSD", side: "long", entry, levels, point: 0.01, grid: "half", rMultiple: 3 });
+
+  assert.equal(plan.stage, "confirmed");
+  assert.equal(plan.plan.target, 74384.44, "the next line past the entry on the half grid");
+  assert.equal(plan.plan.r_multiple, 3);
+  // The stop is one third of the 727.435 to the target, rounded onto the symbol's own two digits.
+  const reward = plan.plan.target - entry;
+  assert.ok(Math.abs(reward / 3 - plan.plan.risk) < 1e-5);
+  const stop = trader.priceOnDigits(instrument, plan.plan.stop);
+  assert.ok(Math.abs(stop - (entry - reward / 3)) <= 0.01, `stop ${stop} is within one tick of a third of the reward`);
+
+  // The same call the loop made until 2026-11-11 - no grid, no multiple - is the stop the three tickets carried.
+  const bug = strategy.reentryPlan({ symbol: "BTCUSD", side: "long", entry, levels, point: 0.01 });
+  assert.equal(Number(bug.plan.stop.toFixed(3)), 73511.518);
+  assert.equal(trader.priceOnDigits(instrument, bug.plan.stop), 73511.52, "the stop the terminal held");
+});
+
+
 function readingsFor(bars) {
   return strategy.strategyReadings({
     instruments: [{

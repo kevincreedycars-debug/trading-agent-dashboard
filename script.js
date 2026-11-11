@@ -18868,6 +18868,14 @@ function liveTradingRulePanel(data, ruleState) {
   }).join("");
 
   const summary = state.summary || {};
+  // The multiple and the grid this panel's rows were read on, so the column heading and the caption state the
+  // rule the lane on screen trades rather than lane 1's: a five-to-one column on a three-to-one lane is the
+  // same mistake as a wrong number in a row.
+  const laneRule = liveTradingLaneView();
+  const laneMultiple = Number.isFinite(Number(laneRule.rMultiple)) && Number(laneRule.rMultiple) > 0
+    ? Number(laneRule.rMultiple)
+    : 5;
+  const laneGridWord = laneRule.grid === "half" ? "half" : "marked";
   const meta = [
     `${rows.length} pair${rows.length === 1 ? "" : "s"}`,
     `${summary.confirmed || 0} confirmed`,
@@ -18892,7 +18900,7 @@ function liveTradingRulePanel(data, ruleState) {
               <th scope="col">Beyond the level</th>
               <th scope="col">Limit</th>
               <th scope="col">Stop</th>
-              <th scope="col">Target (5R)</th>
+              <th scope="col">Target (${escapeHtml(String(laneMultiple))}R)</th>
               <th scope="col">Risk</th>
               <th scope="col">What the rule reads</th>
             </tr>
@@ -18909,7 +18917,7 @@ function liveTradingRulePanel(data, ruleState) {
         <p class="live-trading-table-meta">${meta}</p>
       </div>
       ${table}
-      <p class="live-trading-table-caption">Read by <span class="live-trading-mono">lib/l2l_strategy.js</span> from the sealed Layer 1 calls, the marked ladder in <span class="live-trading-mono">data/l2l-levels.json</span> and the snapshot's own M5 bars: a five-minute close beyond a marked level in the call's own direction, a limit back at that level, the stop behind the leg that made the deviation, and the target at five times the risk. A confirmed row is a ticket to place by hand - this table places, sizes, amends and cancels nothing, the order tool is the only thing here that can send one, and the size it sends is not a number typed in: it is that instrument's own smallest tradable size, read from the terminal rather than supplied, until the size is scaled deliberately. A call whose own window has closed is not read as a direction at all.</p>
+      <p class="live-trading-table-caption">Read by <span class="live-trading-mono">lib/l2l_strategy.js</span> from the sealed Layer 1 calls, the ${escapeHtml(laneGridWord)} ladder in <span class="live-trading-mono">data/l2l-levels.json</span> and the snapshot's own M5 bars: a five-minute close beyond a level in the call's own direction, a limit back at that level, the stop behind the leg that made the deviation, and the target at ${escapeHtml(String(laneMultiple))} times the risk. A confirmed row is a ticket to place by hand - this table places, sizes, amends and cancels nothing, the order tool is the only thing here that can send one, and the size it sends is not a number typed in: it is that instrument's own smallest tradable size, read from the terminal rather than supplied, until the size is scaled deliberately. A call whose own window has closed is not read as a direction at all.</p>
     </section>
   `;
 }
@@ -20158,6 +20166,14 @@ function liveTradingClosedTrades(data) {
   const history = data?.history || {};
   const hasBlock = Array.isArray(data?.closed_trades);
   const trades = hasBlock ? data.closed_trades : [];
+  // Which ticket each close came from, read by the same module the performance panel uses: the first trade this
+  // lane opened on a pair and side inside the window is fresh, and a later one aiming at the same target is the
+  // same trade put back at its level. The geometry each ticket was placed with travels beside the label, which
+  // is what marks the three bitcoin put-backs of 2026-11-11 as five to one on a lane that trades three.
+  const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
+  const laneView = liveTradingLaneView();
+  const kinds = performance ? performance.ticketKinds(trades, { rMultiple: laneView.rMultiple }) : null;
+  const kindByRow = new Map((kinds?.rows || []).map(row => [String(row?.position_id ?? ""), row]));
   const windowDays = Number.isInteger(Number(history.window_days)) ? Number(history.window_days) : null;
   const windowLabel = windowDays
     ? `the last ${windowDays} day${windowDays === 1 ? "" : "s"}`
@@ -20195,6 +20211,10 @@ function liveTradingClosedTrades(data) {
   const rows = trades.map(trade => {
     const side = ["buy", "sell"].includes(trade?.side) ? trade.side : "buy";
     const digits = liveTradingDigitsFor(data, trade?.symbol);
+    const kind = kindByRow.get(String(trade?.position_id ?? "")) || null;
+    const kindTitle = kind?.multiple === null || kind?.multiple === undefined
+      ? "The stop on this ticket no longer states the risk it was opened with, so no multiple is measured."
+      : `${kind.multiple.toFixed(2)} of reward for one of risk, measured on the ticket's own entry, stop and target.`;
     return `
       <tr>
         <th scope="row">${escapeHtml(liveTradingDateTimeLabel(trade?.opened?.time_utc))}</th>
@@ -20204,6 +20224,7 @@ function liveTradingClosedTrades(data) {
           <span class="live-trading-table-symbol">${escapeHtml(trade?.symbol || displayDash())}</span>
         </td>
         <td><span class="live-trading-side ${side}">${escapeHtml(side.toUpperCase())}</span></td>
+        <td><span class="live-trading-kind${kind?.fiveR ? " flag" : ""}${kind?.kind === "put-back" ? " put-back" : ""}" title="${escapeHtml(kindTitle)}">${escapeHtml(kind?.label || displayDash())}</span></td>
         <td class="num">${escapeHtml(String(trade?.volume ?? displayDash()))}</td>
         <td class="num">${escapeHtml(liveTradingPrice(trade?.price_open, digits))}</td>
         <td class="num">${escapeHtml(liveTradingPrice(trade?.price_close, digits))}</td>
@@ -20218,6 +20239,15 @@ function liveTradingClosedTrades(data) {
     `;
   }).join("");
 
+  const kindCounts = kinds?.counts || null;
+  const kindNote = kindCounts && trades.length
+    ? ` Kind reads the ticket rather than the loop's state file: ${kindCounts.fresh} of these ${trades.length} opened on a fresh crossing and ${kindCounts.putBack} put a standing trade back at the level it was triggered on${kindCounts.fiveR ? `, ${kindCounts.fiveR} of them at five to one - the geometry a build that left this lane's own multiple out of the put-back path produced` : ""}. The multiple in the tooltip is the target distance over the stop distance on the row's own prices, and it is left unstated where a stop has since been moved to the entry.`
+    : "";
+  const balance = Number(data?.account?.balance);
+  const reconcileNote = Number.isFinite(balance) && trades.length
+    ? ` The balance this same snapshot states is ${liveTradingPrice(balance, 2)}${currency}; the net above is the rows' own, and a few cents between the two is rounding inside each row - profit, commission and swap are each stated to two decimals, so three of them cannot add to a fourth - rather than a missing trade, because every row here is paired from one entry deal and one exit deal.`
+    : "";
+
   return `
     <section class="live-trading-table-panel">
       ${head}
@@ -20229,6 +20259,7 @@ function liveTradingClosedTrades(data) {
               <th scope="col">Closed (UTC)</th>
               <th scope="col">Trade</th>
               <th scope="col">Side</th>
+              <th scope="col">Kind</th>
               <th scope="col">Volume</th>
               <th scope="col">Entry</th>
               <th scope="col">Exit</th>
@@ -20246,7 +20277,7 @@ function liveTradingClosedTrades(data) {
       </div>
       <p class="live-trading-table-caption">Paired from the terminal's deal history: the entry deal and the exit deal of one position, read over ${
         escapeHtml(windowLabel)
-      }${dealCount === null ? "" : ` (${escapeHtml(String(dealCount))} deal${dealCount === 1 ? "" : "s"} read)`}. Opened and Closed are the position's own entry and exit times in UTC, each with its date so a trade held across midnight is placed on the day it opened and the day it closed. Net is profit plus commission plus swap. A trade that closed before this window is not in the list. On the chart above, an entry is a triangle lettered E and its exit a triangle lettered X, each on the bar it happened in.</p>
+      }${dealCount === null ? "" : ` (${escapeHtml(String(dealCount))} deal${dealCount === 1 ? "" : "s"} read)`}. Opened and Closed are the position's own entry and exit times in UTC, each with its date so a trade held across midnight is placed on the day it opened and the day it closed. Net is profit plus commission plus swap. A trade that closed before this window is not in the list. On the chart above, an entry is a triangle lettered E and its exit a triangle lettered X, each on the bar it happened in.${kindNote}${reconcileNote}</p>
     </section>
   `;
 }
@@ -20321,6 +20352,10 @@ function liveTradingPerformancePanel(data, laneView) {
   const currency = data?.account?.currency ? ` ${data.account.currency}` : "";
   const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
   const summary = performance ? performance.summarise(trades, { history: data?.history || {} }) : null;
+  // Which closes were the same trade put back at its level, and which were priced off this lane's own multiple:
+  // the same read the Closed trades table prints one row at a time, counted here so the panel and the table say
+  // the same thing about the day.
+  const kinds = performance ? performance.ticketKinds(trades, { rMultiple: laneView?.rMultiple }) : null;
   const period = summary ? liveTradingPerformancePeriod(summary) : "";
   const periodExact = summary ? liveTradingPerformancePeriodExact(summary) : "";
   const head = `
@@ -20431,6 +20466,12 @@ function liveTradingPerformancePanel(data, laneView) {
   }
   if (totals.unclassified > 0) {
     notes.push(`${totals.unclassified} carried no readable net, so ${totals.unclassified === 1 ? "it is" : "they are"} in the trade count but in no outcome.`);
+  }
+  if (kinds && kinds.counts.putBack > 0) {
+    const laneR = kinds.laneMultiple === null ? null : kinds.laneMultiple;
+    notes.push(`${kinds.counts.putBack} of the ${trades.length} closes put a standing trade back at the level it was triggered on rather than opening on a fresh crossing${kinds.counts.fiveR
+      ? `, and ${kinds.counts.fiveR} of those measures five to one${laneR === null ? "" : ` on a lane whose rule is ${laneR} to one`} - the geometry a build that left this lane's own multiple out of the put-back path produced, kept in the row and not recomputed away`
+      : ""}.`);
   }
   const windowDays = Number(summary.period.windowDays);
 
