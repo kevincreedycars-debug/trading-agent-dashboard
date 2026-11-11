@@ -64,7 +64,7 @@ async function fetchLocalJson(url) {
   return response.json();
 }
 
-const usdLayer1BacktesterUrl = "./data/usd-layer1-backtester/run-v1.json?v=20261109-usd-l1-call-trace";
+const usdLayer1BacktesterUrl = "./data/usd-layer1-backtester/run-v1.json?v=20261111-usd-l1-dxy-cash";
 let usdLayer1Data = null;
 let usdLayer1LoadError = null;
 let usdLayer1Request = null;
@@ -295,6 +295,103 @@ function usdL1ConvictionTable(byConviction = {}, label, context = null) {
   `;
 }
 
+/**
+ * The broker-DXY lane: the same question as test 1, put to a named instrument that actually exists here.
+ *
+ * FTMO's `DXY.cash` is a spot CFD on the dollar index basket. It is not ICE cash DXY, so this card never
+ * replaces the blocked official lane above it: it carries its own symbol, its own provider, its own tape span
+ * and its own worked morning, and the heading says what it is not.
+ */
+function renderUsdL1DxyProxyCard(payload = {}) {
+  const lane = (payload.tests && payload.tests.dxy_direction_broker_cfd) || null;
+  if (!lane || !lane.instrument) return "";
+  const models = lane.models || {};
+  const instrument = lane.instrument;
+  const worked = lane.worked_example || null;
+  const rows = [
+    ["current", "Current model"],
+    ["challenger", "Challenger"],
+    ["challenger_v1", "Challenger v1"]
+  ];
+  const row = ([key, label]) => {
+    const entry = models[key] || {};
+    const overall = entry.overall || {};
+    return `
+      <tr data-usd-l1-dxy-proxy-model="${escapeHtml(key)}">
+        <th scope="row">${escapeHtml(label)}</th>
+        <td>${usdL1Number(entry.calls_made, 0)}</td>
+        <td>${usdL1Number(entry.sessions_with_price, 0)}</td>
+        <td>${usdL1Number(entry.paired_sessions, 0)}</td>
+        <td>${usdL1Number(overall.hits, 0)} / ${usdL1Number(overall.scored, 0)}</td>
+        <td>${usdL1Number(overall.flat, 0)}</td>
+        <td>${usdL1Percent(overall.accuracy_pct)}${
+          Number.isFinite(overall.lower_bound_pct) ? ` <span class="muted">(LB ${usdL1Number(overall.lower_bound_pct, 1)}%)</span>` : ""
+        }</td>
+      </tr>
+    `;
+  };
+  const workedLine = worked
+    ? `${escapeHtml(worked.date)}: open ${usdL1Number(worked.open, 3)} at ${escapeHtml(worked.open_bar)} and close
+        ${usdL1Number(worked.close, 3)} at ${escapeHtml(worked.close_bar)}, so
+        ${escapeHtml(worked.arithmetic)}%. The frozen band is ${usdL1Number(worked.flat_band_pct, 3)}%, so the
+        session reads <strong>${escapeHtml(worked.actual)}</strong>. ${(worked.models || [])
+          .map(
+            (entry) =>
+              `${escapeHtml(entry.model)} called ${escapeHtml(entry.call_direction)} at conviction ${usdL1Number(
+                entry.conviction,
+                0
+              )}, predicted ${escapeHtml(entry.predicted)}, ${entry.hit === null ? "unscored on a flat session" : entry.hit ? "hit" : "miss"}`
+          )
+          .join("; ")}.`
+    : "No morning has both a call and a priced tape yet, so no worked example is shown.";
+  return `
+    <article class="usd-l1-test-card usd-l1-dxy-proxy" data-usd-l1-dxy-proxy="true">
+      <p class="eyebrow">Measured beside test 1 — not test 1</p>
+      <h3>${escapeHtml(instrument.label)} — the same 05:00-to-05:00 question on a real, named instrument</h3>
+      <p class="usd-l1-test-copy">${escapeHtml(instrument.provider)} quotes ${escapeHtml(instrument.symbol)} as
+        "${escapeHtml(instrument.description)}". ${escapeHtml(instrument.what_it_is_not)}. The official lane above
+        therefore stays blocked; this card reports what the broker instrument itself did, with its own numbers.</p>
+      <table class="usd-l1-table usd-l1-dxy-proxy-table">
+        <caption>${escapeHtml(instrument.symbol)} from 05:00 London to the next 05:00:
+          ${usdL1Number(lane.usable_sessions, 0)} sessions priced on both endpoints, frozen flat band
+          ${usdL1Number(lane.flat_band_pct, 3)}%</caption>
+        <thead>
+          <tr>
+            <th scope="col">Model</th>
+            <th scope="col">Calls made</th>
+            <th scope="col">Sessions priced</th>
+            <th scope="col">Paired</th>
+            <th scope="col">Correct / scored</th>
+            <th scope="col">Flat</th>
+            <th scope="col">Accuracy</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(row).join("")}
+        </tbody>
+      </table>
+      <div class="usd-l1-test-grid">
+        <article class="usd-l1-test-card">
+          <p class="eyebrow">Current model by conviction</p>
+          ${usdL1ConvictionTable(models.current?.by_conviction, "Current model on DXY.cash")}
+        </article>
+        <article class="usd-l1-test-card">
+          <p class="eyebrow">Challenger by conviction</p>
+          ${usdL1ConvictionTable(models.challenger?.by_conviction, "Challenger on DXY.cash")}
+        </article>
+      </div>
+      <p class="usd-l1-test-copy" data-usd-l1-dxy-worked="${escapeHtml(worked?.date || "")}">
+        <strong>Worked morning.</strong> ${workedLine}</p>
+      <p class="usd-l1-test-copy muted">Tape: ${usdL1Number(instrument.rows, 0)} one-hour bars,
+        ${usdL1Text(instrument.first_bar)} to ${usdL1Text(instrument.last_bar)}, exported from
+        <code>${escapeHtml(instrument.terminal)}</code> (${escapeHtml(instrument.provider_server)}) by
+        <code>${escapeHtml(instrument.exporter)}</code>. ${escapeHtml(instrument.clock_rule)}. The frozen band is
+        measured on ${usdL1Number(instrument.flat_band_sample, 0)} development-window sessions and applied unchanged to
+        every later date.</p>
+    </article>
+  `;
+}
+
 function renderUsdL1DxyTab(test = {}, payload = {}) {
   const official = test.official_series || {};
   const models = test.models || {};
@@ -332,6 +429,7 @@ function renderUsdL1DxyTab(test = {}, payload = {}) {
         ${card("current", "Current model")}
         ${card("challenger", "Challenger")}
       </div>
+      ${renderUsdL1DxyProxyCard(payload)}
     </section>
   `;
 }
