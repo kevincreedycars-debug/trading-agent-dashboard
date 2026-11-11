@@ -26,8 +26,15 @@ So lane 2 now asks for it: `strategy.crossedSince` in `lib/l2l_strategy.js`, `--
 three in `tests/live_trading_lane2.test.js` (the 04:31Z case as a rule, the crossing that re-arms the level, and the
 same account with no flag) - hold it; `npm test` runs 864 tests with 5 failures, all of them the pre-existing
 browser/DOM ones (the disabled-lane tone test fails on `3a2e6566` with these changes stashed, and the nav/render/tab
-ones are the same as before). The full account, with the broker times and the deployed revision, is §10 of
-`docs/live-trading/LANE2_REENTRY_FIX_20261111.md`.
+ones are the same as before).
+
+The correction went to the host the same day, at 10:35Z: `C:\ftmo2` detached at `126f1674`, the deployed runner the
+commit's own blob `cd5797fa…` (sha256 `de3902fc…`, matched three ways - the commit, the checkout, this workstation) -
+and `--reentry-crossing` added to the run command, whose previous copy is in `C:\ftmo2\tmp\predeploy-20261111`. The
+task was not restarted. The first tick on it is `2026-11-11T10:36:31.930Z`: `nothing_to_place`, `armed: true`,
+`checkout_head: 126f1674`, `strategy.reentry: "crossed"`, nothing open, `--max-per-day 4` still the cap, and the state
+file byte-identical to the pre-deploy copy. Lane 1 still `c5abd0ac`, still touching nothing. The full account, with
+the broker times and both revisions, is §10 of `docs/live-trading/LANE2_REENTRY_FIX_20261111.md`.
 
 2026-11-11 (lane 2 put-backs fixed to the lane's own 3R on the half grid; the day audited; dashboard labels the
 kinds) - the 5R finding of lane 2's first day is fixed in `scripts/run-live-trading-trader.js`: `tradeCycles` /

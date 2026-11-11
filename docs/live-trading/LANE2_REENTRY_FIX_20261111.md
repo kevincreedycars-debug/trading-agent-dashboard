@@ -275,8 +275,33 @@ The correction, on lane 2 only, is a flag rather than a rewrite:
   with `reentry: "level"` - the difference between the two runs being the whole change.
 
 The flag was then added to `C:\ftmo2\tmp\live-trading-trader-run.cmd` and the revision carrying this code deployed the
-same way as §8, so the next tick states `reentry: "crossed"` in its heartbeat. Until that tick has been read, the
-host is running the 3R fix without the crossing gate, which is a smaller fault than the one it replaced and not the
-end state. The revision, the command line carrying the flag and the tick that states it are written in below, once
-read.
+same way as §8, so the next tick states `reentry: "crossed"` in its heartbeat.
+
+- The revision is `126f1674`. `git status --short --untracked-files=no` is empty in `C:\ftmo2`, and
+  `scripts/run-live-trading-trader.js` is the commit's own blob `cd5797fa…` - `git rev-parse
+  HEAD:scripts/run-live-trading-trader.js`, `git hash-object` in the checkout and `git hash-object` on this
+  workstation all read it, sha256 `de3902fc…`.
+- The command line the task runs now reads `--lane "ftmo-2" --grid half --r-multiple 3 --reentry-crossing --magic
+  20261005 --expect-identity … --max-per-day 4 --terminal … --published …`: the same line as before plus the flag,
+  with the previous copy of the file kept at `C:\ftmo2\tmp\predeploy-20261111\live-trading-trader-run.cmd.before-reentry-crossing`.
+  The task is not restarted - it runs `cmd /c` on that file at every tick - and `-ReentryCrossing` writes the same
+  flag if the task is ever registered again.
+- The first tick on it is `2026-11-11T10:36:31.930Z`: `status: nothing_to_place`, `armed: true`, `checkout_head:
+  126f1674`, `code.git_blob: cd5797fa…`, `strategy: {grid: half, r_multiple: 3, magic: 20261005,
+  entries_paused: false, identity_checked: true, reentry: "crossed"}`, `terminal: {0 positions, 0 orders, 0 of ours}`,
+  `caps: {max_per_day: 4, trade_day: 2026-11-11, …}`, and no placement, cancellation, close or stop move. The state
+  file is byte-identical to the copy taken before the first deploy (sha256 `c4fcea62…`), which is the plainest
+  statement that nothing about the lane's own record moved.
+- Lane 1 again: `c5abd0ac`, published heartbeat `nothing_to_place`, `armed: true`, and no `reentry` field - it runs the
+  build it was on and was not asked to read any of this.
+- The lanes publisher carried it to the hosted page on its next cycle: `data/live-trading-trader.ftmo-2.json` at
+  `10:46:32.108Z` reads `checkout_head: 126f1674`, `git_blob: cd5797fa…`, `sha256: de3902fc…`, `status:
+  nothing_to_place`, `armed: true` and `strategy.reentry: "crossed"`, while `data/live-trading-trader.ftmo-1.json` at
+  `10:46:30.018Z` still reads `c5abd0ac`, one position and one order of its own. The hosted page was read from
+  `kevincreedycars-debug.github.io`, not from the checkout, so what the page shows is what was published.
+
+A healthy `nothing_to_place` tick is all this proves, and it is all it needed to prove: the revision that ran, the rule
+it ran under, the account it left alone. The first put-back under the new rule will state `r_multiple: 3` and, if no
+candle has re-crossed the level since the exit, will not be a ticket at all - that row will read as a skip naming the
+wait, and `trade.crossing` in the log line will carry the candle it read or the instant the window opened.
 
