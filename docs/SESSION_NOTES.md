@@ -1,5 +1,34 @@
 # Session Notes
 
+2026-11-11 (lane 2 deployed at `3a2e6566`, the 04:31Z put-back answered, lane 2 now re-arms only on a fresh
+crossing) - the 3R put-back fix was deployed to `C:\ftmo2` from the project workstation with the key at
+`.local\vps-access\id_ed25519`, lane 2 only: detached at `3a2e6566`, `git status --short --untracked-files=no` empty,
+and the deployed `scripts/run-live-trading-trader.js` is the commit's own blob `136fa60f…` (sha256 `36540ed4…`). The
+first tick on it read `2026-11-11T09:36:32.261Z`, `status: nothing_to_place`, `armed: true`, `checkout_head:
+3a2e6566`, `terminal: {0 positions, 0 orders, 0 of ours}`. Lane 1 was read and not touched: `C:\live-trading\runtime`
+is still `c5abd0ac` and its published heartbeat still reads `nothing_to_place`, `armed: true`. The one tracked file
+the checkout had to give up was `data/live-trading.json`, the lane's own regenerated snapshot; a copy of it, of the
+state, of the status and of the run command was kept in `C:\ftmo2\tmp\predeploy-20261111` first, and the state, the
+working orders, the 0.01 sizing and `--max-per-day 4` were not touched.
+
+The 04:31Z bitcoin put-back the first audit could not explain opened new exposure rather than replacing an unfilled
+order: the position before it (199488169) closed at its stop at `04:19:18Z`, the new limit (199500177) was placed at
+`04:31:34.841Z`, filled at `04:57:20Z` and closed at `06:11:35Z` for `+1.69`, and the signal carried on it was the
+`2026-11-10T20:45:00Z` bar the trade was originally opened on. No closed M5 candle had finished above 73,657.005 in
+between - 04:25 closed 73,650.31, and the 04:30 candle was 21 seconds old when the tick read it. That is a fault
+against the second half of the permanence ruling ("re-armed when a 5m candle deviates at them again"), which the code
+never implemented.
+
+So lane 2 now asks for it: `strategy.crossedSince` in `lib/l2l_strategy.js`, `--reentry-crossing` threaded through
+`tradeCycles`/`tradeCycle`, `reentry: "crossed"` in the heartbeat's `strategy` block, and `-ReentryCrossing` in
+`scripts/register-live-trading-trader-task.ps1`. Lane 1 passes nothing and is unchanged. Six new tests - three in
+`tests/l2l_strategy.test.js` (the window, the one-point margin, a forming candle, a short, an unstated window) and
+three in `tests/live_trading_lane2.test.js` (the 04:31Z case as a rule, the crossing that re-arms the level, and the
+same account with no flag) - hold it; `npm test` runs 864 tests with 5 failures, all of them the pre-existing
+browser/DOM ones (the disabled-lane tone test fails on `3a2e6566` with these changes stashed, and the nav/render/tab
+ones are the same as before). The full account, with the broker times and the deployed revision, is §10 of
+`docs/live-trading/LANE2_REENTRY_FIX_20261111.md`.
+
 2026-11-11 (lane 2 put-backs fixed to the lane's own 3R on the half grid; the day audited; dashboard labels the
 kinds) - the 5R finding of lane 2's first day is fixed in `scripts/run-live-trading-trader.js`: `tradeCycles` /
 `tradeCycle` now take the run's `grid` and `rMultiple` and pass them to `strategy.reentryPlan`, so a ticket put

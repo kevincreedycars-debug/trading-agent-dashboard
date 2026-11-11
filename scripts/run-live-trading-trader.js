@@ -296,6 +296,12 @@ const USAGE = [
   "  --grid <full|half>         which ladder the rule reads (default full, the marked one). `half` inserts one",
   "                             midpoint between every adjacent pair of marked levels, and every original and every",
   "                             midpoint is then a line for both an entry and a target",
+  "  --reentry-crossing         put a ticket back at the level a standing trade was triggered on only after a",
+  "                             closed M5 candle has finished beyond that level since the previous attempt on it",
+  "                             ended. Lane 2's rule, added 2026-11-11: the levels are re-armed by a candle",
+  "                             deviating at them again, so a put-back after a stop-out that no candle has",
+  "                             re-crossed is new exposure rather than the same trade. Without it, a standing",
+  "                             trade's level is put back whatever the candles are doing (lane 1's rule)",
   "  --magic <n>                the ownership number this lane's tickets carry (default 20261004). A lane with its",
   "                             own number is required to pass --expect-identity as well: a magic says which path",
   "                             placed a ticket, not which account the terminal is logged into",
@@ -420,6 +426,10 @@ function parseArgs(argv) {
     maxPerDay: DEFAULT_MAX_PER_DAY,
     rMultiple: DEFAULT_R_MULTIPLE,
     grid: DEFAULT_GRID,
+    // Whether a ticket put back at a standing trade's level waits for a fresh crossing of that level. Lane 1
+    // answers no - the level is its entry level until the call or the take-profit ends the trade - and lane 2
+    // answers yes since 2026-11-11, which is why this is a flag rather than a value.
+    reentryCrossing: false,
     magic: ORDER_MAGIC,
     expectIdentity: null,
     pauseEntries: false,
@@ -502,6 +512,9 @@ function parseArgs(argv) {
         break;
       case "--pause-entries":
         options.pauseEntries = true;
+        break;
+      case "--reentry-crossing":
+        options.reentryCrossing = true;
         break;
       case "--close-ticket":
         options.closeTicket = positiveInteger(token, next());
@@ -760,7 +773,9 @@ function tradeCycles({
   closedTrades = [],
   magic = ORDER_MAGIC,
   grid = DEFAULT_GRID,
-  rMultiple = DEFAULT_R_MULTIPLE
+  rMultiple = DEFAULT_R_MULTIPLE,
+  reentryCrossing = false,
+  nowMs = null
 } = {}) {
   const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
   const instrumentBySymbol = new Map(instruments.filter(row => row?.symbol).map(row => [row.symbol, row]));
@@ -795,7 +810,11 @@ function tradeCycles({
       // that lane trades rather than by the defaults lane 1 answers to. Lane 1 names neither flag and gets
       // the defaults it has always had.
       grid,
-      rMultiple
+      rMultiple,
+      // And whether the level has to be crossed afresh before the ticket goes back: only the lane that asks
+      // for it reads the bars here, and `nowMs` is what keeps a candle still forming out of that read.
+      reentryCrossing,
+      nowMs
     }));
   }
   return cycles;
@@ -817,6 +836,9 @@ function tradeSummary(cycle) {
     target_reached: cycle.target_reached,
     ended: cycle.ended,
     ended_by: cycle.ended_by,
+    // The crossing a put-back waited for, when the lane asks for one, so the log line says which candle re-armed
+    // the level rather than only that a ticket was left.
+    crossing: cycle.crossing ?? null,
     reason: cycle.reason
   };
 }
@@ -851,7 +873,9 @@ function tradeCycle(symbol, row, {
   closedTrades = [],
   manualEnds = [],
   grid = DEFAULT_GRID,
-  rMultiple = DEFAULT_R_MULTIPLE
+  rMultiple = DEFAULT_R_MULTIPLE,
+  reentryCrossing = false,
+  nowMs = null
 } = {}) {
   const asset = row?.asset || instrument?.dashboard_asset || null;
   const side = row?.side === "short" ? "short" : "long";
@@ -930,14 +954,41 @@ function tradeCycle(symbol, row, {
         : targetReached
           ? "target-touched"
           : null;
-  // The ticket a standing trade is put back with, priced from the level it was triggered on. The level is
-  // handed in already gridded above, so the plan is asked for the raw ladder with the lane's own grid and
-  // multiple - until 2026-11-11 this call passed neither, and every put-back was priced at five to one on the
-  // marked ladder whatever lane asked for it. The paths that decide a fresh ticket always carried the lane's
-  // rule; this one is the same ticket for a trade already on, and takes the same two numbers.
-  const ticket = endedBy
+  // The exit that ended the previous attempt on this level: the account's own close of the position the newest
+  // ticket produced. A ticket that never filled has no such close, and a trade with no exit on it asks the
+  // candles nothing - there is nothing the level would be re-armed after.
+  const lastExitMs = closedTrades.reduce((latest, entry) => {
+    if (placedAtMs === null || entry?.symbol !== symbol) return latest;
+    if ((Date.parse(entry?.opened?.time_utc || "") || 0) < placedAtMs) return latest;
+    const closedAt = Date.parse(entry?.closed?.time_utc || "");
+    if (!Number.isFinite(closedAt)) return latest;
+    return latest === null || closedAt > latest ? closedAt : latest;
+  }, null);
+  // Lane 2's correction of 2026-11-11, asked for with --reentry-crossing: the levels are re-armed when a 5m
+  // candle deviates at them again, so the ticket goes back only once a closed candle has finished beyond this
+  // level since that exit. Read from the same bars the fresh path reads, with the window moved to the exit; a
+  // lane that does not ask for it reads nothing here and puts its level back whatever the candles are doing.
+  const crossing = reentryCrossing && !endedBy && lastExitMs !== null
+    ? strategy.crossedSince({
+        side,
+        level: trigger,
+        bars: instrument?.m5?.bars,
+        sinceMs: lastExitMs,
+        point,
+        nowMs
+      })
+    : null;
+  // The ticket a standing trade is put back with, priced from the level it was triggered on. The level is handed
+  // in already gridded above, so the plan is asked for the raw ladder with the lane's own grid and multiple -
+  // until 2026-11-11 this call passed neither, and every put-back was priced at five to one on the marked ladder
+  // whatever lane asked for it. The arithmetic is the same with or without the crossing gate; what the gate
+  // changes is whether the ticket is stated at all.
+  const plan = endedBy
     ? null
     : strategy.reentryPlan({ symbol, side, entry: trigger, levels: instrument?.levels, point, grid, rMultiple });
+  const ticket = crossing && !crossing.crossed
+    ? { stage: "waiting", plan: null, reason: crossing.reason }
+    : plan;
   return {
     symbol,
     asset,
@@ -958,6 +1009,18 @@ function tradeCycle(symbol, row, {
     ticket: ticket && ticket.stage === "confirmed" ? ticket.plan : null,
     ticket_stage: ticket ? ticket.stage : null,
     ticket_reason: ticket ? ticket.reason : null,
+    // The crossing the put-back waited for, when the lane asks for one: whether a closed candle finished beyond
+    // the level after the last exit, which candle it was, and the instant the window opened. Null on a lane that
+    // puts its level back whatever the candles are doing, and on a trade with no exit on it yet.
+    crossing: crossing
+      ? {
+          crossed: crossing.crossed === true,
+          bar_time_utc: crossing.bar?.time_utc ?? null,
+          close: crossing.close ?? null,
+          beyond_points: crossing.beyond_points ?? null,
+          since_utc: crossing.since_utc ?? null
+        }
+      : null,
     resting,
     market: Number.isFinite(market) ? market : null,
     resting_reason: resting === false
@@ -2216,7 +2279,11 @@ function runOnce(options, deps = {}) {
       r_multiple: options.rMultiple,
       magic: options.magic,
       entries_paused: options.pauseEntries === true,
-      identity_checked: Boolean(options.expectIdentity)
+      identity_checked: Boolean(options.expectIdentity),
+      // Which rule the put-back follows: `crossed` when the level has to be crossed afresh before a ticket
+      // goes back on it, `level` when the level itself is the entry until the call or the take-profit ends the
+      // trade. Stated here so the page and the log can tell which rule ran without the task's command line.
+      reentry: options.reentryCrossing === true ? "crossed" : "level"
     },
     sources: {
       published: relativePath(published),
@@ -2434,9 +2501,11 @@ function runOnce(options, deps = {}) {
       magic: options.magic,
       // The lane's own rule, so a ticket put back at the level a standing trade was triggered on is priced
       // exactly as this run prices a fresh one. Lane 1 passes neither flag and keeps five to one on the
-      // marked ladder.
+      // marked ladder, and puts its level back without asking the candles anything.
       grid: options.grid,
-      rMultiple: options.rMultiple
+      rMultiple: options.rMultiple,
+      reentryCrossing: options.reentryCrossing === true,
+      nowMs: startedMs
     });
 
     // What this loop already has working, judged before anything new is placed: the entry stands while the call it

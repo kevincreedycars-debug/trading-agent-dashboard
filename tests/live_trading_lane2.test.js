@@ -379,6 +379,82 @@ test("a short put-back on lane 1 keeps its five to one target on the marked line
   assert.equal(open.flags["--stop-loss"], "112");
 });
 
+// The account's own record of the attempt that ended on the level: a position the newest ticket produced, stopped
+// out at its own stop. Nothing about it ends the trade - the level stands - so this is exactly the case the
+// crossing rule asks about, and the closed time is the instant its window opens.
+function stoppedOutClose({ closedAt = "2026-11-07T11:55:00Z" } = {}) {
+  return {
+    symbol: "US100.cash",
+    magic: trader.HALF_LANE_MAGIC,
+    comment: `${trader.COMMENT_PREFIX}nq`,
+    price_open: 100,
+    price_close: 98.333333,
+    stop_loss: 98.333333,
+    take_profit: 105,
+    profit: -1,
+    opened: { time_utc: "2026-11-07T11:35:00Z" },
+    closed: { time_utc: closedAt }
+  };
+}
+
+// The same three bars as `crossingBars`, with the newest one finishing under the level: nothing has deviated at
+// 100 since the stop-out.
+function noCrossingBars() {
+  return [
+    bar("2026-11-07T11:50:00Z", 99, 99.6, 98.9, 99.4),
+    bar("2026-11-07T11:55:00Z", 99.4, 99.8, 98.4, 98.9),
+    bar("2026-11-07T12:00:00Z", 98.9, 99.5, 98.6, 99.2)
+  ];
+}
+
+function stoppedOutFeed(bars) {
+  const feed = feedFixture({ bars });
+  feed.closed_trades = [stoppedOutClose()];
+  return feed;
+}
+
+// The 04:31Z bitcoin put-back of 2026-11-11, as a rule: the previous position closed at its stop after price had
+// fallen away from the level, and a limit went back on at that level twelve minutes later with no candle having
+// finished above it in between. The owner's correction is that this is new exposure rather than the same trade put
+// back, so the lane asks the candles for a crossing first - and states the wait when there has not been one.
+test("lane 2 waits for a fresh crossing before it puts a level back, and states the wait when there has not been one", () => {
+  const run = runLane2({ state: putBackState(), feed: stoppedOutFeed(noCrossingBars()), extraArgs: ["--reentry-crossing"] });
+  assert.equal(run.code, 0, run.record.reason);
+  assert.equal(run.record.status, "nothing_to_place");
+  assert.equal(run.spawns.filter(spawn => spawn.action === "open").length, 0, "no ticket goes back on an un-crossed level");
+  const row = run.record.rule.rows.find(entry => entry.symbol === "US100.cash");
+  assert.equal(row.reentry, true, "the pair still carries the trade it was triggered on");
+  assert.equal(row.decision, "skip");
+  assert.match(row.reason, /has not been crossed afresh/);
+  assert.equal(row.trade.crossing.crossed, false);
+  assert.equal(row.trade.crossing.since_utc, "2026-11-07T11:55:00.000Z");
+  assert.equal(run.heartbeat.strategy.reentry, "crossed");
+});
+
+test("a closed candle beyond the level after the exit re-arms it, and lane 2's ticket goes back at three to one", () => {
+  const run = runLane2({ state: putBackState(), feed: stoppedOutFeed(crossingBars()), extraArgs: ["--reentry-crossing"] });
+  assert.equal(run.code, 0, run.record.reason);
+  const open = run.spawns.find(spawn => spawn.action === "open");
+  assert.ok(open, "the candle deviated at the level again, so the ticket went back");
+  assert.equal(open.flags["--entry-price"], "100");
+  assert.equal(open.flags["--take-profit"], "105");
+  assert.equal(open.flags["--stop-loss"], "98.333333");
+  const row = run.record.rule.rows.find(entry => entry.symbol === "US100.cash");
+  assert.equal(row.trade.crossing.crossed, true);
+  assert.equal(row.trade.crossing.bar_time_utc, "2026-11-07T12:00:00Z");
+  assert.equal(run.record.placements[0].reentry, true);
+  assert.equal(run.record.placements[0].r_multiple, 3);
+});
+
+// The same stopped-out account and the same candles with no flag: lane 2's own rule before this correction, which
+// is lane 1's rule always. It is stated as a test because the difference between the two runs is the whole change.
+test("without the flag the level goes back whatever the candles are doing, and the heartbeat says which rule ran", () => {
+  const run = runLane2({ state: putBackState(), feed: stoppedOutFeed(noCrossingBars()) });
+  const open = run.spawns.find(spawn => spawn.action === "open");
+  assert.ok(open, "a lane that does not ask for a crossing puts its level back");
+  assert.equal(run.heartbeat.strategy.reentry, "level");
+});
+
 // The spent-signal question the audit of 2026-11-11 raised, stated as two tests: a put-back is the same trade
 // put back at its own level and is deliberately not stopped by the signal-bar guard that a fresh ticket answers
 // to - while a trade that has ended can never be put back at all, so a spent bar cannot become a second trade.

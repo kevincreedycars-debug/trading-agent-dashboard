@@ -189,10 +189,9 @@ Lane 1 is not touched: its task, checkout, state file, magic and heartbeat stay 
 `checkout_head` (`c5abd0ac` at the time of writing) must not change. Rollback is the same three commands with the
 previous sha (`4d93757d`).
 
-**Not done from this workstation.** The deploy itself needs the host, and this session had no SSH key for
-158.220.87.240 (port 22 answers; `Permission denied (publickey)`), so the release is committed and pushed and the
-three steps above are the deploy. Nothing on the host was read or changed, which also means the audit above uses
-the published snapshot rather than the terminal and the layer-1 call history.
+**Done later the same day, lane 2 only.** With the key at `.local\vps-access\id_ed25519` on the project workstation,
+the three steps above were run against `C:\ftmo2` at 09:33Z-09:36Z, and the first tick on the new revision is in §10.
+Lane 1's checkout (`C:\live-trading\runtime`) was read and not touched.
 
 ## 9. What is still the owner's
 
@@ -203,4 +202,81 @@ the published snapshot rather than the terminal and the layer-1 call history.
   terminal.
 - Whether the dashboard's heartbeat URL should carry a cache-busting key, since a published heartbeat can sit
   behind a cached copy for a few minutes.
+
+## 10. The deploy, and the put-back it exposed
+
+The release went on to the host at 09:33Z-09:36Z on 2026-11-11, lane 2 only. `C:\ftmo2` was fetched and detached at
+`3a2e6566`, `git status --short --untracked-files=no` was empty afterwards, and the deployed
+`scripts/run-live-trading-trader.js` is the commit's own blob - `git hash-object` reads `136fa60f…` in the worktree and
+`git rev-parse HEAD:scripts/run-live-trading-trader.js` reads the same, sha256 `36540ed4…`. The one tracked file the
+checkout had to give up was `data/live-trading.json`, this lane's regenerated feed snapshot: the producer rewrites it
+at the head of every tick. A copy of it, of the state file, of the status file and of the run command was kept in
+`C:\ftmo2\tmp\predeploy-20261111` first.
+
+Nothing about the lane was moved: the run command, the magic `20261005`, the state path, the 0.01 sizing and
+`--max-per-day 4` are the lines they were, and the terminal keeps whatever it holds. The lane had nothing open at the
+switch (0 positions, 0 orders, 0 of ours).
+
+The first tick on the new revision is what proves the switch: `2026-11-11T09:36:32.261Z`, `status: nothing_to_place`,
+`armed: true`, `code.checkout_head: 3a2e6566`, `code.git_blob: 136fa60f…`, `strategy: {grid: half, r_multiple: 3,
+magic: 20261005, identity_checked: true}`, `terminal: {positions_open: 0, orders_open: 0, ours: 0}`. Lane 1 was read
+and not touched: `C:\live-trading\runtime` is still `c5abd0ac`, and its published heartbeat still reads
+`nothing_to_place`, `armed: true`.
+
+### The 04:31Z bitcoin put-back, answered against the broker
+
+The owner asked one question about the third of the three flagged tickets: did it replace an unfilled order, or did
+it open another position after an exit? It opened another position.
+
+- The position before it, ticket `199488169`, filled at `02:51:28Z` at 73,655.21 from the limit placed at
+  `02:46:34.145Z`, and **closed at its stop at `04:19:18Z`** at 73,509.51, `-1.46` (`-1.94` net).
+- The new order, ticket `199500177`, was a buy limit at the level 73,657.005 **placed at `04:31:34.841Z`** - twelve
+  minutes and seventeen seconds after that close - with the stop at 73,511.518, the target at 74,384.44 and
+  `r_multiple: 5`; `TRADE_RETCODE_DONE`. It **filled at `04:57:20Z`** at 73,653.00 and closed at `06:11:35Z` at
+  73,821.59, `+1.69` (`+1.21` net), on the call turning.
+- The signal it was placed on is `signal_time_utc: 2026-11-10T20:45:00+00:00`: the bar that opened the trade eight
+  hours earlier, carried on the ticket, not a new crossing.
+- And no candle had re-crossed the level: the closed M5 candles after the stop-out closed at 73,477.59 (04:15),
+  73,524.53 (04:20) and 73,650.31 (04:25), all under 73,657.005, and the 04:30 candle was 21 seconds old when the
+  tick read it (73,650.32 to 73,660.37, still forming). The limit could rest only because the price was a few points
+  above the level at that moment; nothing had *finished* beyond it.
+
+So the ticket was not a replacement of something unfilled: the previous attempt had filled and been stopped out, and
+what went back on was new exposure on a spent signal with no fresh crossing. That it made `+1.69` does not make it
+right - the rule that put it there would have put it there whatever the candles did.
+
+### What was wrong, and the correction
+
+`scripts/run-live-trading-trader.js` said, in its own comment, that a put-back "is not read for a fresh crossing at
+all", and `strategy.reentryPlan` was written to price a level without being handed a candle. That is half of the
+permanence ruling. The other half is in the same comment four lines above it: the levels are "still active after a
+stop is hit and **re-armed when a 5m candle deviates at them again**". The re-arming half was never implemented, so a
+stopped-out level put a ticket back on the next tick regardless.
+
+The correction, on lane 2 only, is a flag rather than a rewrite:
+
+- `strategy.crossedSince({ side, level, bars, sinceMs, point, nowMs })` in `lib/l2l_strategy.js` - the same event the
+  fresh path reads (a closed M5 candle finishing beyond the level by at least a point of the instrument's own grid),
+  with the window moved to the instant the previous attempt ended. It names the candle it read, or says why it read
+  none. A `null` instant is not the epoch: an unstated window reads nothing.
+- `--reentry-crossing` in the runner, passed down to `tradeCycle`, which finds that instant from the account's own
+  record - the close of the position the newest ticket produced - and asks the module before it states a ticket. With
+  no crossing the row is a stated `skip` naming the wait, so the log says why rather than going quiet.
+- The heartbeat's `strategy` block now carries `reentry: "crossed" | "level"`, so the page and the log can tell which
+  rule ran without reading the task's command line.
+- `scripts/register-live-trading-trader-task.ps1 -ReentryCrossing` writes the flag, so a re-registration cannot drop it
+  silently. Lane 1 passes nothing and is unchanged: its put-back still goes back at the level whatever the candles are
+  doing.
+- Six tests. `tests/l2l_strategy.test.js`: a crossing only counts when the candle closed after the instant asked for;
+  the margin is a point of the grid and a forming candle is not read; a short mirrors it and an unstated window reads
+  nothing. `tests/live_trading_lane2.test.js`: the 04:31Z case as a rule (stopped-out position, no candle beyond the
+  level, no ticket, a stated wait, `reentry: "crossed"` in the heartbeat); the same bars with a crossing, which puts
+  the ticket back at three to one on the half grid; and the same stopped-out account with no flag, which puts it back
+  with `reentry: "level"` - the difference between the two runs being the whole change.
+
+The flag was then added to `C:\ftmo2\tmp\live-trading-trader-run.cmd` and the revision carrying this code deployed the
+same way as §8, so the next tick states `reentry: "crossed"` in its heartbeat. Until that tick has been read, the
+host is running the 3R fix without the crossing gate, which is a smaller fault than the one it replaced and not the
+end state. The revision, the command line carrying the flag and the tick that states it are written in below, once
+read.
 

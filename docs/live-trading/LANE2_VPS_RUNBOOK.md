@@ -3,7 +3,7 @@
 Lane 2 is the second FTMO account: the half grid, three to one, its own terminal, its own checkout, its own tasks, its
 own magic `20261005` and its own identity file. This runbook is **lane 2 only**. Nothing here re-registers, stops,
 re-publishes or re-configures lane 1, and nothing here arms lane 2 before the FTMO reply in
-[SECOND_LANE_HALF_L2L.md](SECOND_LANE_HALF_L2L.md) §8 exists.
+[SECOND_LANE_HALF_L2L.md](SECOND_LANE_HALF_L2L.md) Â§8 exists.
 
 The stages are in the order they must run, and the last two - publishing the lane-2 dashboard and arming its trader -
 are deliberately separate acts. Each stage ends with a check that can fail; if it fails, stop there rather than
@@ -282,7 +282,7 @@ not lane 1's folder, which differs from it by four characters and a space.
    installing over lane 1, and the hand-copied-folder fallback becomes a separate proof of 2a rather than an assumption.
 6. Open `C:\Program Files\FTMO Global Markets MT5 Terminal 2\terminal64.exe`. First run opens FTMO's "Open an Account"
    wizard - close it; the login dialog is what the next step uses.
-7. Then sign in as **stage 2's numbered list** says: **File → Login to Trade Account**, login `***841` (all digits),
+7. Then sign in as **stage 2's numbered list** says: **File â†’ Login to Trade Account**, login `***841` (all digits),
    password the account's **investor** password, server `FTMO-Server3`, **Save account information** ticked, **OK**.
    Do not screenshot the dialog - the Login field is unmasked - and type nothing into any file or shell.
 
@@ -307,11 +307,11 @@ script:
 
 1. On the VPS, open `C:\Program Files\FTMO Global Markets MT5 Terminal 2\terminal64.exe`. If the second install has
    never run, it opens on the FTMO "Open an Account" wizard; close the wizard, the login dialog is what is wanted.
-2. Menu **File → Login to Trade Account**. The dialog has three fields: **Login** (the full account number, all
+2. Menu **File â†’ Login to Trade Account**. The dialog has three fields: **Login** (the full account number, all
    digits), **Password** (the **read-only / investor password** for this stage), and **Server**.
 3. **Server**: pick `FTMO-Server3` from the list. If `FTMO-Server3` is not listed, the terminal has not downloaded
-   FTMO's server list yet: **File → Open an Account** → type `FTMO` in the broker search → the servers appear → close
-   that wizard without creating anything, then reopen **File → Login to Trade Account** and `FTMO-Server3` will be in
+   FTMO's server list yet: **File â†’ Open an Account** â†’ type `FTMO` in the broker search â†’ the servers appear â†’ close
+   that wizard without creating anything, then reopen **File â†’ Login to Trade Account** and `FTMO-Server3` will be in
    the dropdown.
 4. Tick **Save account information**, press **OK**. Nothing else is typed anywhere: not in PowerShell, not in a
    wrapper, not in a task argument, not in the identity file, not into any file in `C:\ftmo2`.
@@ -400,7 +400,7 @@ task exists.
 cd C:\ftmo2
 node scripts\run-live-trading-trader.js --once --align --settle-seconds 90 
   --python "C:\Python313\python.exe" 
-  --lane ftmo-2 --grid half --r-multiple 3 --magic 20261005 
+  --lane ftmo-2 --grid half --r-multiple 3 --magic 20261005 --reentry-crossing 
   --expect-identity C:\live-trading\state\lane-ftmo2-identity.json 
   --max-per-day 4 
   --state tmp\live-trading-trader-state.json --log tmp\live-trading-trader.log 
@@ -412,9 +412,9 @@ Get-Content C:\ftmo2\tmp\live-trading-trader-status.json -Raw
 ```
 
 **Stage 4 passes when** the last log line reads `"armed":false`, `"lane":"ftmo-2"`, `"strategy":{"grid":"half",
-"r_multiple":3,"magic":20261005,"identity_checked":true}`, every `placements[]` entry is `"sent":false` and
-`"planned":true`, and the journal holds **no** line with an `answer`. Anything sent here is a fault, not a result: the
-arm flag was not passed.
+"r_multiple":3,"magic":20261005,"identity_checked":true,"reentry":"crossed"}`, every `placements[]` entry is
+`"sent":false` and `"planned":true`, and the journal holds **no** line with an `answer`. Anything sent here is a fault,
+not a result: the arm flag was not passed.
 
 ## 5. The lane-2 tasks, registered unarmed
 
@@ -423,19 +423,19 @@ Two tasks, both under the lane-2 names the lanes file publishes, and **neither c
 ```powershell
 cd C:\ftmo2
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-live-trading-trader-task.ps1 
-  -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 
+  -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 -ReentryCrossing 
   -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json 
   -TaskName LiveTradingTraderTick-ftmo2 -ChainFeed -Published C:\live-trading\publisher 
   -Terminal 'C:\Program Files\FTMO Global Markets MT5 Terminal 2' -HiddenRunner <the host's run-hidden.vbs> -NoStart
 
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-live-trading-trader-task.ps1 -Show -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json -TaskName LiveTradingTraderTick-ftmo2
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-live-trading-trader-task.ps1 -Show -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 -ReentryCrossing -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json -TaskName LiveTradingTraderTick-ftmo2
 Get-Content C:\ftmo2\tmp\live-trading-trader-run.cmd
 ```
 
 **Stage 5 passes when** the `-Show` output's `loop_command` carries `--lane "ftmo-2"`, `--grid half`,
-`--r-multiple 3`, `--magic 20261005` and `--expect-identity` with the path, and carries **no** `--confirm-live`; and the
-`Lane ftmo-2` line names this lane. A registration that omits any of those refuses itself, which is what stage 0 of
-§9 in the design document proves with tests.
+`--r-multiple 3`, `--reentry-crossing`, `--magic 20261005` and `--expect-identity` with the path, and carries **no**
+`--confirm-live`; and the `Lane ftmo-2` line names this lane. A registration that omits any of those refuses itself,
+which is what stage 0 of Â§9 in the design document proves with tests.
 
 Start it once by hand (`Start-ScheduledTask -TaskName LiveTradingTraderTick-ftmo2`) and read
 `C:\ftmo2\tmp\live-trading-trader.log` - it must still report `"armed":false`.
@@ -591,7 +591,7 @@ git -C . log -1 --stat
 Get-Content data\live-trading-trader.ftmo-2.json -Raw
 ```
 
-Then open the page and switch the selector to **FTMO 2 · 0.5 L2L**: the chips must read `***841 / FTMO-Server3`, the
+Then open the page and switch the selector to **FTMO 2 Â· 0.5 L2L**: the chips must read `***841 / FTMO-Server3`, the
 tables must show its tickets, and the four cards - EURUSD, XAUUSD, US100.cash, BTCUSD - must draw the original marked
 lines **plus** the dashed midpoints, with the entry band at lane 2's own entry. Switching back must restore lane 1
 exactly. If the page says parked, missing or stale, that is the true state - read the notice rather than the numbers.
@@ -625,7 +625,7 @@ This stage is the only one that can place a ticket, and it is deliberately one c
 cd C:\ftmo2
 # The lane-2 registration, identical to stage 5 except for -Arm.
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register-live-trading-trader-task.ps1 
-  -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 
+  -RepoRoot C:\ftmo2 -Lane ftmo-2 -Grid half -RMultiple 3 -Magic 20261005 -ReentryCrossing 
   -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json 
   -TaskName LiveTradingTraderTick-ftmo2 -ChainFeed -Published C:\live-trading\publisher -Arm 
   -Terminal 'C:\Program Files\FTMO Global Markets MT5 Terminal 2' -HiddenRunner <the host's run-hidden.vbs>

@@ -63,6 +63,11 @@ param(
   # A lane parked for new entries: the loop still reviews, exits and moves stops, but leaves no new limit. Written
   # into the task so pausing is a registration rather than a hand edit of the scheduler.
   [switch] $PauseEntries,
+  # The put-back rule this lane trades. Off is lane 1's: a standing trade's level is put back whatever the candles
+  # are doing. On is lane 2's, added 2026-11-11: the ticket only goes back after a closed M5 candle has finished
+  # beyond that level since the previous attempt on it ended, because a put-back after a stop-out that no candle has
+  # re-crossed is new exposure rather than the same trade put back.
+  [switch] $ReentryCrossing,
   # One task per lane, running the snapshot producer and then this loop inside the same scheduled run. That is
   # what removes the ordering assumption the two separate tasks carried: the loop can never start before the
   # snapshot that carries the bar it reads, because the producer's own run has to finish first, and a producer
@@ -301,6 +306,7 @@ function Get-WrapperLines($extraFlags, $paths = $null) {
     $laneStyleArgument += "--expect-identity `"$ExpectIdentity`" "
   }
   if ($PauseEntries) { $laneStyleArgument += "--pause-entries " }
+  if ($ReentryCrossing) { $laneStyleArgument += "--reentry-crossing " }
   $command = "`"$Node`" `"$runner`" --once $extraFlags --quiet --python `"$Python`" " +
     "--state `"$($paths.state)`" --log `"$($paths.log)`" --lock `"$($paths.lock)`" --journal `"$($paths.journal)`" " +
     "${laneArgument}${laneStyleArgument}${expireArgument}${maxOpenArgument}--max-per-day $MaxPerDay$terminalArgument$publishedArgument"
