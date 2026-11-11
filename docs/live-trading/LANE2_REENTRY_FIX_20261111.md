@@ -155,6 +155,12 @@ so three of them cannot always add to a fourth, and the residue accumulates acro
 missing trade: every close has both of its deals and every deal is inside the window. The dashboard's Closed
 trades caption now states the same thing beside the balance it is reading.
 
+**As the lane went on.** These seven are the closes the snapshot of 07:46Z carried. By 08:46Z the account had
+closed two more under the same rule - the EURUSD short at 08:16Z for +2.05 after its breakeven stop, and the
+US100.cash sell limit that filled at 08:03Z and stopped out at 08:34Z for -0.45 - so the snapshot the page now
+draws reads nine closes and -11.89 USD. Nothing in the audit above changes with them: they are both fresh
+tickets, and the three labelled put-backs are the same three.
+
 ## 8. Deploying it, lane 2 only
 
 The release is a commit on `main`. The host runs lane 2 from `C:\ftmo2` and lane 1 from
