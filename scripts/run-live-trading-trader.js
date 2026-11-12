@@ -775,6 +775,7 @@ function tradeCycles({
   grid = DEFAULT_GRID,
   rMultiple = DEFAULT_R_MULTIPLE,
   reentryCrossing = false,
+  callSealedMs = {},
   nowMs = null
 } = {}) {
   const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
@@ -789,6 +790,12 @@ function tradeCycles({
     .concat(Array.isArray(state?.cancellations) ? state.cancellations : [])
     .concat(Array.isArray(state?.close_requests) ? state.close_requests : [])
     .filter(row => row && (row.done === true || row.outcome === "closed" || row.outcome === "cancelled"));
+  // The limits this lane withdrew because the call they were left for ended. The owner drew the boundary on
+  // 2026-11-12: that is not an exit - nothing filled - but it is an event of its own, and the set-up it belonged to
+  // ends with it, so the level does not go back on a call that merely reads the same direction again. This is the
+  // reading the two 06:11Z replacements of that morning were missing.
+  const withdrawnByCall = (Array.isArray(state?.cancellations) ? state.cancellations : [])
+    .filter(row => row && row.call_ended === true);
   // One row per pair: the newest ticket this loop placed on it. Everything older is the same trade put back, or a
   // trade that has already been answered, and the account itself is the live fact about what is still working.
   const newest = new Map();
@@ -812,8 +819,11 @@ function tradeCycles({
       grid,
       rMultiple,
       // And whether the level has to be crossed afresh before the ticket goes back: only the lane that asks
-      // for it reads the bars here, and `nowMs` is what keeps a candle still forming out of that read.
+      // for it reads the bars here, and `nowMs` is what keeps a candle still forming out of that read. The
+      // instants the window can open on travel beside it: the seal of the call now published for the pair.
       reentryCrossing,
+      withdrawnByCall,
+      callSealedMs,
       nowMs
     }));
   }
@@ -836,10 +846,16 @@ function tradeSummary(cycle) {
     target_reached: cycle.target_reached,
     ended: cycle.ended,
     ended_by: cycle.ended_by,
+    // Which call answer ended it - a call that turned or one whose limit was withdrawn unfilled - and the limit
+    // that came out, because the owner asked for the withdrawal to be its own event in the log rather than a
+    // second kind of exit.
+    ended_call: cycle.ended_call ?? null,
+    withdrawn: cycle.withdrawn ?? null,
     // The account's own close of the previous attempt on this level - the instant the crossing window opens - and
     // the crossing it waited for, when the lane asks for one, so one log line states the previous exit, the candle
     // that re-armed the level and the ticket that followed, which is the set-up the owner checks.
     last_exit_utc: cycle.last_exit_utc ?? null,
+    call_sealed_utc: cycle.call_sealed_utc ?? null,
     crossing: cycle.crossing ?? null,
     reason: cycle.reason
   };
@@ -849,9 +865,12 @@ function tradeSummary(cycle) {
 // that are the user's own has happened. The words are this lane's own, so the log reads the same way when a trade
 // is standing, when its call has gone, when its target has been taken and when its target has been reached by a
 // market that never touched the entry.
-function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, exitPrice } = {}) {
+function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, exitPrice, withdrawn } = {}) {
   if (!endedBy) {
     return `The trade ${symbol} was triggered at ${trigger} is still the pair's own: the call it was left for reads ${direction ? `"${direction}"` : "no direction"} and stands as a ${side} call, and the level is permanent, so it goes on standing with its target at ${target} until that target is taken or the call changes direction. The entry stays at that same level.`;
+  }
+  if (endedBy === "call" && withdrawn) {
+    return `The call this trade was left for ended and its limit at ${withdrawn.entry ?? trigger} was taken back out unfilled (ticket ${withdrawn.ticket ?? "unstated"}): nothing filled, so this is a withdrawal rather than an exit, and the set-up it belonged to is over - Layer 1 now reads ${direction ? `"${direction}"` : "no direction"} for ${asset || symbol}, and a call published now, even one in the same direction, needs a crossing of its own at ${trigger} before a limit goes back there.`;
   }
   if (endedBy === "call") {
     return `The call this trade was left for has ended: Layer 1 now reads ${direction ? `"${direction}"` : "no direction"} for ${asset || symbol}, which is not a ${side} call standing, so the trade at ${trigger} has nothing left to be in and the level is not re-entered.`;
@@ -877,6 +896,8 @@ function tradeCycle(symbol, row, {
   grid = DEFAULT_GRID,
   rMultiple = DEFAULT_R_MULTIPLE,
   reentryCrossing = false,
+  withdrawnByCall = [],
+  callSealedMs = {},
   nowMs = null
 } = {}) {
   const asset = row?.asset || instrument?.dashboard_asset || null;
@@ -894,6 +915,18 @@ function tradeCycle(symbol, row, {
   const direction = directions && typeof directions === "object" ? directions[asset] : null;
   const callSide = strategy.sideForDirection(direction);
   const placedAtMs = Date.parse(row?.placed_at_utc || "") || null;
+  // The limit this trade's newest ticket left working and this lane took back unfilled because the call it waited
+  // on ended. Nothing filled, so it is not an exit - and the set-up it belonged to is over all the same: a call
+  // published afterwards needs a crossing of its own before a ticket goes back at this level, even when it reads
+  // the same direction. The owner drew that boundary on 2026-11-12, and the pair the 06:11Z run replaced is the
+  // case he named. Matched on the ticket the loop placed, and falling back to the instant it was placed for rows
+  // that do not carry one.
+  const withdrawn = (Array.isArray(withdrawnByCall) ? withdrawnByCall : []).find(entry => {
+    if (!entry || entry.symbol !== symbol) return false;
+    if (placedTicket !== null && Number.isFinite(placedTicket) && Number(entry.ticket) === placedTicket) return true;
+    const when = Date.parse(entry.cancelled_at_utc || entry.decided_at_utc || "") || 0;
+    return placedAtMs !== null && when >= placedAtMs;
+  }) || null;
   const level = entryIsPrice
     ? side === "long"
       ? strategy.nearestAbove(levels, trigger)
@@ -949,13 +982,15 @@ function tradeCycle(symbol, row, {
   const exitPrice = exitPriceFor(side, instrument);
   const endedBy = !callSide || callSide !== side
     ? "call"
-    : askedByHand || closedByHand
-      ? "hand-close"
-      : settled
-        ? "target-fill"
-        : targetReached
-          ? "target-touched"
-          : null;
+    : withdrawn
+      ? "call"
+      : askedByHand || closedByHand
+        ? "hand-close"
+        : settled
+          ? "target-fill"
+          : targetReached
+            ? "target-touched"
+            : null;
   // The exit that ended the previous attempt on this level: the account's own close of the position the newest
   // ticket produced. A ticket that never filled has no such close, and a trade with no exit on it asks the
   // candles nothing - there is nothing the level would be re-armed after.
@@ -966,19 +1001,45 @@ function tradeCycle(symbol, row, {
     if (!Number.isFinite(closedAt)) return latest;
     return latest === null || closedAt > latest ? closedAt : latest;
   }, null);
-  // Lane 2's correction of 2026-11-11, asked for with --reentry-crossing: the levels are re-armed when a 5m
-  // candle deviates at them again, so the ticket goes back only once a closed candle has finished beyond this
-  // level since that exit. Read from the same bars the fresh path reads, with the window moved to the exit; a
-  // lane that does not ask for it reads nothing here and puts its level back whatever the candles are doing.
-  const crossing = reentryCrossing && !endedBy && lastExitMs !== null
-    ? strategy.crossedSince({
-        side,
-        level: trigger,
-        bars: instrument?.m5?.bars,
-        sinceMs: lastExitMs,
-        point,
-        nowMs
-      })
+  // Lane 2's correction of 2026-11-11, tightened on 2026-11-12 and asked for with --reentry-crossing: the newest
+  // two completed M5 candles have to straddle the level - the one before the newest at or on the near side of it,
+  // the newest at least a point beyond it - and the newest of the two has to *close* after the window opens. The
+  // window opens on the later of two instants: the exit that ended the previous attempt on this level, and the
+  // seal of the call now published for the pair. The second one is the owner's sentence of 2026-11-12, "when a new
+  // call arrives, even in the same direction, require a fresh qualifying crossing under that call": a crossing
+  // that happened under the call before it cannot re-arm the level under this one. Read from the same bars the
+  // fresh path reads; a lane that does not ask for it reads nothing here and puts its level back whatever the
+  // candles are doing.
+  const sealedMs = Number.isFinite(Number(callSealedMs?.[asset])) ? Number(callSealedMs[asset]) : null;
+  const windowStart = lastExitMs === null ? sealedMs : sealedMs === null ? lastExitMs : Math.max(lastExitMs, sealedMs);
+  const windowBasis = lastExitMs === null
+    ? (sealedMs === null ? null : "call")
+    : sealedMs !== null && sealedMs > lastExitMs
+      ? "call"
+      : "exit";
+  const crossing = reentryCrossing && !endedBy
+    ? windowStart === null
+      // No exit on the ticket and no readable seal on the call: the two candles can still be read, but nothing says
+      // which crossing re-arms the level, so the level waits rather than being put back on a window that is missing.
+      ? {
+          crossed: false,
+          bar: null,
+          close: null,
+          previous_bar: null,
+          previous_close: null,
+          beyond_points: null,
+          since_utc: null,
+          since_basis: null,
+          reason: `Neither the instant the previous attempt on ${trigger} ended nor the instant the call now published for ${asset || symbol} was sealed can be read, so no crossing since either can be stated: ${symbol} waits rather than putting a ticket back at ${trigger}.`
+        }
+      : strategy.crossedSince({
+          side,
+          level: trigger,
+          bars: instrument?.m5?.bars,
+          sinceMs: windowStart,
+          point,
+          nowMs
+        })
     : null;
   // The ticket a standing trade is put back with, priced from the level it was triggered on. The level is handed
   // in already gridded above, so the plan is asked for the raw ladder with the lane's own grid and multiple -
@@ -1003,9 +1064,23 @@ function tradeCycle(symbol, row, {
     order_ticket: row?.order_ticket ?? null,
     ended: Boolean(endedBy),
     ended_by: endedBy,
+    // Which ending the call answer is: a call that has turned or gone is `turned`, and a limit withdrawn unfilled
+    // because its call ended while a new call reads the same direction is `withdrawn`. Both end the set-up; the log
+    // says which one it was, because the owner asked for the withdrawal to be kept separate from an exit.
+    ended_call: endedBy !== "call" ? null : withdrawn ? "withdrawn" : "turned",
+    // The limit this lane withdrew unfilled, when the trade it belonged to was ended by that withdrawal rather than
+    // by the call reading alone: which ticket came out, at which level and when. Null on every other trade.
+    withdrawn: endedBy === "call" && withdrawn
+      ? {
+          ticket: withdrawn.ticket ?? null,
+          level: Number.isFinite(Number(withdrawn.entry)) ? Number(withdrawn.entry) : null,
+          cancelled_at_utc: withdrawn.cancelled_at_utc ?? null,
+          reason: withdrawn.reason ?? null
+        }
+      : null,
     target_reached: targetReached,
     exit_price: exitPrice,
-    reason: tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, exitPrice }),
+    reason: tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, exitPrice, withdrawn }),
     // The ticket this loop would put back, and the module's own words for why it is not a ticket at all when the
     // ladder cannot price one - no line marked beyond the level, or a stop the instrument's grid cannot hold.
     ticket: ticket && ticket.stage === "confirmed" ? ticket.plan : null,
@@ -1015,16 +1090,21 @@ function tradeCycle(symbol, row, {
     // by the owner to check the set-up in front of the ticket, so the exit time it is measured from travels with
     // the crossing itself rather than only inside it.
     last_exit_utc: lastExitMs === null ? null : new Date(lastExitMs).toISOString(),
-    // The crossing the put-back waited for, when the lane asks for one: whether a closed candle finished beyond
-    // the level after the last exit, which candle it was, and the instant the window opened. Null on a lane that
-    // puts its level back whatever the candles are doing, and on a trade with no exit on it yet.
+    call_sealed_utc: sealedMs === null ? null : new Date(sealedMs).toISOString(),
+    // The crossing the put-back waited for, when the lane asks for one: the two newest completed candles the gate
+    // compares - the one on the near side and the one beyond - the instant the window opened and which of the two
+    // instants opened it. Null on a lane that puts its level back whatever the candles are doing.
     crossing: crossing
       ? {
           crossed: crossing.crossed === true,
           bar_time_utc: crossing.bar?.time_utc ?? null,
           close: crossing.close ?? null,
+          previous_bar_time_utc: crossing.previous_bar?.time_utc ?? null,
+          previous_close: crossing.previous_close ?? null,
           beyond_points: crossing.beyond_points ?? null,
-          since_utc: crossing.since_utc ?? null
+          since_utc: crossing.since_utc ?? null,
+          since_basis: crossing.since_basis ?? windowBasis ?? null,
+          reason: crossing.reason ?? null
         }
       : null,
     resting,
@@ -1188,12 +1268,14 @@ function reviewPendings({ live, joined, calls = {}, cycles = new Map(), magic = 
     const callSide = strategy.sideForDirection(directions[asset]);
     if (!callSide) {
       return drop(
-        `The call this entry was left for has ended: Layer 1 now reads ${directions[asset] ? `"${directions[asset]}"` : "no direction"} for ${asset || row?.symbol}, which is not a live call, so the ${side} limit at ${entry} has nothing left to be filled by.`
+        `The call this entry was left for has ended: Layer 1 now reads ${directions[asset] ? `"${directions[asset]}"` : "no direction"} for ${asset || row?.symbol}, which is not a live call, so the ${side} limit at ${entry} has nothing left to be filled by. The set-up that limit belonged to ends with it: what opens the next ticket at this level is a fresh crossing under whatever call is published next, even one in the same direction.`,
+        { call_ended: true, event: "withdrawn-unfilled-limit" }
       );
     }
     if (callSide !== side) {
       return drop(
-        `The call this entry was left for has ended: Layer 1 now reads ${directions[asset]} for ${asset || row?.symbol}, a ${callSide} call against this ${side} limit, so it waits on a direction that is no longer standing.`
+        `The call this entry was left for has ended: Layer 1 now reads ${directions[asset]} for ${asset || row?.symbol}, a ${callSide} call against this ${side} limit, so it waits on a direction that is no longer standing. The set-up that limit belonged to ends with it: what opens the next ticket at this level is a fresh crossing under whatever call is published next, even one in the same direction.`,
+        { call_ended: true, event: "withdrawn-unfilled-limit" }
       );
     }
     // The reason the candles cannot see: the account's own record shows the trade this entry belongs to closing at
@@ -1945,6 +2027,39 @@ function takenSignals(state) {
   return taken;
 }
 
+// A price out of a row this lane wrote down, or NaN: a null is a price that was never stated rather than zero, and
+// `Number(null)` is zero - the one reading that would match an empty level against a real one.
+function readNumber(value) {
+  if (value === null || value === undefined || value === "") return Number.NaN;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : Number.NaN;
+}
+
+// The last limit this lane left at a level and took back out unfilled because the call it waited on ended. It is
+// the event the owner drew apart from an exit on 2026-11-12: nothing filled, so no position was stopped out, but
+// the set-up ended and the level's next ticket needs a crossing under whatever call is published after it. A
+// placement that follows it at the same level is a *replacement* of that limit rather than a fresh entry, and the
+// log says so, because the two are different events even though the same gate authorises both.
+function withdrawnUnfilledAt(state, symbol, level) {
+  const rows = (Array.isArray(state?.cancellations) ? state.cancellations : [])
+    .filter(row => row && row.call_ended === true && row.symbol === symbol && row.cancelled !== false);
+  if (!rows.length) return null;
+  const stamp = row => Date.parse(row?.cancelled_at_utc || row?.decided_at_utc || "") || 0;
+  const newest = rows.reduce((latest, row) => (latest === null || stamp(row) >= stamp(latest) ? row : latest), null);
+  if (!newest) return null;
+  const entry = readNumber(level);
+  const price = readNumber(newest.entry);
+  // Same level, to the instrument's own precision: a limit replaced at a different line is a fresh ticket, not
+  // this one put back.
+  if (!Number.isFinite(entry) || !Number.isFinite(price) || Math.abs(entry - price) > 1e-9) return null;
+  return {
+    ticket: newest.ticket ?? null,
+    level: price,
+    cancelled_at_utc: newest.cancelled_at_utc ?? null,
+    reason: typeof newest.reason === "string" ? newest.reason : null
+  };
+}
+
 // Placements, not attempts: a ticket the tool refused never became a trade and does not spend the day's cap. A
 // re-entry does not spend it either: it is the same trade put back at the level it was triggered on rather than a
 // second trade, and the user's rule is that the level is re-entered until the call changes or the target is taken,
@@ -2003,7 +2118,7 @@ function todayPlacements(state, nowMs) {
 // still its own states that trade's own ticket whatever the candles are doing. The day's cap counts trades opened,
 // so a ticket put back at that level is not one of those; the module's stage and close stay on the row beside it,
 // because they are what the page says about the pair and a reader comparing the two should see both.
-function decide({ readings, state, live, options, nowMs, cycles = new Map() }) {
+function decide({ readings, state, live, options, nowMs, cycles = new Map(), callSealedMs = {} }) {
   const taken = takenSignals(state);
   const oursBySymbol = new Set((live?.ours || []).map(row => row?.symbol).filter(Boolean));
   const openTickets = (live?.ours || []).length;
@@ -2016,7 +2131,11 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map() }) {
     const cycle = cycles instanceof Map ? cycles.get(reading.symbol) || null : null;
     const trade = cycle && !cycle.ended ? cycle : null;
     const ticket = trade ? trade.ticket : reading.stage === "confirmed" ? reading.plan : null;
-    const signalTime = trade ? trade.signal_time_utc : reading.confirmation?.time_utc || null;
+    // The candle a put-back is made on is the re-arming one rather than the bar that opened the trade: it is what
+    // the owner reads in front of a ticket, and it is the bar this loop writes down as spent, so one confirming bar
+    // can leave one ticket per pair. A lane with no crossing gate states the trade's own bar, as it always has.
+    const confirmingBar = trade?.crossing?.crossed === true ? trade.crossing.bar_time_utc : null;
+    const signalTime = trade ? confirmingBar || trade.signal_time_utc : reading.confirmation?.time_utc || null;
     const base = {
       symbol: reading.symbol,
       asset: reading.asset ?? null,
@@ -2043,6 +2162,16 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map() }) {
       // a hand cap --max-open when a run asked for one, a ladder with no line past the level to aim the target at,
       // or a market on the far side of it.
       const row = { ...base, reentry: true, reason: trade.ticket_reason || trade.reason };
+      // The candle that re-arms a put-back is spent by it: one confirming bar authorises one placement per symbol,
+      // so the bar that already left a limit at this level cannot leave a second one. This is the same guard the
+      // fresh path answers to, stated here because a put-back does not go through that path.
+      if (trade.ticket && confirmingBar && taken.has(signalKey(reading.symbol, confirmingBar))) {
+        return {
+          ...row,
+          decision: "skip",
+          reason: `the M5 candle at ${confirmingBar} has already authorised a placement on ${reading.symbol}: one confirming bar authorises one ticket per pair, so the level this trade was triggered at, ${trade.trigger_level}, waits for the next crossing.`
+        };
+      }
       if (!trade.ticket) return { ...row, decision: "skip" };
       if (trade.resting === false) return { ...row, decision: "skip", reason: trade.resting_reason };
       if (oursBySymbol.has(reading.symbol)) {
@@ -2060,9 +2189,34 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map() }) {
         };
       }
       working += 1;
-      return { ...row, decision: "place" };
+      return {
+        ...row,
+        decision: "place",
+        // The two kinds of put-back are kept apart in the log, as the owner asked: one follows a position that
+        // exited, the other replaces a limit that never filled and whose level therefore carries no exit at all.
+        event: cycle.last_exit_utc ? "re-entry-after-exit" : "replacement-of-unfilled-limit",
+        replacement_of: cycle.last_exit_utc ? null : { level: trade.trigger_level, ticket: trade.order_ticket ?? null }
+      };
     }
     if (!ticket) return base;
+    // The fresh path's half of the owner's ruling of 2026-11-12: a crossing belongs to the call that was standing
+    // when it closed. A call is sealed between two closes often - the 06:11Z pair of the day before was exactly
+    // that, a new call read eleven minutes after the newest candle had finished - so a confirming candle that
+    // closed before the seal is the *previous* call's crossing, and this call waits for one of its own. Lane 1
+    // names no crossing gate and is not asked; the instant is only read on a lane that asks for it.
+    const sealMs = options.reentryCrossing === true ? readNumber(callSealedMs?.[reading.asset]) : Number.NaN;
+    const confirmedCloseMs = signalTime ? Date.parse(signalTime) + 5 * 60 * 1000 : Number.NaN;
+    if (Number.isFinite(sealMs) && !(confirmedCloseMs > sealMs)) {
+      return {
+        ...base,
+        decision: "skip",
+        reason: `the confirming candle at ${signalTime} closed at ${
+          Number.isFinite(confirmedCloseMs) ? new Date(confirmedCloseMs).toISOString() : "an instant that cannot be read"
+        }, which is not after the call now published for ${reading.asset || reading.symbol} was sealed at ${new Date(
+          sealMs
+        ).toISOString()}: the crossing under this call has not happened yet, and it waits for the next close rather than taking the last call's crossing.`
+      };
+    }
     if (taken.has(signalKey(reading.symbol, signalTime))) {
       return {
         ...base,
@@ -2093,7 +2247,17 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map() }) {
     }
     working += 1;
     used += 1;
-    return { ...base, decision: "place" };
+    // A fresh crossing is normally a fresh entry. It is a replacement when this lane already withdrew a limit
+    // unfilled at this same level and the call it waited on ended - the 06:11Z pair of 2026-11-12 - because the
+    // owner asked for that boundary to be a separate event in the log rather than a silent second ticket. Both are
+    // placed on a crossing this call's own window authorises; only the name differs.
+    const replacement = withdrawnUnfilledAt(state, reading.symbol, ticket?.entry);
+    return {
+      ...base,
+      decision: "place",
+      event: replacement ? "replacement-of-unfilled-limit" : "fresh-entry",
+      replacement_of: replacement
+    };
   });
 
   // Paused entries: the two decisions above that would leave a limit - a fresh crossing and a put-back at the
@@ -2495,6 +2659,16 @@ function runOnce(options, deps = {}) {
 
     const state = deps.state || readState(statePath);
 
+    // The instant each pair's call was sealed, keyed by the dashboard's asset code. A lane that asks the candles
+    // for a crossing opens its window on the later of two instants, and this is the second of them: a call
+    // published after an exit means the crossing that re-arms the level has to be a crossing under *that* call,
+    // which is the owner's ruling of 2026-11-12 on the two 06:11Z replacements.
+    const callSealedMs = {};
+    (Array.isArray(calls?.rows) ? calls.rows : []).forEach(row => {
+      const sealedAt = Date.parse(row?.sealed_at || "");
+      if (row?.asset && Number.isFinite(sealedAt)) callSealedMs[row.asset] = sealedAt;
+    });
+
     // The trade each pair already has on, read before anything is reviewed or placed: a working limit is judged
     // against the trade it was left for, and a trade still standing is what a ticket is put back at the level of,
     // rather than found by a fresh crossing. The account's own record of its closed trades is part of the read,
@@ -2511,6 +2685,7 @@ function runOnce(options, deps = {}) {
       grid: options.grid,
       rMultiple: options.rMultiple,
       reentryCrossing: options.reentryCrossing === true,
+      callSealedMs,
       nowMs: startedMs
     });
 
@@ -2665,7 +2840,7 @@ function runOnce(options, deps = {}) {
     // says the position has gone on the next run rather than a send this run that may not have landed yet.
     const removed = new Set(cancellations.filter(row => row.cancelled).map(row => row.ticket));
     const liveAfterReview = { ...live, ours: live.ours.filter(row => !removed.has(row?.ticket)) };
-    const decision = decide({ readings, state, live: liveAfterReview, options, nowMs: startedMs, cycles });
+    const decision = decide({ readings, state, live: liveAfterReview, options, nowMs: startedMs, cycles, callSealedMs });
     record.rule = {
       ...strategy.strategySummary(readings),
       grid: options.grid,
@@ -2742,6 +2917,12 @@ function runOnce(options, deps = {}) {
         ticket.last_exit_utc = row.trade?.last_exit_utc ?? null;
         ticket.crossing = row.trade?.crossing ?? null;
       }
+      // Which event this ticket is, in the owner's own two-way split of 2026-11-12: a fresh entry at a line no
+      // limit rested on, a re-entry after a filled position exited, or the replacement of a limit that never filled
+      // and whose set-up ended when its call did. The withdrawn ticket the last one replaces travels with it, so the
+      // log states the event and its previous limit in one row.
+      if (row.event) ticket.event = row.event;
+      if (row.replacement_of) ticket.replacement_of = row.replacement_of;
       if (!options.confirmLive) {
         placements.push({ ...ticket, sent: false, placed: false, refused: false, planned: true });
         continue;

@@ -34,12 +34,12 @@ function crossingBars() {
   ];
 }
 
-function callsFixture(direction = "BULLISH") {
+function callsFixture(direction = "BULLISH", sealedAt = "2026-11-07T00:00:00Z") {
   return {
     dashboard_meta: { last_updated_et: "2026-11-07T11:00:00Z" },
     agents: [{
       agent: "NQ",
-      sealed_at: "2026-11-07T00:00:00Z",
+      sealed_at: sealedAt,
       effective_status: "ACTIVE",
       forecast_window_end: "2026-11-08T00:00:00Z",
       expires_at: "2026-11-08T00:00:00Z",
@@ -121,9 +121,9 @@ function flagMap(args) {
 
 // One run of the loop against the fixtures. The identity file is only ever a path the run passes on here; the
 // tool is what reads it, and `tests/live_trading_identity_gate.test.js` is where that reading is proved.
-function runLane2({ extraArgs = [], feed = feedFixture(), state = null, statusPositions = [], statusOrders = [], laneOne = false, direction = "BULLISH" } = {}) {
+function runLane2({ extraArgs = [], feed = feedFixture(), state = null, statusPositions = [], statusOrders = [], laneOne = false, direction = "BULLISH", sealedAt = "2026-11-07T00:00:00Z" } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lane2-trader-"));
-  fs.writeFileSync(path.join(dir, "layer1.json"), JSON.stringify(callsFixture(direction)), "utf8");
+  fs.writeFileSync(path.join(dir, "layer1.json"), JSON.stringify(callsFixture(direction, sealedAt)), "utf8");
   fs.writeFileSync(path.join(dir, "l2l-levels.json"), JSON.stringify(levelsFixture()), "utf8");
   fs.writeFileSync(path.join(dir, "live-trading.json"), JSON.stringify(feed), "utf8");
   const identityPath = path.join(dir, "lane-ftmo2-identity.json");
@@ -457,16 +457,28 @@ test("without the flag the level goes back whatever the candles are doing, and t
   assert.equal(run.heartbeat.strategy.reentry, "level");
 });
 
-// The four facts the owner asks for in front of a re-entry are carried by one row: the previous exit, the candle
-// that re-armed the level, the level the order goes back on, and the three prices the ticket is sent with. The
-// first three are the loop's reading; the last three are the placement row below. A trade with no exit on it yet
-// states no exit rather than a fabricated instant, and asks the candles nothing.
-test("the row states no previous exit when the newest ticket never filled, and asks nothing of the candles", () => {
-  const run = runLane2({ state: putBackState(), feed: feedFixture({ bars: noCrossingBars() }), extraArgs: ["--reentry-crossing"] });
-  assert.equal(run.code, 0, run.record.reason);
-  const row = run.record.rule.rows.find(entry => entry.symbol === "US100.cash");
+// A trade whose newest ticket never filled has no exit to measure a window from, so the window opens on the seal of
+// the call the level is being re-armed under (2026-11-12). A replacement of an unfilled limit is that same crossing
+// rather than an exemption from it, and the row states that it has no exit rather than inventing one.
+test("a put-back with no exit on it opens its window on the call's seal and states no exit", () => {
+  const waiting = runLane2({ state: putBackState(), feed: feedFixture({ bars: noCrossingBars() }), extraArgs: ["--reentry-crossing"] });
+  assert.equal(waiting.code, 0, waiting.record.reason);
+  assert.equal(waiting.record.status, "nothing_to_place");
+  const row = waiting.record.rule.rows.find(entry => entry.symbol === "US100.cash");
   assert.equal(row.trade.last_exit_utc, null);
-  assert.equal(row.trade.crossing, null);
+  assert.equal(row.trade.call_sealed_utc, "2026-11-07T00:00:00.000Z");
+  assert.equal(row.trade.crossing.crossed, false);
+  assert.equal(row.trade.crossing.since_basis, "call");
+  assert.equal(row.decision, "skip");
+
+  // The same state with both newest closes straddling the level: the put-back goes out, and it is labelled as the
+  // replacement of a limit that never filled rather than as a re-entry after an exit.
+  const crossed = runLane2({ state: putBackState(), feed: feedFixture({ bars: crossingBars() }), extraArgs: ["--reentry-crossing"] });
+  const open = crossed.spawns.find(spawn => spawn.action === "open");
+  assert.ok(open, "the level was crossed under the call now published");
+  assert.equal(crossed.record.placements[0].event, "replacement-of-unfilled-limit");
+  assert.equal(crossed.record.placements[0].reentry, true);
+  assert.equal(crossed.record.placements[0].last_exit_utc, null);
 });
 
 test("the row states the previous exit, the re-arming candle, the fixed level and the prices the ticket was sent with", () => {
@@ -489,37 +501,136 @@ test("the row states the previous exit, the re-arming candle, the fixed level an
   assert.ok(Math.abs((placed.target - placed.entry) / (placed.entry - placed.stop) - 3) < 1e-6);
 });
 
-// The spent-signal question the audit of 2026-11-11 raised, stated as two tests: a put-back is the same trade
-// put back at its own level and is deliberately not stopped by the signal-bar guard that a fresh ticket answers
-// to - while a trade that has ended can never be put back at all, so a spent bar cannot become a second trade.
-test("a put-back is not blocked by the spent-signal guard, and an ended trade is never put back", () => {
+// The state the 06:11Z boundary of 2026-11-12 leaves behind: a limit this lane placed, never filled, and taken back
+// out when the call it waited on expired. The withdrawal is the event the owner asked to keep apart from an exit.
+function withdrawnState({ level = 100, cancelledAt = "2026-11-07T12:06:30Z" } = {}) {
+  const state = putBackState({ level });
+  state.cancellations = [{
+    ticket: state.placements[0].order_ticket,
+    symbol: "US100.cash",
+    asset: "NQ",
+    side: "long",
+    order_type: "ORDER_TYPE_BUY_LIMIT",
+    entry: level,
+    decision: "cancel",
+    reason: `The call this entry was left for has ended: Layer 1 now reads no direction for NQ, which is not a live call, so the buy limit at ${level} has nothing left to be filled by. The set-up that limit belonged to ends with it: what opens the next ticket at this level is a fresh crossing under whatever call is published next, even one in the same direction.`,
+    call_ended: true,
+    event: "withdrawn-unfilled-limit",
+    sent: true,
+    cancelled: true,
+    refused: false,
+    planned: false,
+    retcode_name: "TRADE_RETCODE_DONE",
+    tool_exit: 0,
+    cancelled_at_utc: cancelledAt,
+    tool_reason: null
+  }];
+  return state;
+}
+
+// The pair the 06:11Z run replaced, as a rule: the previous limit was withdrawn unfilled when its call expired, and a
+// new call arrives reading the same direction. Nothing goes back at the level on that tick - the set-up ended with
+// the withdrawal, and the newest completed candle closed before the new call was sealed, so the crossing under this
+// call has not happened yet. This is the regression those two replacements are, and it is now a refusal.
+test("a limit withdrawn unfilled ends the set-up: a new call in the same direction needs a crossing of its own", () => {
+  const run = runLane2({
+    state: withdrawnState(),
+    feed: feedFixture({ bars: crossingBars() }),
+    extraArgs: ["--reentry-crossing"],
+    sealedAt: "2026-11-07T12:06:00Z"
+  });
+  assert.equal(run.code, 0, run.record.reason);
+  assert.equal(run.spawns.filter(spawn => spawn.action === "open").length, 0, "nothing goes back at the level on the new call's first tick");
+  const row = run.record.rule.rows.find(entry => entry.symbol === "US100.cash");
+  assert.equal(row.reentry, undefined, "the pair is read as a fresh reading, not as a trade it is still in");
+  assert.equal(row.decision, "skip");
+  assert.match(row.reason, /the crossing under this call has not happened yet/);
+  const trade = run.record.trades.rows[0];
+  assert.equal(trade.ended_by, "call");
+  assert.equal(trade.ended_call, "withdrawn");
+  assert.equal(trade.withdrawn.ticket, 7000100);
+  assert.equal(trade.withdrawn.level, 100);
+});
+
+// The same withdrawn state with the call in place before the crossing closed: the replacement goes out, and the
+// placement says what it replaces, so a reader can tell it from a fresh entry at a line no limit ever rested on.
+test("a replacement of a withdrawn limit is placed on a crossing under the new call and says what it replaces", () => {
+  const run = runLane2({
+    state: withdrawnState(),
+    feed: feedFixture({ bars: crossingBars() }),
+    extraArgs: ["--reentry-crossing"],
+    sealedAt: "2026-11-07T11:56:00Z"
+  });
+  const open = run.spawns.find(spawn => spawn.action === "open");
+  assert.ok(open, "a confirming close after the call was sealed authorises the replacement");
+  assert.equal(open.flags["--entry-price"], "100");
+  assert.equal(open.flags["--take-profit"], "105");
+  const placed = run.record.placements.find(entry => entry.placed);
+  assert.equal(placed.event, "replacement-of-unfilled-limit");
+  assert.equal(placed.replacement_of.ticket, 7000100);
+  assert.equal(placed.replacement_of.level, 100);
+  assert.equal(placed.reentry, undefined, "a replacement is a fresh placement under the new call, not a put-back");
+});
+
+
+// confirming bar authorises one placement per symbol, so the bar that already left a ticket at the level cannot
+// leave a second one - while a trade that has ended can never be put back at all, so a spent bar cannot become a
+// second trade.
+test("a confirming bar authorises one placement per pair, and an ended trade is never put back", () => {
   const bars = crossingBars();
   const readings = readingsFor(bars);
   const options = trader.parseArgs([
     "--once", "--grid", "half", "--r-multiple", "3", "--magic", String(trader.HALF_LANE_MAGIC),
-    "--expect-identity", "tmp/lane2-identity.json"
+    "--expect-identity", "tmp/lane2-identity.json", "--reentry-crossing"
   ]);
-  // The standing trade's own placement carries the bar that opened it, and that bar is in the spent set above.
-  const state = putBackState();
-  state.placements[0].signal_time_utc = "2026-11-07T12:00:00Z";
+  const instrument = { symbol: "US100.cash", dashboard_asset: "NQ", levels: LEVELS, point: 0.01, quote: { bid: 100.9, ask: 101.1 }, m5: { bars } };
   const live = { positions: [], orders: [], ours: [] };
+  // The window a put-back with no exit on it opens on: the call now published, sealed before the 12:00 candle closed.
+  const callSealedMs = { NQ: Date.parse("2026-11-07T11:00:00Z") };
 
-  const standing = trader.decide({ readings, state, live, options, nowMs: NOW, cycles: trader.tradeCycles({
-    state,
+  // The level was already re-armed on the 12:00 candle when this standing trade's ticket went out, so that candle
+  // cannot authorise another ticket: the pair waits for the next crossing.
+  const spent = putBackState();
+  spent.placements[0].signal_time_utc = "2026-11-07T12:00:00Z";
+  const spentCycles = trader.tradeCycles({
+    state: spent,
     directions: { NQ: "BULLISH" },
-    joined: { instruments: [{ symbol: "US100.cash", dashboard_asset: "NQ", levels: LEVELS, point: 0.01, quote: { bid: 100.9, ask: 101.1 }, m5: { bars } }] },
+    joined: { instruments: [instrument] },
     closedTrades: [],
     magic: trader.HALF_LANE_MAGIC,
     grid: "half",
-    rMultiple: 3
+    rMultiple: 3,
+    reentryCrossing: true,
+    callSealedMs,
+    nowMs: NOW
+  });
+  const blocked = trader.decide({ readings, state: spent, live, options, nowMs: NOW, cycles: spentCycles });
+  assert.equal(blocked.candidates.length, 0, "one confirming bar leaves one ticket per pair");
+  assert.match(blocked.rows[0].reason, /has already authorised a placement/);
+
+  // An unspent candle re-arms the level, and the put-back states that candle rather than the bar that opened the
+  // trade, so the row carries the set-up in front of the ticket.
+  const standing = trader.decide({ readings, state: putBackState(), live, options, nowMs: NOW, cycles: trader.tradeCycles({
+    state: putBackState(),
+    directions: { NQ: "BULLISH" },
+    joined: { instruments: [instrument] },
+    closedTrades: [],
+    magic: trader.HALF_LANE_MAGIC,
+    grid: "half",
+    rMultiple: 3,
+    reentryCrossing: true,
+    callSealedMs,
+    nowMs: NOW
   }) });
   assert.equal(standing.candidates.length, 1, "the same trade is put back while it stands");
   assert.equal(standing.candidates[0].confirmation_time_utc, "2026-11-07T12:00:00Z");
+  assert.equal(standing.candidates[0].event, "replacement-of-unfilled-limit");
 
   // The target taken: the account's own record shows the position closing at its take-profit, so the trade's
   // turn is over and the level is not re-entered - no ticket, and no second trade from the same bar.
+  const takenState = putBackState();
   const ended = trader.tradeCycles({
-    state,
+    state: takenState,
     directions: { NQ: "BULLISH" },
     joined: { instruments: [{ symbol: "US100.cash", dashboard_asset: "NQ", levels: LEVELS, point: 0.01, quote: { bid: 100.9, ask: 101.1 }, m5: { bars } }] },
     closedTrades: [{
@@ -538,7 +649,7 @@ test("a put-back is not blocked by the spent-signal guard, and an ended trade is
     rMultiple: 3
   });
   assert.equal(ended.get("US100.cash").ended_by, "target-fill");
-  const after = trader.decide({ readings, state, live, options, nowMs: NOW, cycles: ended });
+  const after = trader.decide({ readings, state: takenState, live, options, nowMs: NOW, cycles: ended });
   assert.equal(after.rows[0].reentry, undefined, "a finished trade is judged as a fresh reading, not a put-back");
 });
 

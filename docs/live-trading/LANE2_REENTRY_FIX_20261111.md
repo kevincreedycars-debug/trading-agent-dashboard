@@ -534,3 +534,75 @@ fixed level, the first and newest beyond-close with the close before each, the n
 entry, stop, target and size — and it runs with no argument for the newest such line:
 `powershell -NoProfile -ExecutionPolicy Bypass -File C:\ftmo2\tmp\crossing-report.ps1`.
 
+## 14. The owner's ruling of 2026-11-12: two closes, a close after the window, and a withdrawal kept apart from an exit
+
+Lane 2 only, and it is the rules change §13 said would be the owner's call rather than a defect fix. Four statements,
+each one implemented where the reading it constrains is taken:
+
+| the ruling | where it lives |
+| --- | --- |
+| compare the two newest consecutive completed M5 candles: for a buy the older close at or below the level and the newest at least one point above it, reversed for a sell | `crossedSince` in `lib/l2l_strategy.js`, which is the lane's put-back gate, and the fresh path's own `buildPlan`, which already read exactly that pair of closes |
+| a post-exit re-entry's confirming candle must close after the exit | the same function, against the instant the window opens |
+| a fresh entry, and a replacement after an expired call, must be a crossing under the call now published | `decide` in the trader for the fresh path, `tradeCycle`'s window for the put-back path: the window opens on the later of the exit and the call's own `sealed_at` |
+| a withdrawn unfilled limit is its own event, and the set-up it belonged to ends with it | `reviewPendings` writes `call_ended: true` and `event: "withdrawn-unfilled-limit"` on the cancellation; `tradeCycle` reads it as an ending; the placement that follows is labelled `replacement-of-unfilled-limit` |
+
+**What changed in the reading.** `crossedSince` used to accept *any* closed candle beyond the level since the instant
+it was handed, which is how the `14:01:35Z` XAUUSD put-back rested on a `13:50` close while the newest close, `13:55`
+at `4037.84`, had already come back to the near side. It now reads only the two newest completed candles: the older one
+must have finished at or on the near side of the level, the newer one at least one point beyond it, and the newer one
+must have closed after the window (its own five minutes added to its open, strictly after the instant). Two closes
+already beyond the level therefore arm nothing, however far past it they finished. One candle missing is a wait, not a
+crossing: an absent candle is not a close on the near side. The result carries both closes (`bar`, `previous_bar`,
+`close`, `previous_close`) so a log line can state the pair of candles the gate actually compared.
+
+**What changed in the window.** A put-back after an exit used to open its window on the exit alone; a ticket whose
+newest limit never filled had no window at all and was put back whatever the candles were doing, which is the hole the
+`06:11Z` pair went through. The window now opens on the later of two instants — the exit that ended the previous
+attempt on the level, and the seal of the call now published for the pair — and a trade with neither states no window,
+which is a wait rather than a ticket. The same rule is applied to the fresh path in `decide`, so a confirming candle
+that closed before the current call was sealed cannot place anything: that crossing belongs to the call before it. The
+daily seal lands at `06:04`–`06:15Z`, so the morning replacement window is where this bites; an intraday re-entry after
+an exit still measures from the exit, because the exit is later than the seal.
+
+**What changed in the ending.** The two `06:11Z` cancellations were written as ordinary withdrawals and read on the
+next tick as nothing at all, so the pair still looked like a standing trade and its level went straight back on. A
+cancellation the call ended now carries `call_ended: true`, and `tradeCycle` reads it as the trade's ending — a third
+way for a call answer to end a set-up, beside a call that has turned and one that has gone. The trade row states
+`ended_by: "call"` with `ended_call: "withdrawn"`, the ticket that came out and its level; nothing goes back at that
+level until the rule's own crossing under the call published after it, even when that call reads the same direction.
+A placement that follows at that same level is labelled `event: "replacement-of-unfilled-limit"` and carries
+`replacement_of: { ticket, level, cancelled_at_utc, reason }`, so a replacement is never mistaken for a fresh entry or
+for a re-entry after an exit. The other two event names are `fresh-entry` and `re-entry-after-exit`.
+
+**What a confirming bar spends.** The candle that re-arms a level now writes itself into the placement as
+`signal_time_utc`, and it is checked against the spent set on both paths, so one confirming bar authorises one
+placement per symbol. A put-back is no longer exempt from that guard; it is still exempt from `--max-per-day`, because
+a ticket put back at a standing trade's own level is the same trade rather than a second one. A replacement after an
+expired call *is* a fresh placement under the new call, so it spends one of the day's four.
+
+**Left exactly as they were.** The fixed levels, the half grid, the 3R geometry, the minimum size the tool places and
+the four-a-day cap. Lane 1 passes no `--reentry-crossing`, so none of this reaches it: its put-back reads no candle, its
+window does not exist and its rows carry none of these fields.
+
+### The four cases the owner asked to be tested
+
+| case | test |
+| --- | --- |
+| the `14:01Z` gold put-back | `tests/l2l_strategy.test.js`, *the 14:01Z gold put-back arms nothing*: the `2026-11-11` closes `13:40 4032.82`, `13:45 4034.31`, `13:50 4032.52`, `13:55 4037.84` against level `4033.29` and exit `01:34:15Z`. At `14:01:35Z` it reads `crossed: false`, the newest close back on the near side; read at `13:56` the same history is a real crossing off `13:45 4034.31` into `13:50 4032.52` |
+| two closes already beyond the line | *two closes already beyond the level arm nothing* — and the gold case above is the same shape from the other side, the older close beyond and the newer one back on the near side |
+| a valid buy crossing and a valid sell crossing | *a crossing is the two newest closes straddling the level…* and *a short's crossing is the two newest closes straddling the level from above…*, each asserting both close times and the one-point margin |
+| the expired-call replacement | `tests/live_trading_lane2.test.js`, *a limit withdrawn unfilled ends the set-up* (a call sealed after the confirming close places nothing; the trade row reads `ended_by: call`, `ended_call: withdrawn`) and *a replacement of a withdrawn limit is placed on a crossing under the new call and says what it replaces* |
+
+Tests the change moved rather than added: *a put-back with no exit on it opens its window on the call's seal*, *a
+confirming bar authorises one placement per pair, and an ended trade is never put back*, and *one of the two newest
+candles missing is a wait, not a crossing*. `node --test tests/l2l_strategy.test.js tests/live_trading_lane2.test.js`
+runs 52 of 52 green, `node --test tests/live_trading_trader.test.js tests/live_trading_lane1_baseline.test.js` runs 75
+of 75 green, and `npm test` runs 874 with 865 passing, 4 skipped and the same 5 browser-page failures §12 recorded at
+`234e4d85` (three in `backtester/tests/site_nav_consistency.browser.test.js`, one each in
+`tests/live_trading_accounts.browser.test.js` and `tests/live_trading_chart_zoom.browser.test.js`, plus the load
+failure of `tests/research_library.browser.test.js`) — all five confirmed to fail identically at `234e4d85` in a clean
+worktree before this change.
+
+
+
+

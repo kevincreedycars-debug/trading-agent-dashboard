@@ -456,29 +456,111 @@ test("the trade's own level is refused rather than priced when the ladder cannot
   assert.equal(reentryPlan({ symbol: "BTCUSD", side: "long", entry: "not a price", levels: LEVELS }).stage, "unavailable");
 });
 
-// A put-back after an exit is new exposure unless a candle has deviated at the level again, which is what the
-// second account's lane asks before it puts a ticket back (2026-11-11). `crossedSince` is that reading: the same
-// event the fresh path reads - a closed candle finishing beyond the level - with the window moved to the instant
-// the previous attempt on the level ended.
-test("a crossing counts only when a closed candle finished beyond the level after the instant asked for", () => {
+// A put-back after an exit is new exposure unless the two newest completed candles cross the level again, which is
+// what the second account's lane asks before it puts a ticket back (2026-11-11). On 2026-11-12 the owner stated the
+// event more tightly: the candle before the newest has to finish at or on the near side of the level, the newest has
+// to finish at least a point beyond it, and the newest has to *close* after the instant the window opens.
+test("a crossing is the two newest closes straddling the level, and the newest has to close after the window", () => {
   const bars = [
-    bar(0, 84300, 85200, 84100, 85100),
-    bar(5, 85100, 85120, 84400, 84400),
-    bar(10, 84400, 84480, 84300, 84400)
+    bar(0, 84300, 84500, 84200, 84400),
+    bar(5, 84400, 85140, 84300, 85100)
   ];
-  const after = crossedSince({ side: "long", level: 84500, bars, sinceMs: Date.parse("2026-10-04T15:04:00Z"), point: 0.01 });
+  const after = crossedSince({ side: "long", level: 84500, bars, sinceMs: Date.parse("2026-10-04T15:02:00Z"), point: 0.01 });
   assert.equal(after.crossed, true);
-  assert.equal(after.bar.time_utc, "2026-10-04T15:00:00Z");
+  assert.equal(after.bar.time_utc, "2026-10-04T15:05:00Z", "the newest completed candle is the one that crossed");
   assert.equal(after.close, 85100);
+  assert.equal(after.previous_bar.time_utc, "2026-10-04T15:00:00Z", "the candle before it is stated beside it");
+  assert.equal(after.previous_close, 84400);
   assert.equal(after.beyond_points, 60000);
   assert.match(after.reason, /finished above 84500 at 85100/);
 
-  // The same bars with the instant moved past that candle: the only crossing is behind the window, so the level
-  // has not been crossed afresh and the lane states that rather than a ticket.
-  const behind = crossedSince({ side: "long", level: 84500, bars, sinceMs: Date.parse("2026-10-04T15:06:00Z"), point: 0.01 });
+  // The window opened after that candle closed: the crossing is behind it, so the level has not been re-armed and
+  // the lane states that rather than a ticket. The candle it read is still named, so the log says what it saw.
+  const behind = crossedSince({ side: "long", level: 84500, bars, sinceMs: Date.parse("2026-10-04T15:11:00Z"), point: 0.01 });
   assert.equal(behind.crossed, false);
-  assert.equal(behind.bar, null);
+  assert.equal(behind.bar.time_utc, "2026-10-04T15:05:00Z");
+  assert.match(behind.reason, /not after 2026-10-04T15:11:00.000Z/);
   assert.match(behind.reason, /has not been crossed afresh/);
+});
+
+// The 14:01:35Z gold put-back of 2026-11-11, read as a rule. The position it belonged to was filled at 4033.29 and
+// stopped out at 4045.203333; price closed below the level at 13:40, came back above it at 13:45, closed below it
+// again at 13:50 and was back above it at 13:55 - the newest close at the moment the ticket went out. A gate that
+// asks only whether *any* close was beyond the level since the exit arms that level; the two-candle gate does not.
+test("the 14:01Z gold put-back arms nothing: the newest close had come back to the near side", () => {
+  const gold = (time, open, low, close) => ({
+    time_utc: `2026-11-11T${time}:00Z`,
+    open,
+    high: Math.max(open, close),
+    low,
+    close
+  });
+  const bars = [
+    gold("13:35", 4034.86, 4033.40, 4034.86),
+    gold("13:40", 4034.87, 4032.00, 4032.82),
+    gold("13:45", 4032.82, 4033.10, 4034.31),
+    gold("13:50", 4034.31, 4032.20, 4032.52),
+    gold("13:55", 4032.52, 4032.40, 4037.84)
+  ];
+  const exitMs = Date.parse("2026-11-11T01:34:15Z");
+  const read = crossedSince({
+    side: "short",
+    level: 4033.29,
+    bars,
+    sinceMs: exitMs,
+    point: 0.01,
+    nowMs: Date.parse("2026-11-11T14:01:35Z")
+  });
+  assert.equal(read.crossed, false, "the newest close was back above the level, so nothing armed it");
+  assert.equal(read.bar.time_utc, "2026-11-11T13:55:00Z");
+  assert.equal(read.close, 4037.84);
+  assert.equal(read.previous_bar.time_utc, "2026-11-11T13:50:00Z");
+  assert.equal(read.previous_close, 4032.52);
+  assert.match(read.reason, /back on the near side/);
+
+  // The same history read at 13:56, when 13:50 was still the newest close: that was a crossing from the near side,
+  // and the ticket that went out at 14:01 was five minutes past it.
+  const earlier = crossedSince({
+    side: "short",
+    level: 4033.29,
+    bars: bars.slice(0, 4),
+    sinceMs: exitMs,
+    point: 0.01,
+    nowMs: Date.parse("2026-11-11T13:56:00Z")
+  });
+  assert.equal(earlier.crossed, true);
+  assert.equal(earlier.bar.time_utc, "2026-11-11T13:50:00Z");
+  assert.equal(earlier.previous_close, 4034.31, "the close before it was still on the near side");
+});
+
+// The case the owner named beside it: two closes already beyond the level arm nothing, however far past it they
+// finished, because a level the market has been sitting beyond has not been crossed at all.
+test("two closes already beyond the level arm nothing", () => {
+  const bars = [
+    bar(0, 84600, 84620, 84350, 84400),
+    bar(5, 84400, 84420, 84250, 84300),
+    bar(10, 84300, 84320, 84200, 84250)
+  ];
+  const read = crossedSince({ side: "short", level: 84500, bars, sinceMs: Date.parse("2026-10-04T14:00:00Z"), point: 0.01 });
+  assert.equal(read.crossed, false);
+  assert.equal(read.previous_close, 84300);
+  assert.equal(read.close, 84250);
+  assert.match(read.reason, /already below the level/);
+  assert.match(read.reason, /also below it/);
+});
+
+// One of the two candles missing is a wait rather than a crossing: an absent candle is not a close on the near side
+// of the level, so the level waits for the next completed bar instead of being put back on a reading that is short.
+test("one of the two newest candles missing is a wait, not a crossing", () => {
+  const read = crossedSince({
+    side: "long",
+    level: 84500,
+    bars: [bar(5, 84400, 84510, 84390, 84520)],
+    sinceMs: Date.parse("2026-10-04T14:00:00Z"),
+    point: 0.01
+  });
+  assert.equal(read.crossed, false);
+  assert.match(read.reason, /not both here/);
 });
 
 test("the crossing clears the level by a point of the instrument's own grid, and a forming candle is not read", () => {
@@ -518,15 +600,16 @@ test("the crossing clears the level by a point of the instrument's own grid, and
   assert.equal(forming.crossed, false);
 });
 
-test("a short's crossing is a close below the level, and a window that cannot be stated reads nothing", () => {
-  const bars = [bar(0, 84600, 84700, 84400, 84500), bar(5, 84500, 84600, 84300, 84300), bar(10, 84300, 84400, 84200, 84300)];
-  const after = crossedSince({ side: "short", level: 84500, bars, sinceMs: Date.parse("2026-10-04T15:06:00Z"), point: 0.01 });
+test("a short's crossing is the two newest closes straddling the level from above, and a window that cannot be stated reads nothing", () => {
+  const bars = [bar(0, 84600, 84700, 84400, 84500), bar(5, 84500, 84600, 84300, 84300)];
+  const after = crossedSince({ side: "short", level: 84500, bars, sinceMs: Date.parse("2026-10-04T15:02:00Z"), point: 0.01 });
   assert.equal(after.crossed, true);
-  assert.equal(after.bar.time_utc, "2026-10-04T15:10:00Z", "the newest candle beyond the level is the one named");
+  assert.equal(after.bar.time_utc, "2026-10-04T15:05:00Z", "the newest candle is the one that crossed");
+  assert.equal(after.previous_close, 84500, "a close at the level is the near side of it");
   assert.match(after.reason, /finished below 84500 at 84300/);
 
-  // No readable instant: a caller that cannot say when the previous attempt ended is told so rather than handed
-  // a crossing it cannot place in time.
+  // No readable instant: a caller that cannot say when the window opens is told so rather than handed a crossing it
+  // cannot place in time.
   const unstated = crossedSince({ side: "short", level: 84500, bars, sinceMs: null, point: 0.01 });
   assert.equal(unstated.crossed, false);
   assert.equal(unstated.since_utc, null);
