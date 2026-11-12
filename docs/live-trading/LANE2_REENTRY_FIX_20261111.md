@@ -405,3 +405,52 @@ standing trade back at the level it was triggered on* - so what a reader's brows
 served it was still the previous one when the commits went in at 20:53Z, so a page read inside that first hour after a
 push can still show the old words; the reader is the served file, not the checkout.
 
+
+## 12. The next morning: the same ticket going back, and the facts on the placement
+
+The lane sent two more re-entries while nobody was watching. `2026-11-12T06:11:32.462Z`, one log line, status
+`placed`: EURUSD short at 1.108345 (ticket `199851757`, stop 1.109047, target 1.10624, 2.9986 to one) and XAUUSD
+short at 3997.55 (ticket `199851758`, stop 4009.463333, target 3961.81, exactly three to one). Both rows read
+`trade.last_exit_utc: null` and `trade.crossing: null`, and those nulls are the truth rather than a gap: neither
+level had been left. The trade at each level was still the pair's own, its ticket had come off the account without a
+position ever closing, and the rule put the same level back. That is this lane's second kind of re-entry, and it is
+not the 14:01Z XAUUSD one: there an exit came first and a candle re-armed the level, here nothing exited and nothing
+had to be re-armed.
+
+The line exposed where the four facts lived. They were only on `rule.rows[].trade`, so a reader who opened the
+placement row - the row that actually sends the order - found the level and the three prices but had to look sideways
+for the exit and the crossing. From `71680af8` the trader writes both on the placement itself, copied from the same
+cycle and written as `null` rather than left out when the level never left. A placement row now states all four:
+`last_exit_utc`, `crossing` (`bar_time_utc`, `close`, `beyond_points`, `since_utc`, `crossed`), `level` and `entry`,
+and `stop`, `target`, `r_multiple`, `order_ticket`, `placed_at_utc`.
+
+Lane 1 is untouched by it: the two fields are written only when `reentry` is set, and `tests/fixtures/lane1/run.golden.json`
+still matches byte for byte. Two assertions hold the change - the lane-2 crossing test now reads the exit and the
+candle off the placement, and the trader's put-back test states the two nulls - and `npm test` runs 869 tests with
+859 passing and 6 failing. The 6 are stated rather than waved through: the 4 pre-existing ones (the disabled-lane
+tone test, `research_library.browser.test.js`, and the two overview freshness tests) plus 2 in
+`backtester/tests/site_nav_consistency.browser.test.js` that name `usd-layer1-backtester.html` as the page that no
+longer matches the partial's render - run on its own, that file fails those same 2 of 5, and the page was changed by
+`4c5222e8`, a research commit about DXY.cash that touches no part of this lane.
+
+It went on to `C:\ftmo2` at 10:59Z, the same way as §8, §10 and §11: fetched, detached at `71680af8`,
+`scripts/run-live-trading-trader.js` the commit's own blob (`7ebf3348…` from both `rev-parse` and `hash-object`, sha256
+`025f5157…`), state byte-identical before and after (`b491cffc…`), the state, status and run command copied to
+`C:\ftmo2\tmp\predeploy-20261112\*.before-placement-facts` first, and the run command the line it already was. The
+first tick on it is `2026-11-12T11:01:31.775Z`: `nothing_to_place`, armed, `checkout_head: 71680af8`,
+`strategy.reentry: "crossed"`, terminal 0 positions / 0 orders / 0 of ours. Lane 1 read and not touched: `c5abd0ac`,
+no `reentry` field on its heartbeat.
+
+What that leaves open is one row, and it is the lane's own:
+
+- **BTCUSD 73,657.005 long** is the live re-entry candidate: exited `06:55:37Z`, its ticket off the account, market
+  73,420.77 - the far side of the level for a long - so it is skipped until price trades back and a candle closes
+  beyond the line. The four facts will be on that placement row the moment it does, exit and crossing included.
+- **US100 28,163.82 is no longer waiting on price.** Price did come back under the line (28,139.83), but the call it
+  was left for ended at `06:11:34Z`, and a level whose call has gone is not re-entered - so that trade's turn is over
+  rather than deferred, and the §11 note about it waiting for 28,163.82 is superseded here.
+
+`tmp/host/reentry-report.ps1` was updated to match: it reads the exit and the crossing off the placement first, falls
+back to the trade row for lines written before this run, and prints *none: the trade at this level never left it* in
+words where the fields are null, so a printed report cannot be mistaken for missing data.
+

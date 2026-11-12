@@ -1,5 +1,27 @@
 # Session Notes
 
+2026-11-12 (lane 2's two re-entries sent overnight, and the four facts moved onto the row that sends one) - the lane
+sent two re-entries nobody was watching, both on `2026-11-12T06:11:32.462Z`: EURUSD short at 1.108345 (ticket
+`199851757`, stop 1.109047, target 1.10624, 2.9986 to one) and XAUUSD short at 3997.55 (ticket `199851758`, stop
+4009.463333, target 3961.81, exactly three to one). Both rows carry `last_exit_utc: null` and `crossing: null` because
+neither level had been left - the trade was still the pair's own and its ticket simply went back, which is the second
+kind of re-entry on this lane beside the 14:01Z crossing one. The gap that exposed: the four facts lived only on
+`rule.rows[].trade`, so the placement row that actually sends the order had the level and the three prices but not the
+exit or the candle. From `71680af8` the trader writes `last_exit_utc` and `crossing` on the placement too, as `null`
+where the level never left, so one row states the previous exit, the M5 crossing, the fixed level and the sent prices.
+Lane 1 is untouched (`tests/fixtures/lane1/run.golden.json` still matches) and the two new assertions sit in
+`tests/live_trading_lane2.test.js` and `tests/live_trading_trader.test.js`. `npm test` runs 869 tests with 859 passing
+and 6 failing: the 4 pre-existing ones plus 2 in `backtester/tests/site_nav_consistency.browser.test.js` that name
+`usd-layer1-backtester.html` as the page out of step with the partial, which `4c5222e8` (a DXY.cash research commit)
+changed and which fails the same 2 of 5 when run on its own. Deployed to `C:\ftmo2` at 10:59Z the same way as before -
+detached at `71680af8`, blob `7ebf3348…`, sha256 `025f5157…`, state byte-identical `b491cffc…`, backups in
+`C:\ftmo2\tmp\predeploy-20261112`, run command unchanged, lane 1 read only at `c5abd0ac` - and the first tick on it,
+`11:01:31.775Z`, is `nothing_to_place` with head `71680af8` and the terminal at nothing. Open: BTCUSD 73,657.005 long is
+the live candidate (exited `06:55:37Z`, market 73,420.77, the far side, so skipped until price returns), and US100
+28,163.82 is no longer waiting on price - its call ended at `06:11:34Z`, so that level's turn is over. §12 of
+`docs/live-trading/LANE2_REENTRY_FIX_20261111.md` holds both.
+
+
 2026-11-11 (lane 2's re-entry named, lane 1 left alone) - the owner answered the open question the other way round
 from a code change: lane 1 keeps everything it has (no crossing gate, its own put-back wording, its own checkout and
 task), and lane 2's ticket is called *a re-entry order at the same fixed level* on the page and in its notes. Both
