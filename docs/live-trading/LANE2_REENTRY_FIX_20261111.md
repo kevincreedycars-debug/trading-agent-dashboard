@@ -457,3 +457,80 @@ line it prints exactly that for both symbols and then the level and the prices a
 the workstation's base64 command channel will carry, so it now goes over with `scp` and runs with
 `powershell -File C:\ftmo2\tmp\reentry-report.ps1` rather than as an `-EncodedCommand`.
 
+
+## 13. Reconciling the 06:11Z pair against MT5 history, and what the crossing gate actually asked for
+
+Read-only audit, run from the workstation over the lane's own snapshot and journal (`tmp/host/crossing-report.ps1`,
+`probe-calls606.ps1`, `probe-calls631.ps1`, `probe-cancels.ps1`); nothing was placed, cancelled or modified, lane 1 was
+not read and the DXY page-nav work was left alone. The snapshot's deal history covers `2026-10-29T19:51Z` to
+`2026-11-12T19:51Z` (`history_deals_get`, 39 deals over 19 closed positions), so a fill of either ticket would be in
+it.
+
+| ticket | symbol | previous order | its final status | fill / exit | new order | new order placed |
+| --- | --- | --- | --- | --- | --- | --- |
+| 199819136 → 199851757 | EURUSD short 1.108345 | 199819136, placed `02:41:34.467Z` | cancelled `06:06:35.909Z`, `TRADE_RETCODE_DONE` | none: no entry deal, no exit | 199851757 | `06:11:36.672Z` |
+| 199803009 → 199851758 | XAUUSD short 3997.55 | 199803009, placed `01:26:35.042Z` | cancelled `06:06:34.887Z`, `TRADE_RETCODE_DONE` | none: no entry deal, no exit | 199851758 | `06:11:37.465Z` |
+
+**Both are `replacement of unfilled limit`, not `re-entry after exit`.** The two tickets they replaced were working
+limits that had filled nothing (`resting: true`, and the deal window above carries no EURUSD or XAUUSD entry on
+2026-11-12). They were pulled at `06:06` because, in the loop's own words, *"The call this entry was left for has
+ended: Layer 1 now reads no direction for GOLD … which is not a live call, so the short limit at 3997.55 has nothing
+left to be filled by."* The call the loop was reading on that tick was yesterday's, sealed `2026-11-11T06:04:52Z` for
+EUR / `06:05:03Z` for GOLD, with `direction: ""` and `live: false` — expired at `06:04:52Z` / `06:05:03Z`, six minutes
+before the tick. The new day's calls were sealed at `2026-11-12T06:04:33Z` (EUR, BEARISH) and `06:04:49Z` (GOLD,
+BEARISH_LEAN) and were what the `06:11` tick read, so the same level, stop and target went straight back out at
+`06:11:36.672Z` / `06:11:37.465Z`. The replacement cost was one five-minute withdrawal, and it happened because the
+24-hour call expiry and the loop's next read of the sealed calls left a gap of roughly six minutes between
+`06:04:52Z` and `06:11:32Z` with no live call for either pair.
+
+Neither replacement survived its own level either, and both ended unfilled:
+
+- EURUSD `199851757` — cancelled `2026-11-12T06:31:34.610Z`, `TRADE_RETCODE_DONE`, because the call sealed at
+  `06:15:07Z` reads `NO_CLEAR_BIAS` for EUR, which is not a short call standing. Its 3R target `1.10624` was later
+  reached by price anyway (`target_reached: true` by `19:4x`), so the move happened with no position on it.
+- XAUUSD `199851758` — cancelled `2026-11-12T07:16:34.756Z`, `TRADE_RETCODE_DONE`, because the ask had reached
+  `3963.78`, past the `3961.81` take-profit the limit was carrying, without the limit filling; the level's turn is
+  over and a fresh crossing is what would open the next one.
+
+So nothing on 2026-11-12 filled: four tickets placed, four withdrawn, no deal, no position. That is why the 06:11
+pair reads `last_exit_utc: null` and `crossing: null` on the placement row — the nulls are the truth of a
+replacement, not a missing field.
+
+### The crossing question, on the last actual re-entry after an exit
+
+No filled position has exited since `2026-11-11T17:51:30Z`, so the newest case of a *re-entry after exit* on this lane
+is still the `2026-11-11T14:01:35.317Z` XAUUSD one, and its numbers answer the outstanding ruleset question:
+
+- exit `2026-11-11T01:34:15Z` (position `199442155`, stopped at 4045.38), call GOLD `BEARISH_LEAN` sealed
+  `06:05:03Z`, fixed level `4033.29`, target `3997.55`.
+- first closed candle beyond the level after the exit: `13:40`, `o 4034.87 h 4035.22 l 4032.00 c 4032.82`, and the
+  candle before it closed `4034.86` on the near side. Price traded through `4033.29` inside that bar. That is a
+  crossing, not a close that happened to land beyond.
+- the candle the gate quoted: `13:50` close `4032.52`, 77 points beyond, with `13:45` having closed `4034.31` back
+  above the line — a second genuine crossing, because price had returned to the near side first.
+- what went out: entry `4033.29`, stop `4045.203333`, target `3997.55`, size `0.01`, ticket `199640256`,
+  `TRADE_RETCODE_DONE`. It filled at `14:04:16Z` at `4033.3` and reached its target at `17:51:30Z` for `+35.77`.
+
+So in the one case there is, price **did** cross the line again rather than merely closing beyond it twice. The
+structural finding that does fall out of it is narrower and worth a ruling anyway: at `14:01:35Z`, the moment the
+ticket went out, the newest closed candle was `13:55` at `4037.84` — back on the near side. The gate accepts *any*
+closed candle beyond the level since the exit, not the newest one, so a crossing the market has already undone still
+opens the level. Here that helped (the limit filled two minutes later on the retrace), but a lane that wanted the
+crossing to still be standing would have to ask for the newest close to be the beyond one — the fresh path's own
+"newest closed candle finishes past, the one before it did not" test applied to the window after the exit rather than
+to the newest pair. That is a rules change, not a defect, and it is not made here.
+
+### Where the next one stands (read-only, `2026-11-12T19:56:32Z`)
+
+- BTCUSD long `73657.005` — the live candidate: exit `06:55:37Z`, call BTC `BULLISH_LEAN`, and `0` of the `157`
+  closed candles since that exit are above the level (price `71,721`, the level 2,000 points away), so the gate is
+  closed and the level is not re-entered.
+- US100.cash long `28163.82` — exited `06:11:34Z` but the trade has ended (`ended_by: call`), so not a candidate.
+- EURUSD (call `NO_CLEAR_BIAS`) and XAUUSD (level `3854.59` not crossed) are both waiting on something other than a
+  re-entry.
+
+`tmp/host/crossing-report.ps1` prints the whole report for whichever row carries an exit — exit time, active call,
+fixed level, the first and newest beyond-close with the close before each, the newest close at send, and the submitted
+entry, stop, target and size — and it runs with no argument for the newest such line:
+`powershell -NoProfile -ExecutionPolicy Bypass -File C:\ftmo2\tmp\crossing-report.ps1`.
+

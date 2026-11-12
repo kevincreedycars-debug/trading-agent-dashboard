@@ -1,5 +1,24 @@
 # Session Notes
 
+2026-11-12 later (the 06:11Z pair reconciled against history, and the crossing question answered on the one case there
+is) - read-only audit, nothing placed or cancelled, lane 1 and the DXY page-nav work untouched. Both 06:11Z re-entries
+are **replacement of unfilled limit**, not re-entry after exit: EURUSD `199819136` (placed `02:41:34.467Z`) and XAUUSD
+`199803009` (placed `01:26:35.042Z`) had filled nothing, and were withdrawn at `06:06:35.909Z` / `06:06:34.887Z` with
+`TRADE_RETCODE_DONE` because the call each was left for had expired six minutes earlier (the loop read yesterday's
+seal, `direction: ""`, `live: false`); the new day's calls sealed `06:04:33Z`/`06:04:49Z` were read at `06:11`, so the
+same levels went back as `199851757` (`06:11:36.672Z`) and `199851758` (`06:11:37.465Z`). Those two then died unfilled
+as well - EURUSD at `06:31:34.610Z` because the `06:15:07Z` call reads `NO_CLEAR_BIAS`, XAUUSD at `07:16:34.756Z`
+because the ask reached the 3961.81 take-profit with the limit still working - so 2026-11-12 placed four tickets, filled
+none and holds no position; the `null` exit and crossing on those rows are the truth of a replacement. That corrects
+the reading in the entry below, which called them a plain put-back. On the crossing question: no filled exit since
+`2026-11-11T17:51:30Z`, so the newest re-entry-after-exit is still the `14:01:35.317Z` XAUUSD one, and price really did
+cross the line there (13:40 bar `o 4034.87 l 4032.00 c 4032.82` after 13:35 closed 4034.86, then 13:50 close 4032.52
+after 13:45 closed back above), so the "closed beyond twice" worry does not show up in the case there is. The narrower
+finding worth a ruling: the gate takes *any* close beyond since the exit, so at `14:01:35Z` the newest close, 13:55 at
+4037.84, was already back on the near side. Live candidate now is BTCUSD long 73,657.005 (exit `06:55:37Z`, 0 of 157
+closes above the level, price 71,721). `§13` of `docs/live-trading/LANE2_REENTRY_FIX_20261111.md` holds the table and
+the numbers; `tmp/host/crossing-report.ps1` prints the report for whichever row carries an exit.
+
 2026-11-12 (lane 2's two re-entries sent overnight, and the four facts moved onto the row that sends one) - the lane
 sent two re-entries nobody was watching, both on `2026-11-12T06:11:32.462Z`: EURUSD short at 1.108345 (ticket
 `199851757`, stop 1.109047, target 1.10624, 2.9986 to one) and XAUUSD short at 3997.55 (ticket `199851758`, stop
