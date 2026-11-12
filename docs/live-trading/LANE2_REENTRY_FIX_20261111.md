@@ -452,5 +452,8 @@ What that leaves open is one row, and it is the lane's own:
 
 `tmp/host/reentry-report.ps1` was updated to match: it reads the exit and the crossing off the placement first, falls
 back to the trade row for lines written before this run, and prints *none: the trade at this level never left it* in
-words where the fields are null, so a printed report cannot be mistaken for missing data.
+words where the fields are null, so a printed report cannot be mistaken for missing data. Read against the 06:11Z
+line it prints exactly that for both symbols and then the level and the prices as sent. It has also grown past what
+the workstation's base64 command channel will carry, so it now goes over with `scp` and runs with
+`powershell -File C:\ftmo2\tmp\reentry-report.ps1` rather than as an `-EncodedCommand`.
 
