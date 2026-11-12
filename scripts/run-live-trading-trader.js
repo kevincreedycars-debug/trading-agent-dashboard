@@ -2732,8 +2732,16 @@ function runOnce(options, deps = {}) {
       };
       // A re-entry is the same trade put back at the level it was triggered on rather than a trade of its own, so
       // it is written down as one: the day's count of trades leaves it out, and a reader of the state file can tell
-      // the two apart. Nothing is written when it is not one, the way this file writes only what is new.
-      if (row.reentry === true) ticket.reentry = true;
+      // the two apart. Nothing is written when it is not one, the way this file writes only what is new. The exit
+      // the level was measured from and the candle that re-armed it travel on the placement too, so the row that
+      // sends a re-entry states the previous exit, the crossing, the fixed level and the three prices in one place.
+      // Both of the first two are written as null rather than left out when the level never left - a trade still
+      // the pair's own whose ticket simply went back - so that row says which kind of re-entry it is.
+      if (row.reentry === true) {
+        ticket.reentry = true;
+        ticket.last_exit_utc = row.trade?.last_exit_utc ?? null;
+        ticket.crossing = row.trade?.crossing ?? null;
+      }
       if (!options.confirmLive) {
         placements.push({ ...ticket, sent: false, placed: false, refused: false, planned: true });
         continue;

@@ -481,6 +481,10 @@ test("the row states the previous exit, the re-arming candle, the fixed level an
   assert.equal(placed.stop, 98.333333);
   assert.equal(placed.target, 105);
   assert.equal(placed.r_multiple, 3);
+  // The same exit and the same candle on the placement row itself, so the line that sends a re-entry carries all
+  // four facts rather than leaving a reader to find the trade row beside it.
+  assert.equal(placed.last_exit_utc, "2026-11-07T11:55:00.000Z");
+  assert.equal(placed.crossing.bar_time_utc, "2026-11-07T12:00:00Z");
   // Three to one, read off the sent ticket rather than off the rule that priced it.
   assert.ok(Math.abs((placed.target - placed.entry) / (placed.entry - placed.stop) - 3) < 1e-6);
 });

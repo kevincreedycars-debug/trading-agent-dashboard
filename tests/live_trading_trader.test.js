@@ -719,6 +719,16 @@ test("a spent signal bar is not a second trade, and the pair's own trade is what
   assert.equal(flags["--stop-loss"], "84300");
   assert.equal(flags["--take-profit"], "85500");
   assert.equal(again.record.placements[0].reentry, true);
+  assert.equal(
+    again.record.placements[0].last_exit_utc,
+    null,
+    "a level that never left states no exit on the placement rather than leaving the field out"
+  );
+  assert.equal(
+    again.record.placements[0].crossing,
+    null,
+    "and asks the candles nothing, because the trade is still the pair's own"
+  );
   assert.equal(again.record.rule.taken_today, 1, "a re-entry is not a trade the day opened");
   assert.equal(
     again.record.rule.reentries_today,
