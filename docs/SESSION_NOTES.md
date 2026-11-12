@@ -1,5 +1,28 @@
 # Session Notes
 
+2026-11-12 evening (lane 2's crossing gate tightened to the owner's ruling, and deployed to `C:\ftmo2` at `21:49Z`) -
+the four statements of 2026-11-12 are now the code the second account runs: a crossing is the two newest completed M5
+closes straddling the level (older at or on the near side, newer at least one point beyond, so two closes already
+beyond arm nothing, which is the `14:01Z` gold shape), the confirming candle has to close after the window opens, a
+window with no exit opens on the call's own `sealed_at` so a crossing that closed before the call was sealed cannot
+place anything, and a limit withdrawn unfilled now ends its set-up (`call_ended: true` on the cancellation,
+`ended_by: call` with `ended_call: withdrawn` and the ticket's level on the trade row) so the `06:11Z` replacements
+cannot recur — a new call in the same direction needs a crossing of its own, and the ticket that follows is labelled
+`replacement-of-unfilled-limit` rather than passing as a fresh entry. One confirming bar spends once, on both paths.
+Levels, half grid, 3R, minimum size and the four-a-day cap unchanged; lane 1 passes no `--reentry-crossing` and reads
+none of it (`tests/fixtures/lane1/run.golden.json` still matches). Tests: the two focused files 52 of 52, the trader
+and lane-1 baseline files 75 of 75, `npm test` 874 with 865 passing, 4 skipped and the same 5 browser-page failures
+that fail at `234e4d85` in a clean worktree (three in `site_nav_consistency`, one each in `live_trading_accounts` and
+`live_trading_chart_zoom`, plus `research_library`). Deployed `f14f2ac7` the way §8 of the lane-2 doc describes -
+detached, clean tree, `scripts/run-live-trading-trader.js` blob `7c3538e0…` and `lib/l2l_strategy.js` blob `e0e64c2b…`
+matching `HEAD:`, state byte-identical `B491CFFC…`, backups in `C:\ftmo2\tmp\predeploy-20261112-gate`, run command
+unchanged, lane 1 read only at `c5abd0ac` - and the first tick on it, `2026-11-12T21:51:31.431Z`, is
+`nothing_to_place` with `checkout_head f14f2ac7` and the terminal at nothing. No natural post-exit re-entry has gone out
+yet: BTCUSD long `73,657.005` (exit `06:55:37Z`) is the one pair the gate is judging, and at that tick both newest
+closes, `21:40 @71,563.42` and `21:45 @71,599.20`, were far under the level, so `crossed: false` and the row states
+both closes by time and price. §14 of `docs/live-trading/LANE2_REENTRY_FIX_20261111.md` holds the rules, the four test
+cases and the deploy record.
+
 2026-11-12 later (the 06:11Z pair reconciled against history, and the crossing question answered on the one case there
 is) - read-only audit, nothing placed or cancelled, lane 1 and the DXY page-nav work untouched. Both 06:11Z re-entries
 are **replacement of unfilled limit**, not re-entry after exit: EURUSD `199819136` (placed `02:41:34.467Z`) and XAUUSD

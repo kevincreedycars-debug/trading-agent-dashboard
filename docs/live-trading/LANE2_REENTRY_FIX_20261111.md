@@ -603,6 +603,40 @@ of 75 green, and `npm test` runs 874 with 865 passing, 4 skipped and the same 5 
 failure of `tests/research_library.browser.test.js`) — all five confirmed to fail identically at `234e4d85` in a clean
 worktree before this change.
 
+### The deploy, lane 2 only
+
+`f14f2ac7` on `main`, put on `C:\ftmo2` at `21:49Z` on 2026-11-12 the same way as §8, §10, §11 and §12: fetched,
+detached, `git status --short --untracked-files=no` empty afterwards, and both files the lane loads are the commit's
+own blobs — `scripts/run-live-trading-trader.js` worktree and `HEAD:` both `7c3538e0…`, `lib/l2l_strategy.js` both
+`e0e64c2b…`. The state file was not touched (`B491CFFC…` before and after), the run command is the line it already was
+(`--grid half --r-multiple 3 --reentry-crossing --magic 20261005 --max-per-day 4`), and the copies taken first are in
+`C:\ftmo2\tmp\predeploy-20261112-gate` (state, status, run command and this lane's own snapshot). The one tracked file
+the checkout gave up is `data/live-trading.json`, the snapshot the producer rewrites at the head of every tick. Lane 1
+was read and not touched: `C:\live-trading\runtime` stayed at `c5abd0ac`.
+
+The first tick on the new revision is `2026-11-12T21:51:31.431Z` — `nothing_to_place`, `armed: true`,
+`code.checkout_head: f14f2ac7`, `code.sha256: 36fdd6fe…`, blob `7c3538e0…`, the terminal at no position and no order,
+the state file unchanged. Its trade rows carry the new fields and nothing else changed:
+
+| pair | ended | ended_by | ended_call | call sealed | crossing |
+| --- | --- | --- | --- | --- | --- |
+| EURUSD | yes | `call` | `turned` | `06:15:07.275Z` | — |
+| XAUUSD | yes | `target-touched` | — | `06:15:17.829Z` | — |
+| US100.cash | yes | `call` | `turned` | `06:15:30.338Z` | — |
+| BTCUSD | no | — | — | `06:15:42.339Z` | `crossed: false` |
+
+### The first gate reading after the deploy
+
+No natural post-exit re-entry has gone out on any pair since the deploy, so the first row the new gate actually
+judged is the pair that has been waiting on it all evening: BTCUSD long `73,657.005`, the level its last position was
+triggered on, exited `2026-11-12T06:55:37Z` (stop), call BTC `BULLISH_LEAN` sealed `06:15:42.339Z`. At the
+`21:51:31.431Z` tick the two newest completed M5 candles were `21:40` closing `71,563.42` and `21:45` closing
+`71,599.20`; a buy needs the older close at or below `73,657.005` and the newer one at `73,657.015` or above, so the
+gate read `crossed: false` with `since_basis: exit`, and the pair was skipped for that and for the level sitting
+`2,076.05` above the market (`resting: false`). The row states both closes by time and price, which is the fact §13
+said the log could not show: that omission is what the owner asked to be closed, and it is closed.
+
+
 
 
 
