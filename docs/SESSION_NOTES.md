@@ -21,7 +21,8 @@ unchanged, lane 1 read only at `c5abd0ac` - and the first tick on it, `2026-11-1
 yet: BTCUSD long `73,657.005` (exit `06:55:37Z`) is the one pair the gate is judging, and at that tick both newest
 closes, `21:40 @71,563.42` and `21:45 @71,599.20`, were far under the level, so `crossed: false` and the row states
 both closes by time and price. §14 of `docs/live-trading/LANE2_REENTRY_FIX_20261111.md` holds the rules, the four test
-cases and the deploy record.
+cases and the deploy record. A second tick after that one, `2026-11-12T21:56:31.490Z`, reads the same head, the same
+state hash and `nothing_to_place`, with the gate rolled on to `21:45 @71,599.20` and `21:50 @71,539.72`.
 
 2026-11-12 later (the 06:11Z pair reconciled against history, and the crossing question answered on the one case there
 is) - read-only audit, nothing placed or cancelled, lane 1 and the DXY page-nav work untouched. Both 06:11Z re-entries

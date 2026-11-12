@@ -634,7 +634,10 @@ triggered on, exited `2026-11-12T06:55:37Z` (stop), call BTC `BULLISH_LEAN` seal
 `71,599.20`; a buy needs the older close at or below `73,657.005` and the newer one at `73,657.015` or above, so the
 gate read `crossed: false` with `since_basis: exit`, and the pair was skipped for that and for the level sitting
 `2,076.05` above the market (`resting: false`). The row states both closes by time and price, which is the fact §13
-said the log could not show: that omission is what the owner asked to be closed, and it is closed.
+said the log could not show: that omission is what the owner asked to be closed, and it is closed. The next tick,
+`21:56:31.490Z`, is the same shape on the next pair of closes — `21:45 @71,599.20` and `21:50 @71,539.72`, still
+`crossed: false` — so the gate rolls forward with the candles rather than staying on the pair that closed when the
+ticket went out.
 
 
 
