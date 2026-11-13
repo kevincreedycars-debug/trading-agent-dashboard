@@ -1,9 +1,9 @@
 {
   "schema_version": "live-trading-feed-v4",
-  "generated_at_utc": "2026-11-13T15:16:31.126808+00:00",
-  "time_server": "2026-11-13T17:16:31.126808+00:00",
+  "generated_at_utc": "2026-11-13T15:36:31.490548+00:00",
+  "time_server": "2026-11-13T17:36:31.490548+00:00",
   "server_offset_seconds": 7200,
-  "server_offset_source_symbol": "XAUUSD",
+  "server_offset_source_symbol": "EURUSD",
   "clock_note": "MT5 returns server-clock timestamps. Every time is written twice: time_server is the broker wall clock, time_utc is the same instant corrected by server_offset_seconds. FTMO's trading day boundary is CE(S)T midnight, not either of these.",
   "stale_after_seconds": 900,
   "cadence_note": "The dashboard's published view is a snapshot of this file. It is only fresh while a producer is running against the terminal.",
@@ -25,33 +25,14 @@
     "company": "FTMO Global Markets Ltd",
     "currency": "USD",
     "leverage": 100,
-    "balance": 9994.35,
-    "equity": 10000.04,
-    "margin_free": 9708.63,
-    "positions_open": 2,
-    "orders_open": 1
+    "balance": 10001.68,
+    "equity": 10014.95,
+    "margin_free": 9923.87,
+    "positions_open": 1,
+    "orders_open": 0
   },
   "execution_note": "This snapshot places nothing. Anything in `orders`, `positions` or `closed_trades` was executed outside it, by tools/mt5-bridge/live-trading-order.py run deliberately from the terminal session, or by hand in the terminal.",
-  "orders": [
-    {
-      "ticket": 200361233,
-      "symbol": "EURUSD",
-      "dashboard_asset": "EUR",
-      "type": "ORDER_TYPE_SELL_LIMIT",
-      "side": "sell",
-      "volume": 0.01,
-      "price_open": 1.1062400000000001,
-      "stop_loss": 1.10694,
-      "take_profit": 1.10414,
-      "magic": 20261005,
-      "comment": "l2l-rule-eur",
-      "placed": {
-        "time_server": "2026-11-13T15:41:35+00:00",
-        "time_utc": "2026-11-13T13:41:35+00:00"
-      },
-      "expiration": null
-    }
-  ],
+  "orders": [],
   "positions": [
     {
       "ticket": 200364072,
@@ -60,12 +41,12 @@
       "side": "sell",
       "volume": 0.01,
       "price_open": 3890.31,
-      "price_current": 3888.28,
+      "price_current": 3876.91,
       "stop_loss": 3902.24,
       "take_profit": 3854.59,
-      "profit": 2.03,
+      "profit": 13.4,
       "swap": 0.0,
-      "floating_pct": 0.0522,
+      "floating_pct": 0.3444,
       "magic": 20261005,
       "comment": "l2l-rule-gold",
       "opened": {
@@ -76,33 +57,38 @@
         "time_server": "2026-11-13T16:25:47+00:00",
         "time_utc": "2026-11-13T14:25:47+00:00"
       }
-    },
+    }
+  ],
+  "closed_trades": [
     {
-      "ticket": 200381809,
+      "position_id": 200381809,
       "symbol": "BTCUSD",
       "dashboard_asset": "BTC",
       "side": "sell",
       "volume": 0.01,
       "price_open": 69303.82,
-      "price_current": 68937.73,
-      "stop_loss": 69292.4,
+      "price_close": 68548.36,
+      "stop_loss": 69534.87,
       "take_profit": 68564.96,
-      "profit": 3.66,
+      "profit": 7.55,
+      "commission": -0.45,
       "swap": 0.0,
-      "floating_pct": 0.5282,
+      "net_profit": 7.1,
       "magic": 20261005,
       "comment": "l2l-rule-btc",
+      "deal_count": 2,
+      "entry_deal": 187158651,
+      "exit_deal": 187194835,
       "opened": {
         "time_server": "2026-11-13T16:31:29+00:00",
         "time_utc": "2026-11-13T14:31:29+00:00"
       },
-      "updated": {
-        "time_server": "2026-11-13T16:31:29+00:00",
-        "time_utc": "2026-11-13T14:31:29+00:00"
-      }
-    }
-  ],
-  "closed_trades": [
+      "closed": {
+        "time_server": "2026-11-13T17:26:15+00:00",
+        "time_utc": "2026-11-13T15:26:15+00:00"
+      },
+      "duration_seconds": 3286
+    },
     {
       "position_id": 200315993,
       "symbol": "XAUUSD",
@@ -860,11 +846,11 @@
   ],
   "history": {
     "window_days": 14,
-    "from_server": "2026-10-30T17:16:31.126808+00:00",
-    "from_utc": "2026-10-30T15:16:31.126808+00:00",
-    "to_utc": "2026-11-13T15:16:31.126808+00:00",
-    "deal_count": 55,
-    "closed_positions": 26,
+    "from_server": "2026-10-30T17:36:31.490548+00:00",
+    "from_utc": "2026-10-30T15:36:31.490548+00:00",
+    "to_utc": "2026-11-13T15:36:31.490548+00:00",
+    "deal_count": 56,
+    "closed_positions": 27,
     "source": "history_deals_get",
     "note": "Deals, not trades: the entry and exit deals of one position are paired here by position_id. A trade that closed before this window is not in the list, and a position with an entry deal and no exit deal inside it is still open, so it appears in positions instead."
   },
@@ -884,58 +870,18 @@
       "stops_level": 0,
       "trade_mode": 4,
       "quote": {
-        "bid": 1.10493,
-        "ask": 1.10495,
-        "spread_price": 2e-05,
-        "spread_points": 2,
-        "tick_age_seconds": 2.1,
+        "bid": 1.10397,
+        "ask": 1.10397,
+        "spread_price": 0.0,
+        "spread_points": 0,
+        "tick_age_seconds": 0.5,
         "market_state": "quoting",
-        "time_server": "2026-11-13T17:16:29+00:00",
-        "time_utc": "2026-11-13T15:16:29+00:00"
+        "time_server": "2026-11-13T17:36:31+00:00",
+        "time_utc": "2026-11-13T15:36:31+00:00"
       },
       "m5": {
         "candle_count": 576,
         "bars": [
-          {
-            "time_server": "2026-11-11T17:00:00+00:00",
-            "time_utc": "2026-11-11T15:00:00+00:00",
-            "open": 1.1085099999999999,
-            "high": 1.10875,
-            "low": 1.10827,
-            "close": 1.10866,
-            "tick_volume": 532,
-            "spread_points": 0
-          },
-          {
-            "time_server": "2026-11-11T17:05:00+00:00",
-            "time_utc": "2026-11-11T15:05:00+00:00",
-            "open": 1.10867,
-            "high": 1.10924,
-            "low": 1.10862,
-            "close": 1.10923,
-            "tick_volume": 647,
-            "spread_points": 0
-          },
-          {
-            "time_server": "2026-11-11T17:10:00+00:00",
-            "time_utc": "2026-11-11T15:10:00+00:00",
-            "open": 1.10923,
-            "high": 1.1095,
-            "low": 1.1092,
-            "close": 1.10939,
-            "tick_volume": 446,
-            "spread_points": 0
-          },
-          {
-            "time_server": "2026-11-11T17:15:00+00:00",
-            "time_utc": "2026-11-11T15:15:00+00:00",
-            "open": 1.10938,
-            "high": 1.10969,
-            "low": 1.1091,
-            "close": 1.10955,
-            "tick_volume": 443,
-            "spread_points": 0
-          },
           {
             "time_server": "2026-11-11T17:20:00+00:00",
             "time_utc": "2026-11-11T15:20:00+00:00",
@@ -6651,37 +6597,53 @@
             "time_utc": "2026-11-13T15:15:00+00:00",
             "open": 1.10557,
             "high": 1.10561,
-            "low": 1.10493,
-            "close": 1.10493,
-            "tick_volume": 274,
+            "low": 1.10473,
+            "close": 1.10501,
+            "tick_volume": 766,
+            "spread_points": 0
+          },
+          {
+            "time_server": "2026-11-13T17:20:00+00:00",
+            "time_utc": "2026-11-13T15:20:00+00:00",
+            "open": 1.10504,
+            "high": 1.10519,
+            "low": 1.10471,
+            "close": 1.1048,
+            "tick_volume": 816,
+            "spread_points": 0
+          },
+          {
+            "time_server": "2026-11-13T17:25:00+00:00",
+            "time_utc": "2026-11-13T15:25:00+00:00",
+            "open": 1.1048,
+            "high": 1.10486,
+            "low": 1.10348,
+            "close": 1.10352,
+            "tick_volume": 713,
+            "spread_points": 0
+          },
+          {
+            "time_server": "2026-11-13T17:30:00+00:00",
+            "time_utc": "2026-11-13T15:30:00+00:00",
+            "open": 1.10353,
+            "high": 1.1043,
+            "low": 1.10352,
+            "close": 1.10397,
+            "tick_volume": 629,
+            "spread_points": 0
+          },
+          {
+            "time_server": "2026-11-13T17:35:00+00:00",
+            "time_utc": "2026-11-13T15:35:00+00:00",
+            "open": 1.10397,
+            "high": 1.10402,
+            "low": 1.10382,
+            "close": 1.10397,
+            "tick_volume": 244,
             "spread_points": 0
           }
         ],
         "close_series": [
-          {
-            "time_server": "2026-11-11T17:00:00+00:00",
-            "time_utc": "2026-11-11T15:00:00+00:00",
-            "close": 1.10866,
-            "direction": "up"
-          },
-          {
-            "time_server": "2026-11-11T17:05:00+00:00",
-            "time_utc": "2026-11-11T15:05:00+00:00",
-            "close": 1.10923,
-            "direction": "up"
-          },
-          {
-            "time_server": "2026-11-11T17:10:00+00:00",
-            "time_utc": "2026-11-11T15:10:00+00:00",
-            "close": 1.10939,
-            "direction": "up"
-          },
-          {
-            "time_server": "2026-11-11T17:15:00+00:00",
-            "time_utc": "2026-11-11T15:15:00+00:00",
-            "close": 1.10955,
-            "direction": "up"
-          },
           {
             "time_server": "2026-11-11T17:20:00+00:00",
             "time_utc": "2026-11-11T15:20:00+00:00",
@@ -10111,36 +10073,60 @@
           {
             "time_server": "2026-11-13T17:15:00+00:00",
             "time_utc": "2026-11-13T15:15:00+00:00",
-            "close": 1.10493,
+            "close": 1.10501,
             "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:20:00+00:00",
+            "time_utc": "2026-11-13T15:20:00+00:00",
+            "close": 1.1048,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:25:00+00:00",
+            "time_utc": "2026-11-13T15:25:00+00:00",
+            "close": 1.10352,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:30:00+00:00",
+            "time_utc": "2026-11-13T15:30:00+00:00",
+            "close": 1.10397,
+            "direction": "up"
+          },
+          {
+            "time_server": "2026-11-13T17:35:00+00:00",
+            "time_utc": "2026-11-13T15:35:00+00:00",
+            "close": 1.10397,
+            "direction": "flat"
           }
         ],
         "last_close": {
-          "time_server": "2026-11-13T17:15:00+00:00",
-          "time_utc": "2026-11-13T15:15:00+00:00",
-          "open": 1.10557,
-          "high": 1.10561,
-          "low": 1.10493,
-          "close": 1.10493,
-          "tick_volume": 274,
+          "time_server": "2026-11-13T17:35:00+00:00",
+          "time_utc": "2026-11-13T15:35:00+00:00",
+          "open": 1.10397,
+          "high": 1.10402,
+          "low": 1.10382,
+          "close": 1.10397,
+          "tick_volume": 244,
           "spread_points": 0
         },
         "previous_close": {
-          "time_server": "2026-11-13T17:10:00+00:00",
-          "time_utc": "2026-11-13T15:10:00+00:00",
-          "open": 1.10515,
-          "high": 1.10561,
-          "low": 1.10498,
-          "close": 1.10557,
-          "tick_volume": 611,
+          "time_server": "2026-11-13T17:30:00+00:00",
+          "time_utc": "2026-11-13T15:30:00+00:00",
+          "open": 1.10353,
+          "high": 1.1043,
+          "low": 1.10352,
+          "close": 1.10397,
+          "tick_volume": 629,
           "spread_points": 0
         },
         "range_high": 1.11027,
-        "range_low": 1.10429,
-        "change_points": -0.0006399999999999739,
-        "change_pct": -0.05788869090152355,
-        "direction": "down",
-        "bar_age_seconds": 89,
+        "range_low": 1.10348,
+        "change_points": 0.0,
+        "change_pct": 0.0,
+        "direction": "flat",
+        "bar_age_seconds": 91,
         "refresh_attempts": 1,
         "stale": false
       },
@@ -13502,9 +13488,9 @@
             "time_utc": "2026-11-13T15:00:00+00:00",
             "open": 1.10568,
             "high": 1.10579,
-            "low": 1.10493,
-            "close": 1.10493,
-            "tick_volume": 2140,
+            "low": 1.10348,
+            "close": 1.10397,
+            "tick_volume": 5034,
             "spread_points": 0
           }
         ],
@@ -15522,7 +15508,7 @@
           {
             "time_server": "2026-11-13T17:00:00+00:00",
             "time_utc": "2026-11-13T15:00:00+00:00",
-            "close": 1.10493,
+            "close": 1.10397,
             "direction": "down"
           }
         ],
@@ -15531,9 +15517,9 @@
           "time_utc": "2026-11-13T15:00:00+00:00",
           "open": 1.10568,
           "high": 1.10579,
-          "low": 1.10493,
-          "close": 1.10493,
-          "tick_volume": 2140,
+          "low": 1.10348,
+          "close": 1.10397,
+          "tick_volume": 5034,
           "spread_points": 0
         },
         "previous_close": {
@@ -15547,11 +15533,11 @@
           "spread_points": 0
         },
         "range_high": 1.12731,
-        "range_low": 1.10429,
-        "change_points": -0.0007500000000000284,
-        "change_pct": -0.06783156066855044,
+        "range_low": 1.10348,
+        "change_points": -0.0017100000000001003,
+        "change_pct": -0.1546559583242982,
         "direction": "down",
-        "bar_age_seconds": 989,
+        "bar_age_seconds": 2191,
         "refresh_attempts": 1,
         "stale": false
       },
@@ -17953,9 +17939,9 @@
             "time_utc": "2026-11-13T14:00:00+00:00",
             "open": 1.1050200000000001,
             "high": 1.10598,
-            "low": 1.10429,
-            "close": 1.10493,
-            "tick_volume": 8743,
+            "low": 1.10348,
+            "close": 1.10397,
+            "tick_volume": 11637,
             "spread_points": 0
           }
         ],
@@ -19397,7 +19383,7 @@
           {
             "time_server": "2026-11-13T16:00:00+00:00",
             "time_utc": "2026-11-13T14:00:00+00:00",
-            "close": 1.10493,
+            "close": 1.10397,
             "direction": "down"
           }
         ],
@@ -19406,9 +19392,9 @@
           "time_utc": "2026-11-13T14:00:00+00:00",
           "open": 1.1050200000000001,
           "high": 1.10598,
-          "low": 1.10429,
-          "close": 1.10493,
-          "tick_volume": 8743,
+          "low": 1.10348,
+          "close": 1.10397,
+          "tick_volume": 11637,
           "spread_points": 0
         },
         "previous_close": {
@@ -19422,11 +19408,11 @@
           "spread_points": 0
         },
         "range_high": 1.14956,
-        "range_low": 1.10429,
-        "change_points": -7.00000000000145e-05,
-        "change_pct": -0.0063348416289605875,
+        "range_low": 1.10348,
+        "change_points": -0.0010300000000000864,
+        "change_pct": -0.09321266968326573,
         "direction": "down",
-        "bar_age_seconds": 4589,
+        "bar_age_seconds": 5791,
         "refresh_attempts": 1,
         "stale": false
       }
@@ -19445,58 +19431,18 @@
       "stops_level": 0,
       "trade_mode": 4,
       "quote": {
-        "bid": 3887.89,
-        "ask": 3888.28,
+        "bid": 3876.52,
+        "ask": 3876.91,
         "spread_price": 0.39,
         "spread_points": 39,
-        "tick_age_seconds": 0.1,
+        "tick_age_seconds": 0.5,
         "market_state": "quoting",
-        "time_server": "2026-11-13T17:16:31+00:00",
-        "time_utc": "2026-11-13T15:16:31+00:00"
+        "time_server": "2026-11-13T17:36:31+00:00",
+        "time_utc": "2026-11-13T15:36:31+00:00"
       },
       "m5": {
         "candle_count": 576,
         "bars": [
-          {
-            "time_server": "2026-11-11T14:50:00+00:00",
-            "time_utc": "2026-11-11T12:50:00+00:00",
-            "open": 4042.73,
-            "high": 4043.49,
-            "low": 4040.67,
-            "close": 4040.75,
-            "tick_volume": 672,
-            "spread_points": 35
-          },
-          {
-            "time_server": "2026-11-11T14:55:00+00:00",
-            "time_utc": "2026-11-11T12:55:00+00:00",
-            "open": 4040.72,
-            "high": 4044.01,
-            "low": 4040.33,
-            "close": 4043.92,
-            "tick_volume": 641,
-            "spread_points": 35
-          },
-          {
-            "time_server": "2026-11-11T15:00:00+00:00",
-            "time_utc": "2026-11-11T13:00:00+00:00",
-            "open": 4044.35,
-            "high": 4045.68,
-            "low": 4040.83,
-            "close": 4042.16,
-            "tick_volume": 1151,
-            "spread_points": 39
-          },
-          {
-            "time_server": "2026-11-11T15:05:00+00:00",
-            "time_utc": "2026-11-11T13:05:00+00:00",
-            "open": 4042.16,
-            "high": 4042.32,
-            "low": 4039.51,
-            "close": 4041.51,
-            "tick_volume": 1139,
-            "spread_points": 39
-          },
           {
             "time_server": "2026-11-11T15:10:00+00:00",
             "time_utc": "2026-11-11T13:10:00+00:00",
@@ -25212,37 +25158,53 @@
             "time_utc": "2026-11-13T15:15:00+00:00",
             "open": 3890.02,
             "high": 3890.02,
-            "low": 3886.33,
-            "close": 3887.89,
-            "tick_volume": 516,
+            "low": 3881.41,
+            "close": 3884.44,
+            "tick_volume": 1709,
             "spread_points": 39
+          },
+          {
+            "time_server": "2026-11-13T17:20:00+00:00",
+            "time_utc": "2026-11-13T15:20:00+00:00",
+            "open": 3884.47,
+            "high": 3886.47,
+            "low": 3880.22,
+            "close": 3881.86,
+            "tick_volume": 1619,
+            "spread_points": 35
+          },
+          {
+            "time_server": "2026-11-13T17:25:00+00:00",
+            "time_utc": "2026-11-13T15:25:00+00:00",
+            "open": 3881.85,
+            "high": 3881.85,
+            "low": 3877.2,
+            "close": 3877.51,
+            "tick_volume": 1517,
+            "spread_points": 35
+          },
+          {
+            "time_server": "2026-11-13T17:30:00+00:00",
+            "time_utc": "2026-11-13T15:30:00+00:00",
+            "open": 3877.49,
+            "high": 3879.22,
+            "low": 3874.68,
+            "close": 3875.68,
+            "tick_volume": 1547,
+            "spread_points": 35
+          },
+          {
+            "time_server": "2026-11-13T17:35:00+00:00",
+            "time_utc": "2026-11-13T15:35:00+00:00",
+            "open": 3875.68,
+            "high": 3877.75,
+            "low": 3875.6,
+            "close": 3876.52,
+            "tick_volume": 509,
+            "spread_points": 35
           }
         ],
         "close_series": [
-          {
-            "time_server": "2026-11-11T14:50:00+00:00",
-            "time_utc": "2026-11-11T12:50:00+00:00",
-            "close": 4040.75,
-            "direction": "down"
-          },
-          {
-            "time_server": "2026-11-11T14:55:00+00:00",
-            "time_utc": "2026-11-11T12:55:00+00:00",
-            "close": 4043.92,
-            "direction": "up"
-          },
-          {
-            "time_server": "2026-11-11T15:00:00+00:00",
-            "time_utc": "2026-11-11T13:00:00+00:00",
-            "close": 4042.16,
-            "direction": "down"
-          },
-          {
-            "time_server": "2026-11-11T15:05:00+00:00",
-            "time_utc": "2026-11-11T13:05:00+00:00",
-            "close": 4041.51,
-            "direction": "down"
-          },
           {
             "time_server": "2026-11-11T15:10:00+00:00",
             "time_utc": "2026-11-11T13:10:00+00:00",
@@ -28672,35 +28634,59 @@
           {
             "time_server": "2026-11-13T17:15:00+00:00",
             "time_utc": "2026-11-13T15:15:00+00:00",
-            "close": 3887.89,
+            "close": 3884.44,
             "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:20:00+00:00",
+            "time_utc": "2026-11-13T15:20:00+00:00",
+            "close": 3881.86,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:25:00+00:00",
+            "time_utc": "2026-11-13T15:25:00+00:00",
+            "close": 3877.51,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:30:00+00:00",
+            "time_utc": "2026-11-13T15:30:00+00:00",
+            "close": 3875.68,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:35:00+00:00",
+            "time_utc": "2026-11-13T15:35:00+00:00",
+            "close": 3876.52,
+            "direction": "up"
           }
         ],
         "last_close": {
-          "time_server": "2026-11-13T17:15:00+00:00",
-          "time_utc": "2026-11-13T15:15:00+00:00",
-          "open": 3890.02,
-          "high": 3890.02,
-          "low": 3886.33,
-          "close": 3887.89,
-          "tick_volume": 516,
-          "spread_points": 39
+          "time_server": "2026-11-13T17:35:00+00:00",
+          "time_utc": "2026-11-13T15:35:00+00:00",
+          "open": 3875.68,
+          "high": 3877.75,
+          "low": 3875.6,
+          "close": 3876.52,
+          "tick_volume": 509,
+          "spread_points": 35
         },
         "previous_close": {
-          "time_server": "2026-11-13T17:10:00+00:00",
-          "time_utc": "2026-11-13T15:10:00+00:00",
-          "open": 3885.07,
-          "high": 3894.31,
-          "low": 3884.12,
-          "close": 3890.0,
-          "tick_volume": 1673,
-          "spread_points": 39
+          "time_server": "2026-11-13T17:30:00+00:00",
+          "time_utc": "2026-11-13T15:30:00+00:00",
+          "open": 3877.49,
+          "high": 3879.22,
+          "low": 3874.68,
+          "close": 3875.68,
+          "tick_volume": 1547,
+          "spread_points": 35
         },
         "range_high": 4046.59,
         "range_low": 3852.44,
-        "change_points": -2.1100000000001273,
-        "change_pct": -0.05424164524421921,
-        "direction": "down",
+        "change_points": 0.8400000000001455,
+        "change_pct": 0.021673615984811583,
+        "direction": "up",
         "bar_age_seconds": 91,
         "refresh_attempts": 1,
         "stale": false
@@ -32063,9 +32049,9 @@
             "time_utc": "2026-11-13T15:00:00+00:00",
             "open": 3893.98,
             "high": 3894.55,
-            "low": 3883.07,
-            "close": 3887.89,
-            "tick_volume": 5286,
+            "low": 3874.68,
+            "close": 3876.52,
+            "tick_volume": 11671,
             "spread_points": 35
           }
         ],
@@ -34083,7 +34069,7 @@
           {
             "time_server": "2026-11-13T17:00:00+00:00",
             "time_utc": "2026-11-13T15:00:00+00:00",
-            "close": 3887.89,
+            "close": 3876.52,
             "direction": "down"
           }
         ],
@@ -34092,9 +34078,9 @@
           "time_utc": "2026-11-13T15:00:00+00:00",
           "open": 3893.98,
           "high": 3894.55,
-          "low": 3883.07,
-          "close": 3887.89,
-          "tick_volume": 5286,
+          "low": 3874.68,
+          "close": 3876.52,
+          "tick_volume": 11671,
           "spread_points": 35
         },
         "previous_close": {
@@ -34109,10 +34095,10 @@
         },
         "range_high": 4148.44,
         "range_low": 3852.44,
-        "change_points": -6.230000000000018,
-        "change_pct": -0.1599847975922678,
+        "change_points": -17.59999999999991,
+        "change_pct": -0.45196347313385077,
         "direction": "down",
-        "bar_age_seconds": 991,
+        "bar_age_seconds": 2191,
         "refresh_attempts": 1,
         "stale": false
       },
@@ -36514,9 +36500,9 @@
             "time_utc": "2026-11-13T14:00:00+00:00",
             "open": 3880.93,
             "high": 3899.56,
-            "low": 3880.09,
-            "close": 3887.89,
-            "tick_volume": 22476,
+            "low": 3874.68,
+            "close": 3876.52,
+            "tick_volume": 28861,
             "spread_points": 35
           }
         ],
@@ -37958,8 +37944,8 @@
           {
             "time_server": "2026-11-13T16:00:00+00:00",
             "time_utc": "2026-11-13T14:00:00+00:00",
-            "close": 3887.89,
-            "direction": "up"
+            "close": 3876.52,
+            "direction": "down"
           }
         ],
         "last_close": {
@@ -37967,9 +37953,9 @@
           "time_utc": "2026-11-13T14:00:00+00:00",
           "open": 3880.93,
           "high": 3899.56,
-          "low": 3880.09,
-          "close": 3887.89,
-          "tick_volume": 22476,
+          "low": 3874.68,
+          "close": 3876.52,
+          "tick_volume": 28861,
           "spread_points": 35
         },
         "previous_close": {
@@ -37984,10 +37970,10 @@
         },
         "range_high": 4396.74,
         "range_low": 3852.44,
-        "change_points": 7.0099999999997635,
-        "change_pct": 0.18062913565994732,
-        "direction": "up",
-        "bar_age_seconds": 4591,
+        "change_points": -4.360000000000127,
+        "change_pct": -0.11234565356311269,
+        "direction": "down",
+        "bar_age_seconds": 5791,
         "refresh_attempts": 1,
         "stale": false
       }
@@ -38006,58 +37992,18 @@
       "stops_level": 0,
       "trade_mode": 4,
       "quote": {
-        "bid": 27781.53,
-        "ask": 27782.98,
+        "bid": 27676.23,
+        "ask": 27677.68,
         "spread_price": 1.45,
         "spread_points": 145,
-        "tick_age_seconds": 0.1,
+        "tick_age_seconds": 0.5,
         "market_state": "quoting",
-        "time_server": "2026-11-13T17:16:31+00:00",
-        "time_utc": "2026-11-13T15:16:31+00:00"
+        "time_server": "2026-11-13T17:36:31+00:00",
+        "time_utc": "2026-11-13T15:36:31+00:00"
       },
       "m5": {
         "candle_count": 576,
         "bars": [
-          {
-            "time_server": "2026-11-11T14:50:00+00:00",
-            "time_utc": "2026-11-11T12:50:00+00:00",
-            "open": 28288.43,
-            "high": 28290.83,
-            "low": 28263.43,
-            "close": 28270.33,
-            "tick_volume": 1444,
-            "spread_points": 145
-          },
-          {
-            "time_server": "2026-11-11T14:55:00+00:00",
-            "time_utc": "2026-11-11T12:55:00+00:00",
-            "open": 28270.23,
-            "high": 28271.93,
-            "low": 28254.83,
-            "close": 28258.83,
-            "tick_volume": 1364,
-            "spread_points": 155
-          },
-          {
-            "time_server": "2026-11-11T15:00:00+00:00",
-            "time_utc": "2026-11-11T13:00:00+00:00",
-            "open": 28259.33,
-            "high": 28259.83,
-            "low": 28225.23,
-            "close": 28230.43,
-            "tick_volume": 1718,
-            "spread_points": 155
-          },
-          {
-            "time_server": "2026-11-11T15:05:00+00:00",
-            "time_utc": "2026-11-11T13:05:00+00:00",
-            "open": 28229.33,
-            "high": 28263.83,
-            "low": 28223.93,
-            "close": 28253.03,
-            "tick_volume": 1777,
-            "spread_points": 175
-          },
           {
             "time_server": "2026-11-11T15:10:00+00:00",
             "time_utc": "2026-11-11T13:10:00+00:00",
@@ -43774,36 +43720,52 @@
             "open": 27699.33,
             "high": 27793.73,
             "low": 27690.53,
-            "close": 27781.53,
-            "tick_volume": 875,
+            "close": 27711.53,
+            "tick_volume": 2846,
+            "spread_points": 145
+          },
+          {
+            "time_server": "2026-11-13T17:20:00+00:00",
+            "time_utc": "2026-11-13T15:20:00+00:00",
+            "open": 27710.33,
+            "high": 27713.23,
+            "low": 27636.03,
+            "close": 27708.73,
+            "tick_volume": 2844,
+            "spread_points": 145
+          },
+          {
+            "time_server": "2026-11-13T17:25:00+00:00",
+            "time_utc": "2026-11-13T15:25:00+00:00",
+            "open": 27708.43,
+            "high": 27764.43,
+            "low": 27626.43,
+            "close": 27746.23,
+            "tick_volume": 2816,
+            "spread_points": 145
+          },
+          {
+            "time_server": "2026-11-13T17:30:00+00:00",
+            "time_utc": "2026-11-13T15:30:00+00:00",
+            "open": 27745.83,
+            "high": 27776.43,
+            "low": 27696.43,
+            "close": 27706.53,
+            "tick_volume": 2807,
+            "spread_points": 145
+          },
+          {
+            "time_server": "2026-11-13T17:35:00+00:00",
+            "time_utc": "2026-11-13T15:35:00+00:00",
+            "open": 27707.83,
+            "high": 27729.23,
+            "low": 27672.23,
+            "close": 27676.23,
+            "tick_volume": 870,
             "spread_points": 145
           }
         ],
         "close_series": [
-          {
-            "time_server": "2026-11-11T14:50:00+00:00",
-            "time_utc": "2026-11-11T12:50:00+00:00",
-            "close": 28270.33,
-            "direction": "down"
-          },
-          {
-            "time_server": "2026-11-11T14:55:00+00:00",
-            "time_utc": "2026-11-11T12:55:00+00:00",
-            "close": 28258.83,
-            "direction": "down"
-          },
-          {
-            "time_server": "2026-11-11T15:00:00+00:00",
-            "time_utc": "2026-11-11T13:00:00+00:00",
-            "close": 28230.43,
-            "direction": "down"
-          },
-          {
-            "time_server": "2026-11-11T15:05:00+00:00",
-            "time_utc": "2026-11-11T13:05:00+00:00",
-            "close": 28253.03,
-            "direction": "up"
-          },
           {
             "time_server": "2026-11-11T15:10:00+00:00",
             "time_utc": "2026-11-11T13:10:00+00:00",
@@ -47233,35 +47195,59 @@
           {
             "time_server": "2026-11-13T17:15:00+00:00",
             "time_utc": "2026-11-13T15:15:00+00:00",
-            "close": 27781.53,
+            "close": 27711.53,
             "direction": "up"
+          },
+          {
+            "time_server": "2026-11-13T17:20:00+00:00",
+            "time_utc": "2026-11-13T15:20:00+00:00",
+            "close": 27708.73,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:25:00+00:00",
+            "time_utc": "2026-11-13T15:25:00+00:00",
+            "close": 27746.23,
+            "direction": "up"
+          },
+          {
+            "time_server": "2026-11-13T17:30:00+00:00",
+            "time_utc": "2026-11-13T15:30:00+00:00",
+            "close": 27706.53,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:35:00+00:00",
+            "time_utc": "2026-11-13T15:35:00+00:00",
+            "close": 27676.23,
+            "direction": "down"
           }
         ],
         "last_close": {
-          "time_server": "2026-11-13T17:15:00+00:00",
-          "time_utc": "2026-11-13T15:15:00+00:00",
-          "open": 27699.33,
-          "high": 27793.73,
-          "low": 27690.53,
-          "close": 27781.53,
-          "tick_volume": 875,
+          "time_server": "2026-11-13T17:35:00+00:00",
+          "time_utc": "2026-11-13T15:35:00+00:00",
+          "open": 27707.83,
+          "high": 27729.23,
+          "low": 27672.23,
+          "close": 27676.23,
+          "tick_volume": 870,
           "spread_points": 145
         },
         "previous_close": {
-          "time_server": "2026-11-13T17:10:00+00:00",
-          "time_utc": "2026-11-13T15:10:00+00:00",
-          "open": 27872.33,
-          "high": 27872.33,
-          "low": 27697.93,
-          "close": 27699.43,
-          "tick_volume": 2845,
+          "time_server": "2026-11-13T17:30:00+00:00",
+          "time_utc": "2026-11-13T15:30:00+00:00",
+          "open": 27745.83,
+          "high": 27776.43,
+          "low": 27696.43,
+          "close": 27706.53,
+          "tick_volume": 2807,
           "spread_points": 145
         },
         "range_high": 28600.03,
-        "range_low": 27690.53,
-        "change_points": 82.09999999999854,
-        "change_pct": 0.29639599082002244,
-        "direction": "up",
+        "range_low": 27626.43,
+        "change_points": -30.299999999999272,
+        "change_pct": -0.1093605009360583,
+        "direction": "down",
         "bar_age_seconds": 91,
         "refresh_attempts": 1,
         "stale": false
@@ -50624,9 +50610,9 @@
             "time_utc": "2026-11-13T15:00:00+00:00",
             "open": 27993.03,
             "high": 27998.33,
-            "low": 27690.53,
-            "close": 27781.53,
-            "tick_volume": 9379,
+            "low": 27626.43,
+            "close": 27676.23,
+            "tick_volume": 20687,
             "spread_points": 145
           }
         ],
@@ -52644,7 +52630,7 @@
           {
             "time_server": "2026-11-13T17:00:00+00:00",
             "time_utc": "2026-11-13T15:00:00+00:00",
-            "close": 27781.53,
+            "close": 27676.23,
             "direction": "down"
           }
         ],
@@ -52653,9 +52639,9 @@
           "time_utc": "2026-11-13T15:00:00+00:00",
           "open": 27993.03,
           "high": 27998.33,
-          "low": 27690.53,
-          "close": 27781.53,
-          "tick_volume": 9379,
+          "low": 27626.43,
+          "close": 27676.23,
+          "tick_volume": 20687,
           "spread_points": 145
         },
         "previous_close": {
@@ -52670,10 +52656,10 @@
         },
         "range_high": 30021.04,
         "range_low": 26247.74,
-        "change_points": -211.90000000000146,
-        "change_pct": -0.7569633303242992,
+        "change_points": -317.2000000000007,
+        "change_pct": -1.1331230220805408,
         "direction": "down",
-        "bar_age_seconds": 991,
+        "bar_age_seconds": 2191,
         "refresh_attempts": 1,
         "stale": false
       },
@@ -55075,9 +55061,9 @@
             "time_utc": "2026-11-13T14:00:00+00:00",
             "open": 28323.03,
             "high": 28377.33,
-            "low": 27690.53,
-            "close": 27780.93,
-            "tick_volume": 38343,
+            "low": 27626.43,
+            "close": 27676.23,
+            "tick_volume": 49650,
             "spread_points": 145
           }
         ],
@@ -56519,7 +56505,7 @@
           {
             "time_server": "2026-11-13T16:00:00+00:00",
             "time_utc": "2026-11-13T14:00:00+00:00",
-            "close": 27780.93,
+            "close": 27676.23,
             "direction": "down"
           }
         ],
@@ -56528,9 +56514,9 @@
           "time_utc": "2026-11-13T14:00:00+00:00",
           "open": 28323.03,
           "high": 28377.33,
-          "low": 27690.53,
-          "close": 27780.93,
-          "tick_volume": 38343,
+          "low": 27626.43,
+          "close": 27676.23,
+          "tick_volume": 49650,
           "spread_points": 145
         },
         "previous_close": {
@@ -56545,10 +56531,10 @@
         },
         "range_high": 31366.03,
         "range_low": 26247.74,
-        "change_points": -541.5999999999985,
-        "change_pct": -1.9122585446992149,
+        "change_points": -646.2999999999993,
+        "change_pct": -2.2819289095995283,
         "direction": "down",
-        "bar_age_seconds": 4591,
+        "bar_age_seconds": 5791,
         "refresh_attempts": 1,
         "stale": false
       }
@@ -56567,58 +56553,18 @@
       "stops_level": 0,
       "trade_mode": 4,
       "quote": {
-        "bid": 68936.73,
-        "ask": 68937.73,
+        "bid": 68263.46,
+        "ask": 68264.46,
         "spread_price": 1.0,
         "spread_points": 100,
-        "tick_age_seconds": 0.1,
+        "tick_age_seconds": 0.5,
         "market_state": "quoting",
-        "time_server": "2026-11-13T17:16:31+00:00",
-        "time_utc": "2026-11-13T15:16:31+00:00"
+        "time_server": "2026-11-13T17:36:31+00:00",
+        "time_utc": "2026-11-13T15:36:31+00:00"
       },
       "m5": {
         "candle_count": 576,
         "bars": [
-          {
-            "time_server": "2026-11-11T17:00:00+00:00",
-            "time_utc": "2026-11-11T15:00:00+00:00",
-            "open": 73540.21,
-            "high": 73625.69,
-            "low": 73459.63,
-            "close": 73622.4,
-            "tick_volume": 2062,
-            "spread_points": 100
-          },
-          {
-            "time_server": "2026-11-11T17:05:00+00:00",
-            "time_utc": "2026-11-11T15:05:00+00:00",
-            "open": 73622.75,
-            "high": 73630.41,
-            "low": 73457.44,
-            "close": 73511.31,
-            "tick_volume": 2030,
-            "spread_points": 100
-          },
-          {
-            "time_server": "2026-11-11T17:10:00+00:00",
-            "time_utc": "2026-11-11T15:10:00+00:00",
-            "open": 73511.38,
-            "high": 73758.12,
-            "low": 73468.09,
-            "close": 73622.45,
-            "tick_volume": 2052,
-            "spread_points": 100
-          },
-          {
-            "time_server": "2026-11-11T17:15:00+00:00",
-            "time_utc": "2026-11-11T15:15:00+00:00",
-            "open": 73622.45,
-            "high": 73623.0,
-            "low": 73506.44,
-            "close": 73531.77,
-            "tick_volume": 1953,
-            "spread_points": 100
-          },
           {
             "time_server": "2026-11-11T17:20:00+00:00",
             "time_utc": "2026-11-11T15:20:00+00:00",
@@ -62335,36 +62281,52 @@
             "open": 68689.32,
             "high": 68936.8,
             "low": 68653.99,
-            "close": 68936.73,
-            "tick_volume": 727,
+            "close": 68784.15,
+            "tick_volume": 2284,
+            "spread_points": 100
+          },
+          {
+            "time_server": "2026-11-13T17:20:00+00:00",
+            "time_utc": "2026-11-13T15:20:00+00:00",
+            "open": 68784.14,
+            "high": 68784.26,
+            "low": 68576.26,
+            "close": 68641.66,
+            "tick_volume": 2446,
+            "spread_points": 100
+          },
+          {
+            "time_server": "2026-11-13T17:25:00+00:00",
+            "time_utc": "2026-11-13T15:25:00+00:00",
+            "open": 68641.66,
+            "high": 68699.78,
+            "low": 68492.79,
+            "close": 68617.62,
+            "tick_volume": 2309,
+            "spread_points": 100
+          },
+          {
+            "time_server": "2026-11-13T17:30:00+00:00",
+            "time_utc": "2026-11-13T15:30:00+00:00",
+            "open": 68617.61,
+            "high": 68624.47,
+            "low": 68293.8,
+            "close": 68405.15,
+            "tick_volume": 2410,
+            "spread_points": 100
+          },
+          {
+            "time_server": "2026-11-13T17:35:00+00:00",
+            "time_utc": "2026-11-13T15:35:00+00:00",
+            "open": 68413.79,
+            "high": 68499.5,
+            "low": 68217.39,
+            "close": 68263.46,
+            "tick_volume": 732,
             "spread_points": 100
           }
         ],
         "close_series": [
-          {
-            "time_server": "2026-11-11T17:00:00+00:00",
-            "time_utc": "2026-11-11T15:00:00+00:00",
-            "close": 73622.4,
-            "direction": "up"
-          },
-          {
-            "time_server": "2026-11-11T17:05:00+00:00",
-            "time_utc": "2026-11-11T15:05:00+00:00",
-            "close": 73511.31,
-            "direction": "down"
-          },
-          {
-            "time_server": "2026-11-11T17:10:00+00:00",
-            "time_utc": "2026-11-11T15:10:00+00:00",
-            "close": 73622.45,
-            "direction": "up"
-          },
-          {
-            "time_server": "2026-11-11T17:15:00+00:00",
-            "time_utc": "2026-11-11T15:15:00+00:00",
-            "close": 73531.77,
-            "direction": "down"
-          },
           {
             "time_server": "2026-11-11T17:20:00+00:00",
             "time_utc": "2026-11-11T15:20:00+00:00",
@@ -65794,35 +65756,59 @@
           {
             "time_server": "2026-11-13T17:15:00+00:00",
             "time_utc": "2026-11-13T15:15:00+00:00",
-            "close": 68936.73,
+            "close": 68784.15,
             "direction": "up"
+          },
+          {
+            "time_server": "2026-11-13T17:20:00+00:00",
+            "time_utc": "2026-11-13T15:20:00+00:00",
+            "close": 68641.66,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:25:00+00:00",
+            "time_utc": "2026-11-13T15:25:00+00:00",
+            "close": 68617.62,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:30:00+00:00",
+            "time_utc": "2026-11-13T15:30:00+00:00",
+            "close": 68405.15,
+            "direction": "down"
+          },
+          {
+            "time_server": "2026-11-13T17:35:00+00:00",
+            "time_utc": "2026-11-13T15:35:00+00:00",
+            "close": 68263.46,
+            "direction": "down"
           }
         ],
         "last_close": {
-          "time_server": "2026-11-13T17:15:00+00:00",
-          "time_utc": "2026-11-13T15:15:00+00:00",
-          "open": 68689.32,
-          "high": 68936.8,
-          "low": 68653.99,
-          "close": 68936.73,
-          "tick_volume": 727,
+          "time_server": "2026-11-13T17:35:00+00:00",
+          "time_utc": "2026-11-13T15:35:00+00:00",
+          "open": 68413.79,
+          "high": 68499.5,
+          "low": 68217.39,
+          "close": 68263.46,
+          "tick_volume": 732,
           "spread_points": 100
         },
         "previous_close": {
-          "time_server": "2026-11-13T17:10:00+00:00",
-          "time_utc": "2026-11-13T15:10:00+00:00",
-          "open": 68756.85,
-          "high": 68853.0,
-          "low": 68632.19,
-          "close": 68689.3,
-          "tick_volume": 2276,
+          "time_server": "2026-11-13T17:30:00+00:00",
+          "time_utc": "2026-11-13T15:30:00+00:00",
+          "open": 68617.61,
+          "high": 68624.47,
+          "low": 68293.8,
+          "close": 68405.15,
+          "tick_volume": 2410,
           "spread_points": 100
         },
         "range_high": 74765.3,
         "range_low": 67482.72,
-        "change_points": 247.42999999999302,
-        "change_pct": 0.36021621999349684,
-        "direction": "up",
+        "change_points": -141.68999999998778,
+        "change_pct": -0.20713352722709885,
+        "direction": "down",
         "bar_age_seconds": 91,
         "refresh_attempts": 1,
         "stale": false
@@ -69185,9 +69171,9 @@
             "time_utc": "2026-11-13T15:00:00+00:00",
             "open": 68987.4,
             "high": 69089.25,
-            "low": 68632.19,
-            "close": 68936.73,
-            "tick_volume": 7667,
+            "low": 68217.39,
+            "close": 68263.46,
+            "tick_volume": 17121,
             "spread_points": 100
           }
         ],
@@ -71205,7 +71191,7 @@
           {
             "time_server": "2026-11-13T17:00:00+00:00",
             "time_utc": "2026-11-13T15:00:00+00:00",
-            "close": 68936.73,
+            "close": 68263.46,
             "direction": "down"
           }
         ],
@@ -71214,9 +71200,9 @@
           "time_utc": "2026-11-13T15:00:00+00:00",
           "open": 68987.4,
           "high": 69089.25,
-          "low": 68632.19,
-          "close": 68936.73,
-          "tick_volume": 7667,
+          "low": 68217.39,
+          "close": 68263.46,
+          "tick_volume": 17121,
           "spread_points": 100
         },
         "previous_close": {
@@ -71231,10 +71217,10 @@
         },
         "range_high": 81187.41,
         "range_low": 67482.72,
-        "change_points": -47.7100000000064,
-        "change_pct": -0.06916052373550673,
+        "change_points": -720.9799999999959,
+        "change_pct": -1.0451342360683018,
         "direction": "down",
-        "bar_age_seconds": 991,
+        "bar_age_seconds": 2191,
         "refresh_attempts": 1,
         "stale": false
       },
@@ -73636,9 +73622,9 @@
             "time_utc": "2026-11-13T14:00:00+00:00",
             "open": 69536.28,
             "high": 69561.17,
-            "low": 68632.19,
-            "close": 68936.73,
-            "tick_volume": 33867,
+            "low": 68217.39,
+            "close": 68263.46,
+            "tick_volume": 43321,
             "spread_points": 100
           }
         ],
@@ -75080,7 +75066,7 @@
           {
             "time_server": "2026-11-13T16:00:00+00:00",
             "time_utc": "2026-11-13T14:00:00+00:00",
-            "close": 68936.73,
+            "close": 68263.46,
             "direction": "down"
           }
         ],
@@ -75089,9 +75075,9 @@
           "time_utc": "2026-11-13T14:00:00+00:00",
           "open": 69536.28,
           "high": 69561.17,
-          "low": 68632.19,
-          "close": 68936.73,
-          "tick_volume": 33867,
+          "low": 68217.39,
+          "close": 68263.46,
+          "tick_volume": 43321,
           "spread_points": 100
         },
         "previous_close": {
@@ -75106,10 +75092,10 @@
         },
         "range_high": 86966.8,
         "range_low": 67482.72,
-        "change_points": -599.5200000000041,
-        "change_pct": -0.8621690125653944,
+        "change_points": -1272.7899999999936,
+        "change_pct": -1.8303978140897643,
         "direction": "down",
-        "bar_age_seconds": 4591,
+        "bar_age_seconds": 5791,
         "refresh_attempts": 1,
         "stale": false
       }
