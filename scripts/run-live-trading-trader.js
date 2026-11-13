@@ -302,6 +302,11 @@ const USAGE = [
   "                             deviating at them again, so a put-back after a stop-out that no candle has",
   "                             re-crossed is new exposure rather than the same trade. Without it, a standing",
   "                             trade's level is put back whatever the candles are doing (lane 1's rule)",
+  "  --require-deviation        read a close back across a level as a reclaim only if price had already finished",
+  "                             beyond that level earlier in the published bars: 102 -> 99 -> 98 -> 101 leaves one",
+  "                             buy limit at 100, while 99 -> 98 -> 101 on its own leaves none, because nothing was",
+  "                             deviated from. Applies to the fresh path and to a put-back alike (owner, 2026-11-13).",
+  "                             Off unless named, so a lane that does not ask cannot move",
   "  --magic <n>                the ownership number this lane's tickets carry (default 20261004). A lane with its",
   "                             own number is required to pass --expect-identity as well: a magic says which path",
   "                             placed a ticket, not which account the terminal is logged into",
@@ -430,6 +435,10 @@ function parseArgs(argv) {
     // answers no - the level is its entry level until the call or the take-profit ends the trade - and lane 2
     // answers yes since 2026-11-11, which is why this is a flag rather than a value.
     reentryCrossing: false,
+    // Whether a close back across a level is read as a reclaim of it: the level must have been left earlier in the
+    // published bars. Off by default - it narrows the rule - and asked for by a lane that wants it, so the
+    // behaviour of a lane that names no flag cannot move under it.
+    requireDeviation: false,
     magic: ORDER_MAGIC,
     expectIdentity: null,
     pauseEntries: false,
@@ -515,6 +524,9 @@ function parseArgs(argv) {
         break;
       case "--reentry-crossing":
         options.reentryCrossing = true;
+        break;
+      case "--require-deviation":
+        options.requireDeviation = true;
         break;
       case "--close-ticket":
         options.closeTicket = positiveInteger(token, next());
@@ -775,6 +787,7 @@ function tradeCycles({
   grid = DEFAULT_GRID,
   rMultiple = DEFAULT_R_MULTIPLE,
   reentryCrossing = false,
+  requireDeviation = false,
   callSealedMs = {},
   nowMs = null
 } = {}) {
@@ -822,6 +835,8 @@ function tradeCycles({
       // for it reads the bars here, and `nowMs` is what keeps a candle still forming out of that read. The
       // instants the window can open on travel beside it: the seal of the call now published for the pair.
       reentryCrossing,
+      // And whether that crossing has to be a reclaim of the level rather than the first crossing of it.
+      requireDeviation,
       withdrawnByCall,
       callSealedMs,
       nowMs
@@ -896,6 +911,7 @@ function tradeCycle(symbol, row, {
   grid = DEFAULT_GRID,
   rMultiple = DEFAULT_R_MULTIPLE,
   reentryCrossing = false,
+  requireDeviation = false,
   withdrawnByCall = [],
   callSealedMs = {},
   nowMs = null
@@ -1038,7 +1054,8 @@ function tradeCycle(symbol, row, {
           bars: instrument?.m5?.bars,
           sinceMs: windowStart,
           point,
-          nowMs
+          nowMs,
+          requireDeviation
         })
     : null;
   // The ticket a standing trade is put back with, priced from the level it was triggered on. The level is handed
@@ -2453,7 +2470,10 @@ function runOnce(options, deps = {}) {
       // Which rule the put-back follows: `crossed` when the level has to be crossed afresh before a ticket
       // goes back on it, `level` when the level itself is the entry until the call or the take-profit ends the
       // trade. Stated here so the page and the log can tell which rule ran without the task's command line.
-      reentry: options.reentryCrossing === true ? "crossed" : "level"
+      reentry: options.reentryCrossing === true ? "crossed" : "level",
+      // And whether that crossing, and a fresh entry alike, has to be a reclaim of a level price had already
+      // left rather than the first crossing of it.
+      require_deviation: options.requireDeviation === true
     },
     sources: {
       published: relativePath(published),
@@ -2653,7 +2673,9 @@ function runOnce(options, deps = {}) {
         calls: calls.directions,
         nowMs: startedMs,
         rMultiple: options.rMultiple,
-        grid: options.grid
+        grid: options.grid,
+        // A lane that asks for it reads a close back across a level as a reclaim only if the level was left first.
+        requireDeviation: options.requireDeviation === true
       })
       .map(row => ({ ...row, asset: assetBySymbol[row.symbol] ?? null }));
 
@@ -2685,6 +2707,7 @@ function runOnce(options, deps = {}) {
       grid: options.grid,
       rMultiple: options.rMultiple,
       reentryCrossing: options.reentryCrossing === true,
+      requireDeviation: options.requireDeviation === true,
       callSealedMs,
       nowMs: startedMs
     });
