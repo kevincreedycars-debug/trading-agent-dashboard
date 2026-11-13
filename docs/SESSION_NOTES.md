@@ -1,5 +1,19 @@
 # Session Notes
 
+2026-11-13 evening (both corner strips name the model and state three words, published) -
+`Live L2L Directional` and `Live 0.5L2L Directional` are page constants again and each strip says one of
+`Active`, `Stale`, `Paused` beside the name, the reason living on the tooltip; `liveTradingLaneWord()` is the one
+rule the lane card and its selector pill both read, so the two agree by construction. Found while reading the
+strips back: the widget behind the second strip dated the heartbeat with the browser's clock, which dates the
+commit rather than the run, and so read `Stale` beside a card that said `Active` whenever the last publish was
+fifteen minutes old; it now dates the record at the lanes document's `generated_at_utc`, keeps the sixty-minute
+copy ceiling and separates `no run for` from `no publish for`. Shipped on `main` as `4f871da8` with the
+cache-buster `20261113-lane-state-clock`; the published page read back at 18:30Z with both strips green, both
+cards and pills `Active`, no page error and the served files byte-equal to the commit. Full `npm test` 867 of
+876, the 5 failures reproduced on `origin/main` `843317ba` in a second worktree. No trading change: no lanes
+semantics, no config, no workflow, no order.
+
+
 2026-11-12 evening (lane 2's crossing gate tightened to the owner's ruling, and deployed to `C:\ftmo2` at `21:49Z`) -
 the four statements of 2026-11-12 are now the code the second account runs: a crossing is the two newest completed M5
 closes straddling the level (older at or on the near side, newer at least one point beyond, so two closes already
