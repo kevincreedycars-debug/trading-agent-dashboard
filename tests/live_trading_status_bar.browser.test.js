@@ -349,21 +349,39 @@ function laneTwoHeartbeat({ armed = true, entriesPaused = false, ageSeconds = 30
     written_at_utc: at,
     armed,
     entries_paused: entriesPaused,
+    expected_interval_seconds: 300,
     strategy: { identity_checked: true },
     status: "nothing_to_place",
     terminal: { positions_open: 0, orders_open: 1 }
   };
 }
 
+// The publish instant is a separate fact from the run, and the widget reads it for the same reason the accounts
+// strip does: the heartbeat file is only rewritten when a commit publishes it, so the browser's clock dates the
+// commit, not the loop. Each case states both.
+function laneTwoLanes({ publishedAgeSeconds = 20 } = {}) {
+  return {
+    schema_version: "live-trading-lanes-v1",
+    generated_at_utc: new Date(Date.now() - publishedAgeSeconds * 1000).toISOString(),
+    lanes: [{ id: "ftmo-2", label: "Live 0.5L2L Directional", enabled: true, status: "published" }]
+  };
+}
+
 test("the second strip reads as its own model, with the state as one of three words beside it", async () => {
   const harness = await createHarness();
   try {
-    for (const [fixture, word, className] of [
-      [laneTwoHeartbeat({ armed: true }), "Active", /\blive\b/],
-      [laneTwoHeartbeat({ armed: true, ageSeconds: 20 * 60 }), "Stale", /\bstale\b/],
-      [laneTwoHeartbeat({ armed: false }), "Paused", /\bwaiting\b/]
+    // A run inside its window with a fresh copy is Active; a run outside its window is Stale however fresh the
+    // copy; a copy nobody has republished for an hour is Stale too, though the run it carries was fine; a loop
+    // that is not armed is Paused. Each case writes both documents the widget reads, so neither clock hides
+    // behind a fixture that only sets one.
+    for (const [title, heartbeat, lanes, word, className, longer] of [
+      ["a fresh run in a fresh copy", laneTwoHeartbeat({ armed: true }), laneTwoLanes(), "Active", /\blive\b/, /Armed/],
+      ["a run older than its window", laneTwoHeartbeat({ armed: true, ageSeconds: 20 * 60 }), laneTwoLanes(), "Stale", /\bstale\b/, /Stale heartbeat/],
+      ["a copy nobody republished for an hour", laneTwoHeartbeat({ armed: true, ageSeconds: 120 }), laneTwoLanes({ publishedAgeSeconds: 90 * 60 }), "Stale", /\bstale\b/, /Stale copy/],
+      ["a loop that is not armed", laneTwoHeartbeat({ armed: false }), laneTwoLanes(), "Paused", /\bwaiting\b/, /Unarmed/]
     ]) {
-      harness.setFile("/data/live-trading-trader.ftmo-2.json", fixture);
+      harness.setFile("/data/live-trading-trader.ftmo-2.json", heartbeat);
+      harness.setFile(LANES_PATH, lanes);
       const { page } = await harness.open();
       // The widget paints its first state after its own fetch, so wait for the detail to leave its placeholder.
       await page.waitForFunction(() => {
@@ -372,10 +390,11 @@ test("the second strip reads as its own model, with the state as one of three wo
       });
       const strip = await laneTwoStrip(page);
       assert.equal(strip.label, "Live 0.5L2L Directional", "the second strip's label is the model's name, exactly");
-      assert.equal(strip.detail, word, `the state beside the name is one of the three words, saw "${strip.detail}"`);
-      assert.match(strip.className, className, `the strip's tone must match the word, saw "${strip.className}"`);
-      assert.notEqual(strip.panel, "", "the longer state stays in the panel below");
-      assert.match(strip.title, new RegExp(word === "Active" ? "Armed" : word === "Stale" ? "Stale heartbeat" : "Unarmed"), "the tooltip carries the longer state");
+      assert.equal(strip.detail, word, `${title}: the state beside the name is one of the three words, saw "${strip.detail}"`);
+      assert.match(strip.className, className, `${title}: the strip's tone must match the word, saw "${strip.className}"`);
+      assert.notEqual(strip.panel, "", `${title}: the longer state stays in the panel below`);
+      assert.match(strip.panel, longer, `${title}: the panel carries the longer state, saw "${strip.panel}"`);
+      assert.match(strip.title, longer, `${title}: the tooltip carries the longer state, saw "${strip.title}"`);
       await page.close();
     }
   } finally {

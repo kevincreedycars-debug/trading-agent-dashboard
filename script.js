@@ -16160,17 +16160,60 @@ function liveTradingLaneActionsAllowed() {
   return view.id === "ftmo-1" ? !view.data?.meta?.error : view.state === "ok";
 }
 
+// The one rule both places that state a lane's state in a single word use - the card in the accounts strip and the
+// badge on its selector button - so the two can never disagree about the same lane. Paused is a row parked in the
+// lanes file; Active is a snapshot published for the lane with a heartbeat from a run inside its window; Stale is
+// everything else, because a page that cannot point at a live record must not read as one. The snapshot's own age
+// is deliberately not part of the word: it is a row on the card and a chip of its own, and a page can know what an
+// account holds while it cannot confirm a loop is watching it.
+function liveTradingLaneWord(lane) {
+  if (!liveTradingLaneEnabled(lane)) {
+    return {
+      word: "Paused",
+      tone: "parked",
+      why: "Parked in config/live-trading-lanes.json (enabled: false): no loop trades it and nothing is published for it."
+    };
+  }
+  const loadError = liveTradingLanes.errors[lane.id] || "";
+  if (loadError) return { word: "Stale", tone: "error", why: `Its snapshot could not be read (${loadError}).` };
+  const snapshot = liveTradingLanes.snapshots[lane.id]?.data || null;
+  if (!snapshot) {
+    return { word: "Stale", tone: "waiting", why: "This page carries no snapshot for it, so nothing here is being written now." };
+  }
+  const heartbeat = liveTradingLaneHeartbeat(lane);
+  if (!heartbeat.present) {
+    return {
+      word: "Stale",
+      tone: "stale",
+      why: "No heartbeat has been published for this lane, so this page can say what the account holds but not whether a loop is watching it."
+    };
+  }
+  if (heartbeat.stale) {
+    return {
+      word: "Stale",
+      tone: "stale",
+      why: heartbeat.staleReason === "copy"
+        ? "The published copy is older than the strip's ceiling, so no heartbeat here can be dated to now."
+        : "The last heartbeat is outside its window: no run is watching this account now."
+    };
+  }
+  return {
+    word: "Active",
+    tone: "live",
+    why: "A heartbeat from a run inside its window, with this lane's own snapshot published: a loop is running behind it. The snapshot's own age is on the Snapshot row."
+  };
+}
+
 function liveTradingLaneSelector(view = liveTradingLaneView()) {
   const buttons = LIVE_TRADING_LANES.map(lane => {
     const laneView = liveTradingLaneView(lane.id);
     // The button's headline is the model; the account and its R are the line beneath it, and the state is its own
     // pill - Active, Stale or Paused - so a lane that has stopped publishing is still visibly the same model
-    // rather than merely a status word.
-    const word = laneView.state === "ok" ? "Active" : laneView.state === "parked" ? "Paused" : "Stale";
-    const tone = laneView.state === "ok"
-      ? "live"
-      : laneView.state === "parked" ? "parked" : laneView.state === "missing" ? "missing" : "stale";
-    const badge = `<i class="live-trading-lane-badge ${tone}" title="${escapeHtml(laneView.detail || "")}">${escapeHtml(word)}</i>`;
+    // rather than merely a status word. The word comes from the same rule the card below uses, so the strip and
+    // the selector cannot say two things about one lane.
+    const laneWord = liveTradingLaneWord({ ...laneView, ...lane });
+    const tone = laneWord.tone;
+    const badge = `<i class="live-trading-lane-badge ${tone}" title="${escapeHtml(laneWord.why)}">${escapeHtml(laneWord.word)}</i>`;
     const pressed = lane.id === view.id ? "true" : "false";
     return `
       <button type="button" class="live-trading-lane-button${lane.id === view.id ? " active" : ""}" data-live-lane="${escapeHtml(lane.id)}" aria-pressed="${pressed}" title="${escapeHtml(`${laneView.label}: ${laneView.note}`)}">
@@ -16813,8 +16856,9 @@ function liveTradingLaneCard(lane) {
   const stale = enabled && heartbeat.present && heartbeat.stale;
   const tone = !enabled ? "parked" : loadError ? "error" : !snapshot ? "waiting" : stale ? "stale" : "live";
   // The headline is the model's name and the badge beside it is the state in one of three words: Active, Stale or
-  // Paused. The reason behind the word - no snapshot, an unreadable one, a heartbeat past its window, a parked
-  // lane - is kept on the badge's tooltip and in the rows below, so the shorter word loses nothing.
+  // Paused, from the same rule the selector button uses. The reason behind the word - no snapshot, an unreadable
+  // one, a heartbeat past its window, a parked lane - is kept on the badge's tooltip and in the rows below, so the
+  // shorter word loses nothing.
   const named = LIVE_TRADING_LANES.find(entry => entry.id === lane.id) || null;
   const name = liveTradingLaneName(lane.id, lane.label);
   const statedR = Number(lane.strategy?.r_multiple);
@@ -16823,18 +16867,9 @@ function liveTradingLaneCard(lane) {
     account: named ? named.account : lane.id,
     rMultiple: statedR > 0 ? statedR : named?.rMultiple
   });
-  const badge = !enabled ? "PAUSED" : stale || !snapshot || loadError ? "STALE" : "ACTIVE";
-  const badgeTitle = !enabled
-    ? "Parked in config/live-trading-lanes.json (enabled: false): no loop trades it and nothing is published for it."
-    : loadError
-      ? `Its snapshot could not be read (${loadError}).`
-      : !snapshot
-        ? "This page carries no snapshot for it, so nothing here is being written now."
-        : stale
-          ? heartbeat.staleReason === "copy"
-            ? "The published copy is older than the strip's ceiling, so no heartbeat here can be dated to now."
-            : "The last heartbeat is outside its window: no run is watching this account now."
-          : "A snapshot inside its window and a heartbeat inside its window: the loop is running.";
+  const laneWord = liveTradingLaneWord(lane);
+  const badge = laneWord.word.toUpperCase();
+  const badgeTitle = laneWord.why;
 
   const traderValue = !heartbeat.present
     ? "no heartbeat published"

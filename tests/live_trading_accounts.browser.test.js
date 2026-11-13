@@ -176,6 +176,9 @@ test("an armed heartbeat that stopped writing is drawn as stale, not as a runnin
     assert.match(alert, /No heartbeat for 3h 12m ago - past the 15m window/, "the alert must state the silence and the window it broke");
     assert.match(alert, /armed when it last wrote/, "the alert must say the armed record is history");
     assert.match(alert, /nothing here shows a loop running now/, "the alert must refuse to present the record as a running loop");
+    // The button that selects this lane must say the same word the card does, from the same rule.
+    const selectorState = await page.locator('[data-live-lane="ftmo-1"] .live-trading-lane-badge').textContent();
+    assert.equal(selectorState.trim(), "Stale", "the selector states the same stale word the card carries");
 
     const text = await card.textContent();
     assert.match(text, /armed when last seen - no run since/, "the trader row must not read as simply armed");
@@ -262,6 +265,8 @@ test("both strips read the model's name, with the state, the account and its R k
       );
       const buttonState = (await button.locator(".live-trading-lane-badge").textContent()).trim();
       assert.ok(["Active", "Stale", "Paused"].includes(buttonState), `the selector states the state in its own word, got ${buttonState}`);
+      // One rule behind both words: a lane cannot read ACTIVE on the card and Stale on the button that selects it.
+      assert.equal(cardState, buttonState.toUpperCase(), `the card and its selector must state one word for ${lane.id}`);
     }
 
     // The same two names in both documents that state them: the config the publisher reads and the artifact it
