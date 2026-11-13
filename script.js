@@ -16163,14 +16163,19 @@ function liveTradingLaneActionsAllowed() {
 function liveTradingLaneSelector(view = liveTradingLaneView()) {
   const buttons = LIVE_TRADING_LANES.map(lane => {
     const laneView = liveTradingLaneView(lane.id);
-    const badge = laneView.state === "ok"
-      ? ""
-      : `<i class="live-trading-lane-badge ${laneView.state}">${escapeHtml(laneView.state.toUpperCase())}</i>`;
+    // The button's headline is the model; the account and its R are the line beneath it, and the state is its own
+    // pill - Active, Stale or Paused - so a lane that has stopped publishing is still visibly the same model
+    // rather than merely a status word.
+    const word = laneView.state === "ok" ? "Active" : laneView.state === "parked" ? "Paused" : "Stale";
+    const tone = laneView.state === "ok"
+      ? "live"
+      : laneView.state === "parked" ? "parked" : laneView.state === "missing" ? "missing" : "stale";
+    const badge = `<i class="live-trading-lane-badge ${tone}" title="${escapeHtml(laneView.detail || "")}">${escapeHtml(word)}</i>`;
     const pressed = lane.id === view.id ? "true" : "false";
     return `
-      <button type="button" class="live-trading-lane-button${lane.id === view.id ? " active" : ""}" data-live-lane="${escapeHtml(lane.id)}" aria-pressed="${pressed}" title="${escapeHtml(`${lane.label}: ${lane.note}`)}">
-        <span class="live-trading-lane-label">${escapeHtml(lane.label)}</span>
-        <span class="live-trading-lane-note">${escapeHtml(lane.note)}</span>${badge}
+      <button type="button" class="live-trading-lane-button${lane.id === view.id ? " active" : ""}" data-live-lane="${escapeHtml(lane.id)}" aria-pressed="${pressed}" title="${escapeHtml(`${laneView.label}: ${laneView.note}`)}">
+        <span class="live-trading-lane-label">${escapeHtml(laneView.label)}</span>
+        <span class="live-trading-lane-note">${escapeHtml(`${liveTradingLaneSecondary(laneView)} \u00b7 ${laneView.note}`)}</span>${badge}
       </button>`;
   }).join("");
   return `
@@ -16561,14 +16566,55 @@ function liveTradingLaneEnabled(lane) {
 //
 // A lane that is parked, missing or stale is drawn as exactly that, and a lane-2 chart never falls back to lane
 // 1's numbers: the one thing a two-account page must not do is show one account's prices under the other's name.
-// The two names, in the owner's wording of 2026-11-13: the account first, then the model it trades, so the
-// selector and the card say the same thing as `config/live-trading-lanes.json`'s own `label` and a reader never
-// has to hold "which number was the half grid" in their head. `liveTradingPerformancePanel` takes the part
-// before the first " · " as the account's own name, so the model rides after it rather than inside it.
+// The two names, in the owner's wording of 2026-11-13: the *model* is the persistent name on every strip, so a
+// reader never has to decode "which number was the half grid"; the account, its id and the R it trades are
+// secondary detail printed beneath it, and the state of the loop rides in its own badge beside the name rather
+// than in place of it - Active, Stale or Paused, never "FTMO 2" swapped out for a status word.
+//
+// The name is this page's own constant rather than the lanes document's `label`: the strip is chrome the page
+// owns, and a publisher that republishes the document late must not put the account's number back over the
+// model's name between publishes. `config/live-trading-lanes.json` carries the same two strings, and
+// `tests/live_trading_accounts.browser.test.js` holds the two files equal so they cannot drift quietly.
 const LIVE_TRADING_LANES = [
-  { id: "ftmo-1", label: "FTMO 1 \u00b7 5R", note: "the marked ladder, five to one" },
-  { id: "ftmo-2", label: "FTMO 2 \u00b7 0.5 \u00b7 3R", note: "the half grid, three to one" }
+  {
+    id: "ftmo-1",
+    name: "Live L2L Directional",
+    account: "FTMO 1",
+    rMultiple: 5,
+    note: "the marked ladder, five to one"
+  },
+  {
+    id: "ftmo-2",
+    name: "Live 0.5L2L Directional",
+    account: "FTMO 2",
+    rMultiple: 3,
+    note: "the half grid, three to one"
+  }
 ];
+// The third name is reserved before its lane exists: when the blind lane's terminal is deployed its row appears
+// in the lanes file and the strip reads this, with no further naming decision. No lanes-file row is required
+// for a lane that is not deployed, and a name here draws nothing on its own.
+const LIVE_TRADING_RESERVED_LANES = { "ftmo-3": "Live L2L Blind" };
+
+function liveTradingLaneName(id, fallback) {
+  const entry = LIVE_TRADING_LANES.find(lane => lane.id === id);
+  if (entry) return entry.name;
+  return LIVE_TRADING_RESERVED_LANES[id] || fallback || id;
+}
+
+function liveTradingLaneAccount(id) {
+  const entry = LIVE_TRADING_LANES.find(lane => lane.id === id);
+  return entry ? entry.account : String(id || "FTMO 1");
+}
+
+// The line under the name: the account, then the R multiple it trades. Nothing else - the rows below state the
+// login, the server and the rule in full - so the strip's headline stays the model.
+function liveTradingLaneSecondary(view) {
+  const parts = [view.account || view.id];
+  const rMultiple = Number(view.rMultiple);
+  if (Number.isFinite(rMultiple) && rMultiple > 0) parts.push(`${rMultiple}R`);
+  return parts.join(" \u00b7 ");
+}
 let liveTradingSelectedLane = "ftmo-1";
 
 // The lanes document's own row for a lane. Named apart from `liveTradingLaneRow(label, value)`, which draws one
@@ -16593,18 +16639,27 @@ function liveTradingLaneSnapshot(id) {
 //   missing  an enabled lane with no snapshot on this page;
 //   parked   a lane the lanes file marks enabled: false, so no loop trades it and nothing is published for it.
 function liveTradingLaneView(id = liveTradingSelectedLane) {
-  const entry = LIVE_TRADING_LANES.find(lane => lane.id === id) || { id, label: id, note: "" };
+  const entry = LIVE_TRADING_LANES.find(lane => lane.id === id) || { id, name: liveTradingLaneName(id), note: "" };
   const row = liveTradingLaneRecord(id);
   const snapshot = liveTradingLaneSnapshot(id);
   const grid = row?.strategy?.grid === "half" ? "half" : "full";
   const stated = Number(row?.strategy?.r_multiple);
-  const base = { id, label: entry.label, note: entry.note, row, data: null, grid, rMultiple: stated > 0 ? stated : 5 };
+  const base = {
+    id,
+    label: entry.name,
+    account: entry.account || liveTradingLaneAccount(id),
+    note: entry.note,
+    row,
+    data: null,
+    grid,
+    rMultiple: stated > 0 ? stated : entry.rMultiple || 5
+  };
   if (id !== "ftmo-1" && row && !liveTradingLaneEnabled(row)) {
     return {
       ...base,
       state: "parked",
       tone: "stale",
-      detail: `${entry.label} is parked in the lanes file (enabled: false): nothing is published for it and no loop trades it, so there is nothing to draw.`
+      detail: `${entry.name} is parked in the lanes file (enabled: false): nothing is published for it and no loop trades it, so there is nothing to draw.`
     };
   }
   if (!snapshot || snapshot.meta?.error) {
@@ -16615,7 +16670,7 @@ function liveTradingLaneView(id = liveTradingSelectedLane) {
       ...base,
       state: "missing",
       tone: "error",
-      detail: `${entry.label} cannot be drawn: ${why}. Nothing is shown for it rather than lane 1's numbers.`
+      detail: `${entry.name} cannot be drawn: ${why}. Nothing is shown for it rather than lane 1's numbers.`
     };
   }
   const freshness = liveTradingFreshness(snapshot);
@@ -16757,15 +16812,29 @@ function liveTradingLaneCard(lane) {
   const heartbeat = liveTradingLaneHeartbeat(lane);
   const stale = enabled && heartbeat.present && heartbeat.stale;
   const tone = !enabled ? "parked" : loadError ? "error" : !snapshot ? "waiting" : stale ? "stale" : "live";
-  const badge = !enabled
-    ? "DISABLED"
+  // The headline is the model's name and the badge beside it is the state in one of three words: Active, Stale or
+  // Paused. The reason behind the word - no snapshot, an unreadable one, a heartbeat past its window, a parked
+  // lane - is kept on the badge's tooltip and in the rows below, so the shorter word loses nothing.
+  const named = LIVE_TRADING_LANES.find(entry => entry.id === lane.id) || null;
+  const name = liveTradingLaneName(lane.id, lane.label);
+  const statedR = Number(lane.strategy?.r_multiple);
+  const secondary = liveTradingLaneSecondary({
+    id: lane.id,
+    account: named ? named.account : lane.id,
+    rMultiple: statedR > 0 ? statedR : named?.rMultiple
+  });
+  const badge = !enabled ? "PAUSED" : stale || !snapshot || loadError ? "STALE" : "ACTIVE";
+  const badgeTitle = !enabled
+    ? "Parked in config/live-trading-lanes.json (enabled: false): no loop trades it and nothing is published for it."
     : loadError
-      ? "UNREADABLE"
+      ? `Its snapshot could not be read (${loadError}).`
       : !snapshot
-        ? "NO SNAPSHOT"
+        ? "This page carries no snapshot for it, so nothing here is being written now."
         : stale
-          ? heartbeat.staleReason === "copy" ? "COPY STALE" : "HEARTBEAT STALE"
-          : "LIVE";
+          ? heartbeat.staleReason === "copy"
+            ? "The published copy is older than the strip's ceiling, so no heartbeat here can be dated to now."
+            : "The last heartbeat is outside its window: no run is watching this account now."
+          : "A snapshot inside its window and a heartbeat inside its window: the loop is running.";
 
   const traderValue = !heartbeat.present
     ? "no heartbeat published"
@@ -16858,8 +16927,11 @@ function liveTradingLaneCard(lane) {
   return `
     <article class="live-trading-lane-card ${escapeHtml(tone)}" data-lane="${escapeHtml(lane.id)}">
       <header>
-        <h4>${escapeHtml(lane.label || lane.id)}</h4>
-        <span class="live-trading-lane-badge ${escapeHtml(tone)}">${escapeHtml(badge)}</span>
+        <div class="live-trading-lane-heading">
+          <h4>${escapeHtml(name)}</h4>
+          <p class="live-trading-lane-identity">${escapeHtml(secondary)}</p>
+        </div>
+        <span class="live-trading-lane-badge ${escapeHtml(tone)}" title="${escapeHtml(badgeTitle)}">${escapeHtml(badge)}</span>
       </header>
       ${alert}
       <dl class="live-trading-lane-rows">${rows.join("")}</dl>
@@ -20377,9 +20449,11 @@ function liveTradingPerformanceRows(rows, currency) {
 
 function liveTradingPerformancePanel(data, laneView) {
   const trades = Array.isArray(data?.closed_trades) ? data.closed_trades : [];
-  // The panel draws whichever lane the selector is on, so its own labels name that lane instead of a fixed
-  // account: one account's totals printed under another's name is the one mistake a two-lane page cannot make.
-  const laneAccount = String(laneView?.label || "FTMO 1").split(" \u00b7 ")[0];
+  // The panel draws whichever lane the selector is on, so its own labels name that lane's account rather than a
+  // fixed one: one account's totals printed under another's name is the one mistake a two-lane page cannot make.
+  // The account is the right heading here even though the strip above names the model: these are the account's
+  // totals, and "FTMO 1 Performance" under a strip reading "Live L2L Directional" says which of the two it is.
+  const laneAccount = String(laneView?.account || liveTradingLaneAccount(laneView?.id) || "FTMO 1");
   const currency = data?.account?.currency ? ` ${data.account.currency}` : "";
   const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
   const summary = performance ? performance.summarise(trades, { history: data?.history || {} }) : null;

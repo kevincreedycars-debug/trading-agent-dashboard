@@ -138,7 +138,7 @@ test("each account card states the lane, the arming, the heartbeat and its age, 
     assert.deepEqual(errors, [], "opening the section must not raise a script error");
 
     const card = await cardText(page, "ftmo-1");
-    for (const expected of ["FTMO 1 · 5R", "LIVE", "enabled", "***614 / FTMO-Server", "armed", "nothing_to_place", "PC-DESKTOP-A17"]) {
+    for (const expected of ["Live L2L Directional", "FTMO 1 · 5R", "ACTIVE", "enabled", "***614 / FTMO-Server", "armed", "nothing_to_place", "PC-DESKTOP-A17"]) {
       assert.ok(card.includes(expected), `the card must state ${expected}`);
     }
     // The heartbeat row carries both the age and the instant, so a reader can see which run wrote it.
@@ -169,7 +169,8 @@ test("an armed heartbeat that stopped writing is drawn as stale, not as a runnin
 
     const card = page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-1"]');
     assert.match(await card.getAttribute("class"), /stale/, "the card must carry the stale tone rather than the live one");
-    assert.match((await card.locator(".live-trading-lane-badge").textContent()).trim(), /HEARTBEAT STALE/);
+    assert.equal((await card.locator(".live-trading-lane-badge").textContent()).trim(), "STALE", "the badge says the state in one word");
+    assert.equal((await card.locator("h4").textContent()).trim(), "Live L2L Directional", "the model keeps its name when the lane goes stale");
 
     const alert = await card.locator(".live-trading-lane-alert").textContent();
     assert.match(alert, /No heartbeat for 3h 12m ago - past the 15m window/, "the alert must state the silence and the window it broke");
@@ -218,9 +219,65 @@ test("a card names the code its heartbeat was written by, and says so plainly wh
     assert.equal((await row.locator("dd").textContent()).trim(), "not stated by this heartbeat");
     assert.match(await row.getAttribute("class"), /is-muted/, "an unstated version is drawn quietly, not as a fault");
     assert.equal(await row.locator("dd").getAttribute("title"), null, "there is nothing to tooltip when nothing was stated");
-    assert.match((await cardText(page, "ftmo-1")), /LIVE/, "the card is still a running lane, whatever it can say about the build");
+    assert.match((await cardText(page, "ftmo-1")), /ACTIVE/, "the card is still a running lane, whatever it can say about the build");
   } finally {
     await silent.close();
+  }
+});
+
+// The owner's naming rule of 2026-11-13, held as one case: the persistent strip reads the model, the state is a
+// separate word beside it, and the account and its R sit beneath it as secondary detail. A case that only checked
+// that "FTMO" was gone from the headline would not notice the account creeping back in, so each of the four parts
+// is read from its own element. The two files that carry the same naming choice - this page and the lanes
+// configuration - are compared here so they cannot drift apart quietly.
+test("both strips read the model's name, with the state, the account and its R kept apart from it", async () => {
+  const trader = heartbeat({ writtenAtMs: Date.now() - 60_000 });
+  const harness = await createHarness({ lanes: lanesWith(trader), trader });
+  try {
+    const context = await harness.createContext();
+    const { page, errors } = await openLiveTrading(context, harness.origin);
+    assert.deepEqual(errors, [], "the strip must draw without a script error");
+    const expected = [
+      { id: "ftmo-1", name: "Live L2L Directional", account: "FTMO 1", r: 5 },
+      { id: "ftmo-2", name: "Live 0.5L2L Directional", account: "FTMO 2", r: 3 }
+    ];
+    for (const lane of expected) {
+      const card = page.locator(`#liveTradingPanel .live-trading-lane-card[data-lane="${lane.id}"]`);
+      assert.equal((await card.locator("h4").textContent()).trim(), lane.name, "the card's headline is the model");
+      assert.equal(
+        (await card.locator(".live-trading-lane-identity").textContent()).trim(),
+        `${lane.account} · ${lane.r}R`,
+        "the account and its R are the line under the name"
+      );
+      const cardState = (await card.locator(".live-trading-lane-badge").textContent()).trim();
+      assert.ok(["ACTIVE", "STALE", "PAUSED"].includes(cardState), `the badge is one of the three state words, got ${cardState}`);
+      assert.notEqual(cardState.toLowerCase(), "ftmo", "the state never stands in for the name");
+
+      const button = page.locator(`[data-live-lane="${lane.id}"]`);
+      assert.equal((await button.locator(".live-trading-lane-label").textContent()).trim(), lane.name, "the selector's headline is the same model name");
+      assert.match(
+        (await button.locator(".live-trading-lane-note").textContent()).trim(),
+        new RegExp(`^${lane.account} · ${lane.r}R`),
+        "the selector's second line leads with the account and its R"
+      );
+      const buttonState = (await button.locator(".live-trading-lane-badge").textContent()).trim();
+      assert.ok(["Active", "Stale", "Paused"].includes(buttonState), `the selector states the state in its own word, got ${buttonState}`);
+    }
+
+    // The same two names in both documents that state them: the config the publisher reads and the artifact it
+    // publishes. The page draws its own constant, so this is the guard against the three drifting apart.
+    for (const relative of ["config/live-trading-lanes.json", "data/live-trading-lanes.json"]) {
+      const lanes = readJson(relative).lanes;
+      for (const lane of expected) {
+        assert.equal(lanes.find((row) => row.id === lane.id).label, lane.name, `${relative} must carry the name the page draws`);
+      }
+    }
+
+    // The third name is reserved before its lane exists, so the blind lane reads the same the day it is deployed.
+    const script = fs.readFileSync(path.join(repoRoot, "script.js"), "utf8");
+    assert.match(script, /"ftmo-3": "Live L2L Blind"/, "the blind lane's name is reserved in the page");
+  } finally {
+    await harness.close();
   }
 });
 
@@ -244,7 +301,9 @@ test("a disabled lane stays visibly disabled and is not dressed with a heartbeat
     const card = page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-2"]');
     assert.match(await card.getAttribute("class"), /parked/, "the disabled lane must keep the parked tone");
     const badge = (await card.locator(".live-trading-lane-badge").textContent()).trim();
-    assert.equal(badge, "DISABLED");
+    assert.equal(badge, "PAUSED");
+    assert.equal((await card.locator("h4").textContent()).trim(), "Live 0.5L2L Directional", "a parked lane keeps its model's name too");
+    assert.match(await card.locator(".live-trading-lane-badge").getAttribute("title"), /Parked in config\/live-trading-lanes\.json/, "the badge's tooltip says why it is paused");
     const text = await card.textContent();
     assert.ok(text.includes("not published for a disabled lane"), "the disabled lane must say its snapshot is not published");
     assert.equal(/\barmed\b/.test(text), false, "a lane with no trader must not show an arming state");

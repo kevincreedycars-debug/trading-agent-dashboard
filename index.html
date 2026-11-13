@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261111-lane2-ticket-kinds" />
+  <link rel="stylesheet" href="styles.css?v=20261113-lane-model-names" />
 </head>
 <body>
 <!-- SHARED-NAV:START -->
@@ -135,11 +135,13 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 }
 </style>
 <!-- SHARED-NAV:END -->
-<!-- The live trader's lamp. It sits outside the shared-nav block on purpose: the nav is copied byte for byte
-     into the evidence pages, and this lamp speaks only for the trading lane, so it belongs to this page. It
-     reads the same heartbeat the Live Trading tab reads and states one of exactly six things - active, stale,
-     not armed, no heartbeat, disabled, unknown - so a corner that says nothing is never mistaken for a loop
-     that is running. It carries no control: it is a read of published files, not an order path. -->
+<!-- The live traders' lamps. They sit outside the shared-nav block on purpose: the nav is copied byte for byte
+     into the evidence pages, and these lamps speak only for the trading lanes, so they belong to this page. Each
+     one reads the same heartbeat the Live Trading tab reads. The label is the model's name and stays the model's
+     name - Live L2L Directional, Live 0.5L2L Directional - and the state rides beside it as one of exactly three
+     words: Active, Stale, Paused. The reason behind the word (the silence, the unarmed loop, the parked row) is
+     on the tooltip, so a corner that cannot confirm a loop never trades the name away for a status sentence. No
+     lamp carries a control: they are reads of published files, not an order path. -->
 <style>
 .trader-status-strips { position: fixed; top: 68px; right: 22px; z-index: 30; display: grid; justify-items: end; gap: 4px; }
 .trader-status-strips .live-trader-status { position: static; }
@@ -158,8 +160,9 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 
 <div id="liveTraderStatusFtmo2" class="live-trader-status unknown" role="status" aria-live="polite">
   <span class="live-trader-dot" aria-hidden="true"></span>
-  <span class="live-trader-label">FTMO 2 · 0.5 L2L</span>
-  <span class="live-trader-detail">Checking heartbeat…</span>
+  <span class="live-trader-label">Live 0.5L2L Directional</span>
+  <span class="live-trader-sep" aria-hidden="true"> · </span>
+  <span class="live-trader-detail">Stale - checking heartbeat…</span>
 </div>
 </div>
     <main class="shell">
@@ -429,7 +432,7 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
         <p id="liveTradingUpdated">Loading broker snapshot...</p>
       </section>
       <section class="backtest-panel" aria-labelledby="ftmo2StatusHeading">
-        <h3 id="ftmo2StatusHeading">FTMO 2 · 0.5 · 3R trader</h3>
+        <h3 id="ftmo2StatusHeading">Live 0.5L2L Directional</h3>
         <strong id="ftmo2Status" role="status">Checking heartbeat…</strong>
         <p id="ftmo2StatusDetails"></p>
       </section>
@@ -492,7 +495,7 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
   <script src="lib/research_upload_adapter.js?v=20261103-open-access-v1"></script>
   <script src="lib/live_trading_close_request.js?v=20261024-live-trading-close-request-v2"></script>
 <script src="lib/live_trading_performance.js?v=20261111-lane2-ticket-kinds"></script>
-<script src="script.js?v=20261111-lane2-ticket-kinds"></script>
-  <script src="lib/ftmo2_status_widget.js?v=20261113-strip"></script>
+<script src="script.js?v=20261113-lane-model-names"></script>
+  <script src="lib/ftmo2_status_widget.js?v=20261113-lane-model-names"></script>
 </body>
 </html>
