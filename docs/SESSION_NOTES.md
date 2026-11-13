@@ -1,5 +1,27 @@
 # Session Notes
 
+2026-11-13 late (the deviation sequence proved on both deployed loops, and the reclaim branch prepared, nothing
+deployed) - read-only on the host at 18:45Z, then one unmerged branch. Deployed and proved byte-for-byte: lane 1
+`c5abd0ac`, trader blob `f43ac5ea` (`41028adc`'s file, not HEAD's, so the checkout is not at its pin) with module
+`338bb2f6` that has no `crossedSince`; lane 2 `f14f2ac7`, trader `7c3538e0` and module `e0e64c2b`, which are
+`origin/main`'s own files. The owner's cases run through each loop's own `runOnce` with its own flags
+(`tools/audit/l2l_deviation_audit.js`, trees in `tmp/host/`): ftmo-1 **12 of 18** as stated, ftmo-2 **14 of 18**.
+Both place on a first approach (`99, 98, 101`), which is the rule neither loop asks; lane 1 also puts a level back
+on a close exactly on the line, and on the confirming bar it has already spent, because its put-back path reads no
+candle at all. The fix already in `main` (`crossedSince` plus the two-close gate, untouched here) answers 14 of 18
+on its own; the branch adds `levelWasLeft` and `--require-deviation`, and lane 1 additionally names
+`--reentry-crossing`, after which both lanes are **18 of 18**. Lane 1's 40 repeat placements reconciled against the
+account's 58 closed positions in the 14-day window: **38 new exposure after an exit, 1 replacement of a withdrawn
+limit** (EURUSD `307022408` → `307216030`), **1 the record cannot resolve** (XAUUSD `306701928`, no deal and no
+withdrawal row, with a second ticket at the same price five minutes later), and all 40 carrying the predecessor's
+own confirming bar. The disputed signal is EURUSD `1.10624` at `13:46Z`: a genuine post-exit reclaim that lane 2's
+newest-pair gate refuses, so the branch removes the ticket for a reason that is a ruling, not a bug - flagged.
+Branch `live-trading/deviation-audit-20261113` off `e53d1888`: new `tests/live_trading_deviation_sequence.test.js`
+39 of 39, and 24 of 39 with the module reverted. `npm test` 915 with 906 passing, 4 skipped, the same 5
+browser-page failures as the untouched baseline. Nothing on either machine changed: no order, no config, no
+workflow, no data file, no deployment.
+
+
 2026-11-13 evening (both corner strips name the model and state three words, published) -
 `Live L2L Directional` and `Live 0.5L2L Directional` are page constants again and each strip says one of
 `Active`, `Stale`, `Paused` beside the name, the reason living on the tooltip; `liveTradingLaneWord()` is the one
