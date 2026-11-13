@@ -289,6 +289,22 @@ const CASES = [
     note: "above, two closes below, close back above: one buy limit at 100"
   },
   {
+    id: "bull reclaim, the excursion bar then a close on the line: 102, 99, 100, 101",
+    direction: "BULLISH",
+    closes: [102, 99, 100, 101],
+    exitAfter: 1,
+    expect: { fresh: "long@100", afterExit: "long@100" },
+    note: "held above, one close below, a close on the line, then back above: the excursion is still one close"
+  },
+  {
+    id: "bull touch with no excursion: 102, 100, 101",
+    direction: "BULLISH",
+    closes: [102, 100, 101],
+    exitAfter: 0,
+    expect: { fresh: "none", afterExit: "none" },
+    note: "a close exactly on 100 leaves nothing behind, so the next close above reclaims nothing"
+  },
+  {
     id: "bull reclaim, several closes beyond first: 102, 103, 99, 98, 101",
     direction: "BULLISH",
     closes: [102, 103, 99, 98, 101],

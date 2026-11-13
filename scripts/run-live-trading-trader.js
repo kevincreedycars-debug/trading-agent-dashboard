@@ -302,11 +302,16 @@ const USAGE = [
   "                             deviating at them again, so a put-back after a stop-out that no candle has",
   "                             re-crossed is new exposure rather than the same trade. Without it, a standing",
   "                             trade's level is put back whatever the candles are doing (lane 1's rule)",
-  "  --require-deviation        read a close back across a level as a reclaim only if price had already finished",
-  "                             beyond that level earlier in the published bars: 102 -> 99 -> 98 -> 101 leaves one",
-  "                             buy limit at 100, while 99 -> 98 -> 101 on its own leaves none, because nothing was",
-  "                             deviated from. Applies to the fresh path and to a put-back alike (owner, 2026-11-13).",
-  "                             Off unless named, so a lane that does not ask cannot move",
+  "  --require-deviation        read a close back across a level as a reclaim only if price had already both held",
+  "                             and left that level: a close on the trade's side of it, a close at least a point",
+  "                             beyond the far side, and then the newest close back across. 102 -> 99 -> 100 ->",
+  "                             101 leaves one buy limit at 100; 102 -> 100 -> 101 leaves none, because nothing",
+  "                             left the line, and 99 -> 98 -> 101 leaves none, because nothing had held it. All",
+  "                             three legs have to be closes in one symbol, at one fixed level, in one trading",
+  "                             session (Europe/Prague, the loop's own day). Applies to the fresh path and to a",
+  "                             put-back alike, and a put-back reads the newest completed candle once - this flag",
+  "                             therefore reads the crossing on a standing trade too, as --reentry-crossing does",
+  "                             (owner, 2026-11-13). Off unless named, so a lane that does not ask cannot move",
   "  --magic <n>                the ownership number this lane's tickets carry (default 20261004). A lane with its",
   "                             own number is required to pass --expect-identity as well: a magic says which path",
   "                             placed a ticket, not which account the terminal is logged into",
@@ -1026,6 +1031,13 @@ function tradeCycle(symbol, row, {
   // that happened under the call before it cannot re-arm the level under this one. Read from the same bars the
   // fresh path reads; a lane that does not ask for it reads nothing here and puts its level back whatever the
   // candles are doing.
+  //
+  // --require-deviation asks for the same read, because that rule can only be answered from the newest completed
+  // candle: the deviation is a close at least a point beyond the line before the reclaiming close, so a put-back
+  // that replayed an older bar could not state which candle it was judging and the owner's "use the newest
+  // completed M5 reclaim candle once" would have no meaning on this path. Asking for the deviation therefore asks
+  // for the crossing, and the 13:46Z put-back of 2026-11-13 - which replayed a 06:40 close - is refused by it.
+  const crossingRequired = reentryCrossing === true || requireDeviation === true;
   const sealedMs = Number.isFinite(Number(callSealedMs?.[asset])) ? Number(callSealedMs[asset]) : null;
   const windowStart = lastExitMs === null ? sealedMs : sealedMs === null ? lastExitMs : Math.max(lastExitMs, sealedMs);
   const windowBasis = lastExitMs === null
@@ -1033,7 +1045,7 @@ function tradeCycle(symbol, row, {
     : sealedMs !== null && sealedMs > lastExitMs
       ? "call"
       : "exit";
-  const crossing = reentryCrossing && !endedBy
+  const crossing = crossingRequired && !endedBy
     ? windowStart === null
       // No exit on the ticket and no readable seal on the call: the two candles can still be read, but nothing says
       // which crossing re-arms the level, so the level waits rather than being put back on a window that is missing.
@@ -1055,7 +1067,8 @@ function tradeCycle(symbol, row, {
           sinceMs: windowStart,
           point,
           nowMs,
-          requireDeviation
+          requireDeviation,
+          symbol
         })
     : null;
   // The ticket a standing trade is put back with, priced from the level it was triggered on. The level is handed
@@ -2219,9 +2232,11 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map(), cal
     // The fresh path's half of the owner's ruling of 2026-11-12: a crossing belongs to the call that was standing
     // when it closed. A call is sealed between two closes often - the 06:11Z pair of the day before was exactly
     // that, a new call read eleven minutes after the newest candle had finished - so a confirming candle that
-    // closed before the seal is the *previous* call's crossing, and this call waits for one of its own. Lane 1
-    // names no crossing gate and is not asked; the instant is only read on a lane that asks for it.
-    const sealMs = options.reentryCrossing === true ? readNumber(callSealedMs?.[reading.asset]) : Number.NaN;
+    // closed before the seal is the *previous* call's crossing, and this call waits for one of its own. A lane that
+    // names no crossing gate and no deviation rule is not asked; the instant is only read on a lane that asks.
+    const sealMs = options.reentryCrossing === true || options.requireDeviation === true
+      ? readNumber(callSealedMs?.[reading.asset])
+      : Number.NaN;
     const confirmedCloseMs = signalTime ? Date.parse(signalTime) + 5 * 60 * 1000 : Number.NaN;
     if (Number.isFinite(sealMs) && !(confirmedCloseMs > sealMs)) {
       return {
