@@ -16561,9 +16561,13 @@ function liveTradingLaneEnabled(lane) {
 //
 // A lane that is parked, missing or stale is drawn as exactly that, and a lane-2 chart never falls back to lane
 // 1's numbers: the one thing a two-account page must not do is show one account's prices under the other's name.
+// The two names, in the owner's wording of 2026-11-13: the account first, then the model it trades, so the
+// selector and the card say the same thing as `config/live-trading-lanes.json`'s own `label` and a reader never
+// has to hold "which number was the half grid" in their head. `liveTradingPerformancePanel` takes the part
+// before the first " · " as the account's own name, so the model rides after it rather than inside it.
 const LIVE_TRADING_LANES = [
-  { id: "ftmo-1", label: "FTMO 1 \u00b7 L2L", note: "the marked ladder, five to one" },
-  { id: "ftmo-2", label: "FTMO 2 \u00b7 0.5 L2L", note: "the half grid, three to one" }
+  { id: "ftmo-1", label: "FTMO 1 \u00b7 5R", note: "the marked ladder, five to one" },
+  { id: "ftmo-2", label: "FTMO 2 \u00b7 0.5 \u00b7 3R", note: "the half grid, three to one" }
 ];
 let liveTradingSelectedLane = "ftmo-1";
 

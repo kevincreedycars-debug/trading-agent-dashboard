@@ -138,7 +138,7 @@ test("each account card states the lane, the arming, the heartbeat and its age, 
     assert.deepEqual(errors, [], "opening the section must not raise a script error");
 
     const card = await cardText(page, "ftmo-1");
-    for (const expected of ["FTMO account 1", "LIVE", "enabled", "***614 / FTMO-Server", "armed", "nothing_to_place", "PC-DESKTOP-A17"]) {
+    for (const expected of ["FTMO 1 · 5R", "LIVE", "enabled", "***614 / FTMO-Server", "armed", "nothing_to_place", "PC-DESKTOP-A17"]) {
       assert.ok(card.includes(expected), `the card must state ${expected}`);
     }
     // The heartbeat row carries both the age and the instant, so a reader can see which run wrote it.
@@ -224,9 +224,20 @@ test("a card names the code its heartbeat was written by, and says so plainly wh
   }
 });
 
+// The parked lane this test draws is parked by its own fixture, not by whatever the published document happens to
+// say today: both lanes are enabled in the artifact now that account 2 trades, and the card's disabled tone is
+// still a thing the page must be able to draw.
+function lanesWithParkedLane(trader, publishedAgeSeconds = 30) {
+  const document = lanesWith(trader, publishedAgeSeconds);
+  const parked = document.lanes.find((lane) => lane.id === "ftmo-2");
+  parked.enabled = false;
+  parked.trader = {};
+  return document;
+}
+
 test("a disabled lane stays visibly disabled and is not dressed with a heartbeat it does not have", async () => {
   const trader = heartbeat({ writtenAtMs: Date.now() - 60_000 });
-  const harness = await createHarness({ lanes: lanesWith(trader), trader });
+  const harness = await createHarness({ lanes: lanesWithParkedLane(trader), trader });
   try {
     const context = await harness.createContext();
     const { page } = await openLiveTrading(context, harness.origin);
