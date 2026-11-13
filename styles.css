@@ -8363,11 +8363,20 @@ body {
    because the nav is shared with the evidence pages and this lamp speaks only for the trading lane. It borrows
    the accounts strip's palette so a green corner and a green card always mean the same thing, and it is a
    status readout, not a control: no button, no link, nothing to press. */
-.live-trader-status { position: fixed; top: 68px; right: 22px; z-index: 30; display: inline-flex; align-items: center; gap: 8px; max-width: min(420px, calc(100vw - 44px)); padding: 7px 13px; border: 1px solid #35485f; border-radius: 999px; background: rgba(7, 11, 17, .94); box-shadow: 0 12px 26px rgba(0, 0, 0, .38); backdrop-filter: blur(10px); color: #cfdcec; font: 700 10px 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+/* The live trader's lamp, the one thing in the corner. It is fixed under the sticky nav rather than inside it,
+   because the nav is shared with the evidence pages and this lamp speaks only for the trading lane. It borrows
+   the accounts strip's palette so a green corner and a green card always mean the same thing, and it is a
+   status readout, not a control: no button, no link, nothing to press. The model's name is set in the casing it
+   is written in rather than shouted in capitals, because the lamp's job is to keep one string recognisable in
+   every state - there is no text-transform here on purpose. */
+.live-trader-status { position: fixed; top: 68px; right: 22px; z-index: 30; display: inline-flex; align-items: center; gap: 8px; max-width: min(420px, calc(100vw - 44px)); padding: 7px 13px; border: 1px solid #35485f; border-radius: 999px; background: rgba(7, 11, 17, .94); box-shadow: 0 12px 26px rgba(0, 0, 0, .38); backdrop-filter: blur(10px); color: #cfdcec; font: 700 10.5px 'IBM Plex Mono', monospace; letter-spacing: .06em; }
 .live-trader-status[hidden] { display: none; }
 .live-trader-dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.live-trader-label { flex: 0 0 auto; white-space: nowrap; }
-.live-trader-detail { min-width: 0; overflow: hidden; color: #93a7bf; font-weight: 500; letter-spacing: .02em; text-overflow: ellipsis; text-transform: none; white-space: nowrap; }
+.live-trader-label { flex: 0 0 auto; color: #dbe6f3; white-space: nowrap; }
+/* The dot between the name and the state: a visible divider, so the two words do not run together in the text a
+   screen reader or a copied line carries, and light enough not to compete with either of them. */
+.live-trader-sep { flex: 0 0 auto; color: #556b84; }
+.live-trader-detail { min-width: 0; overflow: hidden; color: #93a7bf; font-weight: 500; letter-spacing: .02em; text-overflow: ellipsis; white-space: nowrap; }
 .live-trader-status.live { color: #7ef0c4; border-color: #2b6b57; background: rgba(9, 26, 22, .94); }
 .live-trader-status.live .live-trader-dot { box-shadow: 0 0 0 4px rgba(126, 240, 196, .16); animation: live-trader-pulse 2.6s ease-in-out infinite; }
 .live-trader-status.waiting { color: #f0c274; border-color: #7a5a24; }

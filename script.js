@@ -17019,6 +17019,11 @@ function liveTradingLampLane() {
 
 function liveTraderStatusState() {
   const lane = liveTradingLampLane();
+  // The strip's label is the model's name and nothing else, so a lane that stops writing is still the same model
+  // on the screen rather than a sentence about a silence. The state is one of exactly three words - Active, Stale,
+  // Paused - carried at the front of the detail, with the reason (the silence, the parked row, the unreadable
+  // document) kept on the tooltip and in the words after it.
+  const name = liveTradingLaneName(lane?.id || DEFAULT_LIVE_TRADING_LANE);
   if (!lane) {
     const why = liveTradingLanes.error
       ? `data/live-trading-lanes.json could not be read (${liveTradingLanes.error}).`
@@ -17026,9 +17031,9 @@ function liveTraderStatusState() {
         ? "data/live-trading-lanes.json carries no lanes."
         : "data/live-trading-lanes.json is not published yet.";
     return {
-      tone: "unknown",
-      label: "Live trader",
-      detail: "status unknown",
+      tone: "stale",
+      label: name,
+      detail: "Stale - status unknown",
       title: `${why} Nothing on this page shows a loop running.`
     };
   }
@@ -17036,17 +17041,17 @@ function liveTraderStatusState() {
   if (!liveTradingLaneEnabled(lane)) {
     return {
       tone: "disabled",
-      label: "Live trader",
-      detail: `${laneId} disabled`,
+      label: name,
+      detail: `Paused - ${laneId} disabled`,
       title: `${laneId} is parked in config/live-trading-lanes.json, so nothing is published for it and no loop trades it.`
     };
   }
   const heartbeat = liveTradingLaneHeartbeat(lane);
   if (!heartbeat.present) {
     return {
-      tone: "waiting",
-      label: "Live trader",
-      detail: `${laneId} no heartbeat`,
+      tone: "stale",
+      label: name,
+      detail: `Stale - no heartbeat for ${laneId}`,
       title: `No trader heartbeat has been published for ${laneId}, so this page can say what the account holds but not whether a loop is watching it.`
     };
   }
@@ -17061,30 +17066,30 @@ function liveTraderStatusState() {
     if (heartbeat.staleReason === "copy") {
       return {
         tone: "stale",
-        label: "Live trader",
-        detail: `no publish for ${liveTradingAgeSpan(heartbeat.copyAgeSeconds)}`,
+        label: name,
+        detail: `Stale - no publish for ${liveTradingAgeSpan(heartbeat.copyAgeSeconds)}`,
         title: `The copy of ${laneId}'s heartbeat on this page is ${liveTradingAgeLabel(heartbeat.copyAgeSeconds)}, past the ${Math.round(LIVE_TRADING_COPY_CEILING_SECONDS / 60)} minute ceiling for publishes. The record it carries was ${heartbeat.ageAtPublishSeconds === null ? "of unknown age" : `${liveTradingAgeSpan(heartbeat.ageAtPublishSeconds)} old`} when it was published and reported ${result}, but nothing on this page says what the loop is doing now.`
       };
     }
     return {
       tone: "stale",
-      label: "Live trader",
-      detail: `no run for ${sinceLabel}`,
+      label: name,
+      detail: `Stale - no run for ${sinceLabel}`,
       title: `The last heartbeat${host} carries ${heartbeat.unknownAge ? "no readable time" : ageLabel}, past the ${Math.round(heartbeat.windowSeconds / 60)} minute window${heartbeat.ageAtPublishSeconds === null ? "" : ` as it was already ${liveTradingAgeSpan(heartbeat.ageAtPublishSeconds)} old when the publisher read it`}. It was ${heartbeat.armed ? "armed" : "not armed"} when it last wrote and reported ${result}; nothing here shows a loop running now.`
     };
   }
   if (!heartbeat.armed) {
     return {
       tone: "waiting",
-      label: "Live trader",
-      detail: `not armed - ${ageLabel}`,
+      label: name,
+      detail: `Paused - not armed - ${ageLabel}`,
       title: `The ${laneId} loop ran ${ageLabel}${host} and is not armed, so it places nothing until that changes.`
     };
   }
   return {
     tone: "live",
-    label: "Live trader active",
-    detail: `${laneId} ${result} - as of ${liveTradingTimestampLabel(heartbeat.writtenAt)}`,
+    label: name,
+    detail: `Active - ${laneId} ${result} - as of ${liveTradingTimestampLabel(heartbeat.writtenAt)}`,
     title: `The ${laneId} loop ran${host} and reported ${result}, armed, ${heartbeat.ageAtPublishSeconds === null ? "inside the window" : `${liveTradingAgeSpan(heartbeat.ageAtPublishSeconds)} before the publisher read it, inside the ${Math.round(heartbeat.windowSeconds / 60)} minute window`}. This lamp turns amber when the record was outside that window at publish, or when the page's own copy${heartbeat.copyAgeSeconds === null ? "" : ` (${liveTradingAgeSpan(heartbeat.copyAgeSeconds)} old)`} passes ${Math.round(LIVE_TRADING_COPY_CEILING_SECONDS / 60)} minutes without a new one.`
   };
 }
@@ -17098,6 +17103,7 @@ function renderLiveTraderStatus() {
   node.innerHTML = [
     '<span class="live-trader-dot" aria-hidden="true"></span>',
     `<span class="live-trader-label">${escapeHtml(state.label)}</span>`,
+    '<span class="live-trader-sep" aria-hidden="true"> · </span>',
     `<span class="live-trader-detail">${escapeHtml(state.detail)}</span>`
   ].join("");
   node.hidden = false;

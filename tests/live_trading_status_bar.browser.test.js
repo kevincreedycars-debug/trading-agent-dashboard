@@ -183,7 +183,8 @@ test("a fresh armed heartbeat reads as a live trader in the top right", async ()
     const state = await lamp(page);
 
     assert.match(state.className, /\blive\b/, `an armed loop with a 20 second heartbeat must read as live, saw "${state.className}"`);
-    assert.match(state.text, /^Live trader active/, `the lamp must lead with the state, saw "${state.text}"`);
+    assert.match(state.text, /^Live L2L Directional/, `the lamp must lead with the model's name, saw "${state.text}"`);
+    assert.match(state.text, /\bActive\b/, `the state rides beside the name as one word, saw "${state.text}"`);
     assert.match(state.text, /ftmo-1/, "the lamp must name the lane it speaks for");
     assert.match(state.text, /nothing to place/, "the lamp must carry the loop's last result rather than only a colour");
     assert.match(state.title, /armed/, "the tooltip must say what the colour stands for");
@@ -214,6 +215,8 @@ test("an armed heartbeat that stopped writing may not read as active", async () 
 
     assert.match(state.className, /\bstale\b/, `an armed record 2h 15m old must read as stale, saw "${state.className}"`);
     assert.doesNotMatch(state.text, /active/i, `a stale record must not wear the active word, saw "${state.text}"`);
+    assert.match(state.text, /^Live L2L Directional/, `a stale lamp still reads as the model, saw "${state.text}"`);
+    assert.match(state.text, /\bStale\b/, `the state rides beside the name as one word, saw "${state.text}"`);
     assert.match(state.text, /no run for 2h/, `the lamp must say how long the silence is, saw "${state.text}"`);
     assert.match(state.title, /nothing here shows a loop running now/, "the tooltip must not leave the arming reading as a state");
   } finally {
@@ -231,6 +234,8 @@ test("a fresh heartbeat that is not armed says so instead of looking active", as
     const state = await lamp(page);
 
     assert.match(state.className, /\bwaiting\b/, `an unarmed loop must read as waiting, saw "${state.className}"`);
+    assert.match(state.text, /^Live L2L Directional/, `an unarmed lamp still reads as the model, saw "${state.text}"`);
+    assert.match(state.text, /\bPaused\b/, `an unarmed loop reads as Paused, saw "${state.text}"`);
     assert.match(state.text, /not armed/, `the lamp must say the loop is not armed, saw "${state.text}"`);
     assert.doesNotMatch(state.text, /active/i, "an unarmed loop must never read as active");
   } finally {
@@ -252,7 +257,8 @@ test("a heartbeat that was fresh when it was published stays active while the co
     const state = await lamp(page);
 
     assert.match(state.className, /\blive\b/, `a record fresh at publish must read as live, saw "${state.className}"`);
-    assert.match(state.text, /^Live trader active/, `the lamp must lead with the state, saw "${state.text}"`);
+    assert.match(state.text, /^Live L2L Directional/, `the lamp must lead with the model's name, saw "${state.text}"`);
+    assert.match(state.text, /\bActive\b/, `the state rides beside the name as one word, saw "${state.text}"`);
     assert.match(state.text, /as of \d{2}:\d{2}Z/, `the lamp must date the record rather than imply it is current, saw "${state.text}"`);
     assert.equal(/no run for/i.test(state.text), false, "a record inside its window at publish must not read as silence");
     assert.match(state.title, /4m before the publisher read it/, `the tooltip must say the record was fresh when it was copied, saw "${state.title}"`);
@@ -290,8 +296,9 @@ test("a lanes document that is not published yet leaves the lamp saying it does 
     const { page } = await harness.open();
     const state = await lamp(page);
 
-    assert.match(state.className, /\bunknown\b/, `a missing lanes document must read as unknown, saw "${state.className}"`);
-    assert.match(state.text, /status unknown/, `the lamp must say it cannot tell, saw "${state.text}"`);
+    assert.match(state.className, /\bstale\b/, `a missing lanes document must read as stale, saw "${state.className}"`);
+    assert.match(state.text, /^Live L2L Directional/, `even an unknown state keeps the model's name, saw "${state.text}"`);
+    assert.match(state.text, /Stale - status unknown/, `the lamp must say it cannot tell and which of the three words it is, saw "${state.text}"`);
     assert.doesNotMatch(state.text, /active/i, "nothing may read as active when the lane document is missing");
     assert.match(state.title, /not published yet/, "the tooltip must say why the lamp cannot tell");
   } finally {
@@ -308,8 +315,69 @@ test("a parked lane is named as disabled rather than left blank", async () => {
     const state = await lamp(page);
 
     assert.match(state.className, /\bdisabled\b/, `a parked lane must read as disabled, saw "${state.className}"`);
+    assert.match(state.text, /^Live L2L Directional/, `a parked lamp still reads as the model, saw "${state.text}"`);
+    assert.match(state.text, /\bPaused\b/, `a parked lane reads as Paused, saw "${state.text}"`);
     assert.match(state.text, /disabled/, `the lamp must name the parked lane, saw "${state.text}"`);
     assert.doesNotMatch(state.text, /active/i, "a parked lane must never read as active");
+  } finally {
+    await harness.close();
+  }
+});
+
+// The second strip is the same rule for the second model: its own name in the markup, never rewritten, and one of
+// the three words painted beside it by the widget that reads that lane's heartbeat. The widget's longer state
+// stays in the panel below and on the tooltip, so the short word does not erase the fact behind it.
+async function laneTwoStrip(page) {
+  return page.evaluate(() => {
+    const node = document.getElementById("liveTraderStatusFtmo2");
+    return {
+      label: node.querySelector(".live-trader-label").textContent.trim(),
+      detail: node.querySelector(".live-trader-detail").textContent.trim(),
+      panel: document.getElementById("ftmo2Status").textContent.trim(),
+      title: node.getAttribute("title") || "",
+      className: node.getAttribute("class") || ""
+    };
+  });
+}
+
+function laneTwoHeartbeat({ armed = true, entriesPaused = false, ageSeconds = 30 } = {}) {
+  const at = new Date(Date.now() - ageSeconds * 1000).toISOString();
+  return {
+    schema_version: "live-trading-trader-v1",
+    lane: "ftmo-2",
+    at_utc: at,
+    written_at_utc: at,
+    armed,
+    entries_paused: entriesPaused,
+    strategy: { identity_checked: true },
+    status: "nothing_to_place",
+    terminal: { positions_open: 0, orders_open: 1 }
+  };
+}
+
+test("the second strip reads as its own model, with the state as one of three words beside it", async () => {
+  const harness = await createHarness();
+  try {
+    for (const [fixture, word, className] of [
+      [laneTwoHeartbeat({ armed: true }), "Active", /\blive\b/],
+      [laneTwoHeartbeat({ armed: true, ageSeconds: 20 * 60 }), "Stale", /\bstale\b/],
+      [laneTwoHeartbeat({ armed: false }), "Paused", /\bwaiting\b/]
+    ]) {
+      harness.setFile("/data/live-trading-trader.ftmo-2.json", fixture);
+      const { page } = await harness.open();
+      // The widget paints its first state after its own fetch, so wait for the detail to leave its placeholder.
+      await page.waitForFunction(() => {
+        const detail = document.querySelector("#liveTraderStatusFtmo2 .live-trader-detail");
+        return Boolean(detail && detail.textContent.trim() && !/checking heartbeat/i.test(detail.textContent));
+      });
+      const strip = await laneTwoStrip(page);
+      assert.equal(strip.label, "Live 0.5L2L Directional", "the second strip's label is the model's name, exactly");
+      assert.equal(strip.detail, word, `the state beside the name is one of the three words, saw "${strip.detail}"`);
+      assert.match(strip.className, className, `the strip's tone must match the word, saw "${strip.className}"`);
+      assert.notEqual(strip.panel, "", "the longer state stays in the panel below");
+      assert.match(strip.title, new RegExp(word === "Active" ? "Armed" : word === "Stale" ? "Stale heartbeat" : "Unarmed"), "the tooltip carries the longer state");
+      await page.close();
+    }
   } finally {
     await harness.close();
   }
