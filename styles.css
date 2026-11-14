@@ -6706,6 +6706,60 @@ body {
   gap: 10px;
 }
 
+.overview-header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.overview-header-actions p {
+  margin: 0;
+}
+
+.overview-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(244, 184, 96, 0.32);
+  border-radius: 8px;
+  background: rgba(244, 184, 96, 0.08);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.overview-map-link::after {
+  content: "→";
+  color: var(--gold);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.overview-map-link:hover,
+.overview-map-link:focus-visible {
+  border-color: var(--gold-light);
+  background: var(--gold-bg);
+  outline: none;
+}
+
+.overview-map-link:focus-visible {
+  box-shadow: 0 0 0 3px rgba(244, 184, 96, 0.18);
+}
+
+@media (max-width: 720px) {
+  .overview-header-actions {
+    align-items: flex-start;
+  }
+}
+
 .overview-status-link {
   display: inline-flex;
   align-items: center;

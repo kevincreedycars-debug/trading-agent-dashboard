@@ -21044,6 +21044,26 @@ function renderLiveTradeLogic() {
   `;
 }
 
+let systemMapLoad = null;
+
+function ensureSystemMap() {
+  const root = document.querySelector("[data-system-map]");
+  if (!root) return Promise.resolve();
+  if (systemMapLoad) return systemMapLoad;
+  systemMapLoad = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "lib/system-map.js?v=20261114-eight-paths-r3";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("System map script failed to load"));
+    document.body.appendChild(script);
+  }).catch((err) => {
+    systemMapLoad = null;
+    console.warn("Architecture map unavailable", err);
+  });
+  return systemMapLoad;
+}
+
 function setTab(tab) {
   const availableTabs = getAvailableTopLevelTabs();
   const fallbackTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -21091,10 +21111,7 @@ function setTab(tab) {
   // The System section's own rule page: static copy, so it renders the same whether or not a snapshot loaded,
   // and it is rendered here rather than on load so a reader who never opens the tab pays nothing for it.
   if (activeTab === "live-trade-logic") renderLiveTradeLogic();
-  if (activeTab === "architecture") {
-    renderArchitecture();
-    loadArchitectureManifest().catch(() => {});
-  }
+  if (activeTab === "architecture") ensureSystemMap();
 }
 
 function setBacktestTab(tab, options = {}) {
@@ -21117,6 +21134,18 @@ function setupTabs() {
   document.querySelectorAll(".tab-button").forEach(btn => {
     btn.addEventListener("click", () => setTab(btn.dataset.tab));
   });
+
+  // The overview's map link names the Architecture tab. On a page opened at #architecture the
+  // hash is already the same string, so the browser fires no hashchange; call setTab directly
+  // in that case so the link always switches the view.
+  const mapLink = document.querySelector(".overview-map-link");
+  if (mapLink) {
+    mapLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (location.hash === "#architecture") setTab("architecture");
+      else location.hash = "architecture";
+    });
+  }
 
   document.querySelectorAll(".subtab-button").forEach(btn => {
     btn.addEventListener("click", () => setBacktestTab(btn.dataset.backtestTab || "accuracy"));
