@@ -7,6 +7,15 @@ Status, 2026-11-14: **the lane is built and tested on branch `live-trading/l2l-b
 task is registered, no terminal is installed and no account is bought.** The blocker is one purchase. Until it clears,
 this page is the plan.
 
+Host progress, 2026-11-14 (`18:57Z`–`19:12Z`, [`FTMO3_HOST_PREP_20261114.md`](FTMO3_HOST_PREP_20261114.md)): §3a is
+done — `C:\ftmo3` is cloned at the branch with an empty `git status` and its `tmp` and `data` folders made; §3b's
+installer was verified (the lane-2 package, same hash, and the destination field still absent, so the wizard has not been
+run); §3c **cannot** be done before the login, because the registration refuses without an identity file and would drop
+`--terminal` if the folder were absent; §3d passed on the host, `199/199`; and a five-scene dry run was made from
+`C:\ftmo3` against saved inputs with sending disabled (that page §5) — both reclaims, the crossing refusal, the fifth
+entry of a day and the one-ticket-per-pair refusal, with the full grid, `5R`, lane 1's 2R/3R stop rungs, broker-minimum
+sizing and `max_per_day: null`.
+
 ## 1. What the branch contains
 
 | File | What it holds |

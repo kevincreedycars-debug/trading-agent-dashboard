@@ -1,5 +1,33 @@
 # Session Notes
 
+2026-11-14 (late: branch pushed and reviewed, the third lane staged on the host, the lane-2 cap switch commands
+corrected) - the branch went to origin and opened as PR
+[#5](https://github.com/kevincreedycars-debug/trading-agent-dashboard/pull/5), and `C:\ftmo3` was staged on the host
+`VMI3697641` over the key-only ssh door: a clean clone of the branch at `1653b693` (fast-forwarded to `702b20c6`), its
+`tmp` and `data` folders, the four deciding blobs hashed and equal to this PC's, and the whole host-side suite green at
+`199/199`. Read-only before and after: lane 1's and lane 2's heartbeats are unchanged apart from their instants (armed,
+`nothing_to_place`, `***614` and `***841`, lane 2 still `max_per_day: 4`), both checkouts untouched at `c5abd0ac` and
+`f14f2ac7` with only their pre-existing dirty lines, two terminals and two data hash folders and no third, and no
+`…ftmo3` task. The installer was verified but **not** started: the lane-2 package is still in
+`C:\Users\Administrator\Downloads\ftmo5setup.exe` with the hash the lane-2 runbook records, its default destination is
+lane 1's own folder, and the destination field `C:\Program Files\FTMO Global Markets MT5 Terminal 3` does not exist yet -
+so the install stays an RDP wizard act with that field read character by character. The ftmo-3 task is deliberately not
+registered: the registration refuses without an identity file, and it silently drops `--terminal` when the folder is
+absent, so a task written now would point at lane 1's terminal. Five dry-run scenes were driven from `C:\ftmo3` against
+saved inputs with `--confirm-live` absent everywhere and a four-kilobyte stand-in answering the order tool's read-only
+`status` (it has no send path): a bullish reclaim (buy limit 1.11887, stop 1.118028, target 1.12308), a bearish reclaim
+(sell limit 1.12729, stop 1.128132, target 1.12308), a simple crossing refused, a fifth entry on a day whose first four
+were already placed (`taken_today: 4`, `max_per_day: null`), and a same-pair reclaim refused because "EURUSD already
+carries a ticket from this loop"; every run stated `rule=blind call_read=none grid=full r_multiple=5
+require_deviation=true`, `caps expire/minutes/max_open/max_per_day` all `null`, no `--lots` on any call (broker-minimum
+sizing) and the module's 2R/3R stop rungs. Two corrections went in with the evidence: the lane-2 no-cap registration line
+was missing `-TaskName`, `-HiddenRunner`, `-ChainFeed` and `-ReentryCrossing` (each would have changed something other
+than the cap, the first would have rewritten lane 1's task), and the lane-1 note about a hand `--max-open 1
+--expire-minutes 30` was stale - the deployed wrapper carries neither. The one host-only test failure was the same class
+of fact: in `C:\ftmo3` the lanes file's `.` and `../ftmo3` resolve to one directory, so the lane-1 registration test now
+names `-Lane ftmo-1` as every runbook line does. Record: `docs/live-trading/FTMO3_HOST_PREP_20261114.md`. Next: the
+purchase and login, then the terminal install, identity file, unarmed registration and the two-minute BTCUSD test.
+
 2026-11-14 (the blind lane built, the daily cap removed, nothing deployed) - the owner approved a third FTMO MT5
 account trading "Live L2L Blind" and removed the strategy's daily entry limit on all three accounts. Branch
 `live-trading/l2l-blind-20261114` off `origin/main` `fc15ef5c` with the four deviation-audit commits cherry-picked.

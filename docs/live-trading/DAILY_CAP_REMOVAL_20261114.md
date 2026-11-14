@@ -6,7 +6,10 @@ Nothing in it has been applied: the live tasks are untouched, the deployed check
 below are for the owner to read and approve before either lane is switched.
 
 Status: staged in branch `live-trading/l2l-blind-20261114`. **No live task changed, no task re-registered, nothing
-restarted.**
+restarted.** Corrected on 2026-11-14 after reading both deployed wrappers on the host: the lane-2 line as first drafted
+was missing `-TaskName`, `-HiddenRunner`, `-ChainFeed` and `-ReentryCrossing` — each of which would have changed
+something other than the cap — and the note about lane 1's hand caps was stale. §3b says why each switch is there and
+§3e prints the two deployed command lines the `-Show` output is compared against.
 
 ## 1. What the change is
 
@@ -72,14 +75,27 @@ git -C C:\ftmo2 hash-object scripts/run-live-trading-trader.js scripts/register-
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File C:\ftmo2\scripts\register-live-trading-trader-task.ps1 `
   -Show -Lane ftmo-2 -RepoRoot C:\ftmo2 -Published C:\live-trading\publisher `
-  -Magic 20261005 -Grid half -RMultiple 3 -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json `
-  -MaxPerDay 0
+  -TaskName LiveTradingTraderTick-ftmo2 `
+  -Terminal "C:\Program Files\FTMO Global Markets MT5 Terminal 2" `
+  -HiddenRunner "C:\Users\Administrator\.trading-agent-dashboard\scripts\run-hidden.vbs" `
+  -Magic 20261005 -Grid half -RMultiple 3 -ReentryCrossing `
+  -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json `
+  -ChainFeed -MaxPerDay 0
 ```
 
 Pass every flag the deployed lane already carries, plus `-MaxPerDay 0`. `-Show` writes nothing. Three lines have to be
 in the output before going on: `max_per_day = unlimited (no strategy cap, owner 2026-11-14)`, and in `loop_command`
 the same `--max-per-day unlimited` beside the lane's own `--magic`, `--grid half`, `--r-multiple 3`,
-`--expect-identity` and `--terminal`, and **no** `--confirm-live` unless the registration being written is armed.
+`--reentry-crossing`, `--expect-identity` and `--terminal`, and **no** `--confirm-live` unless the registration being
+written is armed.
+
+**Three switches are not optional, and each one is there because of a fact read off the host on 2026-11-14** (§3e):
+
+| switch | why the command above has it |
+| --- | --- |
+| `-TaskName LiveTradingTraderTick-ftmo2` | the default task name is lane 1's `LiveTradingTraderTick019`. Without it this registration would rewrite **lane 1's** task with lane 2's wrapper |
+| `-HiddenRunner "C:\Users\Administrator\…\run-hidden.vbs"` | the script's default names `C:\Users\A17\…`, which does not exist on the host. Registration would fall back to `cmd.exe /c` and change the task's action from `wscript.exe` to a flashing console |
+| `-ChainFeed` (and `-ReentryCrossing`) | lane 2's deployed wrapper is a chained feed-then-trader line with `--reentry-crossing` on it. A registration without them would drop the snapshot producer and the crossing gate while the cap change went in |
 
 ### 3c. Back up, register, verify
 
@@ -91,8 +107,12 @@ Export-ScheduledTask -TaskName LiveTradingTraderTick-ftmo2 | Out-File -Encoding 
 
 powershell -NoProfile -ExecutionPolicy Bypass -File C:\ftmo2\scripts\register-live-trading-trader-task.ps1 `
   -Lane ftmo-2 -RepoRoot C:\ftmo2 -Published C:\live-trading\publisher `
-  -Magic 20261005 -Grid half -RMultiple 3 -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json `
-  -MaxPerDay 0 -Arm
+  -TaskName LiveTradingTraderTick-ftmo2 `
+  -Terminal "C:\Program Files\FTMO Global Markets MT5 Terminal 2" `
+  -HiddenRunner "C:\Users\Administrator\.trading-agent-dashboard\scripts\run-hidden.vbs" `
+  -Magic 20261005 -Grid half -RMultiple 3 -ReentryCrossing `
+  -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json `
+  -ChainFeed -MaxPerDay 0 -Arm
 
 Get-Content C:\ftmo2\tmp\live-trading-trader-run.cmd            # --max-per-day unlimited is on the line
 powershell -NoProfile -ExecutionPolicy Bypass -File C:\ftmo2\scripts\export-live-trading-effective-config.ps1 `
@@ -114,19 +134,47 @@ reports `refused` with an identity message is a rollback, not a retry.
 
 ```powershell
 git -C C:\live-trading\runtime rev-parse HEAD          # rollback point
-git -C C:\live-trading\runtime status --porcelain
+git -C C:\live-trading\runtime status --porcelain      # four pre-existing lines, 2026-11-14
 git -C C:\live-trading\runtime checkout live-trading/l2l-blind-20261114 -- scripts/run-live-trading-trader.js scripts/register-live-trading-trader-task.ps1
+
 powershell -NoProfile -ExecutionPolicy Bypass -File C:\live-trading\runtime\scripts\register-live-trading-trader-task.ps1 `
-  -Show -Lane ftmo-1 -RepoRoot C:\live-trading\runtime -Published C:\live-trading\publisher -MaxPerDay 0
-# then the same backup, registration (-Arm), wrapper read and one-tick heartbeat read as 3c, registering with
-#   -Lane ftmo-1 and -Terminal "C:\Program Files\FTMO Global Markets MT5 Terminal"
+  -Show -Lane ftmo-1 -RepoRoot C:\live-trading\runtime -Published C:\live-trading\publisher `
+  -TaskName LiveTradingTraderTick019 `
+  -Terminal "C:\Program Files\FTMO Global Markets MT5 Terminal" `
+  -HiddenRunner "C:\Users\Administrator\.trading-agent-dashboard\scripts\run-hidden.vbs" `
+  -MaxPerDay 0
+# then the same backup, registration (-Arm), wrapper read and one-tick heartbeat read as 3c, with the same switches.
 ```
 
-Lane 1's deployed wrapper also carries `--max-open 1` and `--expire-minutes 30`. Read it first —
-`Get-Content C:\live-trading\runtime\tmp\live-trading-trader-run.cmd` — and copy every flag off it into the `-Show`
-line, including `-MaxOpen 1 -ExpireMinutes 30`, so the re-registration does not silently drop a hand cap that is
-currently in force. The `-Show` output is the comparison: it must differ from the old wrapper in the daily cap and in
-nothing else.
+Lane 1's deployed wrapper, read on the host on 2026-11-14, carries `--align --settle-seconds 90 --confirm-live` and
+`--max-per-day 4`, and **no** `--max-open` and **no** `--expire-minutes` — an earlier draft of this page said otherwise.
+The `--align` pair is written automatically by the script for the unchained shape, so nothing has to be passed for it.
+Lane 1 needs no `-Magic`, `-Grid`, `-RMultiple` or `-ExpectIdentity`: its defaults are its own row's numbers, and it is
+not identity-gated. The `-Show` output is the comparison: it must differ from the deployed wrapper in the daily cap and
+in nothing else — including `-TaskName` and `-HiddenRunner`, which are passed explicitly for the reasons §3b gives.
+
+### 3e. The two deployed command lines, read on the host
+
+The comparison above is only as good as the thing it is compared with, so both wrappers were read read-only at
+`2026-11-14T18:57Z` and `19:10Z` (unchanged between the two):
+
+```
+lane 1: node scripts\run-live-trading-trader.js --once --align --settle-seconds 90 --confirm-live --quiet --python …
+        --state …\tmp\live-trading-trader-state.json --log … --lock … --journal … --lane "ftmo-1" --max-per-day 4
+        --terminal "C:\Program Files\FTMO Global Markets MT5 Terminal" --published "C:\live-trading\publisher"
+
+lane 2: node scripts\run-live-trading-feed.js --once --align --interval-seconds 300 --settle-seconds 90 --quiet …
+        --out C:\ftmo2\data\live-trading.json --log … --lock … --terminal "…MT5 Terminal 2"
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        node scripts\run-live-trading-trader.js --once --confirm-live --quiet --python … --state …\tmp\…-state.json
+        --log … --lock … --journal … --lane "ftmo-2" --grid half --r-multiple 3 --reentry-crossing --magic 20261005
+        --expect-identity "C:\live-trading\state\lane-ftmo2-identity.json" --max-per-day 4
+        --terminal "C:\Program Files\FTMO Global Markets MT5 Terminal 2" --published "C:\live-trading\publisher"
+```
+
+Both tasks run `wscript.exe "C:\Users\Administrator\.trading-agent-dashboard\scripts\run-hidden.vbs" "cmd.exe /c
+<that wrapper>"`, as `VMI3697641\Administrator`. Those four facts — the task name, the hidden runner, the chained shape
+and the identity flag — are what the corrected `-Show`/registration lines above reproduce.
 
 
 ## 4. Rollback
@@ -135,11 +183,15 @@ Rollback is one registration with the old number, and the state file is untouche
 ledger:
 
 ```powershell
-# The task back to a cap of four, with every other flag exactly as before.
+# The task back to a cap of four, with every other switch exactly as before (§3e's read of the deployed line).
 powershell -NoProfile -ExecutionPolicy Bypass -File C:\ftmo2\scripts\register-live-trading-trader-task.ps1 `
   -Lane ftmo-2 -RepoRoot C:\ftmo2 -Published C:\live-trading\publisher `
-  -Magic 20261005 -Grid half -RMultiple 3 -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json `
-  -MaxPerDay 4 -Arm
+  -TaskName LiveTradingTraderTick-ftmo2 `
+  -Terminal "C:\Program Files\FTMO Global Markets MT5 Terminal 2" `
+  -HiddenRunner "C:\Users\Administrator\.trading-agent-dashboard\scripts\run-hidden.vbs" `
+  -Magic 20261005 -Grid half -RMultiple 3 -ReentryCrossing `
+  -ExpectIdentity C:\live-trading\state\lane-ftmo2-identity.json `
+  -ChainFeed -MaxPerDay 4 -Arm
 Get-Content C:\ftmo2\tmp\live-trading-trader-run.cmd            # --max-per-day 4 is back
 
 # Or restore the exact bytes and definition that were live before the switch:
