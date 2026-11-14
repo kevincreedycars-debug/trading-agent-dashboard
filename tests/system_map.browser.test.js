@@ -24,6 +24,30 @@ const mapStyles = fs.readFileSync(path.join(repoRoot, "system-map.css"), "utf8")
 const indexPage = fs.readFileSync(path.join(repoRoot, "index.html"), "utf8");
 const hostScript = fs.readFileSync(path.join(repoRoot, "script.js"), "utf8");
 
+// Chromium refuses a set of ports even on loopback (4045 among them). An OS-assigned ephemeral port can land on
+// one, which made this guard fail before the page was ever read. Bind until the port is one the browser will open.
+const browserBlockedPorts = new Set([2049, 3659, 4045, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6697, 10080, 28017]);
+
+async function listenForBrowser(server) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await new Promise((resolve, reject) => {
+      const onError = error => {
+        server.off("error", onError);
+        reject(error);
+      };
+      server.once("error", onError);
+      server.listen(0, "127.0.0.1", () => {
+        server.off("error", onError);
+        resolve();
+      });
+    });
+    if (!browserBlockedPorts.has(server.address().port)) return;
+    await new Promise(resolve => server.close(resolve));
+  }
+  throw new Error("could not bind a port Chromium will open");
+}
+
+
 function contentType(filePath) {
   if (filePath.endsWith(".html")) return "text/html; charset=utf-8";
   if (filePath.endsWith(".js")) return "text/javascript; charset=utf-8";
@@ -46,7 +70,7 @@ async function startServer() {
     res.writeHead(200, { "Content-Type": contentType(filePath), "Cache-Control": "no-store" });
     res.end(fs.readFileSync(filePath));
   });
-  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+  await listenForBrowser(server);
   return {
     origin: `http://127.0.0.1:${server.address().port}`,
     close: () => new Promise((resolve, reject) => server.close(error => (error ? reject(error) : resolve())))
@@ -69,6 +93,9 @@ test("the overview link opens an embedded map that asks for nothing outside this
   assert.doesNotMatch(mapStyles, /@import|url\s*\(/, "the map stylesheet must not load a font, image or frame");
   assert.match(indexPage, /system-map\.css\?v=20261114-eight-paths-r3/, "the page must request the current map stylesheet");
   assert.match(hostScript, /lib\/system-map\.js\?v=20261114-eight-paths-r3/, "the host must request the current map script");
+  assert.match(mapScript, /registered 25 factors/, "the map must record that the programme registered 25 factors");
+  assert.doesNotMatch(mapScript, /25-factor challenger/, "no label may call the implemented challenger a 25-factor model");
+  assert.match(mapScript, /no replay uses all 25/, "the map must not imply a replay used all 25 factors");
 
   const server = await startServer();
   const browser = await chromium.launch({ headless: true });
@@ -112,6 +139,8 @@ test("the overview link opens an embedded map that asks for nothing outside this
         rows: [...root.querySelectorAll(".map-row-code")].map(el => el.textContent.trim()),
         join: root.querySelector("[data-map-join-state]").textContent.trim(),
         readout: root.querySelector("[data-map-readout] h2").textContent.trim(),
+        tiers: [...root.querySelectorAll("[data-map-asset]")].map(button => [button.dataset.mapAsset, button.querySelector(".map-chip-sub").textContent.trim()]),
+        planned: [...root.querySelectorAll("[data-map-pair] .map-chip-plan")].map(tag => tag.closest("[data-map-pair]").dataset.mapPair),
         scripts: [...document.scripts].filter(script => /system-map\.js/.test(script.src)).length
       };
     });
@@ -129,6 +158,17 @@ test("the overview link opens an embedded map that asks for nothing outside this
     assert.deepEqual(shape.rows, ["USD", "EUR", "GOLD", "SILVER", "NQ", "BTC", "WTI", "GBP"]);
     assert.equal(shape.join, "Eight calls in · one pair out");
     assert.equal(shape.readout, "One join, eight inputs");
+    assert.deepEqual(shape.tiers, [
+      ["USD", "established"],
+      ["EUR", "established"],
+      ["GOLD", "established"],
+      ["SILVER", "onboarding"],
+      ["NQ", "established"],
+      ["BTC", "established"],
+      ["WTI", "onboarding"],
+      ["GBP", "onboarding"]
+    ], "five established engines and three onboarding engines stay distinguishable");
+    assert.deepEqual(shape.planned, ["XAG_USD", "WTI_USD", "GBP_USD"], "the three planned pairings alone carry the planned tag");
     assert.equal(shape.scripts, 1, "the module is injected once");
     assert.deepEqual(
       external.filter(url => /system-map/i.test(url)),
@@ -136,6 +176,19 @@ test("the overview link opens an embedded map that asks for nothing outside this
       "opening the map asks for nothing outside the origin"
     );
 
+
+    await page.click('[data-map-asset="USD"]');
+    const usdCopy = await page.evaluate(() => {
+      const root = document.querySelector("[data-system-map]");
+      const usd = root.querySelector('.map-lane[data-asset="USD"]');
+      return {
+        sub: usd.querySelectorAll(".map-node-sub")[2].textContent.trim(),
+        note: root.querySelector("[data-map-readout] .map-readout-note").textContent.trim()
+      };
+    });
+    assert.equal(usdCopy.sub, "Implemented challenger", "the replay names the implemented challenger, not a 25-factor model");
+    assert.match(usdCopy.note, /registered 25 factors/, "the note records that the programme registered 25 factors");
+    assert.match(usdCopy.note, /no replay uses all 25/, "the note must not imply a replay used all 25 factors");
 
     await page.click('[data-map-asset="EUR"]');
     const focused = await page.evaluate(() => {
@@ -164,6 +217,17 @@ test("the overview link opens an embedded map that asks for nothing outside this
     assert.equal(paired.focus, "pair");
     assert.equal(paired.pair, "true");
     assert.equal(paired.join, "EUR/USD · target + USD");
+
+    await page.click('[data-map-pair="XAG_USD"]');
+    const plannedReadout = await page.evaluate(() => {
+      const root = document.querySelector("[data-system-map]");
+      return {
+        badges: [...root.querySelectorAll("[data-map-readout] .map-tier")].map(el => el.textContent.trim()),
+        join: root.querySelector("[data-map-join-state]").textContent.trim()
+      };
+    });
+    assert.ok(plannedReadout.badges.includes("Planned pairing"), "an onboarding target's pair is labelled planned");
+    assert.equal(plannedReadout.join, "XAG/USD · target + USD");
 
     await page.keyboard.press("Escape");
     const reset = await page.evaluate(() => {
