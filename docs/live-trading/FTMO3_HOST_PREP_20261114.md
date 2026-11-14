@@ -17,6 +17,11 @@ The third terminal was installed later the same evening, at `20:14Z`, once the w
 session; [§9](#9-the-third-terminal-installed-2014z) is that record, and it supersedes the "not installed" readings
 above without rewriting them.
 
+The account was logged in and the lane proved at `21:39Z`-`21:52Z` the same evening: [§10](#10-the-login-the-gate-and-the-connection-test-2138z-2152z)
+holds the login, the identity file, the gate's own read-backs, the unarmed-then-disabled registration and the
+`+0.32 USD` two-minute BTCUSD connection test. The lane is still unarmed.
+
+
 ## 1. The checkout
 
 ```powershell
@@ -187,22 +192,22 @@ node --test tests/live_trading_blind_lane.test.js tests/l2l_strategy.test.js tes
 
 ## 8. What is left, and what it waits on
 
-In the order the host needs them:
+All five steps below are now done; §10 is the evidence. The list is kept in the order the host needed them:
 
-1. **The third FTMO account.** The login, server and passwords come from FTMO's own confirmation; nothing before this
-   step can be finished. The account arrived `21:19Z` and its two non-secret fields are in the dialog (§9); only the
-   password paste and **OK** are left, and they are the owner's.
+1. ~~**The third FTMO account.**~~ Done `21:39Z` (§10): `***584` on `FTMO-Server3`, titled `Hedge`, and
+   `config\accounts.dat` present afterwards, so the terminal can log itself back in after a reboot.
 2. ~~The terminal install on the RDP desktop, with the destination field reading `… MT5 Terminal 3` (§3).~~ Done
    `20:14Z`; the field read `C:\Program Files\FTMO Global Markets MT5 Terminal 3`, and §9 is the proof.
-3. **The identity file**, written by hand from the login (§4).
-4. **The account probe** (`live-trading-account-probe.py`) and the tool's `status` against the new identity — read-only,
-   and the proof that the gate holds before anything is registered.
-5. **The registration, unarmed, then disabled**, then the two-minute BTCUSD connection test, then the report, then —
-   only after the owner has read it — arming.
+3. ~~**The identity file**, written from the login (§4).~~ Done `21:43:43Z` (§10).
+4. ~~**The account probe** and the tool's `status` against the new identity.~~ Done `21:41:40Z` and `21:44:23Z` (§10):
+   `ok: true`, all four symbols at `volume_min` `0.01`, and the `status` identity block agreeing with the file.
+5. ~~**The registration, unarmed, then disabled**~~, done `21:46:54Z`, and ~~the two-minute BTCUSD connection test~~
+   done `21:47:35Z`–`21:50:06Z` (§10), with the report below.
 
-Step 1 is the owner's, and the screen for it is already prepared: the third terminal's `File > Login to Trade Account`
-dialog is open on the RDP desktop, `***584` and `FTMO-Server3` already in its two non-secret fields and the password
-field empty (§9). Step 2 is done, so step 3 onwards is where an agent can act again the moment the account exists.
+What still waits is the owner's: reading §10, then arming — enable and register `LiveTradingTraderTick-ftmo3` **with**
+`-Arm`, flip `enabled` to `true` in `config/live-trading-lanes.json` so the publisher carries its snapshot and
+heartbeat, and watch the first unarmed tick before letting the armed one run.
+
 
 ## 9. The third terminal, installed 20:14Z
 
@@ -344,4 +349,113 @@ Readiness for the steps after the login, so none of them is written while the ow
 - `C:\Program Files\Python313\python.exe` imports `MetaTrader5` (Python 3.13.7), the same interpreter lane 2 uses.
 - Nothing else moved: `LiveTrading*` still 8 tasks with no `ftmo3` task, no `accounts.dat`, no lane-3 identity file,
   all three terminals up (`596` lane 3, `1592` lane 1, `4540` lane 2), session 1 `Disc` with no RDP attached.
+
+## 10. The login, the gate and the connection test, 21:38Z-21:52Z
+
+The owner asked, at `21:36Z`, for the login to be finished from here instead of by hand, because the RDP desktop showed
+the dialog with a caret over the password box and keystrokes were not reaching it. Everything below ran from the same
+key-only ssh door through the session-1 runner; the dialog was never re-opened or re-filled.
+
+### The password, and what was and was not written down
+
+The password was typed into the dialog's own `Password:` edit (`10138`) and read back as a length only: `11` before OK,
+equal to the value the owner supplied, never echoed and never compared as text in a script that writes a log. The route
+that worked belongs beside §9's table: **`WM_SETTEXT` to the plain `Edit` is accepted where the same call to the login
+*combo* was swallowed** - the combo needs `WM_CHAR` to the combo itself, and its child edit needs neither. `OK`
+(`id 1`) was pressed with `BM_CLICK` after `WM_NEXTDLGCTL` put focus back on the button, and the dialog was gone within
+two seconds.
+
+The staging script that carried the password existed on the host for the length of that run and was deleted at `21:51Z`
+(`login_script_present=False` in the closing read). No log, no journal and no document received it, and the login is
+masked as `***584` throughout, as lane 2's is.
+
+| field | before OK | proof |
+| --- | --- | --- |
+| `Password:` (`10138`) | `len=11` | `WM_GETTEXTLENGTH`; the value was never read |
+| `Login:` (`10137`, edit `1001`) | `***584` | read back exact in §9, untouched here |
+| `Server:` (`10139`) | `cursel 3` = `FTMO-Server3` | the combo's own `CB_GETCURSEL`, unchanged |
+| `Save password for quick login` (`10140`) | ticked, as this build presents it | `config\accounts.dat` exists afterwards, 7,101 bytes |
+
+The title bar at `21:39:31Z` reads `***584 - FTMO-Server3 - Hedge - FTMO Global Markets Ltd`. Two facts follow from it:
+the account is **hedging**, where lanes 1 and 2 are netting, and the terminal is logged in on the right server without a
+second attempt.
+
+
+### The probe, the identity and the gate
+
+| | value |
+| --- | --- |
+| account probe, `21:41:40Z` | `ok: true`, `***584`, `FTMO-Server3`, `USD`, leverage `30`, balance and equity `10,000.00`, `trade_allowed: true`, `trade_expert: true`, 0 positions / 0 orders, build `6320`, terminal path `... MT5 Terminal 3` |
+| symbols, before selection | `EURUSD` visible; `XAUUSD`, `US100.cash`, `BTCUSD` present but not visible, so `tradable: false` and no tick |
+| symbols, after `symbol_select` | all four at `volume_min` `0.01`, `volume_step` `0.01`; `volume_max` `50.0` / `100.0` / `1000.0` / `5.0`; `trade_stops_level` `0` |
+| identity file, `21:43:43Z` | written by `write-identity-lane3.py` after its three refusals passed; `login_masked ***584`, server, terminal path; ACL `NT AUTHORITY\SYSTEM` and `BUILTIN\Administrators` full control, inheritance removed |
+| order tool `status`, `21:44:23Z` | `IDENTITY ***584 on FTMO-Server3 at C:\Program Files\...MT5 Terminal 3`, `0 position(s), 0 pending order(s)` - the gate agrees with the file |
+| the size the send path resolves | `resolve_volume`, called on the tool's own module for each of the four: `0.01` on the way in and `0.01` on the way out, exactly `volume_min` in all eight answers |
+
+The identity file names the install **folder**, not `terminal64.exe`, which is what lane 2's file holds and what the gate
+compares (`terminal.path` in the tool's read-back is the folder). §4's wording about a path ending in `terminal64.exe`
+describes a hand-written file; this one is derived from the terminal, so it cannot disagree with it.
+
+### The registration, and the one thing that had to be passed by name
+
+`-Show` first, at `21:46Z`: `rule = blind: two watched lines, no Layer 1 call`, `max_per_day = unlimited`,
+`armed = false`, and a `loop_command` carrying `--lane "ftmo-3" --magic 20261006 --expect-identity
+"...lane-ftmo3-identity.json" --blind --max-per-day unlimited --terminal "...MT5 Terminal 3"` with no `--confirm-live`.
+
+The registration itself failed once, and the reason is a property of the reviewed script rather than of this host:
+it defaults `-HiddenRunner` to `C:\Users\A17\...\run-hidden.vbs`, a path from the owner's own PC. That file is absent
+here, `Get-LauncherPair` writes its *hidden runner is absent* sentence into the output stream ahead of the pair it
+returns, and the caller's two-variable assignment then hands `New-ScheduledTaskAction` an array: `Cannot process
+argument transformation on parameter 'Argument'`. Nothing was registered by that attempt. Lanes 1 and 2 carry
+`wscript.exe "C:\Users\Administrator\.trading-agent-dashboard\scripts\run-hidden.vbs" "cmd.exe /c ..."`, so the same
+file was passed explicitly with `-HiddenRunner` and the registration went through at `21:46:54Z`: `task_state = Ready`,
+then `Disable-ScheduledTask`, final state **Disabled**, action `wscript.exe "...\run-hidden.vbs" "cmd.exe /c
+C:\ftmo3\tmp\live-trading-trader-run.cmd"`, and the wrapper holds no `--confirm-live`. The eight `LiveTrading*` tasks
+were not touched; `ftmo3` tasks before this run: zero, after: one.
+
+
+### The connection test, and its numbers
+
+Run by hand with the task disabled, so no rule could place anything: one protected market buy at BTCUSD's `volume_min`,
+labelled `tech-conn-test-ftmo3`, magic `20261006`, stop `500.00` below the ask (about `0.8%`, `$5.00` of risk at
+`0.01 BTC`).
+
+| | value |
+| --- | --- |
+| ask at planning, `21:47:34Z` | `64,508.85`; stop set at `64,008.85` |
+| request | `open --symbol BTCUSD --side buy --lots 0.01 --stop-loss 64008.85 --comment tech-conn-test-ftmo3 --magic 20261006 --expect-identity ... --confirm-live` |
+| answer | `TRADE_RETCODE_DONE` on the first attempt; position **200523930**, entry deal `187289937` |
+| fill | `64,493.98`, `0.01` lot, notional `$644.86`, commission `-0.21`, on the request's own price |
+| the stop as held | `64,008.85` on the position, so the ticket was protected for its whole life |
+| close | `TRADE_RETCODE_DONE`, deal `187290047`, price `64,568.15`, profit `+0.74`, commission `-0.21` |
+| holding time | `151 s` (server clock `23:47:35` to `23:50:06`): the `120 s` timer plus the `31 s` the refused first close cost |
+| net | **`+0.32 USD`**, balance `10,000.00` to `10,000.32` |
+| left behind | `0` positions, `0` pending orders; magic `20261006` positions `0`, orders `0` |
+
+The first close at `21:49:36Z` was **refused, and nothing was sent**: `close` defaults `--magic` to the tool's own
+`20261004`, so the run asked the tool to close a ticket it did not think it had placed - `refused: ticket 200523930
+carries magic 20261006, not this lane's 20261004`. That is the ownership guard doing its job on a caller's mistake, not a
+broker answer; re-issued with `--magic 20261006` it closed on the first attempt. Lane 3's own wrapper always passes
+`--magic 20261006`, so the loop cannot hit this.
+
+One clock fact to carry: the terminal's own records stamp `21:47:35Z`, the server stamps the same fill `23:47:35Z`. The
+server runs `+2 h` against the terminal's UTC, so a history window measured in local UTC time misses fresh deals - the
+first read-back returned none for exactly that reason, and the widened window returned both.
+
+### Closing state, read at `21:51Z`
+
+- lane-3 task `LiveTradingTraderTick-ftmo3`: **Disabled**, armed `false`; the other `LiveTrading*` tasks are in the state
+  §9 recorded (`LiveTradingLane-ftmo1` and `LiveTradingTraderTick-ftmo2` `Running`, the rest `Ready`);
+- lane 1 heartbeat `21:51:30.011Z`, `armed=true`; lane 2 `21:51:31.460Z`, `armed=true` - both still trading, both untouched;
+- terminals up: lane 3 `596` (started `20:14:44Z`), lane 2 `4540` (started `2026-11-09T21:11:58Z`), lane 1 `5628`
+  **started `21:37:17Z`** - lane 1's terminal restarted on its own about two minutes before this login run, before any
+  lane-3 step and with no lane-3 process pointed at it, and its heartbeat has been continuous since; recorded because a
+  changed pid on a running lane should never appear unexplained in a later diff;
+- `config\accounts.dat` present in lane 3's data folder, so the quick-login box took the password and the terminal can log
+  itself back in after a reboot;
+- the password staging script removed from the host.
+
+The lane is **still unarmed**: no `enabled: true` for `ftmo-3` in `config/live-trading-lanes.json`, and
+`data/live-trading.blind.json` has not been produced. Arming is the owner's next act, and §8 says what it consists of.
+
 
