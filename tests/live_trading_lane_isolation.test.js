@@ -463,7 +463,11 @@ test("the generated lane-2 command line carries the lane's own magic, identity, 
 });
 
 test("lane 1's generated command line carries no magic, grid, multiple or identity, and states the owner's no-cap answer", windowsOnly, () => {
-  const registration = showRegistration([]);
+  // The lane is named here even though lane 1 is the default. A checkout whose own folder is named after a lane's
+  // root - the deploy layout's `C:\ftmo3`, where `../ftmo3` and `.` are the same directory - makes "one lane by
+  // construction" ambiguous, and the registration refuses rather than guessing. Naming the lane is what every
+  // runbook does and what the deploy host needs.
+  const registration = showRegistration(["-Lane", "ftmo-1"]);
   assert.equal(registration.status, 0, registration.stderr);
   const command = loopCommand(registration);
   assert.match(command, /--lane "ftmo-1"/);
