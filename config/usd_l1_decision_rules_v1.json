@@ -1,0 +1,241 @@
+{
+  "version": "usd-l1-decision-rules-v1.0.0",
+  "status": "FROZEN_EXPERIMENTAL",
+  "research_only": true,
+  "frozen_on": "2026-11-14",
+  "title": "USD Layer 1 decision rules, version 1",
+  "scope": "Turns the intended 25-factor book into one USD decision at 05:00 London: a direction, one of five conviction bands, and an explicit trade / no-trade answer.",
+  "supersedes": null,
+  "owner_decision": "The research names one unit of say per family and seven families, but never names the families, a combination rule, a band set or a gate. This version names six voting families (the seventh group, the data-quality gate, does not vote), fixes an equal-weight family vote, carries the inherited band-2 and band-3 thresholds, and freezes the result before any accuracy evaluation. It is a design decision, not a finding.",
+  "cutoff": "05:00 Europe/London. A print released after the cutoff cannot vote in that morning.",
+  "families": [
+    {
+      "id": "rates",
+      "label": "Rates",
+      "weight": 1,
+      "signals": [
+        {
+          "id": "us_2y",
+          "label": "US 2Y yield, five-session change",
+          "factor_id": "live.f2-us-2y-delta",
+          "source": "FRED DGS2",
+          "vote_rule": "sign of the five-session change in bps: higher votes +1 USD, lower -1, unchanged 0"
+        },
+        {
+          "id": "real_yield",
+          "label": "US 10Y real yield, five-session change",
+          "factor_id": "live.f4-real-yield-delta",
+          "source": "FRED DFII10",
+          "vote_rule": "sign of the five-session change in bps: higher votes +1 USD, lower -1, unchanged 0"
+        },
+        {
+          "id": "relative_front_end",
+          "label": "US minus Germany 2Y spread, five-session change",
+          "factor_id": "rates.relative-front-end-delta",
+          "shared_factor_ids": ["live.f3-us-de-2y-spread-delta", "rates.us-front-end-delta"],
+          "source": "FRED DGS2 and Bundesbank BBSIS 2Y",
+          "vote_rule": "sign of the five-session change in bps: widening votes +1 USD, narrowing -1, unchanged 0; F3 and the shared front-end row are the same print and never vote twice"
+        }
+      ]
+    },
+    {
+      "id": "risk",
+      "label": "Risk and volatility",
+      "weight": 1,
+      "signals": [
+        {
+          "id": "vix_level",
+          "label": "VIX level and risk regime",
+          "factor_id": "live.f1-vix-level",
+          "source": "FRED VIXCLS",
+          "vote_rule": "the nine-input book's frozen VIX regime vote: high and rising volatility votes -1 USD, low and falling +1"
+        },
+        {
+          "id": "vix_change",
+          "label": "VIX five-session change",
+          "factor_id": "risk.vix-level-and-change-at-cutoff",
+          "source": "FRED VIXCLS",
+          "vote_rule": "the nine-input book's frozen VIX momentum vote: a rising five-session change votes -1 USD, a falling change +1"
+        },
+        {
+          "id": "safe_haven",
+          "label": "Safe-haven demand",
+          "factor_id": "risk.usd-safe-haven-demand",
+          "source": "Cached gold H1 and H.10 USD/JPY; CHF confirmation only",
+          "vote_rule": "RG-5: gold and JPY both weaken by more than 0.25% votes +1 USD, both strengthen -1, otherwise 0; CHF never votes alone"
+        }
+      ]
+    },
+    {
+      "id": "usd",
+      "label": "USD level and momentum",
+      "weight": 1,
+      "signals": [
+        {
+          "id": "broad_dollar",
+          "label": "Broad dollar momentum",
+          "factor_id": "live.f5-dxy-delta",
+          "source": "FRED DTWEXBGS, a declared stand-in for ICE DXY",
+          "vote_rule": "the nine-input book's frozen broad-dollar vote: a five-session rise votes +1 USD, a fall -1"
+        },
+        {
+          "id": "session_momentum",
+          "label": "USD session momentum",
+          "factor_id": "fx.usd-session-momentum",
+          "source": "EUR/USD and USD/JPY cached H1 tape, declared proxies for the DXY path",
+          "vote_rule": "the mean of the two mirror votes; the pair is one factor and votes once, not twice"
+        },
+        {
+          "id": "overnight_range",
+          "label": "Overnight range position",
+          "factor_id": "fx.usd-overnight-range-position",
+          "source": "Cached EUR/USD H1 tape",
+          "vote_rule": "RG-3: range position at least 0.70 votes +1 USD, at most 0.30 -1, otherwise 0; a range below 10 pips is undefined"
+        }
+      ]
+    },
+    {
+      "id": "commodities",
+      "label": "Gold and commodities",
+      "weight": 1,
+      "signals": [
+        {
+          "id": "gold",
+          "label": "Gold five-session change",
+          "factor_id": "live.f6-gold-delta",
+          "source": "Cached XAU/USD H1, labelled as the Coinbase quote",
+          "vote_rule": "the nine-input book's frozen gold vote: a five-session fall votes +1 USD, a rise -1"
+        }
+      ]
+    },
+    {
+      "id": "cross_asset",
+      "label": "Cross-asset",
+      "weight": 1,
+      "signals": [
+        {
+          "id": "equities",
+          "label": "Equity versus USD",
+          "factor_id": "live.f10-equity-versus-usd",
+          "source": "Cached NAS100 H1, labelled where the rule names QQQ",
+          "vote_rule": "the nine-input book's frozen equity vote: a five-session fall votes +1 USD, a rise -1"
+        }
+      ]
+    },
+    {
+      "id": "event",
+      "label": "Events and calendar",
+      "weight": 1,
+      "signals": [
+        {
+          "id": "fed_bias",
+          "label": "F8 Fed bias",
+          "factor_id": "live.f8-fed-bias",
+          "source": "23 archived FOMC policy statements, release-clocked",
+          "vote_rule": "RG-2: a hawkish statement shift votes +1 USD, dovish -1, neutral 0; a statement released after the cutoff cannot vote that morning"
+        }
+      ]
+    }
+  ],
+  "non_voting_gate": {
+    "id": "quality",
+    "label": "Data-quality gate",
+    "factor_id": "data.quality-gate-for-abstention",
+    "rule": "A morning needs at least six usable voting signals, at least four usable families, and an open RG-4 volatility gate before a direction may be issued. The gate never adds or subtracts a vote."
+  },
+  "direction": {
+    "family_vote": "arithmetic mean of the usable signal votes in the family, capped to [-1, +1] by construction",
+    "net_score": "sum of the usable family votes",
+    "agreement": "absolute net score divided by the number of usable families",
+    "participation": "usable voting signals divided by twelve",
+    "bullish": "net score greater than zero",
+    "bearish": "net score less than zero",
+    "deadband": "no call when agreement is below 0.20, which is the frozen RG-8 deadband"
+  },
+  "eligibility": {
+    "min_usable_signals": 6,
+    "min_usable_families": 4,
+    "volatility_gate": "RG-4 must be defined and open",
+    "note": "Six is RG-8's frozen minimum, carried unchanged. Four families is the smallest count at which a family-balanced vote can still disagree with itself."
+  },
+  "bands": [
+    {
+      "band": 1,
+      "label": "Watch",
+      "min_agreement": 0.2,
+      "min_participation": 0.3,
+      "meaning": "A direction exists, but the book is close to its deadband or mostly absent."
+    },
+    {
+      "band": 2,
+      "label": "Weak",
+      "min_agreement": 0.25,
+      "min_participation": 0.4,
+      "meaning": "The inherited band-2 threshold: a weak directional read, not a trade."
+    },
+    {
+      "band": 3,
+      "label": "Provisional trade",
+      "min_agreement": 0.45,
+      "min_participation": 0.6,
+      "meaning": "The inherited provisional trade threshold. It is a floor for study, not evidence of edge."
+    },
+    {
+      "band": 4,
+      "label": "Strong",
+      "min_agreement": 0.65,
+      "min_participation": 0.75,
+      "meaning": "Broad agreement across most families and most signals."
+    },
+    {
+      "band": 5,
+      "label": "Full book",
+      "min_agreement": 0.85,
+      "min_participation": 0.9,
+      "meaning": "Near-unanimous agreement with the event calendar staged. The calendar is not staged, so this band is defined but unreachable in version 1."
+    }
+  ],
+  "caps": [
+    {
+      "when": "fewer than six families are usable",
+      "max_band": 3,
+      "why": "A missing family cannot be read as neutral; it caps conviction at the provisional trade band."
+    },
+    {
+      "when": "the event calendar is not staged (F7 and both calendar factors)",
+      "max_band": 4,
+      "why": "The direction may still be read from F8, but a full-book band 5 needs the known-release window."
+    }
+  ],
+  "trade_rule": {
+    "min_band": 3,
+    "requires": [
+      "the RG-4 volatility gate is defined and open",
+      "the event family is usable (F8 has a release before the cutoff)",
+      "all twelve voting signals are usable",
+      "the band is at least 3"
+    ],
+    "sizing": null,
+    "note": "Provisional and research-only. No sizing, entry, stop or live execution is defined here, and no accuracy result is claimed."
+  },
+  "event_context": {
+    "fed_bias_rule": "RG-2",
+    "fed_bias_staged": true,
+    "fed_bias_wired_into_artefact": false,
+    "calendar_staged": false,
+    "consequence": "The worked morning reads F8 from the archive to show the rule. The published run-v1.json does not yet consume it, so the rule is specified here but not executed by the nine-input artefact."
+  },
+  "worked_morning": {
+    "date": "2024-02-06",
+    "reason": "First replayed morning on which every wired rule resolves, the RG-4 gate is open, and F8 has a release before the cutoff."
+  },
+  "limitations": [
+    "Research only. No figure on this page is an edge claim, and no call is published as live.",
+    "The rules are frozen by judgement before this version's accuracy was evaluated; they are not fitted to the 725 mornings.",
+    "A missing factor is abstained on, never filled with zero or a neighbouring print.",
+    "The event calendar is not staged, so band 5 cannot be reached and every band-4 result carries that cap.",
+    "F8 is specified and computed from its archive for the worked morning, but run-v1.json does not yet read it; the published challenger remains the nine-input experiment.",
+    "The band-3 trade threshold is inherited from the nine-input book. It is a research floor, not a validated gate."
+  ]
+}
+

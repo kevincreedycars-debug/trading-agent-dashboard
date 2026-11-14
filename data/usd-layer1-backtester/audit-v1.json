@@ -1,0 +1,1388 @@
+{
+  "schema_version": "usd-l1-audit-v1",
+  "research_only": true,
+  "generated_from": {
+    "run": "data/usd-layer1-backtester/run-v1.json",
+    "run_sha256": "20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e",
+    "run_generated_at": "2026-11-14T00:00:00.000Z",
+    "run_date_range": {
+      "start": "2024-01-02",
+      "end": "2026-10-12"
+    },
+    "dxy": {
+      "file": "backtester/tmp/ftmo_dxy_cash_h1.csv",
+      "sha256": "c68757cbbfb202c35cc477e71a22cb7649b54758321cd9aa138e4231bde40d5f",
+      "rows": 10052,
+      "start": "2024-12-10T13:00:00.000Z",
+      "end": "2026-11-11T20:00:00.000Z",
+      "instrument": {
+        "id": "dxy_cash_broker_cfd",
+        "symbol": "DXY.cash",
+        "label": "DXY.cash (FTMO spot CFD)",
+        "provider": "FTMO Global Markets Ltd",
+        "provider_server": "FTMO-Server",
+        "terminal": "FTMO Global Markets MT5 Terminal",
+        "description": "Dollar Index, Spot CFD",
+        "kind": "broker_cfd",
+        "is_official_cash_dxy": false,
+        "quote_convention": "index points",
+        "digits": 3,
+        "usd_bullish_predicts": "UP",
+        "series_file": "backtester/tmp/ftmo_dxy_cash_h1.csv",
+        "exporter": "backtester/scripts/export_ftmo_dxy_cash.py",
+        "clock_rule": "the terminal stamps bars in server time; the exporter converts to UTC with the US daylight-saving dates (UTC+2 outside, UTC+3 inside) and refuses to write unless the shift reproduces against the UTC EUR/USD tape",
+        "what_it_is_not": "not the ICE cash index (no official settlement print, broker hours and broker spread) and not FRED DTWEXBGS (a lagged broad trade-weighted index)",
+        "why_it_can_be_scored_here": "its hourly bars are quoted continuously across both 05:00 London endpoints, so the same 05:00-to-next-05:00 question can be put to a real, named, non-official instrument",
+        "why_it_cannot_replace_the_official_series": "a broker CFD's 05:00 print is one broker's quote rather than the licensed index, so a figure from it cannot be reported as test 1's answer; the official lane stays blocked and this lane is labelled"
+      },
+      "flat_band_pct": 0.086,
+      "flat_band_sample": 59,
+      "band_rule": "20th percentile of the absolute 05:00-to-05:00 move over development dates, rounded to 3 decimals"
+    },
+    "markets": {
+      "EURUSD": {
+        "file": "backtester/tmp/oanda_eur_usd_h1.csv",
+        "sha256": "3becfbcb2844cfd63e4216b69f2f3568708a832b332470ddd45a43acca05d0b6",
+        "rows": 17284,
+        "start": "2024-01-01T22:00:00.000Z",
+        "end": "2026-10-13T23:00:00.000Z"
+      },
+      "XAUUSD": {
+        "file": "backtester/tmp/oanda_xau_usd_h1.csv",
+        "sha256": "30584508e030bbbf49e6890b3b2325c715c4cb419395db1394ce240e6da3a02d",
+        "rows": 16440,
+        "start": "2024-01-01T23:00:00.000Z",
+        "end": "2026-10-13T23:00:00.000Z"
+      },
+      "BTCUSD": {
+        "file": "backtester/tmp/binance_btcusdt_1h.csv",
+        "sha256": "0fef3133a593dd2321c28296482bf293ee31dd30661357d85b2105cd7515e91a",
+        "rows": 24432,
+        "start": "2024-01-01T00:00:00.000Z",
+        "end": "2026-10-14T23:00:00.000Z"
+      },
+      "NAS100": {
+        "file": "backtester/tmp/oanda_nas100_usd_h1.csv",
+        "sha256": "b547b3b25718a7fa4c3f6a727886d80ab1464425883f7f44d35f0d73de9aa58f",
+        "rows": 16396,
+        "start": "2024-01-01T23:00:00.000Z",
+        "end": "2026-10-13T23:00:00.000Z"
+      }
+    }
+  },
+  "counts": {
+    "replayed": 725,
+    "eligible": 320,
+    "directional": 196,
+    "abstentions": 124,
+    "trade": 62,
+    "factor_rows": 18125
+  },
+  "gate": {
+    "open": 321,
+    "closed": 373,
+    "undefined": 31,
+    "first_open": "2024-02-06",
+    "last_open": "2026-10-12",
+    "first_undefined": "2024-01-02",
+    "last_undefined": "2026-01-01"
+  },
+  "dxy": {
+    "instrument": {
+      "id": "dxy_cash_broker_cfd",
+      "symbol": "DXY.cash",
+      "label": "DXY.cash (FTMO spot CFD)",
+      "provider": "FTMO Global Markets Ltd",
+      "provider_server": "FTMO-Server",
+      "terminal": "FTMO Global Markets MT5 Terminal",
+      "description": "Dollar Index, Spot CFD",
+      "kind": "broker_cfd",
+      "is_official_cash_dxy": false,
+      "quote_convention": "index points",
+      "digits": 3,
+      "usd_bullish_predicts": "UP",
+      "series_file": "backtester/tmp/ftmo_dxy_cash_h1.csv",
+      "exporter": "backtester/scripts/export_ftmo_dxy_cash.py",
+      "clock_rule": "the terminal stamps bars in server time; the exporter converts to UTC with the US daylight-saving dates (UTC+2 outside, UTC+3 inside) and refuses to write unless the shift reproduces against the UTC EUR/USD tape",
+      "what_it_is_not": "not the ICE cash index (no official settlement print, broker hours and broker spread) and not FRED DTWEXBGS (a lagged broad trade-weighted index)",
+      "why_it_can_be_scored_here": "its hourly bars are quoted continuously across both 05:00 London endpoints, so the same 05:00-to-next-05:00 question can be put to a real, named, non-official instrument",
+      "why_it_cannot_replace_the_official_series": "a broker CFD's 05:00 print is one broker's quote rather than the licensed index, so a figure from it cannot be reported as test 1's answer; the official lane stays blocked and this lane is labelled"
+    },
+    "flat_band_pct": 0.086,
+    "states": {
+      "unpriced": 92,
+      "abstained": 124,
+      "scored": 104
+    },
+    "scored": 104,
+    "hits": 47,
+    "misses": 57,
+    "accuracy_pct": 45.2,
+    "wilson": {
+      "low_pct": 36,
+      "high_pct": 54.8
+    },
+    "bands": {
+      "1": {
+        "calls": 22,
+        "scored": 11,
+        "hits": 2,
+        "misses": 9,
+        "accuracy_pct": 18.2,
+        "wilson": {
+          "low_pct": 5.1,
+          "high_pct": 47.7
+        }
+      },
+      "2": {
+        "calls": 105,
+        "scored": 55,
+        "hits": 22,
+        "misses": 33,
+        "accuracy_pct": 40,
+        "wilson": {
+          "low_pct": 28.1,
+          "high_pct": 53.2
+        }
+      },
+      "3": {
+        "calls": 50,
+        "scored": 24,
+        "hits": 13,
+        "misses": 11,
+        "accuracy_pct": 54.2,
+        "wilson": {
+          "low_pct": 35.1,
+          "high_pct": 72.1
+        }
+      },
+      "4": {
+        "calls": 19,
+        "scored": 14,
+        "hits": 10,
+        "misses": 4,
+        "accuracy_pct": 71.4,
+        "wilson": {
+          "low_pct": 45.4,
+          "high_pct": 88.3
+        }
+      },
+      "5": {
+        "calls": 0,
+        "scored": 0,
+        "hits": 0,
+        "misses": 0,
+        "accuracy_pct": null,
+        "wilson": {
+          "low_pct": null,
+          "high_pct": null
+        }
+      }
+    },
+    "trade": {
+      "calls": 62,
+      "scored": 31,
+      "hits": 17,
+      "misses": 14,
+      "accuracy_pct": 54.8,
+      "wilson": {
+        "low_pct": 37.8,
+        "high_pct": 70.8
+      }
+    },
+    "by_year": {
+      "2024": {
+        "scored": 6,
+        "hits": 3
+      },
+      "2025": {
+        "scored": 40,
+        "hits": 17
+      },
+      "2026": {
+        "scored": 58,
+        "hits": 27
+      }
+    },
+    "unpriced": {
+      "no opening bar": 68,
+      "no closing bar": 24
+    }
+  },
+  "markets": {
+    "EURUSD": {
+      "label": "EUR/USD",
+      "flat_band_pct": 0.1,
+      "calls": 196,
+      "priced": 159,
+      "scored": 128,
+      "hits": 63,
+      "misses": 65,
+      "flat": 31,
+      "unpriced": 37,
+      "agreement_pct": 49.2,
+      "wilson": {
+        "low_pct": 40.7,
+        "high_pct": 57.8
+      },
+      "unpriced_reasons": {
+        "no closing bar": 37
+      }
+    },
+    "XAUUSD": {
+      "label": "XAU/USD",
+      "flat_band_pct": 0.152,
+      "calls": 196,
+      "priced": 158,
+      "scored": 131,
+      "hits": 73,
+      "misses": 58,
+      "flat": 27,
+      "unpriced": 38,
+      "agreement_pct": 55.7,
+      "wilson": {
+        "low_pct": 47.2,
+        "high_pct": 63.9
+      },
+      "unpriced_reasons": {
+        "no closing bar": 37,
+        "no opening bar": 1
+      }
+    },
+    "BTCUSD": {
+      "label": "BTC/USD",
+      "flat_band_pct": 0.553,
+      "calls": 196,
+      "priced": 196,
+      "scored": 157,
+      "hits": 70,
+      "misses": 87,
+      "flat": 39,
+      "unpriced": 0,
+      "agreement_pct": 44.6,
+      "wilson": {
+        "low_pct": 37,
+        "high_pct": 52.4
+      },
+      "unpriced_reasons": {}
+    },
+    "NAS100": {
+      "label": "NAS100",
+      "flat_band_pct": 0.21,
+      "calls": 196,
+      "priced": 158,
+      "scored": 127,
+      "hits": 59,
+      "misses": 68,
+      "flat": 31,
+      "unpriced": 38,
+      "agreement_pct": 46.5,
+      "wilson": {
+        "low_pct": 38,
+        "high_pct": 55.1
+      },
+      "unpriced_reasons": {
+        "no closing bar": 38
+      }
+    }
+  },
+  "joint": {
+    "directional_calls": 196,
+    "all_four_hit": 17,
+    "any_four_hit": 136,
+    "all_four_flat_or_unpriced": 9
+  },
+  "outcome_check": {
+    "checked": 2900,
+    "matched": 2900,
+    "mismatched": 0,
+    "mismatch_dates": 0,
+    "mismatch_date_range": null,
+    "field_tally": {},
+    "samples": []
+  },
+  "factors": [
+    {
+      "factor_id": "live.f1-vix-level",
+      "factor_name": "VIX level and risk regime",
+      "role": "direction",
+      "source": "FRED VIXCLS (stored daily print)",
+      "freshness_rule": "daily print, used through the following London morning",
+      "calculation": "Frozen VIX regime vote from the nine-input book: high/rising volatility votes USD-weak, low/falling votes USD-strong.",
+      "fix": "Read from stored FRED print and metadata; no backfill needed.",
+      "mornings": 725,
+      "accounted": 717,
+      "timing_verified": 717,
+      "states": {
+        "missing_input": 8,
+        "voting_present": 717
+      },
+      "gap_causes": {
+        "missing_input": 8,
+        "none": 717
+      },
+      "coverage_pct": 98.9,
+      "timing_pct": 98.9
+    },
+    {
+      "factor_id": "risk.vix-level-and-change-at-cutoff",
+      "factor_name": "VIX level and change at the cutoff",
+      "role": "counted_elsewhere",
+      "source": "FRED VIXCLS (stored daily print)",
+      "freshness_rule": "daily print; change is a five-session difference",
+      "calculation": "Two frozen VIX signals read the same print; F1 and this row share it and cannot vote twice.",
+      "fix": "Shared with F1; counted once in the twelve-signal book.",
+      "mornings": 725,
+      "accounted": 717,
+      "timing_verified": 717,
+      "states": {
+        "counted_elsewhere_no_signal": 8,
+        "counted_elsewhere": 717
+      },
+      "gap_causes": {
+        "source_missing": 8,
+        "none": 717
+      },
+      "coverage_pct": 98.9,
+      "timing_pct": 98.9
+    },
+    {
+      "factor_id": "live.f2-us-2y-delta",
+      "factor_name": "US 2Y yield, five-session change",
+      "role": "direction",
+      "source": "FRED DGS2 (stored daily print)",
+      "freshness_rule": "daily print, five-session change",
+      "calculation": "Sign of the five-session change in basis points: up +1 USD, down -1, unchanged 0.",
+      "fix": "Read from the stored FRED print; no backfill needed.",
+      "mornings": 725,
+      "accounted": 661,
+      "timing_verified": 661,
+      "states": {
+        "missing_input": 64,
+        "voting_present": 661
+      },
+      "gap_causes": {
+        "missing_input": 64,
+        "none": 661
+      },
+      "coverage_pct": 91.2,
+      "timing_pct": 91.2
+    },
+    {
+      "factor_id": "live.f3-us-de-2y-spread-delta",
+      "factor_name": "US minus Germany 2Y spread, five-session change",
+      "role": "counted_elsewhere",
+      "source": "FRED DGS2 and Bundesbank BBSIS 2Y",
+      "freshness_rule": "daily prints; both legs must be present",
+      "calculation": "F3 is the same print as the frozen relative-front-end signal and never votes twice.",
+      "fix": "Bundesbank 2Y leg is stored; missing legs are recorded, never filled.",
+      "mornings": 725,
+      "accounted": 661,
+      "timing_verified": 725,
+      "states": {
+        "counted_elsewhere_no_signal": 64,
+        "counted_elsewhere": 661
+      },
+      "gap_causes": {
+        "missing_input": 64,
+        "none": 661
+      },
+      "coverage_pct": 91.2,
+      "timing_pct": 100
+    },
+    {
+      "factor_id": "live.f4-real-yield-delta",
+      "factor_name": "US 10Y real yield, five-session change",
+      "role": "direction",
+      "source": "FRED DFII10 (stored daily print)",
+      "freshness_rule": "daily print, five-session change",
+      "calculation": "Sign of the five-session change in basis points: up +1 USD, down -1, unchanged 0.",
+      "fix": "Read from the stored FRED print; no backfill needed.",
+      "mornings": 725,
+      "accounted": 661,
+      "timing_verified": 661,
+      "states": {
+        "missing_input": 64,
+        "voting_present": 661
+      },
+      "gap_causes": {
+        "missing_input": 64,
+        "none": 661
+      },
+      "coverage_pct": 91.2,
+      "timing_pct": 91.2
+    },
+    {
+      "factor_id": "rates.us-front-end-delta",
+      "factor_name": "US front-end rate change",
+      "role": "counted_elsewhere",
+      "source": "FRED DGS2",
+      "freshness_rule": "daily print, five-session change",
+      "calculation": "Same print as the US 2Y signal; counted once.",
+      "fix": "Shared with the US 2Y signal.",
+      "mornings": 725,
+      "accounted": 661,
+      "timing_verified": 661,
+      "states": {
+        "counted_elsewhere_no_signal": 64,
+        "counted_elsewhere": 661
+      },
+      "gap_causes": {
+        "source_missing": 64,
+        "none": 661
+      },
+      "coverage_pct": 91.2,
+      "timing_pct": 91.2
+    },
+    {
+      "factor_id": "rates.relative-front-end-delta",
+      "factor_name": "US minus Germany front-end spread",
+      "role": "direction",
+      "source": "FRED DGS2 and Bundesbank BBSIS 2Y",
+      "freshness_rule": "daily prints; both legs must be present",
+      "calculation": "Sign of the five-session spread change: widening +1 USD, narrowing -1, unchanged 0.",
+      "fix": "Stored Bundesbank 2Y leg; a missing leg is a recorded abstention.",
+      "mornings": 725,
+      "accounted": 661,
+      "timing_verified": 661,
+      "states": {
+        "missing_input": 64,
+        "voting_present": 661
+      },
+      "gap_causes": {
+        "missing_input": 64,
+        "none": 661
+      },
+      "coverage_pct": 91.2,
+      "timing_pct": 91.2
+    },
+    {
+      "factor_id": "rates.real-yield-delta",
+      "factor_name": "US real yield change",
+      "role": "counted_elsewhere",
+      "source": "FRED DFII10",
+      "freshness_rule": "daily print, five-session change",
+      "calculation": "Same print as the real-yield signal; counted once.",
+      "fix": "Shared with the real-yield signal.",
+      "mornings": 725,
+      "accounted": 661,
+      "timing_verified": 661,
+      "states": {
+        "counted_elsewhere_no_signal": 64,
+        "counted_elsewhere": 661
+      },
+      "gap_causes": {
+        "source_missing": 64,
+        "none": 661
+      },
+      "coverage_pct": 91.2,
+      "timing_pct": 91.2
+    },
+    {
+      "factor_id": "rates.term-premium-and-curve",
+      "factor_name": "Term premium and curve",
+      "role": "excluded",
+      "source": "No staged input in v1",
+      "freshness_rule": "not applicable",
+      "calculation": "The research excluded this factor from the voting book; the row proves it was reviewed.",
+      "fix": "No backfill: exclusion is the frozen disposition.",
+      "mornings": 725,
+      "accounted": 725,
+      "timing_verified": 0,
+      "states": {
+        "reviewed_excluded": 725
+      },
+      "gap_causes": {
+        "excluded": 725
+      },
+      "coverage_pct": 100,
+      "timing_pct": 0
+    },
+    {
+      "factor_id": "rates.credit-spread-delta",
+      "factor_name": "Credit spread change",
+      "role": "excluded",
+      "source": "No staged input in v1",
+      "freshness_rule": "not applicable",
+      "calculation": "The research excluded this factor from the voting book; the row proves it was reviewed.",
+      "fix": "No backfill: exclusion is the frozen disposition.",
+      "mornings": 725,
+      "accounted": 725,
+      "timing_verified": 0,
+      "states": {
+        "reviewed_excluded": 725
+      },
+      "gap_causes": {
+        "excluded": 725
+      },
+      "coverage_pct": 100,
+      "timing_pct": 0
+    },
+    {
+      "factor_id": "live.f5-dxy-delta",
+      "factor_name": "Broad dollar momentum",
+      "role": "direction",
+      "source": "FRED DTWEXBGS, a declared stand-in for ICE DXY",
+      "freshness_rule": "daily H.10 print; the stored print date is checked",
+      "calculation": "Frozen five-session broad-dollar vote: rise +1 USD, fall -1.",
+      "fix": "Read from the stored H.10 print; not an ICE cash DXY substitute for test 1.",
+      "mornings": 725,
+      "accounted": 690,
+      "timing_verified": 690,
+      "states": {
+        "missing_input": 28,
+        "stale_input": 7,
+        "voting_present": 690
+      },
+      "gap_causes": {
+        "missing_input": 28,
+        "stale_input": 7,
+        "none": 690
+      },
+      "coverage_pct": 95.2,
+      "timing_pct": 95.2
+    },
+    {
+      "factor_id": "live.f6-gold-delta",
+      "factor_name": "Gold five-session change",
+      "role": "direction",
+      "source": "Cached gold H1 and daily series",
+      "freshness_rule": "intraday cache at 05:00; five-session change",
+      "calculation": "Frozen gold vote: a rising five-session gold price votes USD-weak, falling votes USD-strong.",
+      "fix": "Read from the stored gold cache; missing prints are recorded.",
+      "mornings": 725,
+      "accounted": 704,
+      "timing_verified": 704,
+      "states": {
+        "missing_input": 21,
+        "voting_present": 704
+      },
+      "gap_causes": {
+        "missing_input": 21,
+        "none": 704
+      },
+      "coverage_pct": 97.1,
+      "timing_pct": 97.1
+    },
+    {
+      "factor_id": "live.f9-dollar-smile",
+      "factor_name": "Dollar smile",
+      "role": "counted_elsewhere",
+      "source": "FRED VIXCLS",
+      "freshness_rule": "daily print",
+      "calculation": "The smile is represented by the two VIX signals; it is not a third vote.",
+      "fix": "Shared with the risk family.",
+      "mornings": 725,
+      "accounted": 717,
+      "timing_verified": 717,
+      "states": {
+        "counted_elsewhere_no_signal": 8,
+        "counted_elsewhere": 717
+      },
+      "gap_causes": {
+        "source_missing": 8,
+        "none": 717
+      },
+      "coverage_pct": 98.9,
+      "timing_pct": 98.9
+    },
+    {
+      "factor_id": "live.f10-equity-versus-usd",
+      "factor_name": "Equity versus USD",
+      "role": "direction",
+      "source": "Cached NAS100 daily and H1 series",
+      "freshness_rule": "intraday cache at 05:00; five-session change",
+      "calculation": "Frozen equity vote: equities rising votes USD-weak, falling votes USD-strong.",
+      "fix": "Read from the stored NAS100 cache; missing prints are recorded.",
+      "mornings": 725,
+      "accounted": 704,
+      "timing_verified": 704,
+      "states": {
+        "missing_input": 21,
+        "voting_present": 704
+      },
+      "gap_causes": {
+        "missing_input": 21,
+        "none": 704
+      },
+      "coverage_pct": 97.1,
+      "timing_pct": 97.1
+    },
+    {
+      "factor_id": "live.f7-economic-surprise",
+      "factor_name": "Economic surprise / release surprise",
+      "role": "event_missing",
+      "source": "No release-surprise history in the checkout",
+      "freshness_rule": "requires release time and first print versus consensus",
+      "calculation": "Cannot be computed at 05:00 without a staged release calendar and consensus history.",
+      "fix": "Stage release timestamps, consensus and first print; until then this is a recorded gap, not a neutral vote.",
+      "mornings": 725,
+      "accounted": 0,
+      "timing_verified": 0,
+      "states": {
+        "event_source_unavailable": 725
+      },
+      "gap_causes": {
+        "event_calendar_missing": 725
+      },
+      "coverage_pct": 0,
+      "timing_pct": 0
+    },
+    {
+      "factor_id": "live.f8-fed-bias",
+      "factor_name": "F8 Fed bias",
+      "role": "direction",
+      "source": "Federal Reserve FOMC statement archive, read by release timestamp",
+      "freshness_rule": "latest statement at or before the cutoff remains valid until superseded",
+      "calculation": "RG-2: hawkish shift +1 USD, dovish shift -1, neutral 0. No new statement means the last one still stands.",
+      "fix": "Historical statements carry release times; no daily collection needed.",
+      "mornings": 725,
+      "accounted": 703,
+      "timing_verified": 725,
+      "states": {
+        "no_release_before_cutoff": 22,
+        "latest_release_valid": 703
+      },
+      "gap_causes": {
+        "source_missing": 22,
+        "none": 703
+      },
+      "coverage_pct": 97,
+      "timing_pct": 100
+    },
+    {
+      "factor_id": "macro.release-surprise-at-first-print",
+      "factor_name": "Release surprise at first print",
+      "role": "event_missing",
+      "source": "No consensus history in the checkout",
+      "freshness_rule": "requires first print, consensus and release time",
+      "calculation": "Cannot be computed without a staged macro release archive.",
+      "fix": "Stage a historical release archive with timestamps; no gap fill is permitted.",
+      "mornings": 725,
+      "accounted": 0,
+      "timing_verified": 0,
+      "states": {
+        "event_source_unavailable": 725
+      },
+      "gap_causes": {
+        "event_calendar_missing": 725
+      },
+      "coverage_pct": 0,
+      "timing_pct": 0
+    },
+    {
+      "factor_id": "fx.usd-session-momentum",
+      "factor_name": "USD session momentum",
+      "role": "direction",
+      "source": "EUR/USD and USD/JPY cached H1 tape at 05:00",
+      "freshness_rule": "one-hour bar opening at the cutoff",
+      "calculation": "Mean of the EUR/USD and USD/JPY mirror votes; both legs must exist.",
+      "fix": "Read from the intraday cache; after 2026-04-30 the cache is absent and the gate is undefined.",
+      "mornings": 725,
+      "accounted": 720,
+      "timing_verified": 714,
+      "states": {
+        "missing_input": 5,
+        "voting_present": 690,
+        "reviewed_no_vote": 30
+      },
+      "gap_causes": {
+        "missing_input": 5,
+        "none": 720
+      },
+      "coverage_pct": 99.3,
+      "timing_pct": 98.5
+    },
+    {
+      "factor_id": "fx.usd-overnight-range-position",
+      "factor_name": "USD overnight range position",
+      "role": "direction",
+      "source": "EUR/USD cached H1 overnight range",
+      "freshness_rule": "one-hour bar opening at the cutoff",
+      "calculation": "RG-3: position above 0.7 votes USD-strong, below 0.3 USD-weak, otherwise 0.",
+      "fix": "Read from the intraday cache; a missing range is a recorded abstention.",
+      "mornings": 725,
+      "accounted": 719,
+      "timing_verified": 719,
+      "states": {
+        "voting_present": 715,
+        "reviewed_no_vote": 4,
+        "missing_input": 6
+      },
+      "gap_causes": {
+        "none": 719,
+        "missing_input": 6
+      },
+      "coverage_pct": 99.2,
+      "timing_pct": 99.2
+    },
+    {
+      "factor_id": "fx.usd-session-volatility-regime",
+      "factor_name": "USD session volatility regime",
+      "role": "inactive",
+      "source": "EUR/USD cached H1 volatility",
+      "freshness_rule": "60-session ratio at 05:00",
+      "calculation": "Does not vote. It is the RG-4 gate: tradeable only when the ratio is at least 1.0.",
+      "fix": "Gate reads the stored ratio; after 2026-04-30 the ratio is absent, so the gate is undefined.",
+      "mornings": 725,
+      "accounted": 694,
+      "timing_verified": 694,
+      "states": {
+        "inactive_source_missing": 31,
+        "reviewed_inactive": 694
+      },
+      "gap_causes": {
+        "missing_input": 31,
+        "none": 694
+      },
+      "coverage_pct": 95.7,
+      "timing_pct": 95.7
+    },
+    {
+      "factor_id": "risk.usd-safe-haven-demand",
+      "factor_name": "Safe-haven demand",
+      "role": "direction",
+      "source": "Cached gold H1 and H.10 USD/JPY; CHF confirmation only",
+      "freshness_rule": "prior-session changes at 05:00",
+      "calculation": "RG-5: gold and JPY both weaken by more than 0.25% votes +1 USD, both strengthen -1; CHF never votes alone.",
+      "fix": "Read from stored prints; a missing leg is a recorded abstention.",
+      "mornings": 725,
+      "accounted": 688,
+      "timing_verified": 688,
+      "states": {
+        "missing_input": 23,
+        "voting_present": 688,
+        "stale_input": 14
+      },
+      "gap_causes": {
+        "missing_input": 23,
+        "none": 688,
+        "stale_input": 14
+      },
+      "coverage_pct": 94.9,
+      "timing_pct": 94.9
+    },
+    {
+      "factor_id": "risk.risk-on-off-cross-asset-state",
+      "factor_name": "Risk-on / risk-off cross-asset state",
+      "role": "counted_elsewhere",
+      "source": "FRED VIXCLS and cached equity/gold series",
+      "freshness_rule": "daily and intraday prints",
+      "calculation": "Represented by the risk and cross-asset signals; it is not a separate vote.",
+      "fix": "Shared with the risk and cross-asset families.",
+      "mornings": 725,
+      "accounted": 724,
+      "timing_verified": 724,
+      "states": {
+        "counted_elsewhere_no_signal": 1,
+        "counted_elsewhere": 724
+      },
+      "gap_causes": {
+        "source_missing": 1,
+        "none": 724
+      },
+      "coverage_pct": 99.9,
+      "timing_pct": 99.9
+    },
+    {
+      "factor_id": "calendar.known-releases-between-cutoff-and-endpoint",
+      "factor_name": "Known releases between cutoff and endpoint",
+      "role": "event_missing",
+      "source": "No staged economic calendar",
+      "freshness_rule": "requires release timestamps and impact",
+      "calculation": "Cannot be known at 05:00 without a release calendar; it caps band 5 and the trade rule.",
+      "fix": "Stage a release calendar with timestamps; until then every call carries the calendar cap.",
+      "mornings": 725,
+      "accounted": 0,
+      "timing_verified": 0,
+      "states": {
+        "event_source_unavailable": 725
+      },
+      "gap_causes": {
+        "event_calendar_missing": 725
+      },
+      "coverage_pct": 0,
+      "timing_pct": 0
+    },
+    {
+      "factor_id": "calendar.days-since-and-until-high-impact-events",
+      "factor_name": "Days since and until high-impact events",
+      "role": "event_missing",
+      "source": "No staged economic calendar",
+      "freshness_rule": "requires release timestamps and impact",
+      "calculation": "Cannot be computed without a release calendar.",
+      "fix": "Stage a release calendar with timestamps; no proxy is accepted.",
+      "mornings": 725,
+      "accounted": 0,
+      "timing_verified": 0,
+      "states": {
+        "event_source_unavailable": 725
+      },
+      "gap_causes": {
+        "event_calendar_missing": 725
+      },
+      "coverage_pct": 0,
+      "timing_pct": 0
+    },
+    {
+      "factor_id": "data.quality-gate-for-abstention",
+      "factor_name": "Data-quality gate for abstention",
+      "role": "gate",
+      "source": "Frozen decision code",
+      "freshness_rule": "evaluated at every cutoff",
+      "calculation": "A missing required input abstains; it is never replaced by zero or a neighbour. RG-4 is the separate volatility gate.",
+      "fix": "Enforced in code; the page counts abstentions and undefined gates separately.",
+      "mornings": 725,
+      "accounted": 694,
+      "timing_verified": 694,
+      "states": {
+        "gate_undefined": 31,
+        "gate_open": 321,
+        "gate_closed": 373
+      },
+      "gap_causes": {
+        "gate_undefined": 31,
+        "none": 694
+      },
+      "coverage_pct": 95.7,
+      "timing_pct": 95.7
+    }
+  ],
+  "l2l": {
+    "status": "replayed",
+    "ladder": {
+      "source": "backtester/tmp/usd-session-research/raw/main/data__l2l-levels.json",
+      "stamp_utc": "2026-10-04T16:14:19Z",
+      "eligible_sessions": [
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09",
+        "2026-10-12"
+      ],
+      "rule": "a session may be priced by the ladder only when its 05:00 London start is later than the ladder's own stamp, so the lines were already in the file when the session was traded"
+    },
+    "calls": [
+      {
+        "date": "2026-10-12",
+        "direction": "BEARISH",
+        "band": 2
+      }
+    ],
+    "ticks": {
+      "source": ".local/tmp/l2l-ticks-sweep"
+    },
+    "totals": {
+      "full_5r": {
+        "sessions": 4,
+        "fills": 5,
+        "targets": 0,
+        "stops": 5,
+        "working": 1,
+        "unfilled": 1,
+        "ambiguous": 1,
+        "rGross": -5,
+        "returnPctGross": -4.9701
+      },
+      "half_3r": {
+        "sessions": 4,
+        "fills": 7,
+        "targets": 2,
+        "stops": 5,
+        "working": 2,
+        "unfilled": 3,
+        "ambiguous": 0,
+        "rGross": 1,
+        "returnPctGross": 1.059
+      }
+    },
+    "symbols": [
+      {
+        "symbol": "EURUSD",
+        "status": "replayed",
+        "broker_symbol": "EURUSD",
+        "sessions": [
+          "2026-10-12"
+        ],
+        "levels": 22,
+        "bars_check": {
+          "sessions": 1,
+          "matched": 286,
+          "within_tolerance": 286,
+          "exact": 286,
+          "mismatched_instants": 0
+        },
+        "geometries": {
+          "full_5r": {
+            "label": "original ladder, 5R",
+            "r_multiple": 5,
+            "totals": {
+              "trades": 1,
+              "fills": 1,
+              "targets": 0,
+              "stops": 1,
+              "unfilled": 0,
+              "working": 0,
+              "ambiguous": 0,
+              "filled_after_gap": 0,
+              "rGross": -1,
+              "spread_points_at_fill_min": 1,
+              "spread_points_at_fill_median": 1,
+              "spread_points_at_fill_max": 1,
+              "balanceStart": 100000,
+              "balanceEnd": 99000,
+              "returnPctGross": -1
+            },
+            "coverage": [
+              {
+                "date": "2026-10-12",
+                "bars": 286,
+                "hours_covered": 24,
+                "session_hours": 24,
+                "ticks": 70200,
+                "gaps": 1
+              }
+            ],
+            "trades": [
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 1.11887,
+                "fill_price": 1.11887,
+                "exit_price": 1.11803,
+                "exit_reason": "stop",
+                "r_gross": -1
+              }
+            ]
+          },
+          "half_3r": {
+            "label": "half grid, 3R",
+            "r_multiple": 3,
+            "totals": {
+              "trades": 2,
+              "fills": 0,
+              "targets": 0,
+              "stops": 0,
+              "unfilled": 1,
+              "working": 1,
+              "ambiguous": 0,
+              "filled_after_gap": 0,
+              "rGross": 0,
+              "spread_points_at_fill_min": null,
+              "spread_points_at_fill_median": null,
+              "spread_points_at_fill_max": null,
+              "balanceStart": 100000,
+              "balanceEnd": 100000,
+              "returnPctGross": 0
+            },
+            "coverage": [
+              {
+                "date": "2026-10-12",
+                "bars": 286,
+                "hours_covered": 24,
+                "session_hours": 24,
+                "ticks": 70200,
+                "gaps": 1
+              }
+            ],
+            "trades": [
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 1.116765,
+                "fill_price": 1.11677,
+                "exit_price": 1.1175,
+                "exit_reason": "working-at-end-of-tape",
+                "r_gross": 0
+              }
+            ]
+          }
+        },
+        "files": [
+          {
+            "path": ".local/tmp/l2l-ticks-sweep/EURUSD/2026-10-12.json",
+            "sha256": "cfbacc9edf0479aeb7def0c0ad322e687b86f1cd9de336641ee6e396e233a127"
+          }
+        ]
+      },
+      {
+        "symbol": "XAUUSD",
+        "status": "replayed",
+        "broker_symbol": "XAUUSD",
+        "sessions": [
+          "2026-10-12"
+        ],
+        "levels": 22,
+        "bars_check": {
+          "sessions": 1,
+          "matched": 273,
+          "within_tolerance": 273,
+          "exact": 273,
+          "mismatched_instants": 0
+        },
+        "geometries": {
+          "full_5r": {
+            "label": "original ladder, 5R",
+            "r_multiple": 5,
+            "totals": {
+              "trades": 1,
+              "fills": 0,
+              "targets": 0,
+              "stops": 0,
+              "unfilled": 0,
+              "working": 1,
+              "ambiguous": 0,
+              "filled_after_gap": 0,
+              "rGross": 0,
+              "spread_points_at_fill_min": null,
+              "spread_points_at_fill_median": null,
+              "spread_points_at_fill_max": null,
+              "balanceStart": 100000,
+              "balanceEnd": 100000,
+              "returnPctGross": 0
+            },
+            "coverage": [
+              {
+                "date": "2026-10-12",
+                "bars": 273,
+                "hours_covered": 24,
+                "session_hours": 24,
+                "ticks": 200190,
+                "gaps": 1
+              }
+            ],
+            "trades": []
+          },
+          "half_3r": {
+            "label": "half grid, 3R",
+            "r_multiple": 3,
+            "totals": {
+              "trades": 2,
+              "fills": 1,
+              "targets": 0,
+              "stops": 1,
+              "unfilled": 0,
+              "working": 1,
+              "ambiguous": 0,
+              "filled_after_gap": 0,
+              "rGross": -1,
+              "spread_points_at_fill_min": 41,
+              "spread_points_at_fill_median": 41,
+              "spread_points_at_fill_max": 41,
+              "balanceStart": 100000,
+              "balanceEnd": 99000,
+              "returnPctGross": -1
+            },
+            "coverage": [
+              {
+                "date": "2026-10-12",
+                "bars": 273,
+                "hours_covered": 24,
+                "session_hours": 24,
+                "ticks": 200190,
+                "gaps": 1
+              }
+            ],
+            "trades": [
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 4176.25,
+                "fill_price": 4176.25,
+                "exit_price": 4164.34,
+                "exit_reason": "stop",
+                "r_gross": -1
+              },
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 4176.25,
+                "fill_price": 4176.25,
+                "exit_price": 4188.51,
+                "exit_reason": "working-at-end-of-tape",
+                "r_gross": 0
+              }
+            ]
+          }
+        },
+        "files": [
+          {
+            "path": ".local/tmp/l2l-ticks-sweep/XAUUSD/2026-10-12.json",
+            "sha256": "eb4badcb09fb2c435942a3619c6044df9ba0cb8e69de5e67e79fe9f9bff10ac1"
+          }
+        ]
+      },
+      {
+        "symbol": "NAS100",
+        "status": "replayed",
+        "broker_symbol": "US100.cash",
+        "sessions": [
+          "2026-10-12"
+        ],
+        "levels": 22,
+        "bars_check": {
+          "sessions": 1,
+          "matched": 273,
+          "within_tolerance": 273,
+          "exact": 273,
+          "mismatched_instants": 0
+        },
+        "geometries": {
+          "full_5r": {
+            "label": "original ladder, 5R",
+            "r_multiple": 5,
+            "totals": {
+              "trades": 3,
+              "fills": 3,
+              "targets": 0,
+              "stops": 3,
+              "unfilled": 0,
+              "working": 0,
+              "ambiguous": 1,
+              "filled_after_gap": 0,
+              "rGross": -3,
+              "spread_points_at_fill_min": 145,
+              "spread_points_at_fill_median": 145,
+              "spread_points_at_fill_max": 165,
+              "balanceStart": 100000,
+              "balanceEnd": 97029.9,
+              "returnPctGross": -2.9701
+            },
+            "coverage": [
+              {
+                "date": "2026-10-12",
+                "bars": 273,
+                "hours_covered": 24,
+                "session_hours": 24,
+                "ticks": 392935,
+                "gaps": 1
+              }
+            ],
+            "trades": [
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 30774.61,
+                "fill_price": 30774.61,
+                "exit_price": 30719.65,
+                "exit_reason": "stop",
+                "r_gross": -1
+              },
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 30774.61,
+                "fill_price": 30774.61,
+                "exit_price": 30719.65,
+                "exit_reason": "stop",
+                "r_gross": -1
+              },
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 30499.79,
+                "fill_price": 30499.79,
+                "exit_price": 30444.83,
+                "exit_reason": "stop",
+                "r_gross": -1
+              }
+            ]
+          },
+          "half_3r": {
+            "label": "half grid, 3R",
+            "r_multiple": 3,
+            "totals": {
+              "trades": 3,
+              "fills": 3,
+              "targets": 0,
+              "stops": 3,
+              "unfilled": 0,
+              "working": 0,
+              "ambiguous": 0,
+              "filled_after_gap": 0,
+              "rGross": -3,
+              "spread_points_at_fill_min": 155,
+              "spread_points_at_fill_median": 165,
+              "spread_points_at_fill_max": 165,
+              "balanceStart": 100000,
+              "balanceEnd": 97029.9,
+              "returnPctGross": -2.9701
+            },
+            "coverage": [
+              {
+                "date": "2026-10-12",
+                "bars": 273,
+                "hours_covered": 24,
+                "session_hours": 24,
+                "ticks": 392935,
+                "gaps": 1
+              }
+            ],
+            "trades": [
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 30912.02,
+                "fill_price": 30912.02,
+                "exit_price": 30866.22,
+                "exit_reason": "stop",
+                "r_gross": -1
+              },
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 30637.2,
+                "fill_price": 30637.2,
+                "exit_price": 30591.4,
+                "exit_reason": "stop",
+                "r_gross": -1
+              },
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 30499.79,
+                "fill_price": 30499.79,
+                "exit_price": 30453.99,
+                "exit_reason": "stop",
+                "r_gross": -1
+              }
+            ]
+          }
+        },
+        "files": [
+          {
+            "path": ".local/tmp/l2l-ticks-sweep/NAS100/2026-10-12.json",
+            "sha256": "c3a1f9633ac2c27a21afa45b62df9e0a2ad43aaf4cb9f74e76d09e7636a10dad"
+          }
+        ]
+      },
+      {
+        "symbol": "BTCUSD",
+        "status": "replayed",
+        "broker_symbol": "BTCUSD",
+        "sessions": [
+          "2026-10-12"
+        ],
+        "levels": 22,
+        "bars_check": {
+          "sessions": 1,
+          "matched": 286,
+          "within_tolerance": 286,
+          "exact": 286,
+          "mismatched_instants": 0
+        },
+        "geometries": {
+          "full_5r": {
+            "label": "original ladder, 5R",
+            "r_multiple": 5,
+            "totals": {
+              "trades": 2,
+              "fills": 1,
+              "targets": 0,
+              "stops": 1,
+              "unfilled": 1,
+              "working": 0,
+              "ambiguous": 0,
+              "filled_after_gap": 0,
+              "rGross": -1,
+              "spread_points_at_fill_min": 100,
+              "spread_points_at_fill_median": 100,
+              "spread_points_at_fill_max": 100,
+              "balanceStart": 100000,
+              "balanceEnd": 99000,
+              "returnPctGross": -1
+            },
+            "coverage": [
+              {
+                "date": "2026-10-12",
+                "bars": 286,
+                "hours_covered": 24,
+                "session_hours": 24,
+                "ticks": 325301,
+                "gaps": 1
+              }
+            ],
+            "trades": [
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 83113.66,
+                "fill_price": 83113.66,
+                "exit_price": 82822.69,
+                "exit_reason": "stop",
+                "r_gross": -1
+              }
+            ]
+          },
+          "half_3r": {
+            "label": "half grid, 3R",
+            "r_multiple": 3,
+            "totals": {
+              "trades": 5,
+              "fills": 3,
+              "targets": 2,
+              "stops": 1,
+              "unfilled": 2,
+              "working": 0,
+              "ambiguous": 0,
+              "filled_after_gap": 0,
+              "rGross": 5,
+              "spread_points_at_fill_min": 100,
+              "spread_points_at_fill_median": 100,
+              "spread_points_at_fill_max": 148,
+              "balanceStart": 100000,
+              "balanceEnd": 105029.1,
+              "returnPctGross": 5.0291
+            },
+            "coverage": [
+              {
+                "date": "2026-10-12",
+                "bars": 286,
+                "hours_covered": 24,
+                "session_hours": 24,
+                "ticks": 325301,
+                "gaps": 1
+              }
+            ],
+            "trades": [
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 83841.095,
+                "fill_price": 83841.1,
+                "exit_price": 83598.62,
+                "exit_reason": "stop",
+                "r_gross": -1
+              },
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 82386.225,
+                "fill_price": 82386.23,
+                "exit_price": 83113.66,
+                "exit_reason": "target",
+                "r_gross": 3
+              },
+              {
+                "session_date": "2026-10-12",
+                "side": "long",
+                "level": 82386.225,
+                "fill_price": 82386.23,
+                "exit_price": 83113.66,
+                "exit_reason": "target",
+                "r_gross": 3
+              }
+            ]
+          }
+        },
+        "files": [
+          {
+            "path": ".local/tmp/l2l-ticks-sweep/BTCUSD/2026-10-12.json",
+            "sha256": "ba5d0007e8b739ee242487ace30c5d5e6ffba209d5cab48b06e43e33c4b5f939"
+          }
+        ]
+      }
+    ]
+  }
+}

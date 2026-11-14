@@ -1,0 +1,1214 @@
+{
+  "schema_version": "usd-l1-f8-fed-statements-v1",
+  "version": "f8-fed-bias-labeller-v1",
+  "frozen_on": "2026-11-14",
+  "status": "staged_not_wired",
+  "source": {
+    "calendar_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+    "statement_url_pattern": "https://www.federalreserve.gov/newsevents/pressreleases/monetary{date}a.htm",
+    "first_date": "2024-01-01",
+    "last_date": "2026-12-31",
+    "statement_count": 23
+  },
+  "clock": {
+    "rule": "the release time printed on the statement, converted to UTC with the zone the statement prints",
+    "timezone": "America/New_York",
+    "verified_for_every_statement": true
+  },
+  "lexicon": {
+    "hawkish": [
+      [
+        "inflation remains elevated",
+        2
+      ],
+      [
+        "inflation is elevated",
+        2
+      ],
+      [
+        "remains somewhat elevated",
+        1
+      ],
+      [
+        "solid pace",
+        1
+      ],
+      [
+        "strongly committed",
+        1
+      ],
+      [
+        "upside risks",
+        1
+      ],
+      [
+        "additional policy firming",
+        2
+      ],
+      [
+        "restrictive",
+        1
+      ],
+      [
+        "higher for longer",
+        2
+      ],
+      [
+        "not yet",
+        1
+      ],
+      [
+        "patient",
+        1
+      ],
+      [
+        "tightening",
+        1
+      ]
+    ],
+    "dovish": [
+      [
+        "has eased",
+        1
+      ],
+      [
+        "have eased",
+        1
+      ],
+      [
+        "cooled",
+        1
+      ],
+      [
+        "cooling",
+        1
+      ],
+      [
+        "moderated",
+        1
+      ],
+      [
+        "moderating",
+        1
+      ],
+      [
+        "softened",
+        1
+      ],
+      [
+        "slowed",
+        1
+      ],
+      [
+        "slowing",
+        1
+      ],
+      [
+        "weaker",
+        1
+      ],
+      [
+        "downside risks",
+        1
+      ],
+      [
+        "roughly in balance",
+        1
+      ],
+      [
+        "accommodative",
+        1
+      ],
+      [
+        "easing",
+        1
+      ]
+    ]
+  },
+  "labelling": {
+    "action_weight": 3,
+    "bias_threshold": 2,
+    "shift_threshold": 2,
+    "bias_rule": "score >= 2 is hawkish, score <= -2 is dovish, otherwise neutral; the score is the policy action (-3 for a cut, +3 for a hike, 0 for a hold) plus the frozen phrase weights",
+    "shift_rule": "the change in score against the previous statement; a move of 2 points or more is a shift, otherwise no change",
+    "direction_rule": "a hawkish shift votes +1 for USD, a dovish shift votes -1, no change votes 0; the vote is not a trade and is not scored here",
+    "status": "development_assumption_not_validated"
+  },
+  "statements": [
+    {
+      "date": "2024-01-31",
+      "released_at_utc": "2024-01-31T19:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EST",
+      "release_zone": "EST",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240131a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 287,
+      "text": "Recent indicators suggest that economic activity has been expanding at a solid pace. Job gains have moderated since early last year but remain strong, and the unemployment rate has remained low. Inflation has eased over the past year but remains elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee judges that the risks to achieving its employment and inflation goals are moving into better balance. The economic outlook is uncertain, and the Committee remains highly attentive to inflation risks.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 5-1/4 to 5-1/2 percent. In considering any adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee does not expect it will be appropriate to reduce the target range until it has gained greater confidence that inflation is moving sustainably toward 2 percent. In addition, the Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage-backed securities, as described in its previously announced plans. The Committee is strongly committed to returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 0,
+      "score": 0,
+      "bias": "neutral",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "has eased",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "moderated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": null,
+      "score_delta": null,
+      "shift": null,
+      "direction": 0
+    },
+    {
+      "date": "2024-03-20",
+      "released_at_utc": "2024-03-20T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240320a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 281,
+      "text": "Recent indicators suggest that economic activity has been expanding at a solid pace. Job gains have remained strong, and the unemployment rate has remained low. Inflation has eased over the past year but remains elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee judges that the risks to achieving its employment and inflation goals are moving into better balance. The economic outlook is uncertain, and the Committee remains highly attentive to inflation risks.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 5-1/4 to 5-1/2 percent. In considering any adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee does not expect it will be appropriate to reduce the target range until it has gained greater confidence that inflation is moving sustainably toward 2 percent. In addition, the Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage-backed securities, as described in its previously announced plans. The Committee is strongly committed to returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 1,
+      "score": 1,
+      "bias": "neutral",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "has eased",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2024-01-31",
+      "score_delta": 1,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2024-05-01",
+      "released_at_utc": "2024-05-01T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240501a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 359,
+      "text": "Recent indicators suggest that economic activity has continued to expand at a solid pace. Job gains have remained strong, and the unemployment rate has remained low. Inflation has eased over the past year but remains elevated. In recent months, there has been a lack of further progress toward the Committee's 2 percent inflation objective.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee judges that the risks to achieving its employment and inflation goals have moved toward better balance over the past year. The economic outlook is uncertain, and the Committee remains highly attentive to inflation risks.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 5-1/4 to 5-1/2 percent. In considering any adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee does not expect it will be appropriate to reduce the target range until it has gained greater confidence that inflation is moving sustainably toward 2 percent. In addition, the Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. Beginning in June, the Committee will slow the pace of decline of its securities holdings by reducing the monthly redemption cap on Treasury securities from $60 billion to $25 billion. The Committee will maintain the monthly redemption cap on agency debt and agency mortgage‑backed securities at $35 billion and will reinvest any principal payments in excess of this cap into Treasury securities. The Committee is strongly committed to returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 1,
+      "score": 1,
+      "bias": "neutral",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "has eased",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2024-03-20",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2024-06-12",
+      "released_at_utc": "2024-06-12T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240612a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 295,
+      "text": "Recent indicators suggest that economic activity has continued to expand at a solid pace. Job gains have remained strong, and the unemployment rate has remained low. Inflation has eased over the past year but remains elevated. In recent months, there has been modest further progress toward the Committee's 2 percent inflation objective.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee judges that the risks to achieving its employment and inflation goals have moved toward better balance over the past year. The economic outlook is uncertain, and the Committee remains highly attentive to inflation risks.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 5-1/4 to 5-1/2 percent. In considering any adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee does not expect it will be appropriate to reduce the target range until it has gained greater confidence that inflation is moving sustainably toward 2 percent. In addition, the Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 1,
+      "score": 1,
+      "bias": "neutral",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "has eased",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2024-05-01",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2024-07-31",
+      "released_at_utc": "2024-07-31T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240731a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 301,
+      "text": "Recent indicators suggest that economic activity has continued to expand at a solid pace. Job gains have moderated, and the unemployment rate has moved up but remains low. Inflation has eased over the past year but remains somewhat elevated. In recent months, there has been some further progress toward the Committee's 2 percent inflation objective.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee judges that the risks to achieving its employment and inflation goals continue to move into better balance. The economic outlook is uncertain, and the Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 5-1/4 to 5-1/2 percent. In considering any adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee does not expect it will be appropriate to reduce the target range until it has gained greater confidence that inflation is moving sustainably toward 2 percent. In addition, the Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 1,
+      "score": 1,
+      "bias": "neutral",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "has eased",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "moderated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2024-06-12",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2024-09-18",
+      "released_at_utc": "2024-09-18T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 285,
+      "text": "Recent indicators suggest that economic activity has continued to expand at a solid pace. Job gains have slowed, and the unemployment rate has moved up but remains low. Inflation has made further progress toward the Committee's 2 percent objective but remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee has gained greater confidence that inflation is moving sustainably toward 2 percent, and judges that the risks to achieving its employment and inflation goals are roughly in balance. The economic outlook is uncertain, and the Committee is attentive to the risks to both sides of its dual mandate.\n\nIn light of the progress on inflation and the balance of risks, the Committee decided to lower the target range for the federal funds rate by 1/2 percentage point to 4-3/4 to 5 percent. In considering additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "cut",
+      "action_size": "1/2 percentage point",
+      "action_score": -3,
+      "language_score": 1,
+      "score": -2,
+      "bias": "dovish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "slowed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "roughly in balance",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2024-07-31",
+      "score_delta": -3,
+      "shift": "dovish_shift",
+      "direction": -1
+    },
+    {
+      "date": "2024-11-07",
+      "released_at_utc": "2024-11-07T19:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EST",
+      "release_zone": "EST",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20241107a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 271,
+      "text": "Recent indicators suggest that economic activity has continued to expand at a solid pace. Since earlier in the year, labor market conditions have generally eased, and the unemployment rate has moved up but remains low. Inflation has made progress toward the Committee's 2 percent objective but remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee judges that the risks to achieving its employment and inflation goals are roughly in balance. The economic outlook is uncertain, and the Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to lower the target range for the federal funds rate by 1/4 percentage point to 4-1/2 to 4-3/4 percent. In considering additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "cut",
+      "action_size": "1/4 percentage point",
+      "action_score": -3,
+      "language_score": 2,
+      "score": -1,
+      "bias": "neutral",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "roughly in balance",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2024-09-18",
+      "score_delta": 1,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2024-12-18",
+      "released_at_utc": "2024-12-18T19:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EST",
+      "release_zone": "EST",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20241218a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 276,
+      "text": "Recent indicators suggest that economic activity has continued to expand at a solid pace. Since earlier in the year, labor market conditions have generally eased, and the unemployment rate has moved up but remains low. Inflation has made progress toward the Committee's 2 percent objective but remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee judges that the risks to achieving its employment and inflation goals are roughly in balance. The economic outlook is uncertain, and the Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to lower the target range for the federal funds rate by 1/4 percentage point to 4-1/4 to 4-1/2 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "cut",
+      "action_size": "1/4 percentage point",
+      "action_score": -3,
+      "language_score": 2,
+      "score": -1,
+      "bias": "neutral",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "roughly in balance",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2024-11-07",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2025-01-29",
+      "released_at_utc": "2025-01-29T19:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EST",
+      "release_zone": "EST",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250129a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 259,
+      "text": "Recent indicators suggest that economic activity has continued to expand at a solid pace. The unemployment rate has stabilized at a low level in recent months, and labor market conditions remain solid. Inflation remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. The Committee judges that the risks to achieving its employment and inflation goals are roughly in balance. The economic outlook is uncertain, and the Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 4-1/4 to 4-1/2 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 2,
+      "score": 2,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "roughly in balance",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2024-12-18",
+      "score_delta": 3,
+      "shift": "hawkish_shift",
+      "direction": 1
+    },
+    {
+      "date": "2025-03-19",
+      "released_at_utc": "2025-03-19T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250319a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 291,
+      "text": "Recent indicators suggest that economic activity has continued to expand at a solid pace. The unemployment rate has stabilized at a low level in recent months, and labor market conditions remain solid. Inflation remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty around the economic outlook has increased. The Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 4-1/4 to 4-1/2 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. Beginning in April, the Committee will slow the pace of decline of its securities holdings by reducing the monthly redemption cap on Treasury securities from $25 billion to $5 billion. The Committee will maintain the monthly redemption cap on agency debt and agency mortgage-backed securities at $35 billion. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 3,
+      "score": 3,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2025-01-29",
+      "score_delta": 1,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2025-05-07",
+      "released_at_utc": "2025-05-07T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250507a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 266,
+      "text": "Although swings in net exports have affected the data, recent indicators suggest that economic activity has continued to expand at a solid pace. The unemployment rate has stabilized at a low level in recent months, and labor market conditions remain solid. Inflation remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty about the economic outlook has increased further. The Committee is attentive to the risks to both sides of its dual mandate and judges that the risks of higher unemployment and higher inflation have risen.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 4-1/4 to 4-1/2 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 3,
+      "score": 3,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2025-03-19",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2025-06-18",
+      "released_at_utc": "2025-06-18T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250618a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 248,
+      "text": "Although swings in net exports have affected the data, recent indicators suggest that economic activity has continued to expand at a solid pace. The unemployment rate remains low, and labor market conditions remain solid. Inflation remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty about the economic outlook has diminished but remains elevated. The Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 4-1/4 to 4-1/2 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 3,
+      "score": 3,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2025-05-07",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2025-07-30",
+      "released_at_utc": "2025-07-30T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250730a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 248,
+      "text": "Although swings in net exports continue to affect the data, recent indicators suggest that growth of economic activity moderated in the first half of the year. The unemployment rate remains low, and labor market conditions remain solid. Inflation remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty about the economic outlook remains elevated. The Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 4-1/4 to 4-1/2 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 1,
+      "score": 1,
+      "bias": "neutral",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "moderated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2025-06-18",
+      "score_delta": -2,
+      "shift": "dovish_shift",
+      "direction": -1
+    },
+    {
+      "date": "2025-09-17",
+      "released_at_utc": "2025-09-17T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250917a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 264,
+      "text": "Recent indicators suggest that growth of economic activity moderated in the first half of the year. Job gains have slowed, and the unemployment rate has edged up but remains low. Inflation has moved up and remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty about the economic outlook remains elevated. The Committee is attentive to the risks to both sides of its dual mandate and judges that downside risks to employment have risen.\n\nIn support of its goals and in light of the shift in the balance of risks, the Committee decided to lower the target range for the federal funds rate by 1/4 percentage point to 4 to 4‑1/4 percent. In considering additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage‑backed securities. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "cut",
+      "action_size": "1/4 percentage point",
+      "action_score": -3,
+      "language_score": -1,
+      "score": -4,
+      "bias": "dovish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "moderated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "slowed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "downside risks",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2025-07-30",
+      "score_delta": -5,
+      "shift": "dovish_shift",
+      "direction": -1
+    },
+    {
+      "date": "2025-10-29",
+      "released_at_utc": "2025-10-29T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251029a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 278,
+      "text": "Available indicators suggest that economic activity has been expanding at a moderate pace. Job gains have slowed this year, and the unemployment rate has edged up but remained low through August; more recent indicators are consistent with these developments. Inflation has moved up since earlier in the year and remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty about the economic outlook remains elevated. The Committee is attentive to the risks to both sides of its dual mandate and judges that downside risks to employment rose in recent months.\n\nIn support of its goals and in light of the shift in the balance of risks, the Committee decided to lower the target range for the federal funds rate by 1/4 percentage point to 3-3/4 to 4 percent. In considering additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee decided to conclude the reduction of its aggregate securities holdings on December 1. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "cut",
+      "action_size": "1/4 percentage point",
+      "action_score": -3,
+      "language_score": 0,
+      "score": -3,
+      "bias": "dovish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "slowed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "downside risks",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2025-09-17",
+      "score_delta": 1,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2025-12-10",
+      "released_at_utc": "2025-12-10T19:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EST",
+      "release_zone": "EST",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251210a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 297,
+      "text": "Available indicators suggest that economic activity has been expanding at a moderate pace. Job gains have slowed this year, and the unemployment rate has edged up through September. More recent indicators are consistent with these developments. Inflation has moved up since earlier in the year and remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty about the economic outlook remains elevated. The Committee is attentive to the risks to both sides of its dual mandate and judges that downside risks to employment rose in recent months.\n\nIn support of its goals and in light of the shift in the balance of risks, the Committee decided to lower the target range for the federal funds rate by 1/4 percentage point to 3-1/2 to 3‑3/4 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.\n\nThe Committee judges that reserve balances have declined to ample levels and will initiate purchases of shorter-term Treasury securities as needed to maintain an ample supply of reserves on an ongoing basis.",
+      "action": "cut",
+      "action_size": "1/4 percentage point",
+      "action_score": -3,
+      "language_score": 0,
+      "score": -3,
+      "bias": "dovish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": [
+          {
+            "phrase": "slowed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "downside risks",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ]
+      },
+      "previous_date": "2025-10-29",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2026-01-28",
+      "released_at_utc": "2026-01-28T19:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EST",
+      "release_zone": "EST",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260128a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 222,
+      "text": "Available indicators suggest that economic activity has been expanding at a solid pace. Job gains have remained low, and the unemployment rate has shown some signs of stabilization. Inflation remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty about the economic outlook remains elevated. The Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 3‑1/2 to 3‑3/4 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 3,
+      "score": 3,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2025-12-10",
+      "score_delta": 6,
+      "shift": "hawkish_shift",
+      "direction": 1
+    },
+    {
+      "date": "2026-03-18",
+      "released_at_utc": "2026-03-18T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260318a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 237,
+      "text": "Available indicators suggest that economic activity has been expanding at a solid pace. Job gains have remained low, and the unemployment rate has been little changed in recent months. Inflation remains somewhat elevated.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Uncertainty about the economic outlook remains elevated. The implications of developments in the Middle East for the U.S. economy are uncertain. The Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 3‑1/2 to 3‑3/4 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 3,
+      "score": 3,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "remains somewhat elevated",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2026-01-28",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2026-04-29",
+      "released_at_utc": "2026-04-29T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260429a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 244,
+      "text": "Recent indicators suggest that economic activity has been expanding at a solid pace. Job gains have remained low, on average, and the unemployment rate has been little changed in recent months. Inflation is elevated, in part reflecting the recent increase in global energy prices.\n\nThe Committee seeks to achieve maximum employment and inflation at the rate of 2 percent over the longer run. Developments in the Middle East are contributing to a high level of uncertainty about the economic outlook. The Committee is attentive to the risks to both sides of its dual mandate.\n\nIn support of its goals, the Committee decided to maintain the target range for the federal funds rate at 3‑1/2 to 3‑3/4 percent. In considering the extent and timing of additional adjustments to the target range for the federal funds rate, the Committee will carefully assess incoming data, the evolving outlook, and the balance of risks. The Committee is strongly committed to supporting maximum employment and returning inflation to its 2 percent objective.\n\nIn assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information for the economic outlook. The Committee would be prepared to adjust the stance of monetary policy as appropriate if risks emerge that could impede the attainment of the Committee's goals. The Committee's assessments will take into account a wide range of information, including readings on labor market conditions, inflation pressures and inflation expectations, and financial and international developments.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 4,
+      "score": 4,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "inflation is elevated",
+            "count": 1,
+            "weight": 2,
+            "contribution": 2
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          },
+          {
+            "phrase": "strongly committed",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2026-03-18",
+      "score_delta": 1,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2026-06-17",
+      "released_at_utc": "2026-06-17T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260617a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 131,
+      "text": "The Federal Open Market Committee approved the following statement for release by a 12 – 0 vote:\n\nThe Committee decided to maintain the target range for the federal funds rate at 3-1/2 to 3-3/4 percent, in support of the Federal Reserve's dual mandate. The Committee reaffirmed its policy of maintaining ample reserves in the banking system.\n\nEconomic activity is expanding at a solid pace despite elevated uncertainty that owes, in part, to the conflict in the Middle East. Productivity growth and capital investment are strong. Job gains have kept pace with the workforce, and the unemployment rate has changed little.\n\nInflation remains elevated relative to the Committee's 2 percent goal, in part reflecting supply shocks that have driven price increases in certain sectors, including energy. The Committee will deliver price stability.",
+      "action": "hold",
+      "action_size": null,
+      "action_score": 0,
+      "language_score": 3,
+      "score": 3,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "inflation remains elevated",
+            "count": 1,
+            "weight": 2,
+            "contribution": 2
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2026-04-29",
+      "score_delta": -1,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2026-07-29",
+      "released_at_utc": "2026-07-29T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 167,
+      "text": "The Federal Open Market Committee approved the following statement for release by a 9 – 3 vote:\n\nThe Committee decided to maintain the target range for the federal funds rate at 3-1/2 to 3-3/4 percent, in support of the Federal Reserve's dual mandate. The Committee is continuing its policy of maintaining ample reserves in the banking system.\n\nEconomic activity is expanding at a solid pace despite elevated uncertainty that owes, in part, to the conflict in the Middle East. Productivity growth and capital investment are strong. Job gains have kept pace with the workforce, and the unemployment rate has changed little.\n\nInflation remains elevated relative to the Committee's 2 percent goal, in part reflecting supply shocks that have driven price increases in certain sectors, including energy. The Committee will deliver price stability.\n\nVoting against the monetary policy action were Beth M. Hammack, Neel Kashkari, and Lorie K. Logan, who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.",
+      "action": "hike",
+      "action_size": "1/4 percentage point",
+      "action_score": 3,
+      "language_score": 3,
+      "score": 6,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "inflation remains elevated",
+            "count": 1,
+            "weight": 2,
+            "contribution": 2
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2026-06-17",
+      "score_delta": 3,
+      "shift": "hawkish_shift",
+      "direction": 1
+    },
+    {
+      "date": "2026-09-16",
+      "released_at_utc": "2026-09-16T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 131,
+      "text": "The Federal Open Market Committee approved the following statement for release by a 12 – 0 vote:\n\nThe Committee decided to raise the target range for the federal funds rate by 1/4 percentage point to 3-3/4 to 4 percent, in support of the Federal Reserve's dual mandate. The Committee is continuing its policy of maintaining ample reserves in the banking system.\n\nEconomic activity is expanding at a solid pace. While uncertainty remains elevated owing, in part, to geopolitical developments, domestic spending has been resilient. Productivity growth is strong, and capital investment is robust. Job gains have kept pace with the workforce, and the unemployment rate has changed little.\n\nInflation remains elevated. Today's policy action will support a timelier return to the Committee's 2 percent goal. The Committee will deliver price stability.",
+      "action": "hike",
+      "action_size": "1/4 percentage point",
+      "action_score": 3,
+      "language_score": 3,
+      "score": 6,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "inflation remains elevated",
+            "count": 1,
+            "weight": 2,
+            "contribution": 2
+          },
+          {
+            "phrase": "solid pace",
+            "count": 1,
+            "weight": 1,
+            "contribution": 1
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2026-07-29",
+      "score_delta": 0,
+      "shift": "no_change",
+      "direction": 0
+    },
+    {
+      "date": "2026-10-28",
+      "released_at_utc": "2026-10-28T18:00:00.000Z",
+      "release_time_text": "For release at 2:00 p.m. EDT",
+      "release_zone": "EDT",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261028a.htm",
+      "title": "Federal Reserve issues FOMC statement",
+      "word_count": 173,
+      "text": "The Federal Open Market Committee approved the following statement for release by a 10 – 2 vote:\n\nThe Committee decided to maintain the target range for the federal funds rate at 3-3/4 to 4 percent, in support of the Federal Reserve's dual mandate. The Committee is continuing its policy of maintaining ample reserves in the banking system.\n\nEconomic activity is expanding at a strong pace. While uncertainty remains elevated owing, in part, to geopolitical developments, domestic spending has been resilient. Productivity growth is strong, and capital investment is robust. Job gains have kept pace with the workforce, and the unemployment rate has changed little.\n\nInflation remains elevated. The accumulation of more information will help the Committee determine the policy stance appropriate to ensure a timely return of inflation to the Committee's 2 percent goal. The Committee will deliver price stability.\n\nVoting against the monetary policy action were Lisa D. Cook and Beth M. Hammack, who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.",
+      "action": "hike",
+      "action_size": "1/4 percentage point",
+      "action_score": 3,
+      "language_score": 2,
+      "score": 5,
+      "bias": "hawkish",
+      "matches": {
+        "hawkish": [
+          {
+            "phrase": "inflation remains elevated",
+            "count": 1,
+            "weight": 2,
+            "contribution": 2
+          }
+        ],
+        "dovish": []
+      },
+      "previous_date": "2026-09-16",
+      "score_delta": -1,
+      "shift": "no_change",
+      "direction": 0
+    }
+  ],
+  "validation": {
+    "statements": 23,
+    "every_statement_labelled": true,
+    "every_statement_has_text": true,
+    "every_statement_has_release_clock": true,
+    "deterministic": true,
+    "chronological": true,
+    "label_counts": {
+      "neutral": 8,
+      "dovish": 4,
+      "hawkish": 11
+    },
+    "shift_counts": {
+      "no_change": 16,
+      "dovish_shift": 3,
+      "hawkish_shift": 3
+    },
+    "known_text_check": {
+      "september_2024_action": "cut",
+      "december_2024_action": "cut",
+      "september_score": -2,
+      "december_score": -1,
+      "december_at_least_as_hawkish": true
+    },
+    "limits": [
+      "the lexicon is a frozen developer assumption; no phrase weight is estimated from a return",
+      "the archive is staged only: F8 is not wired into the 05:00 snapshot, so no morning's requirement count changes",
+      "no statement-level market outcome is stored, so this validation cannot and does not claim predictive power"
+    ]
+  },
+  "content_sha256": "562057005231568f400d36532f684a3e0c8d2cbddce596ffcddc851a5e111fbb"
+}

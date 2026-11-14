@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>USD Layer 1 Decision Rules v1 · Frozen research spec</title>
+<style>
+:root{color-scheme:dark;--bg:#080e16;--panel:#101b29;--panel2:#0c1622;--line:#304358;--text:#e8eef5;--muted:#b2c1d0;--amber:#f2c167;--blue:#8acfff;--green:#8fe0b0;--red:#f2a08a;--warn:#ffd2be}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:1240px;margin:auto;padding:28px 24px 60px}h1,h2,h3,p{margin:0 0 12px;overflow-wrap:anywhere}
+h1{font-size:clamp(26px,4vw,40px);line-height:1.15}h2{font-size:22px}h3{font-size:16px}a{color:var(--blue)}
+header{display:flex;gap:24px;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+header>*{min-width:0}.links{display:flex;gap:16px;flex-wrap:wrap}.links>*{min-width:0;overflow-wrap:anywhere}
+.eyebrow{font:12px/1.5 "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--amber);text-transform:uppercase}
+.muted,small{color:var(--muted)}
+.notice{border:1px solid #81642f;background:#211e17;padding:18px;margin:18px 0;color:#ffe0a2;overflow-wrap:anywhere}
+.notice.critical{border-color:#9b5744;background:#281a18;color:var(--warn)}
+.versionbar{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 4px}
+.tag{border:1px solid var(--line);background:var(--panel2);padding:5px 9px;font:12px/1.4 "IBM Plex Mono",monospace;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0 10px}
+.metric,.panel{border:1px solid var(--line);background:var(--panel);padding:18px;min-width:0;overflow-wrap:anywhere}
+.metric strong{display:block;font:32px/1.3 "IBM Plex Mono",monospace;overflow-wrap:anywhere}
+.metric span{color:var(--muted)}.metric-note{color:var(--muted);max-width:90ch}
+.panel{margin-top:18px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.columns .panel{margin-top:0}
+.table-wrap{overflow-x:auto;max-width:100%}
+table{width:100%;min-width:0;border-collapse:collapse;text-align:left;font-size:14px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);overflow-wrap:anywhere;vertical-align:top}
+th{color:var(--muted);font-weight:500}td:first-child{overflow-wrap:anywhere}
+table.wide{min-width:540px}table.counts td:last-child,table.counts th:last-child{text-align:right;white-space:nowrap}
+.num{font-family:"IBM Plex Mono",monospace}.pos{color:var(--green)}.neg{color:var(--red)}.zero{color:var(--muted)}
+.step{display:grid;grid-template-columns:auto 1fr;gap:14px;margin:0 0 16px;align-items:start}
+.step b{font:13px/1.5 "IBM Plex Mono",monospace;color:var(--amber);border:1px solid var(--line);background:var(--panel2);padding:4px 8px}
+.step p{margin:0}
+.formula{border-left:3px solid var(--amber);padding:10px 14px;background:var(--panel2);font-family:"IBM Plex Mono",monospace;font-size:14px;overflow-wrap:anywhere}
+.call{border:1px solid var(--line);background:var(--panel2);padding:18px;margin:16px 0}
+.call h2{margin-bottom:6px}.call .big{font:clamp(20px,3vw,28px)/1.3 "IBM Plex Mono",monospace;color:var(--green)}
+.hash{font:12px/1.7 "IBM Plex Mono",monospace;overflow-wrap:anywhere;color:var(--muted)}
+ul.limits{margin:0;padding-left:20px}ul.limits li{margin-bottom:10px;overflow-wrap:anywhere}
+footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);overflow-wrap:anywhere}
+@media(max-width:860px){.columns{grid-template-columns:1fr}}
+@media(max-width:720px){main{padding:18px 12px 40px}header{flex-direction:column;gap:10px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric,.panel{padding:14px}.metric strong{font-size:clamp(18px,5.5vw,28px)}th,td{padding:9px 7px}table{font-size:13px}
+table.wide{min-width:0}table.wide thead{position:absolute;left:-9999px}table.wide tr{display:block;border-bottom:1px solid var(--line)}table.wide td{display:block;border:0;padding:4px 0}table.wide td:first-child{color:var(--muted)}}
+@media(max-width:380px){.metrics{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<header>
+  <div>
+    <p class="eyebrow">USD Layer 1 · Frozen specification · Research only</p>
+    <h1>USD Layer 1 decision rules, version 1</h1>
+    <p class="muted">Turns the intended 25-factor book into one USD decision at 05:00 London: a direction, one of five conviction bands, and an explicit trade / no-trade answer.</p>
+  </div>
+  <nav class="links" aria-label="Related pages">
+    <a href="index.html">USD Layer 1 backtester ↗</a>
+    <a href="backtest-flow.html">Backtest flow ↗</a>
+    <a href="data/usd-layer1-backtester/run-v1.json">Published artefact ↗</a>
+  </nav>
+</header>
+
+<div class="versionbar">
+  <span class="tag">usd-l1-decision-rules-v1.0.0</span>
+  <span class="tag">FROZEN_EXPERIMENTAL</span>
+  <span class="tag">frozen 2026-11-14</span>
+  <span class="tag">cutoff 05:00 Europe/London. A print released after the cutoff cannot vote in that morning.</span>
+</div>
+
+<div class="notice critical">
+  <strong>Read this first.</strong> These rules are a design decision frozen by judgement, not a result. They were
+  written before this version's accuracy was evaluated, and no figure on this page is an edge claim. The published
+  challenger remains the nine-input experiment: F8 Fed bias is specified and calculated for the worked morning, but
+  <code>run-v1.json</code> does not yet consume it, and the event calendar is not staged. Every count on this page is
+  a replay of version 1 over the stored session rows, with the F8 reading reconstructed from the Fed statement archive
+  at the cutoff. Eligibility means the frozen signal-count, family-count and RG-4 gate; it does not mean the 05:00
+  receipt check passed, which it did not on any morning. The replay runs to
+  2026-10-12 on an artefact rebuilt
+  2026-11-14T00:00:00.000Z; it replaces the earlier artefact, and
+  <a href="data/usd-layer1-backtester/audit-v1-superseded.json">audit-v1-superseded.json</a> keeps the numbers it
+  replaced.
+</div>
+
+<p class="eyebrow">Four headline counts · 725-morning replay</p>
+<div class="metrics" aria-label="Headline replay counts">
+  <div class="metric" data-headline="sessions-replayed"><span>Mornings replayed</span><strong>725</strong></div>
+  <div class="metric" data-headline="sessions-eligible"><span>Mornings passing the frozen gate</span><strong>320</strong></div>
+  <div class="metric" data-headline="directional-calls"><span>Directional calls issued</span><strong>196</strong></div>
+  <div class="metric" data-headline="trade-qualified"><span>Provisional trade rule met</span><strong>62</strong></div>
+</div>
+<p class="metric-note">Eligibility is the binding constraint, not the direction.
+404 of 725 mornings failed the RG-4
+volatility gate (373 closed,
+31 undefined), a further
+1 open morning had too little of the book,
+124 eligible mornings sat inside the 0.20 deadband, and
+196 produced a direction. Of those,
+87 were bullish and 109 bearish. A no-call is never filled or
+converted to a flat vote. These are replayed decisions under version 1, not the stored challenger's published
+calls.</p>
+
+<section class="panel" id="decision" aria-labelledby="decision-title">
+  <h2 id="decision-title">The decision, in order</h2>
+  <p>The research fixes seven groups and one unit of say per family, but it never names the families, which factors
+  vote, a combination rule, a band set or a gate. Version 1 chooses 12 voting signals across six voting
+  families, keeps the seventh group as a non-voting quality gate, and applies these steps in order.</p>
+
+  <div class="step"><b>01</b><p><strong>Vote inside each family.</strong> A signal votes +1 for USD strength, −1 for
+  USD weakness, or 0. A signal with no value at the cutoff abstains; it is never replaced by zero, a later print or a
+  neighbouring session. The family vote is the arithmetic mean of its usable signal votes.</p></div>
+
+  <div class="step"><b>02</b><p><strong>Weight the families equally.</strong> 6 families each
+  cast one vote regardless of how many signals they contain, so rates cannot outvote commodities by having more
+  columns. The quality gate does not vote.</p></div>
+
+  <div class="step"><b>03</b><p><strong>Score agreement and participation.</strong> Both are needed because a book can
+  agree strongly while most of it is absent.</p></div>
+  <div class="formula">net score = Σ family votes<br>agreement = |net score| ÷ usable families<br>participation = usable voting signals ÷ 12</div>
+
+  <div class="step"><b>04</b><p><strong>Apply the gate.</strong> A direction needs at least
+  6 usable signals, at least 4 usable
+  families, and an RG-4 volatility gate that is defined and open. The event family must also be usable for the
+  provisional trade rule, because a direction read without the event family is incomplete.</p></div>
+
+  <div class="step"><b>05</b><p><strong>Apply the deadband.</strong> A morning inside
+  <span class="num">0.20</span> agreement is a recorded no-call, not a coin toss and not a flat position.</p></div>
+
+  <div class="step"><b>06</b><p><strong>Place the band, then cap it.</strong> A missing family caps the result at
+  band 3. An unstaged event calendar caps it at band 4. Caps are recorded with the morning rather than silently
+  reducing the score.</p></div>
+
+  <div class="step"><b>07</b><p><strong>Answer the trade question.</strong> The provisional trade rule is met only at
+  band 3 or above, with the RG-4 gate open, the event family usable, and all twelve signals usable. No
+  sizing, entry, stop or execution is defined in this version.</p></div>
+
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Conviction bands and replay counts">
+    <table class="wide">
+      <thead><tr><th scope="col">Band</th><th scope="col">Min agreement</th><th scope="col">Min participation</th><th scope="col">Mornings</th><th scope="col">Meaning</th></tr></thead>
+      <tbody><tr><td>Band 1 · Watch</td><td class="num">0.20</td><td class="num">0.30</td><td class="num">22</td><td>A direction exists, but the book is close to its deadband or mostly absent.</td></tr><tr><td>Band 2 · Weak</td><td class="num">0.25</td><td class="num">0.40</td><td class="num">105</td><td>The inherited band-2 threshold: a weak directional read, not a trade.</td></tr><tr><td>Band 3 · Provisional trade</td><td class="num">0.45</td><td class="num">0.60</td><td class="num">50</td><td>The inherited provisional trade threshold. It is a floor for study, not evidence of edge.</td></tr><tr><td>Band 4 · Strong</td><td class="num">0.65</td><td class="num">0.75</td><td class="num">19</td><td>Broad agreement across most families and most signals.</td></tr><tr><td>Band 5 · Full book</td><td class="num">0.85</td><td class="num">0.90</td><td class="num">0</td><td>Near-unanimous agreement with the event calendar staged. The calendar is not staged, so this band is defined but unreachable in version 1.</td></tr></tbody>
+    </table>
+  </div>
+  <p class="hash">Band 5 is defined but cannot be reached in version 1 because the event calendar is not staged, and
+  every band-4 result therefore carries that cap. The table counts only the 196
+  directional calls; eligible no-call mornings have no band.</p>
+</section>
+<section class="panel" id="families" aria-labelledby="families-title">
+  <h2 id="families-title">Six voting families, twelve signals</h2>
+  <p>The research's seventh group is a data-quality gate, not a voter. Each family below carries weight 1, so the
+  family vote is its mean signal vote and the book is family-balanced by construction. The table names the frozen
+  source and the rule each signal follows; it does not add a factor that is absent from the artefact or drop one that
+  the research requires.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Voting families and their signals">
+    <table class="wide">
+      <thead><tr><th scope="col">Family</th><th scope="col">Signal</th><th scope="col">Frozen source at 05:00</th><th scope="col">Vote rule</th></tr></thead>
+      <tbody><tr><td><strong>Rates</strong><br><span class="hash">weight 1</span></td><td>US 2Y yield, five-session change<br><span class="hash">live.f2-us-2y-delta</span></td><td>FRED DGS2</td><td>sign of the five-session change in bps: higher votes +1 USD, lower -1, unchanged 0</td></tr><tr><td></td><td>US 10Y real yield, five-session change<br><span class="hash">live.f4-real-yield-delta</span></td><td>FRED DFII10</td><td>sign of the five-session change in bps: higher votes +1 USD, lower -1, unchanged 0</td></tr><tr><td></td><td>US minus Germany 2Y spread, five-session change<br><span class="hash">rates.relative-front-end-delta</span></td><td>FRED DGS2 and Bundesbank BBSIS 2Y</td><td>sign of the five-session change in bps: widening votes +1 USD, narrowing -1, unchanged 0; F3 and the shared front-end row are the same print and never vote twice</td></tr><tr><td><strong>Risk and volatility</strong><br><span class="hash">weight 1</span></td><td>VIX level and risk regime<br><span class="hash">live.f1-vix-level</span></td><td>FRED VIXCLS</td><td>the nine-input book's frozen VIX regime vote: high and rising volatility votes -1 USD, low and falling +1</td></tr><tr><td></td><td>VIX five-session change<br><span class="hash">risk.vix-level-and-change-at-cutoff</span></td><td>FRED VIXCLS</td><td>the nine-input book's frozen VIX momentum vote: a rising five-session change votes -1 USD, a falling change +1</td></tr><tr><td></td><td>Safe-haven demand<br><span class="hash">risk.usd-safe-haven-demand</span></td><td>Cached gold H1 and H.10 USD/JPY; CHF confirmation only</td><td>RG-5: gold and JPY both weaken by more than 0.25% votes +1 USD, both strengthen -1, otherwise 0; CHF never votes alone</td></tr><tr><td><strong>USD level and momentum</strong><br><span class="hash">weight 1</span></td><td>Broad dollar momentum<br><span class="hash">live.f5-dxy-delta</span></td><td>FRED DTWEXBGS, a declared stand-in for ICE DXY</td><td>the nine-input book's frozen broad-dollar vote: a five-session rise votes +1 USD, a fall -1</td></tr><tr><td></td><td>USD session momentum<br><span class="hash">fx.usd-session-momentum</span></td><td>EUR/USD and USD/JPY cached H1 tape, declared proxies for the DXY path</td><td>the mean of the two mirror votes; the pair is one factor and votes once, not twice</td></tr><tr><td></td><td>Overnight range position<br><span class="hash">fx.usd-overnight-range-position</span></td><td>Cached EUR/USD H1 tape</td><td>RG-3: range position at least 0.70 votes +1 USD, at most 0.30 -1, otherwise 0; a range below 10 pips is undefined</td></tr><tr><td><strong>Gold and commodities</strong><br><span class="hash">weight 1</span></td><td>Gold five-session change<br><span class="hash">live.f6-gold-delta</span></td><td>Cached XAU/USD H1, labelled as the Coinbase quote</td><td>the nine-input book's frozen gold vote: a five-session fall votes +1 USD, a rise -1</td></tr><tr><td><strong>Cross-asset</strong><br><span class="hash">weight 1</span></td><td>Equity versus USD<br><span class="hash">live.f10-equity-versus-usd</span></td><td>Cached NAS100 H1, labelled where the rule names QQQ</td><td>the nine-input book's frozen equity vote: a five-session fall votes +1 USD, a rise -1</td></tr><tr><td><strong>Events and calendar</strong><br><span class="hash">weight 1</span></td><td>F8 Fed bias<br><span class="hash">live.f8-fed-bias</span></td><td>23 archived FOMC policy statements, release-clocked</td><td>RG-2: a hawkish statement shift votes +1 USD, dovish -1, neutral 0; a statement released after the cutoff cannot vote that morning</td></tr></tbody>
+    </table>
+  </div>
+  <p class="hash"><strong>Non-voting gate.</strong> A morning needs at least six usable voting signals, at least four usable families, and an open RG-4 volatility gate before a direction may be issued. The gate never adds or subtracts a vote.</p>
+</section>
+<section class="panel" id="worked-morning" aria-labelledby="worked-title">
+  <p class="eyebrow">One worked morning</p>
+  <h2 id="worked-title">2024-02-06 · 05:00 London</h2>
+  <div class="call" data-worked-morning="2024-02-06" data-worked-direction="BULLISH" data-worked-band="2" data-worked-trade="false">
+    <p class="eyebrow">Result</p>
+    <p class="big">BULLISH · Band 2 Weak · no trade</p>
+    <p>All 12 voting signals and all 6 families resolve. The net score is
+    <span class="num">+1.67</span> across 6 families, which is
+    <span class="num">27.8%</span> agreement at
+    <span class="num">100.0%</span> participation. The RG-4 gate is
+    <strong>open</strong>. The provisional trade rule is not met: band 2 is below the band-3 floor.</p>
+    <p class="hash">Band 2 needs agreement ≥ 0.25 and participation ≥ 0.40. Band 3 needs agreement ≥ 0.45, which 27.8% does not reach.</p>
+  </div>
+
+  <div class="columns">
+    <div class="panel">
+      <h3>Family votes</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Family votes for the worked morning">
+        <table><thead><tr><th scope="col">Family</th><th scope="col">Signals</th><th scope="col">Vote</th></tr></thead><tbody><tr><td>Rates</td><td class="num">3/3</td><td class="num pos">+1.00</td></tr><tr><td>Risk and volatility</td><td class="num">3/3</td><td class="num neg">-0.33</td></tr><tr><td>USD level and momentum</td><td class="num">3/3</td><td class="num pos">+1.00</td></tr><tr><td>Gold and commodities</td><td class="num">1/1</td><td class="num zero">0.00</td></tr><tr><td>Cross-asset</td><td class="num">1/1</td><td class="num zero">0.00</td></tr><tr><td>Events and calendar</td><td class="num">1/1</td><td class="num zero">0.00</td></tr></tbody></table>
+      </div>
+      <p class="hash">Equal weight: each family contributes one vote. The net score is the sum, not an average across
+      all twelve signals.</p>
+    </div>
+    <div class="panel">
+      <h3>Eligibility and band</h3>
+      <p>12/12 usable signals · 6/6 usable families · RG-4
+      open.</p>
+      <p>No cap applied, because every family resolves and the result is below band 5.</p>
+      <p>No eligibility or deadband reason was recorded.</p>
+      <p class="hash">The event family is usable because RG-2 has a release before the cutoff: the 2024-01-31 statement was
+       released at 2024-01-31T19:00:00.000Z, 5 calendar days earlier, and the archived label
+       is <strong>neutral</strong> (vote 0.00). A statement released after 05:00 London
+       would have made the family unusable and blocked the trade rule.</p>
+    </div>
+  </div>
+
+  <h3>The twelve readings</h3>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Signal readings for the worked morning">
+    <table class="wide">
+      <thead><tr><th scope="col">Family</th><th scope="col">Signal</th><th scope="col">Reading at the cutoff</th><th scope="col">Vote</th></tr></thead>
+      <tbody><tr data-signal="us_2y"><td>Rates</td><td>US 2Y yield, five-session change</td><td class="num">US 2Y 17 bps</td><td class="num pos">+1.00</td></tr><tr data-signal="real_yield"><td>Rates</td><td>US 10Y real yield, five-session change</td><td class="num">US 10Y real 12 bps</td><td class="num pos">+1.00</td></tr><tr data-signal="relative_front_end"><td>Rates</td><td>US minus Germany 2Y spread, five-session change</td><td class="num">US–DE 2Y 4 bps</td><td class="num pos">+1.00</td></tr><tr data-signal="vix_level"><td>Risk and volatility</td><td>VIX level and risk regime</td><td class="num">VIX 13.67</td><td class="num neg">-1.00</td></tr><tr data-signal="vix_change"><td>Risk and volatility</td><td>VIX five-session change</td><td class="num">VIX five-session change 0.07 pts</td><td class="num zero">0.00</td></tr><tr data-signal="safe_haven"><td>Risk and volatility</td><td>Safe-haven demand</td><td class="num">gold -0.013% · USD/JPY 0.406%</td><td class="num zero">0.00</td></tr><tr data-signal="broad_dollar"><td>USD level and momentum</td><td>Broad dollar momentum</td><td class="num">broad dollar 0.236%</td><td class="num pos">+1.00</td></tr><tr data-signal="session_momentum"><td>USD level and momentum</td><td>USD session momentum</td><td class="num">EUR/USD -0.727% · USD/JPY 0.406%</td><td class="num pos">+1.00</td></tr><tr data-signal="overnight_range"><td>USD level and momentum</td><td>Overnight range position</td><td class="num">range position 0.904 · 16.6 pips</td><td class="num pos">+1.00</td></tr><tr data-signal="gold"><td>Gold and commodities</td><td>Gold five-session change</td><td class="num">gold -0.131%</td><td class="num zero">0.00</td></tr><tr data-signal="equities"><td>Cross-asset</td><td>Equity versus USD</td><td class="num">NAS100 0.236%</td><td class="num zero">0.00</td></tr><tr data-signal="fed_bias"><td>Events and calendar</td><td>F8 Fed bias</td><td class="num">neutral statement 2024-01-31 · 5 days old</td><td class="num zero">0.00</td></tr></tbody>
+    </table>
+  </div>
+  <p class="hash">Readings come from the stored session rows; F8 is read from the Fed statement archive as stated above. This is not a re-download. A negative vote means the signal reads
+  USD-weak, not that the underlying asset fell.</p>
+</section>
+<section class="panel" id="accounting" aria-labelledby="accounting-title">
+  <h2 id="accounting-title">Where 725 mornings went</h2>
+  <p>The gate does most of the work. This is not a filtering choice made after the fact: it is the frozen eligibility
+  rule, applied to every morning in order, and a blocked morning is counted even when it never becomes a call.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Eligibility accounting">
+    <table class="wide"><thead><tr><th scope="col">Outcome</th><th scope="col">Mornings</th><th scope="col">What it means</th></tr></thead><tbody><tr><td>Mornings in the replay</td><td class="num">725</td><td>Every session in the published artefact.</td></tr><tr><td>RG-4 gate closed</td><td class="num">373</td><td>The volatility gate is defined and closed; no direction.</td></tr><tr><td>RG-4 gate undefined</td><td class="num">31</td><td>The gate has no value at the cutoff; no direction and no fill.</td></tr><tr><td>Open gate but too little of the book</td><td class="num">1</td><td>Fewer than six usable signals or fewer than four usable families.</td></tr><tr><td>Eligible mornings</td><td class="num">320</td><td>Gate open, six or more signals, four or more families.</td></tr><tr><td>No-call inside the deadband</td><td class="num">124</td><td>Eligible, but agreement below 0.20 or a net score of exactly zero.</td></tr><tr><td>Directional calls</td><td class="num">196</td><td>Bullish or bearish, with a band.</td></tr><tr><td>Provisional trade rule met</td><td class="num">62</td><td>Band 3 or above, all twelve signals usable, and the event family usable.</td></tr></tbody></table>
+  </div>
+  <p class="hash">The four category rows — gate closed, gate undefined, too little of the book, eligible — sum to
+  725. The last three rows subdivide the eligible mornings and are not additional mornings. A morning
+  is counted at the first failing step in this order: RG-4, signal and family minimums, deadband, call.</p>
+</section>
+<section class="panel" id="scored" aria-labelledby="scored-title">
+  <h2 id="scored-title">The same calls, scored after the fact</h2>
+  <p>Nothing above is an accuracy claim. This section is the one place where the calls are put against prices, and it
+  is generated separately by <span class="num">backtester/scripts/build_usd_l1_audit_v1.js</span> from the published
+  artefact and the committed market tapes, then copied here unchanged. The rule book was written before these outcomes
+  were read, but the same sessions were in view when it was written, so every figure below is in-sample.</p>
+
+  <div class="metrics" aria-label="Scored outcome counts">
+    <div class="metric" data-scored="dxy"><span>DXY calls scored</span><strong>104</strong></div>
+    <div class="metric" data-scored="dxy-hits"><span>DXY direction right</span><strong>47</strong></div>
+    <div class="metric" data-scored="trade-hits"><span>Trade-rule calls right</span><strong>17</strong></div>
+    <div class="metric" data-scored="all-four"><span>All four markets right</span><strong>17</strong></div>
+  </div>
+  <p class="metric-note">The DXY score puts the v1 direction against
+  <span class="num">DXY.cash (FTMO spot CFD)</span> from 05:00 London to the next 05:00, counting a
+  move inside 0.086% as flat. 47 of 104 are right,
+  45.2%, 95% interval 36.0–54.8%. The 62 mornings that met the provisional
+  trade rule score 17 of 31 where the index has a print,
+  54.8%, 95% interval 37.8–70.8%. Of 196
+  directional calls, 136 were right on at least one of the four markets and
+  9 had no priced market at all.</p>
+
+  <div class="columns">
+    <div class="panel">
+      <h3>By conviction band</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="DXY accuracy by band">
+        <table class="wide"><thead><tr><th scope="col">Band</th><th scope="col">Calls</th><th scope="col">Scored</th><th scope="col">Right</th><th scope="col">Accuracy</th><th scope="col">Interval</th></tr></thead><tbody><tr><td>Band 1</td><td class="num">22</td><td class="num">11</td><td class="num">2</td><td class="num">18.2%</td><td>95% interval 5.1–47.7%</td></tr><tr><td>Band 2</td><td class="num">105</td><td class="num">55</td><td class="num">22</td><td class="num">40.0%</td><td>95% interval 28.1–53.2%</td></tr><tr><td>Band 3</td><td class="num">50</td><td class="num">24</td><td class="num">13</td><td class="num">54.2%</td><td>95% interval 35.1–72.1%</td></tr><tr><td>Band 4</td><td class="num">19</td><td class="num">14</td><td class="num">10</td><td class="num">71.4%</td><td>95% interval 45.4–88.3%</td></tr><tr><td>Band 5</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td>not enough scored calls</td></tr></tbody></table>
+      </div>
+      <p class="hash">A higher band was meant to mean more conviction. Band 5 never occurred, because the full-book cap
+      needs a staged event calendar, so the top row is an empty promise rather than evidence.</p>
+    </div>
+    <div class="panel">
+      <h3>Four markets, same call</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Four-market agreement">
+        <table class="wide"><thead><tr><th scope="col">Market</th><th scope="col">Calls</th><th scope="col">Scored</th><th scope="col">Right</th><th scope="col">Agreement</th><th scope="col">Flat</th><th scope="col">Unpriced</th><th scope="col">Interval</th></tr></thead><tbody><tr data-market="EUR/USD"><td>EUR/USD</td><td class="num">196</td><td class="num">128</td><td class="num">63</td><td class="num">49.2%</td><td class="num">31</td><td class="num">37</td><td>95% interval 40.7–57.8%</td></tr><tr data-market="XAU/USD"><td>XAU/USD</td><td class="num">196</td><td class="num">131</td><td class="num">73</td><td class="num">55.7%</td><td class="num">27</td><td class="num">38</td><td>95% interval 47.2–63.9%</td></tr><tr data-market="NAS100"><td>NAS100</td><td class="num">196</td><td class="num">127</td><td class="num">59</td><td class="num">46.5%</td><td class="num">31</td><td class="num">38</td><td>95% interval 38.0–55.1%</td></tr><tr data-market="BTC/USD"><td>BTC/USD</td><td class="num">196</td><td class="num">157</td><td class="num">70</td><td class="num">44.6%</td><td class="num">39</td><td class="num">0</td><td>95% interval 37.0–52.4%</td></tr></tbody></table>
+      </div>
+      <p class="hash">A bearish dollar call is scored as EUR/USD down, gold down, the Nasdaq future down and bitcoin
+      down, each with its own flat band. A market with no closing bar on the tape is counted as unpriced, never as a
+      miss.</p>
+    </div>
+  </div>
+
+  <h3>Line to line, where the ladder may price</h3>
+  <p>The ladder's own stamp is 2026-10-04T16:14:19Z, which leaves 6 sessions
+    that may be priced. The only v1 call in that window is 2026-10-12 BEARISH band 2.
+    Replayed on EUR/USD, gold, the Nasdaq future and
+    bitcoin, 1118 bar instants reproduce from the sealed ticks with 0 mismatched; the full 5R
+    geometry filled 5 orders for 0 targets and 5 stops, with
+    1 never filled, 1 still open and 1 bar that touched
+    both levels, and the half-off 3R geometry filled 7 for 2 targets and
+    5 stops, with 3 never filled, 2 still open and
+    0 touched both.</p>
+  <p class="hash">The earlier artefact, kept as
+       <a href="data/usd-layer1-backtester/audit-v1-superseded.json">audit-v1-superseded.json</a>, produced
+       78 scored DXY calls with 34 hits against 104 and 47 now, and
+       167 directional calls instead of 196. It also records
+       the tapes it read: EUR/USD, XAU/USD and NAS100 to 2026-04-29 and BTC/USD to 2026-04-30, against
+       EUR/USD, XAU/USD and NAS100 to 2026-10-13 and BTC/USD to 2026-10-14 today, so every session past the old boundary was stored as absent.
+       Today's tapes therefore disagree with those stored outcomes on 403 of
+       2900 session-market rows over 119 sessions; the current
+       artefact disagrees on 0. That difference, not the build date, is why the old
+       numbers are withdrawn.</p>
+  <p class="hash">Audit file: <a href="data/usd-layer1-backtester/audit-v1.json">audit-v1.json</a> · run
+  data/usd-layer1-backtester/run-v1.json · sha256 20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e · built 2026-11-14T00:00:00.000Z over
+  2024-01-02 to 2026-10-12 · tapes
+  EUR/USD, XAU/USD and NAS100 to 2026-10-13 and BTC/USD to 2026-10-14 · DXY tape to
+  2026-11-11. Reproduce:
+  <span class="num">node backtester/scripts/build_usd_l1_audit_v1.js --write</span>, then this page.</p>
+</section>
+<section class="panel" id="evidence" aria-labelledby="evidence-title">
+  <h2 id="evidence-title">What the page is built on</h2>
+  <div class="columns">
+    <div class="panel">
+      <h3>Version and inputs</h3>
+      <p>Rule version <span class="num">usd-l1-decision-rules-v1.0.0</span>, frozen 2026-11-14 and marked
+      FROZEN_EXPERIMENTAL. The page builder reads the config, the published artefact and the existing rule modules; it
+      does not re-download a price or re-score an outcome.</p>
+      <p class="hash">config config/usd_l1_decision_rules_v1.json<br>sha256 f0f7cb753cdb770e7bb715d71e5475655beaee4a7a9bff596b62b080de30769b</p>
+      <p class="hash">artefact data/usd-layer1-backtester/run-v1.json<br>sha256 20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e</p>
+    </div>
+    <div class="panel">
+      <h3>25-row gap table</h3>
+      <p>The artefact registers all 25 intended factors with a disposition and a gap. The counts
+      below are copied from that table, not recomputed here.</p>
+      <p><span class="num">9</span> need code · <span class="num">11</span> need
+      historical data · <span class="num">5</span> are exclusions the research supports.</p>
+      <p class="hash">Source: run-v1.json factor_review.rows</p>
+    </div>
+  </div>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Reproduction commands">
+    <table><thead><tr><th scope="col">Check</th><th scope="col">Command</th></tr></thead><tbody>
+      <tr><td>Page and summary are current</td><td class="num">node backtester/scripts/build_usd_l1_decision_rules_page.js --check</td></tr>
+      <tr><td>Scored outcomes are current</td><td class="num">node backtester/scripts/build_usd_l1_audit_v1.js --check</td></tr>
+      <tr><td>Rule semantics and replay counts</td><td class="num">node --test backtester/tests/usd_layer1_decision_rules_v1.test.js</td></tr>
+      <tr><td>Diagram nodes, evidence and mobile layout</td><td class="num">node --test tests/usd_layer1_diagram.browser.test.js</td></tr>
+    </tbody></table>
+  </div>
+  <p class="hash">The Validity tab's decision diagram draws the same chain as 18 nodes and opens each family's
+  registered factors from the 25-row table. Its browser test asserts the node count, the family evidence panel and a
+  400px viewport, so the published page and the diagram cannot drift apart silently.</p>
+</section>
+<section class="panel" id="limitations" aria-labelledby="limits-title">
+  <h2 id="limits-title">What this page does not claim</h2>
+  <ul class="limits"><li>Research only. No figure on this page is an edge claim, and no call is published as live.</li><li>The rules are frozen by judgement before this version's accuracy was evaluated; they are not fitted to the 725 mornings.</li><li>A missing factor is abstained on, never filled with zero or a neighbouring print.</li><li>The event calendar is not staged, so band 5 cannot be reached and every band-4 result carries that cap.</li><li>F8 is specified and computed from its archive for the worked morning, but run-v1.json does not yet read it; the published challenger remains the nine-input experiment.</li><li>The band-3 trade threshold is inherited from the nine-input book. It is a research floor, not a validated gate.</li></ul>
+  <p>The worked morning is an arithmetic demonstration, not a result; it was not selected for its outcome. The
+  scored section reports hit counts and their intervals, and nothing else: no return, Sharpe, drawdown or comparison
+  with the deployed model, no out-of-sample split, and no claim that a hit count above one half is an edge. The
+  conviction bands are in-sample and band 5 never occurred. F8 is the one signal read outside the session row: it is
+  reconstructed from the Fed statement archive by release time, not from a stored receipt.</p>
+</section>
+<footer>
+  <p>Research only. USD Layer 1 decision rules usd-l1-decision-rules-v1.0.0, frozen 2026-11-14. This page is
+  generated from committed inputs and is not a live signal, a deployment or a claim of trading edge.</p>
+  <p class="hash">Machine-readable rules: <a href="config/usd_l1_decision_rules_v1.json">config/usd_l1_decision_rules_v1.json</a> ·
+  Summary: <a href="data/usd-layer1-backtester/decision-rules-v1.json">data/usd-layer1-backtester/decision-rules-v1.json</a><br>
+  Regenerate: <span class="num">node backtester/scripts/build_usd_l1_decision_rules_page.js --write</span> · Verify:
+  <span class="num">node backtester/scripts/build_usd_l1_decision_rules_page.js --check</span></p>
+</footer>
+<script type="application/json" id="usd-l1-decision-rules-data">{"version":"usd-l1-decision-rules-v1.0.0","status":"FROZEN_EXPERIMENTAL","research_only":true,"frozen_on":"2026-11-14","title":"USD Layer 1 decision rules, version 1","scope":"Turns the intended 25-factor book into one USD decision at 05:00 London: a direction, one of five conviction bands, and an explicit trade / no-trade answer.","owner_decision":"The research names one unit of say per family and seven families, but never names the families, a combination rule, a band set or a gate. This version names six voting families (the seventh group, the data-quality gate, does not vote), fixes an equal-weight family vote, carries the inherited band-2 and band-3 thresholds, and freezes the result before any accuracy evaluation. It is a design decision, not a finding.","cutoff":"05:00 Europe/London. A print released after the cutoff cannot vote in that morning.","generated_from":{"artefact":"data/usd-layer1-backtester/run-v1.json","artefact_sha256":"20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e","artefact_generated_at":"2026-11-14T00:00:00.000Z","artefact_date_range":{"start":"2024-01-02","end":"2026-10-12"},"config":"config/usd_l1_decision_rules_v1.json","config_sha256":"f0f7cb753cdb770e7bb715d71e5475655beaee4a7a9bff596b62b080de30769b"},"headline":{"sessions_replayed":725,"sessions_eligible":320,"directional_calls":196,"trade_qualified":62},"totals":{"version":"usd-l1-decision-rules-v1.0.0","frozen_on":"2026-11-14","sessions":725,"eligible":320,"directional_calls":196,"no_calls":124,"trade_qualified":62,"band_counts":[{"band":1,"label":"Watch","count":22},{"band":2,"label":"Weak","count":105},{"band":3,"label":"Provisional trade","count":50},{"band":4,"label":"Strong","count":19},{"band":5,"label":"Full book","count":0}],"band_5_calls":0,"capped_mornings":3},"bands":[{"band":1,"label":"Watch","min_agreement":0.2,"min_participation":0.3,"meaning":"A direction exists, but the book is close to its deadband or mostly absent."},{"band":2,"label":"Weak","min_agreement":0.25,"min_participation":0.4,"meaning":"The inherited band-2 threshold: a weak directional read, not a trade."},{"band":3,"label":"Provisional trade","min_agreement":0.45,"min_participation":0.6,"meaning":"The inherited provisional trade threshold. It is a floor for study, not evidence of edge."},{"band":4,"label":"Strong","min_agreement":0.65,"min_participation":0.75,"meaning":"Broad agreement across most families and most signals."},{"band":5,"label":"Full book","min_agreement":0.85,"min_participation":0.9,"meaning":"Near-unanimous agreement with the event calendar staged. The calendar is not staged, so this band is defined but unreachable in version 1."}],"eligibility_accounting":{"sessions":725,"gate_blocked":404,"gate_closed":373,"gate_undefined":31,"count_blocked":1,"directional_calls":196,"deadband_no_calls":124,"eligible":320},"direction_counts":{"bullish":87,"bearish":109},"gap_table":{"rows":25,"counts":{"code":9,"exclusion":5,"data":11},"source":"run-v1.json factor_review.rows","note":"Every one of the 25 intended factors is registered with its disposition and gap. This page does not re-score them."},"families":[{"id":"rates","label":"Rates","weight":1,"signals":[{"id":"us_2y","label":"US 2Y yield, five-session change","factor_id":"live.f2-us-2y-delta","source":"FRED DGS2","vote_rule":"sign of the five-session change in bps: higher votes +1 USD, lower -1, unchanged 0"},{"id":"real_yield","label":"US 10Y real yield, five-session change","factor_id":"live.f4-real-yield-delta","source":"FRED DFII10","vote_rule":"sign of the five-session change in bps: higher votes +1 USD, lower -1, unchanged 0"},{"id":"relative_front_end","label":"US minus Germany 2Y spread, five-session change","factor_id":"rates.relative-front-end-delta","source":"FRED DGS2 and Bundesbank BBSIS 2Y","vote_rule":"sign of the five-session change in bps: widening votes +1 USD, narrowing -1, unchanged 0; F3 and the shared front-end row are the same print and never vote twice"}]},{"id":"risk","label":"Risk and volatility","weight":1,"signals":[{"id":"vix_level","label":"VIX level and risk regime","factor_id":"live.f1-vix-level","source":"FRED VIXCLS","vote_rule":"the nine-input book's frozen VIX regime vote: high and rising volatility votes -1 USD, low and falling +1"},{"id":"vix_change","label":"VIX five-session change","factor_id":"risk.vix-level-and-change-at-cutoff","source":"FRED VIXCLS","vote_rule":"the nine-input book's frozen VIX momentum vote: a rising five-session change votes -1 USD, a falling change +1"},{"id":"safe_haven","label":"Safe-haven demand","factor_id":"risk.usd-safe-haven-demand","source":"Cached gold H1 and H.10 USD/JPY; CHF confirmation only","vote_rule":"RG-5: gold and JPY both weaken by more than 0.25% votes +1 USD, both strengthen -1, otherwise 0; CHF never votes alone"}]},{"id":"usd","label":"USD level and momentum","weight":1,"signals":[{"id":"broad_dollar","label":"Broad dollar momentum","factor_id":"live.f5-dxy-delta","source":"FRED DTWEXBGS, a declared stand-in for ICE DXY","vote_rule":"the nine-input book's frozen broad-dollar vote: a five-session rise votes +1 USD, a fall -1"},{"id":"session_momentum","label":"USD session momentum","factor_id":"fx.usd-session-momentum","source":"EUR/USD and USD/JPY cached H1 tape, declared proxies for the DXY path","vote_rule":"the mean of the two mirror votes; the pair is one factor and votes once, not twice"},{"id":"overnight_range","label":"Overnight range position","factor_id":"fx.usd-overnight-range-position","source":"Cached EUR/USD H1 tape","vote_rule":"RG-3: range position at least 0.70 votes +1 USD, at most 0.30 -1, otherwise 0; a range below 10 pips is undefined"}]},{"id":"commodities","label":"Gold and commodities","weight":1,"signals":[{"id":"gold","label":"Gold five-session change","factor_id":"live.f6-gold-delta","source":"Cached XAU/USD H1, labelled as the Coinbase quote","vote_rule":"the nine-input book's frozen gold vote: a five-session fall votes +1 USD, a rise -1"}]},{"id":"cross_asset","label":"Cross-asset","weight":1,"signals":[{"id":"equities","label":"Equity versus USD","factor_id":"live.f10-equity-versus-usd","source":"Cached NAS100 H1, labelled where the rule names QQQ","vote_rule":"the nine-input book's frozen equity vote: a five-session fall votes +1 USD, a rise -1"}]},{"id":"event","label":"Events and calendar","weight":1,"signals":[{"id":"fed_bias","label":"F8 Fed bias","factor_id":"live.f8-fed-bias","source":"23 archived FOMC policy statements, release-clocked","vote_rule":"RG-2: a hawkish statement shift votes +1 USD, dovish -1, neutral 0; a statement released after the cutoff cannot vote that morning"}]}],"non_voting_gate":{"id":"quality","label":"Data-quality gate","factor_id":"data.quality-gate-for-abstention","rule":"A morning needs at least six usable voting signals, at least four usable families, and an open RG-4 volatility gate before a direction may be issued. The gate never adds or subtracts a vote."},"eligibility":{"min_usable_signals":6,"min_usable_families":4,"volatility_gate":"RG-4 must be defined and open","note":"Six is RG-8's frozen minimum, carried unchanged. Four families is the smallest count at which a family-balanced vote can still disagree with itself."},"trade_rule":{"min_band":3,"requires":["the RG-4 volatility gate is defined and open","the event family is usable (F8 has a release before the cutoff)","all twelve voting signals are usable","the band is at least 3"],"sizing":null,"note":"Provisional and research-only. No sizing, entry, stop or live execution is defined here, and no accuracy result is claimed."},"event_context":{"fed_bias_rule":"RG-2","fed_bias_staged":true,"fed_bias_wired_into_artefact":false,"calendar_staged":false,"consequence":"The worked morning reads F8 from the archive to show the rule. The published run-v1.json does not yet consume it, so the rule is specified here but not executed by the nine-input artefact."},"worked_morning":{"date":"2024-02-06","why":"First replayed morning on which every wired rule resolves, the RG-4 gate is open, and F8 has a release before the cutoff.","cutoff_at_utc":"2024-02-06T05:00:00.000Z","gate_status":"open","direction":"BULLISH","band":2,"band_label":"Weak","trade":false,"net_score":1.6666666666666667,"agreement":0.2777777777777778,"participation":1,"usable_signals":12,"usable_families":6,"caps_applied":[],"reasons":[],"families":[{"id":"rates","label":"Rates","vote":1,"usable_signals":3,"signals":3},{"id":"risk","label":"Risk and volatility","vote":-0.3333333333333333,"usable_signals":3,"signals":3},{"id":"usd","label":"USD level and momentum","vote":1,"usable_signals":3,"signals":3},{"id":"commodities","label":"Gold and commodities","vote":0,"usable_signals":1,"signals":1},{"id":"cross_asset","label":"Cross-asset","vote":0,"usable_signals":1,"signals":1},{"id":"event","label":"Events and calendar","vote":0,"usable_signals":1,"signals":1}],"signals":[{"id":"us_2y","label":"US 2Y yield, five-session change","family_id":"rates","factor_id":"live.f2-us-2y-delta","vote":1,"usable":true,"reading":"US 2Y 17 bps"},{"id":"real_yield","label":"US 10Y real yield, five-session change","family_id":"rates","factor_id":"live.f4-real-yield-delta","vote":1,"usable":true,"reading":"US 10Y real 12 bps"},{"id":"relative_front_end","label":"US minus Germany 2Y spread, five-session change","family_id":"rates","factor_id":"rates.relative-front-end-delta","vote":1,"usable":true,"reading":"US–DE 2Y 4 bps"},{"id":"vix_level","label":"VIX level and risk regime","family_id":"risk","factor_id":"live.f1-vix-level","vote":-1,"usable":true,"reading":"VIX 13.67"},{"id":"vix_change","label":"VIX five-session change","family_id":"risk","factor_id":"risk.vix-level-and-change-at-cutoff","vote":0,"usable":true,"reading":"VIX five-session change 0.07 pts"},{"id":"safe_haven","label":"Safe-haven demand","family_id":"risk","factor_id":"risk.usd-safe-haven-demand","vote":0,"usable":true,"reading":"gold -0.013% · USD/JPY 0.406%"},{"id":"broad_dollar","label":"Broad dollar momentum","family_id":"usd","factor_id":"live.f5-dxy-delta","vote":1,"usable":true,"reading":"broad dollar 0.236%"},{"id":"session_momentum","label":"USD session momentum","family_id":"usd","factor_id":"fx.usd-session-momentum","vote":1,"usable":true,"reading":"EUR/USD -0.727% · USD/JPY 0.406%"},{"id":"overnight_range","label":"Overnight range position","family_id":"usd","factor_id":"fx.usd-overnight-range-position","vote":1,"usable":true,"reading":"range position 0.904 · 16.6 pips"},{"id":"gold","label":"Gold five-session change","family_id":"commodities","factor_id":"live.f6-gold-delta","vote":0,"usable":true,"reading":"gold -0.131%"},{"id":"equities","label":"Equity versus USD","family_id":"cross_asset","factor_id":"live.f10-equity-versus-usd","vote":0,"usable":true,"reading":"NAS100 0.236%"},{"id":"fed_bias","label":"F8 Fed bias","family_id":"event","factor_id":"live.f8-fed-bias","vote":0,"usable":true,"reading":"neutral statement 2024-01-31 · 5 days old"}],"fed_statement":{"date":"2024-01-31","released_at_utc":"2024-01-31T19:00:00.000Z","bias":"neutral","direction":0,"age_calendar_days":5,"url":"https://www.federalreserve.gov/newsevents/pressreleases/monetary20240131a.htm"}},"scored":{"current":{"run":"data/usd-layer1-backtester/run-v1.json","run_sha256":"20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e","run_generated_at":"2026-11-14T00:00:00.000Z","run_date_range":{"start":"2024-01-02","end":"2026-10-12"},"tape_ends":{"dxy":{"end":"2026-11-11T20:00:00.000Z","label":"DXY.cash (FTMO spot CFD)"},"markets":{"EURUSD":{"end":"2026-10-13T23:00:00.000Z","label":"EUR/USD"},"XAUUSD":{"end":"2026-10-13T23:00:00.000Z","label":"XAU/USD"},"BTCUSD":{"end":"2026-10-14T23:00:00.000Z","label":"BTC/USD"},"NAS100":{"end":"2026-10-13T23:00:00.000Z","label":"NAS100"}}},"dxy":{"instrument":{"id":"dxy_cash_broker_cfd","symbol":"DXY.cash","label":"DXY.cash (FTMO spot CFD)","provider":"FTMO Global Markets Ltd","provider_server":"FTMO-Server","terminal":"FTMO Global Markets MT5 Terminal","description":"Dollar Index, Spot CFD","kind":"broker_cfd","is_official_cash_dxy":false,"quote_convention":"index points","digits":3,"usd_bullish_predicts":"UP","series_file":"backtester/tmp/ftmo_dxy_cash_h1.csv","exporter":"backtester/scripts/export_ftmo_dxy_cash.py","clock_rule":"the terminal stamps bars in server time; the exporter converts to UTC with the US daylight-saving dates (UTC+2 outside, UTC+3 inside) and refuses to write unless the shift reproduces against the UTC EUR/USD tape","what_it_is_not":"not the ICE cash index (no official settlement print, broker hours and broker spread) and not FRED DTWEXBGS (a lagged broad trade-weighted index)","why_it_can_be_scored_here":"its hourly bars are quoted continuously across both 05:00 London endpoints, so the same 05:00-to-next-05:00 question can be put to a real, named, non-official instrument","why_it_cannot_replace_the_official_series":"a broker CFD's 05:00 print is one broker's quote rather than the licensed index, so a figure from it cannot be reported as test 1's answer; the official lane stays blocked and this lane is labelled"},"flat_band_pct":0.086,"scored":104,"hits":47,"accuracy_pct":45.2,"wilson":{"low_pct":36,"high_pct":54.8},"bands":{"1":{"calls":22,"scored":11,"hits":2,"misses":9,"accuracy_pct":18.2,"wilson":{"low_pct":5.1,"high_pct":47.7}},"2":{"calls":105,"scored":55,"hits":22,"misses":33,"accuracy_pct":40,"wilson":{"low_pct":28.1,"high_pct":53.2}},"3":{"calls":50,"scored":24,"hits":13,"misses":11,"accuracy_pct":54.2,"wilson":{"low_pct":35.1,"high_pct":72.1}},"4":{"calls":19,"scored":14,"hits":10,"misses":4,"accuracy_pct":71.4,"wilson":{"low_pct":45.4,"high_pct":88.3}},"5":{"calls":0,"scored":0,"hits":0,"misses":0,"accuracy_pct":null,"wilson":{"low_pct":null,"high_pct":null}}},"trade":{"calls":62,"scored":31,"hits":17,"misses":14,"accuracy_pct":54.8,"wilson":{"low_pct":37.8,"high_pct":70.8}},"states":{"unpriced":92,"abstained":124,"scored":104}},"markets":{"eurusd":{"label":"EUR/USD","calls":196,"scored":128,"hits":63,"flat":31,"unpriced":37,"agreement_pct":49.2,"wilson":{"low_pct":40.7,"high_pct":57.8}},"xauusd":{"label":"XAU/USD","calls":196,"scored":131,"hits":73,"flat":27,"unpriced":38,"agreement_pct":55.7,"wilson":{"low_pct":47.2,"high_pct":63.9}},"nas100":{"label":"NAS100","calls":196,"scored":127,"hits":59,"flat":31,"unpriced":38,"agreement_pct":46.5,"wilson":{"low_pct":38,"high_pct":55.1}},"btcusd":{"label":"BTC/USD","calls":196,"scored":157,"hits":70,"flat":39,"unpriced":0,"agreement_pct":44.6,"wilson":{"low_pct":37,"high_pct":52.4}}},"joint":{"directional_calls":196,"all_four_hit":17,"any_four_hit":136,"all_four_flat_or_unpriced":9},"outcome_check":{"checked":2900,"matched":2900,"mismatched":0,"mismatch_dates":0,"mismatch_date_range":null,"field_tally":{},"samples":[]},"l2l":{"status":"replayed","ladder":{"source":"backtester/tmp/usd-session-research/raw/main/data__l2l-levels.json","stamp_utc":"2026-10-04T16:14:19Z","eligible_sessions":["2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-09","2026-10-12"],"rule":"a session may be priced by the ladder only when its 05:00 London start is later than the ladder's own stamp, so the lines were already in the file when the session was traded"},"calls":[{"date":"2026-10-12","direction":"BEARISH","band":2}],"ticks":{"source":".local/tmp/l2l-ticks-sweep"},"totals":{"full_5r":{"sessions":4,"fills":5,"targets":0,"stops":5,"working":1,"unfilled":1,"ambiguous":1,"rGross":-5,"returnPctGross":-4.9701},"half_3r":{"sessions":4,"fills":7,"targets":2,"stops":5,"working":2,"unfilled":3,"ambiguous":0,"rGross":1,"returnPctGross":1.059}},"symbols":[{"symbol":"EURUSD","status":"replayed","broker_symbol":"EURUSD","sessions":["2026-10-12"],"levels":22,"bars_check":{"sessions":1,"matched":286,"within_tolerance":286,"exact":286,"mismatched_instants":0},"geometries":{"full_5r":{"label":"original ladder, 5R","r_multiple":5,"totals":{"trades":1,"fills":1,"targets":0,"stops":1,"unfilled":0,"working":0,"ambiguous":0,"filled_after_gap":0,"rGross":-1,"spread_points_at_fill_min":1,"spread_points_at_fill_median":1,"spread_points_at_fill_max":1,"balanceStart":100000,"balanceEnd":99000,"returnPctGross":-1},"coverage":[{"date":"2026-10-12","bars":286,"hours_covered":24,"session_hours":24,"ticks":70200,"gaps":1}],"trades":[{"session_date":"2026-10-12","side":"long","level":1.11887,"fill_price":1.11887,"exit_price":1.11803,"exit_reason":"stop","r_gross":-1}]},"half_3r":{"label":"half grid, 3R","r_multiple":3,"totals":{"trades":2,"fills":0,"targets":0,"stops":0,"unfilled":1,"working":1,"ambiguous":0,"filled_after_gap":0,"rGross":0,"spread_points_at_fill_min":null,"spread_points_at_fill_median":null,"spread_points_at_fill_max":null,"balanceStart":100000,"balanceEnd":100000,"returnPctGross":0},"coverage":[{"date":"2026-10-12","bars":286,"hours_covered":24,"session_hours":24,"ticks":70200,"gaps":1}],"trades":[{"session_date":"2026-10-12","side":"long","level":1.116765,"fill_price":1.11677,"exit_price":1.1175,"exit_reason":"working-at-end-of-tape","r_gross":0}]}},"files":[{"path":".local/tmp/l2l-ticks-sweep/EURUSD/2026-10-12.json","sha256":"cfbacc9edf0479aeb7def0c0ad322e687b86f1cd9de336641ee6e396e233a127"}]},{"symbol":"XAUUSD","status":"replayed","broker_symbol":"XAUUSD","sessions":["2026-10-12"],"levels":22,"bars_check":{"sessions":1,"matched":273,"within_tolerance":273,"exact":273,"mismatched_instants":0},"geometries":{"full_5r":{"label":"original ladder, 5R","r_multiple":5,"totals":{"trades":1,"fills":0,"targets":0,"stops":0,"unfilled":0,"working":1,"ambiguous":0,"filled_after_gap":0,"rGross":0,"spread_points_at_fill_min":null,"spread_points_at_fill_median":null,"spread_points_at_fill_max":null,"balanceStart":100000,"balanceEnd":100000,"returnPctGross":0},"coverage":[{"date":"2026-10-12","bars":273,"hours_covered":24,"session_hours":24,"ticks":200190,"gaps":1}],"trades":[]},"half_3r":{"label":"half grid, 3R","r_multiple":3,"totals":{"trades":2,"fills":1,"targets":0,"stops":1,"unfilled":0,"working":1,"ambiguous":0,"filled_after_gap":0,"rGross":-1,"spread_points_at_fill_min":41,"spread_points_at_fill_median":41,"spread_points_at_fill_max":41,"balanceStart":100000,"balanceEnd":99000,"returnPctGross":-1},"coverage":[{"date":"2026-10-12","bars":273,"hours_covered":24,"session_hours":24,"ticks":200190,"gaps":1}],"trades":[{"session_date":"2026-10-12","side":"long","level":4176.25,"fill_price":4176.25,"exit_price":4164.34,"exit_reason":"stop","r_gross":-1},{"session_date":"2026-10-12","side":"long","level":4176.25,"fill_price":4176.25,"exit_price":4188.51,"exit_reason":"working-at-end-of-tape","r_gross":0}]}},"files":[{"path":".local/tmp/l2l-ticks-sweep/XAUUSD/2026-10-12.json","sha256":"eb4badcb09fb2c435942a3619c6044df9ba0cb8e69de5e67e79fe9f9bff10ac1"}]},{"symbol":"NAS100","status":"replayed","broker_symbol":"US100.cash","sessions":["2026-10-12"],"levels":22,"bars_check":{"sessions":1,"matched":273,"within_tolerance":273,"exact":273,"mismatched_instants":0},"geometries":{"full_5r":{"label":"original ladder, 5R","r_multiple":5,"totals":{"trades":3,"fills":3,"targets":0,"stops":3,"unfilled":0,"working":0,"ambiguous":1,"filled_after_gap":0,"rGross":-3,"spread_points_at_fill_min":145,"spread_points_at_fill_median":145,"spread_points_at_fill_max":165,"balanceStart":100000,"balanceEnd":97029.9,"returnPctGross":-2.9701},"coverage":[{"date":"2026-10-12","bars":273,"hours_covered":24,"session_hours":24,"ticks":392935,"gaps":1}],"trades":[{"session_date":"2026-10-12","side":"long","level":30774.61,"fill_price":30774.61,"exit_price":30719.65,"exit_reason":"stop","r_gross":-1},{"session_date":"2026-10-12","side":"long","level":30774.61,"fill_price":30774.61,"exit_price":30719.65,"exit_reason":"stop","r_gross":-1},{"session_date":"2026-10-12","side":"long","level":30499.79,"fill_price":30499.79,"exit_price":30444.83,"exit_reason":"stop","r_gross":-1}]},"half_3r":{"label":"half grid, 3R","r_multiple":3,"totals":{"trades":3,"fills":3,"targets":0,"stops":3,"unfilled":0,"working":0,"ambiguous":0,"filled_after_gap":0,"rGross":-3,"spread_points_at_fill_min":155,"spread_points_at_fill_median":165,"spread_points_at_fill_max":165,"balanceStart":100000,"balanceEnd":97029.9,"returnPctGross":-2.9701},"coverage":[{"date":"2026-10-12","bars":273,"hours_covered":24,"session_hours":24,"ticks":392935,"gaps":1}],"trades":[{"session_date":"2026-10-12","side":"long","level":30912.02,"fill_price":30912.02,"exit_price":30866.22,"exit_reason":"stop","r_gross":-1},{"session_date":"2026-10-12","side":"long","level":30637.2,"fill_price":30637.2,"exit_price":30591.4,"exit_reason":"stop","r_gross":-1},{"session_date":"2026-10-12","side":"long","level":30499.79,"fill_price":30499.79,"exit_price":30453.99,"exit_reason":"stop","r_gross":-1}]}},"files":[{"path":".local/tmp/l2l-ticks-sweep/NAS100/2026-10-12.json","sha256":"c3a1f9633ac2c27a21afa45b62df9e0a2ad43aaf4cb9f74e76d09e7636a10dad"}]},{"symbol":"BTCUSD","status":"replayed","broker_symbol":"BTCUSD","sessions":["2026-10-12"],"levels":22,"bars_check":{"sessions":1,"matched":286,"within_tolerance":286,"exact":286,"mismatched_instants":0},"geometries":{"full_5r":{"label":"original ladder, 5R","r_multiple":5,"totals":{"trades":2,"fills":1,"targets":0,"stops":1,"unfilled":1,"working":0,"ambiguous":0,"filled_after_gap":0,"rGross":-1,"spread_points_at_fill_min":100,"spread_points_at_fill_median":100,"spread_points_at_fill_max":100,"balanceStart":100000,"balanceEnd":99000,"returnPctGross":-1},"coverage":[{"date":"2026-10-12","bars":286,"hours_covered":24,"session_hours":24,"ticks":325301,"gaps":1}],"trades":[{"session_date":"2026-10-12","side":"long","level":83113.66,"fill_price":83113.66,"exit_price":82822.69,"exit_reason":"stop","r_gross":-1}]},"half_3r":{"label":"half grid, 3R","r_multiple":3,"totals":{"trades":5,"fills":3,"targets":2,"stops":1,"unfilled":2,"working":0,"ambiguous":0,"filled_after_gap":0,"rGross":5,"spread_points_at_fill_min":100,"spread_points_at_fill_median":100,"spread_points_at_fill_max":148,"balanceStart":100000,"balanceEnd":105029.1,"returnPctGross":5.0291},"coverage":[{"date":"2026-10-12","bars":286,"hours_covered":24,"session_hours":24,"ticks":325301,"gaps":1}],"trades":[{"session_date":"2026-10-12","side":"long","level":83841.095,"fill_price":83841.1,"exit_price":83598.62,"exit_reason":"stop","r_gross":-1},{"session_date":"2026-10-12","side":"long","level":82386.225,"fill_price":82386.23,"exit_price":83113.66,"exit_reason":"target","r_gross":3},{"session_date":"2026-10-12","side":"long","level":82386.225,"fill_price":82386.23,"exit_price":83113.66,"exit_reason":"target","r_gross":3}]}},"files":[{"path":".local/tmp/l2l-ticks-sweep/BTCUSD/2026-10-12.json","sha256":"ba5d0007e8b739ee242487ace30c5d5e6ffba209d5cab48b06e43e33c4b5f939"}]}]}},"superseded":{"run":"data/usd-layer1-backtester/run-v1.json@9e4b8d5f","run_sha256":"d374020c75f6ecf24bc5472f822884ab2b8039354c0fe353903e60fb013c883f","run_generated_at":"2026-11-14T16:50:27.205Z","run_date_range":{"start":"2024-01-02","end":"2026-10-12"},"tape_ends":{"dxy":{"end":"2026-11-11T20:00:00.000Z","label":"DXY.cash (FTMO spot CFD)"},"markets":{"EURUSD":{"end":"2026-04-29T23:00:00.000Z","label":"EUR/USD"},"XAUUSD":{"end":"2026-04-29T23:00:00.000Z","label":"XAU/USD"},"BTCUSD":{"end":"2026-04-30T23:00:00.000Z","label":"BTC/USD"},"NAS100":{"end":"2026-04-29T23:00:00.000Z","label":"NAS100"}}},"dxy":{"instrument":{"id":"dxy_cash_broker_cfd","symbol":"DXY.cash","label":"DXY.cash (FTMO spot CFD)","provider":"FTMO Global Markets Ltd","provider_server":"FTMO-Server","terminal":"FTMO Global Markets MT5 Terminal","description":"Dollar Index, Spot CFD","kind":"broker_cfd","is_official_cash_dxy":false,"quote_convention":"index points","digits":3,"usd_bullish_predicts":"UP","series_file":"backtester/tmp/ftmo_dxy_cash_h1.csv","exporter":"backtester/scripts/export_ftmo_dxy_cash.py","clock_rule":"the terminal stamps bars in server time; the exporter converts to UTC with the US daylight-saving dates (UTC+2 outside, UTC+3 inside) and refuses to write unless the shift reproduces against the UTC EUR/USD tape","what_it_is_not":"not the ICE cash index (no official settlement print, broker hours and broker spread) and not FRED DTWEXBGS (a lagged broad trade-weighted index)","why_it_can_be_scored_here":"its hourly bars are quoted continuously across both 05:00 London endpoints, so the same 05:00-to-next-05:00 question can be put to a real, named, non-official instrument","why_it_cannot_replace_the_official_series":"a broker CFD's 05:00 print is one broker's quote rather than the licensed index, so a figure from it cannot be reported as test 1's answer; the official lane stays blocked and this lane is labelled"},"flat_band_pct":0.086,"scored":78,"hits":34,"accuracy_pct":43.6,"wilson":{"low_pct":33.1,"high_pct":54.6},"bands":{"1":{"calls":20,"scored":9,"hits":2,"misses":7,"accuracy_pct":22.2,"wilson":{"low_pct":6.3,"high_pct":54.7}},"2":{"calls":91,"scored":43,"hits":16,"misses":27,"accuracy_pct":37.2,"wilson":{"low_pct":24.4,"high_pct":52.1}},"3":{"calls":41,"scored":16,"hits":10,"misses":6,"accuracy_pct":62.5,"wilson":{"low_pct":38.6,"high_pct":81.5}},"4":{"calls":15,"scored":10,"hits":6,"misses":4,"accuracy_pct":60,"wilson":{"low_pct":31.3,"high_pct":83.2}},"5":{"calls":0,"scored":0,"hits":0,"misses":0,"accuracy_pct":null,"wilson":{"low_pct":null,"high_pct":null}}},"trade":{"calls":52,"scored":22,"hits":13,"misses":9,"accuracy_pct":59.1,"wilson":{"low_pct":38.7,"high_pct":76.7}},"states":{"unpriced":89,"abstained":108,"scored":78}},"markets":{"eurusd":{"label":"EUR/USD","calls":167,"scored":108,"hits":54,"flat":25,"unpriced":34,"agreement_pct":50,"wilson":{"low_pct":40.7,"high_pct":59.3}},"xauusd":{"label":"XAU/USD","calls":167,"scored":111,"hits":65,"flat":21,"unpriced":35,"agreement_pct":58.6,"wilson":{"low_pct":49.3,"high_pct":67.3}},"nas100":{"label":"NAS100","calls":167,"scored":104,"hits":54,"flat":28,"unpriced":35,"agreement_pct":51.9,"wilson":{"low_pct":42.4,"high_pct":61.3}},"btcusd":{"label":"BTC/USD","calls":167,"scored":133,"hits":62,"flat":34,"unpriced":0,"agreement_pct":46.6,"wilson":{"low_pct":38.4,"high_pct":55.1}}},"joint":{"directional_calls":167,"all_four_hit":16,"any_four_hit":119,"all_four_flat_or_unpriced":8},"outcome_check":{"checked":2900,"matched":2497,"mismatched":403,"mismatch_dates":119,"mismatch_date_range":{"first":"2026-04-29","last":"2026-10-12"},"field_tally":{"present":403,"move_pct":403,"direction":403},"samples":[{"date":"2026-04-29","market":"EURUSD","fields":["present","move_pct","direction"],"stored":{"present":false,"move_pct":null,"direction":null,"flat_band_pct":0.1},"fresh":{"present":true,"move_pct":-0.3887,"direction":"DOWN","flat_band_pct":0.1}},{"date":"2026-04-29","market":"XAUUSD","fields":["present","move_pct","direction"],"stored":{"present":false,"move_pct":null,"direction":null,"flat_band_pct":0.152},"fresh":{"present":true,"move_pct":-1.3632,"direction":"DOWN","flat_band_pct":0.152}},{"date":"2026-04-29","market":"NAS100","fields":["present","move_pct","direction"],"stored":{"present":false,"move_pct":null,"direction":null,"flat_band_pct":0.21},"fresh":{"present":true,"move_pct":-0.2295,"direction":"DOWN","flat_band_pct":0.21}},{"date":"2026-04-30","market":"EURUSD","fields":["present","move_pct","direction"],"stored":{"present":false,"move_pct":null,"direction":null,"flat_band_pct":0.1},"fresh":{"present":true,"move_pct":0.572,"direction":"UP","flat_band_pct":0.1}},{"date":"2026-04-30","market":"XAUUSD","fields":["present","move_pct","direction"],"stored":{"present":false,"move_pct":null,"direction":null,"flat_band_pct":0.152},"fresh":{"present":true,"move_pct":1.4798,"direction":"UP","flat_band_pct":0.152}}]},"l2l":{"status":"not_requested","reason":"--no-l2l"}}},"limitations":["Research only. No figure on this page is an edge claim, and no call is published as live.","The rules are frozen by judgement before this version's accuracy was evaluated; they are not fitted to the 725 mornings.","A missing factor is abstained on, never filled with zero or a neighbouring print.","The event calendar is not staged, so band 5 cannot be reached and every band-4 result carries that cap.","F8 is specified and computed from its archive for the worked morning, but run-v1.json does not yet read it; the published challenger remains the nine-input experiment.","The band-3 trade threshold is inherited from the nine-input book. It is a research floor, not a validated gate."]}</script>
+</main></body></html>
