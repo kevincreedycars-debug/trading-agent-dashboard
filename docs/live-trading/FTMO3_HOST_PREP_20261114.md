@@ -13,6 +13,10 @@ disabled. **Not staged, and not able to be:** the third terminal (an RDP wizard 
 (both need the login). No task was registered, no terminal was started, no order was sent, no lane row was published,
 and the lane-1 and lane-2 checkouts were not written to.
 
+The third terminal was installed later the same evening, at `20:14Z`, once the wizard could be driven from the desktop
+session; [§9](#9-the-third-terminal-installed-2014z) is that record, and it supersedes the "not installed" readings
+above without rewriting them.
+
 ## 1. The checkout
 
 ```powershell
@@ -36,8 +40,8 @@ The clone is the lane's own checkout; nothing in it is shared with lane 1 (`C:\l
 | | lane 1 (running) | lane 2 (running) | lane 3 (staged) |
 | --- | --- | --- | --- |
 | checkout | `C:\live-trading\runtime` | `C:\ftmo2` | `C:\ftmo3` |
-| terminal | `C:\Program Files\FTMO Global Markets MT5 Terminal` | `C:\Program Files\FTMO Global Markets MT5 Terminal 2` | `C:\Program Files\FTMO Global Markets MT5 Terminal 3` — **not installed** |
-| MT5 data folder | `%APPDATA%\MetaQuotes\Terminal\81A933A9AFC5DE3C23B15CAB19C63850` | `…\8A052B160E5CE0B13984FF3CD196FEFE` | none yet; its `origin.txt` must name the `… Terminal 3` install |
+| terminal | `C:\Program Files\FTMO Global Markets MT5 Terminal` | `C:\Program Files\FTMO Global Markets MT5 Terminal 2` | `C:\Program Files\FTMO Global Markets MT5 Terminal 3` — **not installed at 19:12Z; installed 20:14Z (§9)** |
+| MT5 data folder | `%APPDATA%\MetaQuotes\Terminal\81A933A9AFC5DE3C23B15CAB19C63850` | `…\8A052B160E5CE0B13984FF3CD196FEFE` | none yet; its `origin.txt` must name the `… Terminal 3` install — it does, in `…\D31040007DAC7476494A754CD0942EA6` (§9) |
 | identity file | none — lane 1 is not identity-gated | `C:\live-trading\state\lane-ftmo2-identity.json` | `C:\live-trading\state\lane-ftmo3-identity.json` — **missing** |
 | snapshot | `C:\live-trading\runtime\data\live-trading.json` | `C:\ftmo2\data\live-trading.json` | `C:\ftmo3\data\live-trading.json` (not produced yet) |
 | heartbeat | `C:\live-trading\runtime\tmp\live-trading-trader-status.json` | `C:\ftmo2\tmp\live-trading-trader-status.json` | `C:\ftmo3\tmp\live-trading-trader-status.json` |
@@ -187,11 +191,81 @@ In the order the host needs them:
 
 1. **The third FTMO account.** The login, server and passwords come from FTMO's own confirmation; nothing before this
    step can be finished.
-2. **The terminal install on the RDP desktop**, with the destination field reading `… MT5 Terminal 3` (§3).
+2. ~~The terminal install on the RDP desktop, with the destination field reading `… MT5 Terminal 3` (§3).~~ Done
+   `20:14Z`; the field read `C:\Program Files\FTMO Global Markets MT5 Terminal 3`, and §9 is the proof.
 3. **The identity file**, written by hand from the login (§4).
 4. **The account probe** (`live-trading-account-probe.py`) and the tool's `status` against the new identity — read-only,
    and the proof that the gate holds before anything is registered.
 5. **The registration, unarmed, then disabled**, then the two-minute BTCUSD connection test, then the report, then —
    only after the owner has read it — arming.
 
-Steps 1 and 2 are the owner's; 3 onwards is where an agent can act again.
+Step 1 is the owner's. Step 2 is done, so step 3 onwards is where an agent can act again the moment the account exists.
+
+## 9. The third terminal, installed 20:14Z
+
+Run over the same key-only ssh door, `2026-11-14T20:12Z`–`20:21Z`. The installer is a wizard, so it was driven from the
+RDP desktop session (session 1) rather than from the ssh session: a scheduled task registered as
+`VMI3697641\Administrator`, `LogonType Interactive`, `RunLevel Highest`, running a script that launches
+`ftmo5setup.exe`, clicks **Settings**, writes the two fields and reads them back, then proceeds only if both read back.
+The task was unregistered by the same script as its last act.
+
+| | value read on the host |
+| --- | --- |
+| `Installation folder:` readback | `C:\Program Files\FTMO Global Markets MT5 Terminal 3` |
+| `Program group:` readback | `FTMO Global Markets MT5 Terminal 3` |
+| guard | the run aborts before **Install** if either readback differs or names lane 1 or lane 2; a recursive snapshot of both lane folders was taken first and compared each loop, and a change would have taskkilled the setup |
+| installed `terminal64.exe` | `5.0.0.6320`, 120,622,880 bytes, mtime `20:14:37Z`, sha256 `CEDC985E4E82753DDEFDDD0AC41EC255364DB2DA13DA3492F4C720F544D5FBA2` |
+| install folder contents | 579 files, no file outside the requested folder |
+| new MT5 data folder | `%APPDATA%\MetaQuotes\Terminal\D31040007DAC7476494A754CD0942EA6`, `origin.txt` reading `C:\Program Files\FTMO Global Markets MT5 Terminal 3` |
+| `config\` in that folder | `assistant.ini`, `common.ini`, `dnsperf.dat`, `hotkeys.ini`, `servers.dat`, `settings.ini`, `terminal.ini` — **no `accounts.dat`**, so no login is stored |
+| terminal window, session 1 | `pid=596` class `MetaQuotes::MetaTrader::5.00` name `FTMO Global Markets MT5 Terminal - Netting - EURUSD,H1` — no account number, no server, so it is at the login step |
+
+The three installs are now three installs and three data folders, each `origin.txt` naming its own directory:
+`…Terminal` → `81A933…`, `…Terminal 2` → `8A052B…`, `…Terminal 3` → `D31040…`. Nothing is shared.
+
+Two details of the run are worth keeping. The installer (`ftmo5setup.exe`, sha256 `34F80A78…B2568D`) opened its
+`Installation folder:` field pre-filled with `C:\Program Files\FTMO Global Markets MT5 Terminal` — lane 1's own
+directory, which is the collision §3 warned about, so the readback guard was load-bearing and not decoration. And a
+single `WM_SETTEXT` did not stick (the field still read the old value at 0.7 s and 3.7 s), so the path was typed
+character by character and read back again at 0.7 s and 2.7 s before **Next >** was posted.
+
+Before and after the install, lane 1's and lane 2's `terminal64.exe` hashes were read and were unchanged
+(`97C204AD…253D590`, `C033CE8F…5688B3`), each install still 579 files.
+
+The one line in the new terminal's journal that looks like a fault is not one:
+
+```
+20:14:47.707  MCP  bind error on 127.0.0.1:22346 [Only one usage of each socket address … (10048)]
+```
+
+`22346` is held by lane 1's terminal (`pid=1592`, `LISTENING`), and lane 2's own journal carries the identical line from
+its first start on `2026-11-09 21:12:04`. Lane 2 has been trading through the Python bridge since, so the line is a
+side-service port clash, not a bridge fault. What the bridge does say about the new terminal is the expected pre-login
+answer, from the same session-1 run that read lane 2 successfully as a control:
+
+```
+--path "C:\Program Files\FTMO Global Markets MT5 Terminal 3"  →  ok: false, code -10005, "IPC timeout"
+--path "C:\Program Files\FTMO Global Markets MT5 Terminal 2"  →  ok: true,  ***841, FTMO-Server3, build 6314, positions_open 1
+```
+
+The package attaches only to a terminal that is logged in, so `IPC timeout` here is the read-only statement "no account in
+that terminal yet". It is also the reason the account probe is step 4 and not step 2 of §8.
+
+Lanes 1 and 2, before `20:12Z` and after `20:21Z`:
+
+| | before | after |
+| --- | --- | --- |
+| lane 1 heartbeat | `armed: true`, `ftmo-1`, `nothing_to_place`, `***614`, 0 positions | `at_utc 20:21:30`, same values |
+| lane 2 heartbeat | `armed: true`, `ftmo-2`, `nothing_to_place`, `***841`, 1 position / 1 ours | `at_utc 20:21:31`, same values |
+| `LiveTrading*` task XMLs | 8 files, newest mtime `2026-11-10T20:46:25` | identical 8 files, same sha256 and mtimes |
+| tasks named `…ftmo3` | none | none — the runner unregistered itself, `ftmo3_task_files=0` |
+| lane checkouts | `C:\live-trading\runtime`, `C:\ftmo2` untouched | untouched |
+
+### What the login will have to clear
+
+1. **The account probe against the new identity** — `ok: true`, login masked, `FTMO-Server*`, currency, leverage, margin
+   mode, and the per-symbol rows for the four pairs. Anything other than `ok: true` stops the sequence there.
+2. **The min-size BTCUSD test** — one order at the broker minimum on the account's own terminal, held two minutes,
+   closed, read back through the order tool's journal. That is the account's evidence; the dry run in §5 is not.
+3. **Then the registration, unarmed and disabled**, exactly as §8 step 5 says. The terminal stays unarmed — no task, no
+   identity file, no order — until 1 and 2 pass.
