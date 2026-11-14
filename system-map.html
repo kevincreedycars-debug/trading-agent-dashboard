@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading system architecture</title>
+<style>
+:root{color-scheme:dark;font:15px/1.45 Inter,system-ui,sans-serif;color:#e8f5f9;background:#061018;--ice:#83e7f6;--gold:#ffcb7b;--line:#264653;--mono:"IBM Plex Mono",Consolas,monospace}
+*{box-sizing:border-box}body{margin:0}main{max-width:1500px;margin:auto;border:1px solid var(--line);background:#08151e}
+header,footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px}header{border-bottom:1px solid var(--line)}h1,h2,p{margin:0}h1{font-size:clamp(22px,3vw,34px);font-weight:580;letter-spacing:-.045em}h2{font-size:24px;letter-spacing:-.035em;margin:8px 0 10px}small,.kicker,.label,button,footer{font:11px/1.4 var(--mono)}.kicker,.label{color:var(--ice);letter-spacing:.13em;text-transform:uppercase}.kicker:before{content:"";display:inline-block;width:24px;height:2px;background:var(--ice);vertical-align:middle;margin-right:9px}.actions{display:flex;gap:6px}button{color:#c6e4ec;background:#0b202c;border:1px solid #335562;border-radius:4px;padding:8px 10px;cursor:pointer}button:hover,button:focus-visible{color:white;border-color:var(--ice)}button:focus-visible{outline:2px solid white;outline-offset:2px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,25%)}#field{position:relative;height:410px;overflow:hidden;background:radial-gradient(ellipse at 50% 53%,#123743 0,#081c27 48%,#051019 83%);touch-action:pan-y}canvas{position:absolute;inset:0;display:block}#nodes{position:absolute;inset:0;pointer-events:none}.node{position:absolute;transform:translate(-50%,0);pointer-events:auto;white-space:nowrap;padding:3px 7px;font-size:11px;background:#071925f2;border-color:#37616d}.node[aria-pressed=true]{color:var(--gold);border-color:#cd9a52;background:#211f1b}.corner{position:absolute;left:16px;top:12px;color:#80aab7;pointer-events:none}aside{padding:22px 18px;border-left:1px solid var(--line);background:linear-gradient(145deg,#102430,#09161e);overflow:auto}#details{color:#b9ccd5;font-size:14px}ul{list-style:none;padding:0;margin:18px 0 0}li{padding:6px 0;border-top:1px solid #25414e;color:#cde6ec;font:12px/1.45 var(--mono)}li:before{content:"›";color:var(--gold);margin-right:7px}footer{border-top:1px solid var(--line);padding-block:11px;color:#92adba}footer span:last-child{color:#efbf77}#field.flat #nodes{display:grid;align-content:center;justify-content:center;gap:6px}#field.flat .node{position:static;transform:none}
+@media(max-width:730px){.layout{grid-template-columns:1fr}#field{height:330px}aside{border-left:0;border-top:1px solid var(--line);padding:14px 18px}ul{margin-top:10px;display:flex;flex-wrap:wrap;gap:3px 12px}li{border:0}header{padding:12px;flex-wrap:wrap}footer{padding:8px 12px}.node{font-size:10px}.corner{font-size:10px}}
+</style>
+</head><body><main>
+<header><div><div class="kicker">System architecture</div><h1>Trading signal path</h1></div><div class="actions"><button id="motion">Pause motion</button><button id="reset">Reset view</button></div></header>
+<div class="layout"><div id="field" class="flat"><small class="corner" id="hint">Select a stage to inspect</small><div id="nodes"></div></div>
+<aside aria-live="polite"><div class="label" id="position"></div><h2 id="title"></h2><p id="details"></p><ul id="items"></ul></aside></div>
+<footer><span>USD research pathway</span><span>Illustrative signal flow</span></footer></main>
+<script src="lib/vendor/three.min.js"></script><script src="lib/system-map.js"></script></body></html>
