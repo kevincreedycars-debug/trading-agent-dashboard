@@ -52,7 +52,12 @@ param(
   # number is this lane's own hand cap, added deliberately, and it is written into the task only when it is asked
   # for - the way --expire-minutes is - so the cadence in the scheduler and the loop's own log cannot disagree.
   [int] $MaxOpen = 0,
-  [int] $MaxPerDay = 4,
+  # The daily entry count's cap. 0 is the default and the rule's own answer since 2026-11-14: the owner removed the
+  # strategy-imposed daily limit on all three accounts ("There is no strategy-imposed daily entry limit on FTMO 1,
+  # FTMO 2 or FTMO 3"), so the registration writes `--max-per-day unlimited` - the word rather than an absent flag,
+  # because an explicit no-cap is what has to survive a restart or a re-registration. A positive number is a hand
+  # cap someone asked for deliberately, and the loop still counts and prints the day's entries either way.
+  [int] $MaxPerDay = 0,
   # The rule this lane trades, and the account it trades: a half grid at three to one on the second account, with
   # a magic of its own and the private identity file the order tool checks before every send. Empty or the lane-1
   # defaults mean the loop's own defaults, so an unchanged registration writes an unchanged command line.
@@ -68,6 +73,11 @@ param(
   # beyond that level since the previous attempt on it ended, because a put-back after a stop-out that no candle has
   # re-crossed is new exposure rather than the same trade put back.
   [switch] $ReentryCrossing,
+  # The blind lane's rule: no Layer 1 call is read, each pair watches the nearest original L2L above price and the
+  # nearest below, either line may arm either side, and the target is the next original line in the trade's
+  # direction. Written into the task so which rule an account trades is a registration rather than a hand edit, and
+  # checked against the lane's own row exactly as the grid and the multiple are.
+  [switch] $Blind,
   # One task per lane, running the snapshot producer and then this loop inside the same scheduled run. That is
   # what removes the ordering assumption the two separate tasks carried: the loop can never start before the
   # snapshot that carries the bar it reads, because the producer's own run has to finish first, and a producer
@@ -108,6 +118,10 @@ if ($ExpireMinutes -lt 0) {
 
 if ($MaxOpen -lt 0) {
   throw "-MaxOpen must be 0 (the rule's own answer: one ticket per pair, no cap across pairs) or a positive number."
+}
+
+if ($MaxPerDay -lt 0) {
+  throw "-MaxPerDay must be 0 (no cap: the owner removed the daily entry limit on 2026-11-14) or a positive number of entries."
 }
 
 if ($Remove) {
@@ -258,6 +272,17 @@ if ($declaredR -gt 0 -and $effectiveR -ne $declaredR) {
   throw ("Lane $laneId trades $declaredR to one in $lanesConfigPath, but this registration would write " +
     "$effectiveR. Pass -RMultiple $declaredR. Nothing is registered.")
 }
+# The rule itself, not only its numbers: the blind lane reads no Layer 1 call, and a registration that leaves the
+# flag off would put a called rule's command line on the account the file says trades blind.
+$declaredBlind = ($laneRecord.strategy -and $laneRecord.strategy.blind -eq $true)
+if ($declaredBlind -and -not $Blind) {
+  throw ("Lane $laneId trades the blind rule in $lanesConfigPath (strategy.blind), but this registration would " +
+    "write a command line that reads a Layer 1 call. Pass -Blind. Nothing is registered.")
+}
+if (-not $declaredBlind -and $Blind) {
+  throw ("Lane $laneId trades a rule built on the Layer 1 call in $lanesConfigPath, and -Blind reads no call at " +
+    "all. Register the lane whose row carries strategy.blind. Nothing is registered.")
+}
 
 
 # The hidden launcher takes the command to run as one argument, and Task Scheduler doubles every quote inside
@@ -290,6 +315,9 @@ function Get-WrapperLines($extraFlags, $paths = $null) {
   if ($ExpireMinutes -gt 0) { $expireArgument = "--expire-minutes $ExpireMinutes " }
   $maxOpenArgument = ""
   if ($MaxOpen -gt 0) { $maxOpenArgument = "--max-open $MaxOpen " }
+  # The daily count's cap, always written: 0 becomes the word `unlimited`, so a re-registration cannot leave the old
+  # four behind and a reader of the task sees the no-cap decision rather than inferring it from a missing flag.
+  $maxPerDayValue = if ($MaxPerDay -gt 0) { "$MaxPerDay" } else { "unlimited" }
   # The lane's own rule and account, written only when a registration asks for them: lane 1 passes nothing and its
   # command line is byte-identical to before the second account existed.
   $laneStyleArgument = ""
@@ -307,9 +335,10 @@ function Get-WrapperLines($extraFlags, $paths = $null) {
   }
   if ($PauseEntries) { $laneStyleArgument += "--pause-entries " }
   if ($ReentryCrossing) { $laneStyleArgument += "--reentry-crossing " }
+  if ($Blind) { $laneStyleArgument += "--blind " }
   $command = "`"$Node`" `"$runner`" --once $extraFlags --quiet --python `"$Python`" " +
     "--state `"$($paths.state)`" --log `"$($paths.log)`" --lock `"$($paths.lock)`" --journal `"$($paths.journal)`" " +
-    "${laneArgument}${laneStyleArgument}${expireArgument}${maxOpenArgument}--max-per-day $MaxPerDay$terminalArgument$publishedArgument"
+    "${laneArgument}${laneStyleArgument}${expireArgument}${maxOpenArgument}--max-per-day $maxPerDayValue$terminalArgument$publishedArgument"
   $lines = @(
     "@echo off",
     "rem Generated by scripts/register-live-trading-trader-task.ps1. Machine specific; rewritten at each registration.",
@@ -429,7 +458,8 @@ $plan = [ordered]@{
   feed_settle_seconds = $(if ($ChainFeed) { $FeedSettleSeconds } else { "separate task (not chained)" })
   expire_minutes     = $(if ($ExpireMinutes -gt 0) { $ExpireMinutes } else { "none (the entry stands until its reason is gone)" })
   max_open           = $(if ($MaxOpen -gt 0) { $MaxOpen } else { "none (the rule's own one ticket per pair)" })
-  max_per_day        = $MaxPerDay
+  max_per_day        = $(if ($MaxPerDay -gt 0) { $MaxPerDay } else { "unlimited (no strategy cap, owner 2026-11-14)" })
+  rule               = $(if ($Blind) { "blind: two watched lines, no Layer 1 call" } else { "Layer 1 call" })
 }
 
 if ($Show) {
@@ -537,9 +567,11 @@ $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(20) `
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew `
   -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
   -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
-$description = "Live Trading trader loop: one run per M5 bar, reading the published calls and ladder and " +
+$ruleSourceWords = if ($Blind) { "the published ladder" } else { "the published calls and ladder" }
+$dayCapWords = if ($MaxPerDay -gt 0) { "a cap of $MaxPerDay trades a day" } else { "no daily entry cap" }
+$description = "Live Trading trader loop: one run per M5 bar, reading $ruleSourceWords and " +
   "placing the ticket a confirmed row states through tools/mt5-bridge/live-trading-order.py at the symbol " +
-  "minimum, once per signal bar and one working ticket per pair, capped at $MaxPerDay trades a day. " +
+  "minimum, once per signal bar and one working ticket per pair, with $dayCapWords. " +
   $(if ($Arm) { "Armed: --confirm-live is passed, so a confirmed row is placed." } else { "Unarmed: it reads and records and places nothing." })
 
 # Replace any earlier registration cleanly: -Force over a task whose run is still in flight left the scheduler

@@ -1,5 +1,71 @@
 # Session Notes
 
+2026-11-14 (late: branch pushed and reviewed, the third lane staged on the host, the lane-2 cap switch commands
+corrected) - the branch went to origin and opened as PR
+[#5](https://github.com/kevincreedycars-debug/trading-agent-dashboard/pull/5), and `C:\ftmo3` was staged on the host
+`VMI3697641` over the key-only ssh door: a clean clone of the branch at `1653b693` (fast-forwarded to `702b20c6`), its
+`tmp` and `data` folders, the four deciding blobs hashed and equal to this PC's, and the whole host-side suite green at
+`199/199`. Read-only before and after: lane 1's and lane 2's heartbeats are unchanged apart from their instants (armed,
+`nothing_to_place`, `***614` and `***841`, lane 2 still `max_per_day: 4`), both checkouts untouched at `c5abd0ac` and
+`f14f2ac7` with only their pre-existing dirty lines, two terminals and two data hash folders and no third, and no
+`…ftmo3` task. The installer was verified but **not** started: the lane-2 package is still in
+`C:\Users\Administrator\Downloads\ftmo5setup.exe` with the hash the lane-2 runbook records, its default destination is
+lane 1's own folder, and the destination field `C:\Program Files\FTMO Global Markets MT5 Terminal 3` does not exist yet -
+so the install stays an RDP wizard act with that field read character by character. The ftmo-3 task is deliberately not
+registered: the registration refuses without an identity file, and it silently drops `--terminal` when the folder is
+absent, so a task written now would point at lane 1's terminal. Five dry-run scenes were driven from `C:\ftmo3` against
+saved inputs with `--confirm-live` absent everywhere and a four-kilobyte stand-in answering the order tool's read-only
+`status` (it has no send path): a bullish reclaim (buy limit 1.11887, stop 1.118028, target 1.12308), a bearish reclaim
+(sell limit 1.12729, stop 1.128132, target 1.12308), a simple crossing refused, a fifth entry on a day whose first four
+were already placed (`taken_today: 4`, `max_per_day: null`), and a same-pair reclaim refused because "EURUSD already
+carries a ticket from this loop"; every run stated `rule=blind call_read=none grid=full r_multiple=5
+require_deviation=true`, `caps expire/minutes/max_open/max_per_day` all `null`, no `--lots` on any call (broker-minimum
+sizing) and the module's 2R/3R stop rungs. Two corrections went in with the evidence: the lane-2 no-cap registration line
+was missing `-TaskName`, `-HiddenRunner`, `-ChainFeed` and `-ReentryCrossing` (each would have changed something other
+than the cap, the first would have rewritten lane 1's task), and the lane-1 note about a hand `--max-open 1
+--expire-minutes 30` was stale - the deployed wrapper carries neither. The one host-only test failure was the same class
+of fact: in `C:\ftmo3` the lanes file's `.` and `../ftmo3` resolve to one directory, so the lane-1 registration test now
+names `-Lane ftmo-1` as every runbook line does. Record: `docs/live-trading/FTMO3_HOST_PREP_20261114.md`. Next: the
+purchase and login, then the terminal install, identity file, unarmed registration and the two-minute BTCUSD test.
+
+2026-11-14 (the blind lane built, the daily cap removed, nothing deployed) - the owner approved a third FTMO MT5
+account trading "Live L2L Blind" and removed the strategy's daily entry limit on all three accounts. Branch
+`live-trading/l2l-blind-20261114` off `origin/main` `fc15ef5c` with the four deviation-audit commits cherry-picked.
+The lane watches the nearest original rung above and below the price, fixes that pair in `state.blind`, and reads no
+Layer 1 direction at all: `blindPlan` asks `buildPlan` for both sides of both watched lines through a new `watch`
+restriction, always with the three legs, and the nearest line wins a close wide enough to clear two. The runner's
+`--blind` also ends a trade only at its target, a target touch or a hand close, reviews a limit only on a target
+reached or a line removed, and does not open the calls artifact at all. `DEFAULT_MAX_PER_DAY` is `null` and
+`--max-per-day unlimited` is what every registration now writes, with `caps.max_per_day: null`,
+`caps.capped: false` and `entries_today` in the heartbeat and the page printing "no daily entry cap - N entries
+today". New `tests/live_trading_blind_lane.test.js` 13 of 13, including an armed end-to-end fifth entry on a day whose
+first four were spread across four assets; the trader suite is 73 of 73 and lane isolation 13 of 13. Nothing is
+registered, installed or funded, and no live task was touched: the cap switch and its rollback are staged in
+`DAILY_CAP_REMOVAL_20261114.md`, and the lane's deployment, purchase, login and two-minute connection test are in
+`BLIND_LANE_BUILD.md`. Next: the owner buys the third account; the lane is ready for it.
+
+2026-11-13 late (the deviation sequence proved on both deployed loops, and the reclaim branch prepared, nothing
+deployed) - read-only on the host at 18:45Z, then one unmerged branch. Deployed and proved byte-for-byte: lane 1
+`c5abd0ac`, trader blob `f43ac5ea` (`41028adc`'s file, not HEAD's, so the checkout is not at its pin) with module
+`338bb2f6` that has no `crossedSince`; lane 2 `f14f2ac7`, trader `7c3538e0` and module `e0e64c2b`, which are
+`origin/main`'s own files. The owner's cases run through each loop's own `runOnce` with its own flags
+(`tools/audit/l2l_deviation_audit.js`, trees in `tmp/host/`): ftmo-1 **12 of 18** as stated, ftmo-2 **14 of 18**.
+Both place on a first approach (`99, 98, 101`), which is the rule neither loop asks; lane 1 also puts a level back
+on a close exactly on the line, and on the confirming bar it has already spent, because its put-back path reads no
+candle at all. The fix already in `main` (`crossedSince` plus the two-close gate, untouched here) answers 14 of 18
+on its own; the branch adds `levelWasLeft` and `--require-deviation`, and lane 1 additionally names
+`--reentry-crossing`, after which both lanes are **18 of 18**. Lane 1's 40 repeat placements reconciled against the
+account's 58 closed positions in the 14-day window: **38 new exposure after an exit, 1 replacement of a withdrawn
+limit** (EURUSD `307022408` → `307216030`), **1 the record cannot resolve** (XAUUSD `306701928`, no deal and no
+withdrawal row, with a second ticket at the same price five minutes later), and all 40 carrying the predecessor's
+own confirming bar. The disputed signal is EURUSD `1.10624` at `13:46Z`: a genuine post-exit reclaim that lane 2's
+newest-pair gate refuses, so the branch removes the ticket for a reason that is a ruling, not a bug - flagged.
+Branch `live-trading/deviation-audit-20261113` off `e53d1888`: new `tests/live_trading_deviation_sequence.test.js`
+39 of 39, and 24 of 39 with the module reverted. `npm test` 915 with 906 passing, 4 skipped, the same 5
+browser-page failures as the untouched baseline. Nothing on either machine changed: no order, no config, no
+workflow, no data file, no deployment.
+
+
 2026-11-13 evening (both corner strips name the model and state three words, published) -
 `Live L2L Directional` and `Live 0.5L2L Directional` are page constants again and each strip says one of
 `Active`, `Stale`, `Paused` beside the name, the reason living on the tooltip; `liveTradingLaneWord()` is the one

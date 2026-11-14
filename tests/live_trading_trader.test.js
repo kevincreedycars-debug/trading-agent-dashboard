@@ -2440,7 +2440,9 @@ test("the run record states the trade day and the clock it was counted on", () =
   const result = runOnce(optionsFor(dir, {}), { spawn, now: () => NOW });
   assert.equal(result.record.caps.trade_day, "2026-10-05");
   assert.equal(result.record.caps.trade_day_timezone, "Europe/Prague");
-  assert.equal(result.record.caps.max_per_day, 4);
+  // The owner removed the daily entry limit on 2026-11-14, so the record says no cap rather than four: the day and
+  // its clock are still stated, because the count beside them is reporting rather than a gate.
+  assert.equal(result.record.caps.max_per_day, null);
 });
 
 // Arming belongs to the registration, not to the file's defaults. The script that registers the live task must not
@@ -2626,7 +2628,7 @@ test("a read-only -Show leaves the live wrapper and the checkout untouched", { s
   assert.equal(first.status, 0, first.stderr || first.stdout);
   assert.match(first.stdout, /armed\s+= false/, "-Show reports the registration it would make, which is unarmed");
   assert.match(first.stdout, /live_wrapper_armed\s+= true/, "-Show reads the arming out of the wrapper that exists");
-  assert.match(first.stdout, /max_per_day\s+= 4/, "-Show states the registration's own cap rather than a hidden default");
+  assert.match(first.stdout, /max_per_day\s+= unlimited/, "-Show states the registration's own answer - no cap - rather than a hidden default");
   // The wrapper's own flags are not in the plan - the plan is what a registration would write - so -Show names
   // the wrapper by hash instead, which is what the effective-config script reads back in full.
   assert.match(first.stdout, /wrapper_sha256\s+= [a-f0-9]{64}/, "-Show names the wrapper it read, by hash");
