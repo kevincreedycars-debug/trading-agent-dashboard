@@ -190,7 +190,8 @@ node --test tests/live_trading_blind_lane.test.js tests/l2l_strategy.test.js tes
 In the order the host needs them:
 
 1. **The third FTMO account.** The login, server and passwords come from FTMO's own confirmation; nothing before this
-   step can be finished.
+   step can be finished. The account arrived `21:19Z` and its two non-secret fields are in the dialog (§9); only the
+   password paste and **OK** are left, and they are the owner's.
 2. ~~The terminal install on the RDP desktop, with the destination field reading `… MT5 Terminal 3` (§3).~~ Done
    `20:14Z`; the field read `C:\Program Files\FTMO Global Markets MT5 Terminal 3`, and §9 is the proof.
 3. **The identity file**, written by hand from the login (§4).
@@ -200,8 +201,8 @@ In the order the host needs them:
    only after the owner has read it — arming.
 
 Step 1 is the owner's, and the screen for it is already prepared: the third terminal's `File > Login to Trade Account`
-dialog is open on the RDP desktop and has been left untouched since `21:09Z` (§9). Step 2 is done, so step 3 onwards is
-where an agent can act again the moment the account exists.
+dialog is open on the RDP desktop, `***584` and `FTMO-Server3` already in its two non-secret fields and the password
+field empty (§9). Step 2 is done, so step 3 onwards is where an agent can act again the moment the account exists.
 
 ## 9. The third terminal, installed 20:14Z
 
@@ -301,4 +302,46 @@ one `Open an Account` disabled behind it; `foreground_hwnd=0` because no RDP ses
 already on session 1's desktop and is what the owner sees on connecting. `config\accounts.dat` absent,
 `lane-ftmo3-identity.json` absent, tasks named `ftmo3` zero, `LiveTrading*` still 8, lane 1
 `at_utc 21:11:30.014Z armed=true nothing_to_place`, lane 2 `at_utc 21:11:31.693Z armed=true nothing_to_place`.
+
+### The account details, and the two fields filled for the owner
+
+The owner sent the account's login, server and both passwords through the chat on `21:19Z`, with the intent stated
+plainly: *they* paste the trading password themselves, from the Client Area's `Copy` button, because that page's copy
+blob carries `svg` markup alongside the text and the password field itself is the only clean source. So the terminal got
+the two fields that are not secrets, and the password field is left empty. Nothing from that message was written to
+disk, to a log, or into the terminal, and the login is logged masked as `***584` throughout, the way lane 2's is.
+
+What was filled in, in session 1, and read back through `WM_GETTEXT` rather than `GetWindowText`:
+
+| field | before | after | proof |
+| --- | --- | --- | --- |
+| `Login:` (`10137`, edit `1001`) | empty | `***584`, 9 chars | read back exact at `21:25:56Z` |
+| `Server:` (`10139`, edit `1001`) | `FTMO-Demo` (`cursel 0`) | `FTMO-Server3` (`cursel 3` of 6) | combo list read live, then the edit read back exact |
+| `Password:` (`10138`) | empty, `len=0` | empty, `len=0` | `WM_GETTEXTLENGTH` before and after |
+| `Save password for quick login` (`10140`) | `BM_GETCHECK=1` | left at `1` | owner's decision, see below |
+
+The dialog's server list is worth having in the record, because it settles the open question in the earlier hand-off:
+`FTMO-Demo`, `FTMO-Server`, `FTMO-Server2`, `FTMO-Server3`, `FTMO-Server4`, `FTMO-Server5` — six, already present in the
+fresh install, so no server-list download and no `Find your company` step is needed. `FTMO-Server3` is index 3.
+
+Three delivery paths were tried, and the failures are the useful part. `WM_SETTEXT` to the combo is swallowed and leaves
+the field empty; `WM_CHAR` to the combo's `Edit` child is also ignored; `WM_CHAR` to the **combo** inserts the characters.
+Reading is the mirror of it: `GetWindowText` returns empty for a control in another process — which made a filled field
+look empty and cost two runs — and `WM_GETTEXT`/`WM_GETTEXTLENGTH` return the truth. The first nine-digit login typed
+this way was already in the field at `21:23:32Z` (`before_login_len=9`); the field was cleared and retyped once so the
+value, not the count, was verified.
+
+The `Save password for quick login` box is **already ticked in this build**, so pressing OK as things stand stores the
+master password in the terminal's own data folder. It was left as the dialog presented it, because that is a security
+choice about a live trading account rather than an automation detail; lane 2's runbook took the same box for its
+read-only login, and the lane-3 startup task assumes the terminal can log itself back in after a reboot.
+
+Readiness for the steps after the login, so none of them is written while the owner is watching the dialog:
+
+- `write-identity-lane3.py` is on the host at `C:\live-trading\state\`, a lane-3 copy of the writer that produced lane
+  2's file: it refuses to write anything unless the masked login ends in `584`, the server is `FTMO-Server3` and the
+  terminal path contains `MT5 Terminal 3`, then writes only `login`, `server`, `terminal_path`.
+- `C:\Program Files\Python313\python.exe` imports `MetaTrader5` (Python 3.13.7), the same interpreter lane 2 uses.
+- Nothing else moved: `LiveTrading*` still 8 tasks with no `ftmo3` task, no `accounts.dat`, no lane-3 identity file,
+  all three terminals up (`596` lane 3, `1592` lane 1, `4540` lane 2), session 1 `Disc` with no RDP attached.
 
