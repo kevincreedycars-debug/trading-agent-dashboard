@@ -199,7 +199,9 @@ In the order the host needs them:
 5. **The registration, unarmed, then disabled**, then the two-minute BTCUSD connection test, then the report, then —
    only after the owner has read it — arming.
 
-Step 1 is the owner's. Step 2 is done, so step 3 onwards is where an agent can act again the moment the account exists.
+Step 1 is the owner's, and the screen for it is already prepared: the third terminal's `File > Login to Trade Account`
+dialog is open on the RDP desktop and has been left untouched since `21:09Z` (§9). Step 2 is done, so step 3 onwards is
+where an agent can act again the moment the account exists.
 
 ## 9. The third terminal, installed 20:14Z
 
@@ -269,3 +271,34 @@ Lanes 1 and 2, before `20:12Z` and after `20:21Z`:
    closed, read back through the order tool's journal. That is the account's evidence; the dry run in §5 is not.
 3. **Then the registration, unarmed and disabled**, exactly as §8 step 5 says. The terminal stays unarmed — no task, no
    identity file, no order — until 1 and 2 pass.
+
+### The login dialog, opened 21:09Z and left for the owner
+
+The dialog is the owner's to fill, so it was opened and left: nothing typed, nothing submitted, kept open. MT5's menu
+bar is a real `HMENU`, so the item was read rather than guessed — `GetMenu` on the main window `68300` gave seven bars,
+and `File` (`68501`) 22 items, with `&Login to Trade Account` at index 17, id `32853` (read `21:05:58Z`). Posting
+`WM_COMMAND` `32853` to `68300` opened a `#32770` window titled `Login`, `hwnd 1182098`, 541×253 at 690,387, visible
+and enabled, `21:06:48Z`–`21:09:06Z`.
+
+The dialog's own controls, read by class and label: `Login:` (combo, `account number or client ID`), `Password:`
+(`main, trader, money manager or read only`), `Certificate password:`, `One-time password:`, `Server:` (combo), a
+`Save password for quick login` checkbox, **OK**, **Cancel**. No screenshot was taken and no `Edit` was read — the Login
+field is unmasked — so the log records each `Edit` as `<not read>`.
+
+The first-run `Open an Account` wizard is still on that desktop, greyed out (`enabled=False`) behind the login dialog,
+which is the modal owner. `WM_CLOSE`, `WM_SYSCOMMAND SC_CLOSE`, `BM_CLICK` on its own `Cancel`, and `WM_COMMAND`
+`IDCANCEL` were each sent, each left it open — what a disabled window does with messages. It opens no account until one
+of its step buttons is pressed, so it is inert where it stands; its `Cancel` works again once the login dialog closes,
+and `File > Open an Account` reaches it afterwards.
+
+One automation fault is recorded because the guard rails are part of the evidence: a helper function took an inserted
+block inside its body, so a session-1 runner looped its close attempts from `21:09:53Z` to `21:12:53Z`. Only
+`Cancel`-family messages were in that loop — no OK, no step button — and the looping process (`pid 5128`) was stopped at
+`21:13Z`. Dialog state before and after is identical.
+
+State after, read in session 1 at `21:15:55Z`: `pid=596`, started `20:14:44Z`, one `#32770` `Login` enabled on top and
+one `Open an Account` disabled behind it; `foreground_hwnd=0` because no RDP session is attached, so the dialog is
+already on session 1's desktop and is what the owner sees on connecting. `config\accounts.dat` absent,
+`lane-ftmo3-identity.json` absent, tasks named `ftmo3` zero, `LiveTrading*` still 8, lane 1
+`at_utc 21:11:30.014Z armed=true nothing_to_place`, lane 2 `at_utc 21:11:31.693Z armed=true nothing_to_place`.
+
