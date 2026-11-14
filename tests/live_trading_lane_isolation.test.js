@@ -350,7 +350,7 @@ test("ftmo-1 selected with the second account's magic refuses, so a lane cannot 
 });
 
 test("a lane the lanes file does not carry is refused instead of guessed", () => {
-  assertRefusedBeforeAnySend(["--lane", "ftmo-3"], /is not one of the lanes config\/live-trading-lanes\.json carries/);
+  assertRefusedBeforeAnySend(["--lane", "ftmo-4"], /is not one of the lanes config\/live-trading-lanes\.json carries/);
 });
 
 
@@ -462,7 +462,7 @@ test("the generated lane-2 command line carries the lane's own magic, identity, 
   assert.equal(command.includes("--confirm-live"), false, "an unarmed registration carries no arming flag");
 });
 
-test("lane 1's generated command line is unchanged: no magic, no grid, no multiple, no identity", windowsOnly, () => {
+test("lane 1's generated command line carries no magic, grid, multiple or identity, and states the owner's no-cap answer", windowsOnly, () => {
   const registration = showRegistration([]);
   assert.equal(registration.status, 0, registration.stderr);
   const command = loopCommand(registration);
@@ -471,6 +471,29 @@ test("lane 1's generated command line is unchanged: no magic, no grid, no multip
   assert.equal(command.includes("--grid"), false);
   assert.equal(command.includes("--r-multiple"), false);
   assert.equal(command.includes("--expect-identity"), false);
-  assert.match(command, /--max-per-day 4/);
+  // The one flag that did change, and the owner's own decision: the daily limit is gone, and the registration says
+  // so in a word rather than by leaving the old four in place or by writing no flag at all.
+  assert.match(command, /--max-per-day unlimited/);
+  assert.equal(command.includes("--blind"), false);
+});
+
+test("the blind lane's generated command line carries its own number, identity and rule, and is refused without the rule", windowsOnly, () => {
+  const id = identityFile();
+  const refused = showRegistration(["-Lane", "ftmo-3", "-Magic", String(LANE2_MAGIC), "-ExpectIdentity", id]);
+  assert.notEqual(refused.status, 0, "lane 3's magic is its own");
+  assert.match(refused.stderr, /carries magic 20261006/);
+
+  const registration = showRegistration([
+    "-Lane", "ftmo-3", "-Magic", "20261006", "-ExpectIdentity", id, "-Blind"
+  ]);
+  assert.equal(registration.status, 0, registration.stderr);
+  const command = loopCommand(registration);
+  assert.match(command, /--lane "ftmo-3"/);
+  assert.match(command, /--magic 20261006/);
+  assert.match(command, /--blind/);
+  assert.ok(command.includes(`--expect-identity "${id}"`));
+  assert.match(command, /--max-per-day unlimited/);
+  assert.equal(command.includes("--reentry-crossing"), false, "the blind lane re-arms through its own deviation rule");
+  assert.equal(command.includes("--confirm-live"), false, "an unarmed registration carries no arming flag");
 });
 

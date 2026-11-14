@@ -1,5 +1,21 @@
 # Session Notes
 
+2026-11-14 (the blind lane built, the daily cap removed, nothing deployed) - the owner approved a third FTMO MT5
+account trading "Live L2L Blind" and removed the strategy's daily entry limit on all three accounts. Branch
+`live-trading/l2l-blind-20261114` off `origin/main` `fc15ef5c` with the four deviation-audit commits cherry-picked.
+The lane watches the nearest original rung above and below the price, fixes that pair in `state.blind`, and reads no
+Layer 1 direction at all: `blindPlan` asks `buildPlan` for both sides of both watched lines through a new `watch`
+restriction, always with the three legs, and the nearest line wins a close wide enough to clear two. The runner's
+`--blind` also ends a trade only at its target, a target touch or a hand close, reviews a limit only on a target
+reached or a line removed, and does not open the calls artifact at all. `DEFAULT_MAX_PER_DAY` is `null` and
+`--max-per-day unlimited` is what every registration now writes, with `caps.max_per_day: null`,
+`caps.capped: false` and `entries_today` in the heartbeat and the page printing "no daily entry cap - N entries
+today". New `tests/live_trading_blind_lane.test.js` 13 of 13, including an armed end-to-end fifth entry on a day whose
+first four were spread across four assets; the trader suite is 73 of 73 and lane isolation 13 of 13. Nothing is
+registered, installed or funded, and no live task was touched: the cap switch and its rollback are staged in
+`DAILY_CAP_REMOVAL_20261114.md`, and the lane's deployment, purchase, login and two-minute connection test are in
+`BLIND_LANE_BUILD.md`. Next: the owner buys the third account; the lane is ready for it.
+
 2026-11-13 late (the deviation sequence proved on both deployed loops, and the reclaim branch prepared, nothing
 deployed) - read-only on the host at 18:45Z, then one unmerged branch. Deployed and proved byte-for-byte: lane 1
 `c5abd0ac`, trader blob `f43ac5ea` (`41028adc`'s file, not HEAD's, so the checkout is not at its pin) with module

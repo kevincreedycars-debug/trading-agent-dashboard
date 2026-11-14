@@ -223,7 +223,11 @@ function loadLanes(configPath) {
       magic: Number.isFinite(Number(lane?.magic)) ? Number(lane.magic) : null,
       strategy: {
         grid: lane?.strategy?.grid === "half" ? "half" : "full",
-        r_multiple: Number.isFinite(Number(lane?.strategy?.r_multiple)) ? Number(lane.strategy.r_multiple) : null
+        r_multiple: Number.isFinite(Number(lane?.strategy?.r_multiple)) ? Number(lane.strategy.r_multiple) : null,
+        // Which of the rules the lane trades. The blind lane reads no Layer 1 call at all, and the page has to be
+        // able to say so from the published row rather than from the account's name: a strip that called a blind
+        // account directional would be the one place two lanes could be confused for each other.
+        blind: lane?.strategy?.blind === true
       },
       account_login_masked: typeof lane.account_login_masked === "string" ? lane.account_login_masked : null,
       account_server:
