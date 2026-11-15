@@ -642,3 +642,93 @@ test("an armed blind run places the fifth entry of a day whose first four were s
   assert.equal(status.caps.entries_today, 4, "the count is reported with no cap in force");
 });
 
+
+// The session a reading belongs to, stated with the case that found it missing. On Sunday 2026-11-15 the lane read
+// Friday's last three closes of EURUSD - 1.104 held above 1.10, 1.098 left it, 1.102 came back - and stated a buy
+// limit at 1.10 with no market open to fill it. Every leg agreed with every other and with the candle being judged,
+// which is Friday's own, so the leg-by-leg session check passed; what it could not see was that the run was two days
+// later. A deviation is evidence about the session that made it, so a setup the close expired has to be replaced by a
+// crossing completed after the open before any limit is stated.
+const FRIDAY_CLOSES = [
+  { time_utc: "2026-11-13T21:35:00Z", open: 1.1045, high: 1.1055, low: 1.1035, close: 1.104 },
+  { time_utc: "2026-11-13T21:45:00Z", open: 1.104, high: 1.1042, low: 1.0975, close: 1.098 },
+  { time_utc: "2026-11-13T21:50:00Z", open: 1.098, high: 1.1025, low: 1.0978, close: 1.102 }
+];
+// The same three closes inside the session they were made in - a market that trades through the weekend - and the
+// same three closes again after Monday's open, which is what a setup has to look like once Friday's has expired.
+const SUNDAY_CLOSES = [
+  { time_utc: "2026-11-15T15:40:00Z", open: 1.1045, high: 1.1055, low: 1.1035, close: 1.104 },
+  { time_utc: "2026-11-15T15:45:00Z", open: 1.104, high: 1.1042, low: 1.0975, close: 1.098 },
+  { time_utc: "2026-11-15T15:50:00Z", open: 1.098, high: 1.1025, low: 1.0978, close: 1.102 }
+];
+const MONDAY_CLOSES = [
+  { time_utc: "2026-11-16T00:05:00Z", open: 1.1045, high: 1.1055, low: 1.1035, close: 1.104 },
+  { time_utc: "2026-11-16T00:10:00Z", open: 1.104, high: 1.1042, low: 1.0975, close: 1.098 },
+  { time_utc: "2026-11-16T00:15:00Z", open: 1.098, high: 1.1025, low: 1.0978, close: 1.102 }
+];
+
+function blindPlanAt(bars, nowIso) {
+  return strategy.blindPlan({
+    symbol: "EURUSD",
+    levels: EUR_LEVELS,
+    bars,
+    point: 0.00001,
+    nowMs: Date.parse(nowIso),
+    rMultiple: 5
+  });
+}
+
+test("a deviation expires with the session that made it: Friday's reclaim read on Sunday states no ticket", () => {
+  const expired = blindPlanAt(FRIDAY_CLOSES, "2026-11-15T15:57:22Z");
+  assert.equal(expired.stage, "waiting");
+  assert.equal(expired.plan, null, "no limit is stated from a close the session break has overtaken");
+  assert.match(expired.reason, /has expired/);
+  assert.match(expired.reason, /2026-11-13T21:50:00Z/, "the reading names the close it refused");
+  assert.match(expired.reason, /2026-11-13/);
+  assert.match(expired.reason, /2026-11-15/);
+
+  // The three legs themselves are the reading, not the fault: judged at Friday's close they state the ticket, and
+  // the only thing that changed in the row above is the session the run is in.
+  const atTheClose = blindPlanAt(FRIDAY_CLOSES, "2026-11-13T21:55:30Z");
+  assert.equal(atTheClose.stage, "confirmed");
+  assert.deepEqual(
+    { side: atTheClose.plan.side, entry: atTheClose.plan.entry, stop: atTheClose.plan.stop, target: atTheClose.plan.target },
+    { side: "long", entry: 1.1, stop: 1.096, target: 1.12 }
+  );
+});
+
+test("the expiry is stated in the deviation's own legs, and a caller that states the instant gets it on both paths", () => {
+  const probe = strategy.buildPlan({
+    symbol: "EURUSD",
+    direction: "BULLISH",
+    levels: EUR_LEVELS,
+    bars: FRIDAY_CLOSES,
+    point: 0.00001,
+    nowMs: Date.parse("2026-11-15T15:57:22Z"),
+    rMultiple: 5,
+    requireDeviation: true,
+    watch: [1.1]
+  });
+  assert.equal(probe.stage, "waiting");
+  assert.equal(probe.plan, null);
+  assert.equal(probe.deviation?.missing, "expired");
+  assert.equal(probe.deviation?.left, false);
+  assert.equal(probe.deviation?.session, "2026-11-13");
+  assert.equal(probe.deviation?.required_session, "2026-11-15");
+});
+
+test("a fresh crossing after the open still trades, and so does one inside the session it was made in", () => {
+  const afterTheOpen = blindPlanAt(MONDAY_CLOSES, "2026-11-16T00:20:00Z");
+  assert.equal(afterTheOpen.stage, "confirmed");
+  assert.deepEqual(
+    { side: afterTheOpen.plan.side, entry: afterTheOpen.plan.entry, stop: afterTheOpen.plan.stop, target: afterTheOpen.plan.target },
+    { side: "long", entry: 1.1, stop: 1.096, target: 1.12 }
+  );
+
+  // The same shape read on a Sunday, inside the session the closes belong to: nothing about the weekend refuses it,
+  // which is what keeps a market that trades through one - BTCUSD on this lane - on its own reading.
+  const sameSession = blindPlanAt(SUNDAY_CLOSES, "2026-11-15T15:57:22Z");
+  assert.equal(sameSession.stage, "confirmed");
+  assert.equal(sameSession.plan.entry, 1.1);
+});
+
