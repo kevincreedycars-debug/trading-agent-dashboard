@@ -638,7 +638,7 @@ test("the shipped lanes file is the publisher's own default and names all three 
   // The blind lane's own ownership number and rule travel with its row, so the page can name them and the loop
   // can check them against its heartbeat.
   assert.equal(config.lanes[2].magic, 20261006);
-  assert.deepEqual(config.lanes[2].strategy, { grid: "full", r_multiple: 5 });
+  assert.deepEqual(config.lanes[2].strategy, { grid: "full", r_multiple: 5, blind: true });
   assert.equal(config.lanes[2].account_login_masked, "***584");
   assert.equal(config.lanes[2].account_server, "FTMO-Server3");
   assert.equal(config.minIntervalSeconds, 600);

@@ -223,7 +223,11 @@ function loadLanes(configPath) {
       magic: Number.isFinite(Number(lane?.magic)) ? Number(lane.magic) : null,
       strategy: {
         grid: lane?.strategy?.grid === "half" ? "half" : "full",
-        r_multiple: Number.isFinite(Number(lane?.strategy?.r_multiple)) ? Number(lane.strategy.r_multiple) : null
+        r_multiple: Number.isFinite(Number(lane?.strategy?.r_multiple)) ? Number(lane.strategy.r_multiple) : null,
+        // Carried through rather than dropped: the row's label says "Blind", and the published document should be able
+        // to say why without a reader inferring it from a name. Absent means the lane trades the level-to-level rule
+        // with its own history, which is what lanes 1 and 2 do.
+        ...(lane?.strategy?.blind === true ? { blind: true } : {})
       },
       account_login_masked: typeof lane.account_login_masked === "string" ? lane.account_login_masked : null,
       account_server:
