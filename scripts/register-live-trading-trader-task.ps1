@@ -578,12 +578,25 @@ $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances 
 # An empty splat leaves the principal exactly as the engine would register it, which is what every lane before this
 # switch was registered with. -Elevated names the same interactive user at `Highest`, so the task's token is a member
 # of the Administrators group rather than the deny-only filtered copy of it, and the order tool can read the private
-# identity file it has to check before any send. Both words are stated here rather than inherited from a console
-# that happened to be open.
+# identity file it has to check before any send. The account is taken from the token this registration runs under and
+# resolved to its SID before anything is touched: on 2026-11-15 a registration from an SSH session built the id from
+# USERDOMAIN/USERNAME, those were empty there, and the engine unregistered the old task and then refused
+# `No mapping between account names and security IDs was done` - a lane with no trader for as long as nobody looked.
 $principalArgument = @{}
 if ($Elevated) {
+  $elevatedUser = $null
+  try { $elevatedUser = ([System.Security.Principal.WindowsIdentity]::GetCurrent()).Name } catch { $elevatedUser = $null }
+  if (-not $elevatedUser) { $elevatedUser = "$env:COMPUTERNAME\$env:USERNAME" }
+  if (-not $elevatedUser -or $elevatedUser -notmatch "\\") {
+    throw "This registration cannot name the account it would run as (got '$elevatedUser'); nothing is registered."
+  }
+  try {
+    $null = (New-Object System.Security.Principal.NTAccount($elevatedUser)).Translate([System.Security.Principal.SecurityIdentifier])
+  } catch {
+    throw "The account '$elevatedUser' does not resolve to a security id ($($_.Exception.Message)); nothing is registered and the existing task, if any, is untouched."
+  }
   $principalArgument = @{
-    Principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
+    Principal = New-ScheduledTaskPrincipal -UserId $elevatedUser -LogonType Interactive -RunLevel Highest
   }
 }
 $ruleSourceWords = if ($Blind) { "the published ladder" } else { "the published calls and ladder" }

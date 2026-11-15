@@ -2480,9 +2480,11 @@ test("a lane whose identity file admits Administrators only is registered elevat
   assert.match(source, /run_level\s+=/, "the plan states the run level the registration would write");
   const principalBranch = source.indexOf("$principalArgument = @{}");
   assert.ok(principalBranch > 0, "one place builds the principal the registration carries");
+  const elevatedCall = source.indexOf("New-ScheduledTaskPrincipal");
+  assert.ok(elevatedCall > principalBranch, "the principal is built where the registration's switch decides it");
   assert.match(
-    source.slice(principalBranch, principalBranch + 700),
-    /New-ScheduledTaskPrincipal[^\n]*-UserId [^\n]*-LogonType Interactive -RunLevel Highest/,
+    source.slice(elevatedCall, elevatedCall + 200),
+    /-UserId \$elevatedUser -LogonType Interactive -RunLevel Highest/,
     "the elevated branch names the interactive user at Highest"
   );
   assert.equal(
