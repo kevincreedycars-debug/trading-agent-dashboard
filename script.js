@@ -21072,8 +21072,8 @@ function ensureSystemMap() {
  * morning). The render block below only draws what lib/backtesting_native.js reads out of them.
  * ------------------------------------------------------------------------------------------------- */
 
-const backtestingRunUrl = "./data/usd-layer1-backtester/run-v1.json?v=20261115-backtesting-native";
-const backtestingEngineUrl = "./data/usd-layer1-backtester/engine-v1.json?v=20261115-backtesting-native";
+const backtestingRunUrl = "./data/usd-layer1-backtester/run-v1.json?v=20261115-verified-mornings";
+const backtestingEngineUrl = "./data/usd-layer1-backtester/engine-v1.json?v=20261115-verified-mornings";
 
 let backtestingRun = null;
 let backtestingRunError = null;
@@ -21130,6 +21130,140 @@ function backtestingVersionStamp(lib, payload) {
 }
 
 
+/**
+ * The fail-safe strip above the three columns: how many of the artefact's mornings survive the research
+ * gate, what the survivors produced, and the exact fix behind every blocker. It leads with the count
+ * because that is the question the tab is being asked, and it says "experimental" wherever it quotes the
+ * implemented book, so a provisional number can never be mistaken for a verified one.
+ */
+function renderBacktestingVerification(lib, payload, engine) {
+  const model = lib.verification(payload, engine);
+  if (!model.available) return "";
+  const share = (value) => (Number.isFinite(value) ? `${value.toFixed(1)}%` : "—");
+  const count = (value, total) => `${Number.isFinite(value) ? value : "—"} / ${total}`;
+  // Backticks in the artefact-derived sentences name a file or a field; render them as code, not raw tick marks.
+  const prose = (text) => escapeHtml(String(text || "")).replace(/`([^`]+)`/g, "<code>$1</code>");
+  const dates = (value) => `${value} ${value === 1 ? "date" : "dates"}`;
+  const rungs = model.rungs
+    .map(
+      (rung) => `
+      <li data-bt-rung="${escapeHtml(rung.id)}" class="${rung.passing ? "bt-rung-pass" : "bt-rung-fail"}">
+        <span class="bt-rung-label">${escapeHtml(rung.label)}</span>
+        <strong>${escapeHtml(count(rung.passing, rung.mornings))}</strong>
+        <span class="bt-status ${rung.passing ? "good" : "bad"}">${escapeHtml(share(rung.share))}</span>
+      </li>
+    `
+    )
+    .join("");
+  const blockers = model.blockers
+    .map(
+      (blocker) => `
+      <li class="bt-blocker" data-bt-blocker="${escapeHtml(blocker.id)}">
+        <div class="bt-blocker-head">
+          <strong>${escapeHtml(blocker.label)}</strong>
+          <span class="bt-status bad">${escapeHtml(dates(blocker.mornings))} · ${escapeHtml(share(blocker.share))}</span>
+        </div>
+        <p class="bt-note"><span class="bt-blocker-kind">${escapeHtml(blocker.kind)}</span> ${prose(blocker.fix)}</p>
+        ${blocker.note ? `<p class="bt-note muted">${prose(blocker.note)}</p>` : ""}
+      </li>
+    `
+    )
+    .join("");
+  const accuracy = (value) => (Number.isFinite(value) ? `${value.toFixed(2)}%` : "—");
+  const record = (row) => `${Number.isFinite(row.hits) ? row.hits : 0} of ${Number.isFinite(row.scored) ? row.scored : 0} (${accuracy(row.accuracy_pct)})`;
+  const tests = model.tests
+    .map((test) => {
+      let detail = "";
+      if (test.markets) {
+        detail = test.markets
+          .map(
+            (market) => `
+            <li data-bt-verified-market="${escapeHtml(market.market)}">
+              <span>${escapeHtml(market.label)}</span>
+              <span class="bt-verify-numbers">current ${escapeHtml(record(market.current))} · challenger_v1 ${escapeHtml(
+                record(market.challenger)
+              )} · matched ${escapeHtml(String(market.matched.dates))} dates (challenger corrected ${escapeHtml(
+                String(market.matched.corrected)
+              )}, spoiled ${escapeHtml(String(market.matched.spoiled))})</span>
+            </li>`
+          )
+          .join("");
+      } else if (test.demo) {
+        detail = `<p class="bt-note">Experimental demo only: ${escapeHtml(String(test.demo.fills))} fills, ${escapeHtml(
+          String(test.demo.wins)
+        )} won, ${escapeHtml(String(test.demo.losses))} lost, ${escapeHtml(String(test.demo.flat))} flat, ${escapeHtml(
+          String(test.demo.total_r)
+        )}R in total and ${escapeHtml(String(test.demo.return_pct))}% on the £100,000 account, over the two-day 2026-11-05/06 EUR/USD tape that sits outside the 725 mornings and has no engine state row.</p>`;
+      } else {
+        detail = `<p class="bt-note">Experimental only: current ${escapeHtml(record(test.current))} · challenger_v1 ${escapeHtml(
+          record(test.challenger)
+        )} on the broker DXY.cash lane.</p>`;
+      }
+      return `
+        <li class="bt-verify-test" data-bt-verified-test="${escapeHtml(test.id)}">
+          <div class="bt-blocker-head">
+            <strong>${escapeHtml(test.title)}</strong>
+            <span class="bt-status bad">verified ${escapeHtml(String(test.verified))} / ${escapeHtml(String(model.mornings))}</span>
+          </div>
+          ${detail}
+          ${test.note ? `<p class="bt-note muted">${escapeHtml(test.note)}</p>` : ""}
+        </li>
+      `;
+    })
+    .join("");
+  const blocked = model.exemplars.blocked;
+  const exemplar = blocked
+    ? `
+      <p class="eyebrow">Open a morning</p>
+      <p class="bt-note" data-bt-verified-exemplar="none">${escapeHtml(model.exemplars.verified_note)}</p>
+      <p class="bt-note" data-bt-verified-blocked="${escapeHtml(blocked.date)}">
+        <a href="${escapeHtml(blocked.href)}">${escapeHtml(blocked.date)}</a> ·
+        ${escapeHtml(blocked.outcome || "no outcome")}${Number.isFinite(blocked.band) ? ` at band ${escapeHtml(String(blocked.band))}` : ""}
+        · ${escapeHtml(blocked.reason)}${
+          blocked.failed_inputs.length
+            ? ` · inputs that fail a rung: ${blocked.failed_inputs.map((key) => `<code>${escapeHtml(key)}</code>`).join(", ")}`
+            : ""
+        }
+      </p>
+    `
+    : "";
+  return `
+    <section class="bt-verify" data-bt-verify="${escapeHtml(model.headline)}" aria-label="Verified mornings">
+      <p class="eyebrow">The fail-safe question</p>
+      <p class="bt-verify-lead" data-bt-verify-lead>
+        <strong>${escapeHtml(model.headline)}</strong> verified mornings
+      </p>
+      <p class="bt-note" data-bt-verify-why>Can we prove the intended 25-factor USD agent had every input it needed by
+        05:00 London and applied the final adjudicator's rule? The run artefact's own research gate answers no on
+        every morning: the intended candidate is <strong>${escapeHtml(model.intended.config_status || "CONFIG_BLOCKED")}</strong>
+        with <strong>rule_defined ${model.intended.rule_defined ? "true" : "false"}</strong>, and no print carries a receipt
+        that proves it existed at the cutoff. The implemented book that did run is quoted below and labelled experimental.</p>
+      <ul class="bt-facts bt-verify-outcomes">
+        <li data-bt-verified-outcome="directional"><span>Produced a direction</span><strong>${escapeHtml(String(model.outcomes.directional))}</strong></li>
+        <li data-bt-verified-outcome="abstained"><span>Abstained, a completed analysis</span><strong>${escapeHtml(String(model.outcomes.abstained))}</strong></li>
+        <li data-bt-verified-outcome="trading"><span>Qualified for trading</span><strong>${escapeHtml(String(model.outcomes.trading))}</strong></li>
+      </ul>
+      <p class="eyebrow">The four rungs, in the gate's own order</p>
+      <ol class="bt-rungs">${rungs}</ol>
+      <p class="bt-note muted" data-bt-verify-ladder>A morning must pass all four. Present is about existence, fresh about
+        age, clocked about a receipt at 05:00 London, and identified about the named instrument rather than a declared proxy.</p>
+      <p class="eyebrow">Blocked mornings, by reason</p>
+      <ol class="bt-blockers">${blockers}</ol>
+      <p class="bt-note muted" data-bt-verify-overlap>${escapeHtml(model.reconciliation.note)}</p>
+      <p class="eyebrow">The four tests on a verified denominator</p>
+      <ol class="bt-verify-tests">${tests}</ol>
+      <p class="bt-note muted" data-bt-verify-experimental>Taken from the artefact's experimental block, not from a verified
+        denominator: data gate ${escapeHtml(String(model.experimental.data_gate.directional))} directional /
+        ${escapeHtml(String(model.experimental.data_gate.no_call))} no call /
+        ${escapeHtml(String(model.experimental.data_gate.insufficient))} insufficient, and the frozen book
+        ${escapeHtml(String(model.experimental.book.allowed))} allowed /
+        ${escapeHtml(String(model.experimental.book.abstained))} abstained /
+        ${escapeHtml(String(model.experimental.book.traded))} traded.</p>
+      ${exemplar}
+    </section>
+  `;
+}
+
 function renderBacktestingMap(payload) {
   const host = document.getElementById("backtestingMap");
   if (!host) return;
@@ -21170,6 +21304,7 @@ function renderBacktestingMap(payload) {
           : `decisions replayed ${escapeHtml(versions.run_generated_at || "at an unrecorded time")} · research only`
       }</p>
     </div>
+    ${renderBacktestingVerification(lib, payload, backtestingEngine)}
     <div class="bt-columns">
       <section class="bt-column" data-bt-column="snapshot">
         <p class="eyebrow">Left · 05:00 snapshot</p>

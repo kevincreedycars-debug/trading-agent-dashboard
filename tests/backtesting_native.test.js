@@ -200,6 +200,99 @@ test("the refused inputs on a morning are the ones the engine's own E3 sentence 
   }
 });
 
+test("the verified count is the research gate's own, and every morning is accounted for", () => {
+  const model = native.verification(run, engine);
+  assert.equal(model.available, true);
+  assert.equal(model.verified, run.validity_gate.research_gate.accepted);
+  assert.equal(model.verified, 0);
+  assert.equal(model.mornings, run.validity_gate.intended.sessions);
+  assert.equal(model.mornings, 725);
+  assert.equal(model.headline, "0 / 725");
+  assert.equal(model.intended.rule_defined, false);
+  assert.equal(model.intended.config_status, "CONFIG_BLOCKED");
+  assert.deepEqual(model.intended.unresolved, run.validity_gate.intended_model.unresolved);
+  assert.equal(model.outcomes.directional + model.outcomes.abstained + model.outcomes.trading, model.verified);
+  assert.equal(model.tests.length, 4);
+  assert.ok(model.tests.every((entry) => entry.verified === 0), "no test has a verified denominator");
+});
+
+test("the rungs and every blocker date are the gate's own rows, not a second count", () => {
+  const model = native.verification(run, engine);
+  const ladder = run.validity_gate.ladder.filter((row) => row.scope === "sessions");
+  assert.deepEqual(model.rungs.map((row) => row.id), ladder.map((row) => row.rung));
+  assert.deepEqual(model.rungs.map((row) => row.passing), ladder.map((row) => row.sessions_passing));
+  assert.deepEqual(model.rungs.map((row) => row.mornings), ladder.map((row) => row.sessions));
+
+  const days = run.validity_gate.days;
+  const count = (field) => days.filter((day) => Array.isArray(day[field]) && day[field].length > 0).length;
+  const byId = Object.fromEntries(model.blockers.map((row) => [row.id, row.mornings]));
+  assert.equal(byId["undefined-rule"], days.filter((day) => day.intended === "undefined_rule").length);
+  assert.equal(byId.unclocked, count("unclocked"));
+  assert.equal(byId["wrong-instrument"], count("wrong_instrument"));
+  assert.equal(byId["missing-input"], count("missing"));
+  assert.equal(byId["stale-input"], count("stale"));
+  assert.equal(byId["fed-bias-no-source"], days.length - run.validity_gate.sessions_meeting_intended_requirements);
+  for (const row of model.blockers) {
+    assert.ok(row.label && row.fix && row.kind, `${row.id} says what it is and what closes it`);
+    assert.ok(/\.(js|json)/.test(row.fix), `${row.id} names the file the fix belongs to`);
+  }
+  assert.match(model.reconciliation.note, /must not be added/);
+  assert.equal(model.reconciliation.data_blocked, days.length);
+});
+
+test("the verification strip names only files that exist, and its blocked morning is stored", () => {
+  const model = native.verification(run, engine);
+  for (const href of model.links) {
+    assert.ok(fs.existsSync(path.join(ROOT, href)), `${href} exists`);
+  }
+  assert.equal(model.exemplars.verified, null, "no verified morning exists to link");
+  const blocked = model.exemplars.blocked;
+  assert.ok(blocked && blocked.date, "the blocked exemplar names a date");
+  assert.ok(run.sessions.some((session) => session.date === blocked.date), "the run holds the morning");
+  assert.ok(engine.morning_states.some((morning) => morning.date === blocked.date), "the engine holds a state row");
+  assert.equal(native.parseHash(blocked.href).date, blocked.date);
+  assert.ok(blocked.reason, "the blocked morning says why");
+  assert.ok(blocked.failed_inputs.length, "the blocked morning names the inputs that fail a rung");
+});
+
+test("the four tests keep a zero verified denominator beside a labelled experimental one", () => {
+  const model = native.verification(run, engine);
+  assert.deepEqual(
+    model.tests.map((entry) => entry.id),
+    ["dxy_direction", "four_markets", "l2l_full_5r", "l2l_half_3r"]
+  );
+  const dxy = run.tests.dxy_direction_broker_cfd.models;
+  assert.equal(model.tests[0].current.scored, dxy.current.overall.scored);
+  assert.equal(model.tests[0].current.hits, dxy.current.overall.hits);
+  assert.equal(model.tests[0].challenger.accuracy_pct, dxy.challenger_v1.overall.accuracy_pct);
+  const four = model.tests[1].markets;
+  assert.deepEqual(four.map((market) => market.market), ["EURUSD", "XAUUSD", "NAS100", "BTCUSD"]);
+  for (const market of four) {
+    assert.ok(market.matched.dates > 0, `${market.market} has matched dates`);
+    assert.equal(
+      market.matched.corrected + market.matched.spoiled + market.matched.both_right + market.matched.both_wrong,
+      market.matched.dates,
+      `${market.market}'s matched dates reconcile`
+    );
+    assert.match(market.label, /[A-Z]/);
+  }
+  const full = run.tests.l2l_full_5r.accounts.find((account) => account.id === "current-full");
+  const half = run.tests.l2l_half_3r.accounts.find((account) => account.id === "current-half");
+  assert.equal(model.tests[2].demo.fills, full.fills);
+  assert.equal(model.tests[3].demo.fills, half.fills);
+  assert.equal(model.tests[2].usable_sessions, 0, "no ladder archive prices 5R");
+  assert.equal(model.tests[3].usable_sessions, 0, "no ladder archive prices 3R");
+  assert.equal(model.experimental.book.allowed, engine.summary.outcomes.allowed);
+  assert.equal(model.experimental.data_gate.directional, run.validity_gate.data_gate.counts.valid_directional);
+});
+
+test("verification is unavailable, not zero, when the run artefact holds no gate", () => {
+  const model = native.verification({ sessions: [] }, null);
+  assert.equal(model.available, false);
+  assert.equal(model.verified, 0);
+  assert.deepEqual(model.blockers, []);
+});
+
 test("the vote register shows who could vote and how, without inventing a family score", () => {
   const date = "2026-10-09";
   const directionRows = engine.book_detail.rows.filter((row) => row.role === "direction");
