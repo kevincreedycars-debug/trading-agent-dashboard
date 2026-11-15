@@ -470,6 +470,15 @@ test("the scheduled task calls that runner, hides it, and schedules nothing else
   // scheduler refusing every repetition, which is a cadence that looks broken while the code looks fine.
   assert.match(registerSource, /Stop-ScheduledTask/);
   assert.match(registerSource, /RepetitionInterval/);
+  // The registration must name an elevated principal. Without one the scheduler stores the task at `Limited`, the
+  // unelevated administrator token carries BUILTIN\Administrators as deny-only, and every scheduled run dies with
+  // EPERM on its own snapshot and log while the same command over ssh succeeds (VPS_DEPLOYMENT_STATUS_20261024.md
+  // §14.2 solved it for lane 1; lane 3 met it again on 2026-11-15 because its registration had no principal).
+  assert.match(registerSource, /New-ScheduledTaskPrincipal/);
+  assert.match(registerSource, /\[string\] \$RunLevel\s*=\s*"Highest"/);
+  assert.match(registerSource, /-RunLevel \$RunLevel/);
+  assert.match(registerSource, /-Principal \$principal/);
+  assert.match(registerSource, /task_run_level/);
   assert.match(registerSource, /order_path\s+=\s+"none"/);
   // Publication is a switch on this script and nowhere else, so re-registering for any other reason cannot start
   // writing to the branch Pages serves; the interval it passes is the publisher's own gate value.

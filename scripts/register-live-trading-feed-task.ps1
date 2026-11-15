@@ -29,6 +29,14 @@ param(
   [string] $Node = $null,
   [string] $Python = $null,
   [string] $HiddenRunner = "C:\Users\A17\.trading-agent-dashboard\scripts\run-hidden.vbs",
+  # The integrity level the task runs at, and who it runs as. Left to the scheduler's default a task registers at
+  # `Limited`, and an unelevated administrator's token carries BUILTIN\Administrators as deny-only, so the snapshot
+  # and the log this lane writes are readable but not writable: every scheduled run then dies with EPERM while the
+  # same command over ssh succeeds. That fault is written up in docs/live-trading/VPS_DEPLOYMENT_STATUS_20261024.md
+  # §14.2, and lane 3 met it again on 2026-11-15 because it was registered without this. `Interactive` is the logon
+  # type the terminal's own task uses, so the cadence attaches to the terminal in the session that is signed in.
+  [string] $RunLevel = "Highest",
+  [string] $RunAs = "$env:USERDOMAIN\$env:USERNAME",
   # The minimum seconds between two publishes, enforced by the publisher itself. 600 is six Pages builds an hour,
   # inside GitHub's documented soft limit of ten; the exact floor is 360, so this leaves deliberate headroom.
   [int] $PublishMinIntervalSeconds = 600,
@@ -158,6 +166,8 @@ $plan = [ordered]@{
   node               = $Node
   python             = $Python
   terminal           = $terminalLabel
+  run_as             = $RunAs
+  run_level          = $RunLevel
   launcher           = $launcher
   inner_command      = $innerCommand
   wrapper            = $wrapperPath
@@ -170,6 +180,10 @@ if ($Show) {
   Write-Plan $plan
   return
 }
+
+# Named rather than left to the scheduler's default, because the default is the one that cannot write the snapshot.
+# It is built here, before the self test, so the throwaway task runs at the same integrity level as the cadence.
+$principal = New-ScheduledTaskPrincipal -UserId $RunAs -LogonType Interactive -RunLevel $RunLevel
 
 # -Test proves the launcher, not the cadence: it registers a throwaway task with the same action and runtime, but a
 # wrapper without --align, so the run happens within seconds instead of at the next bar close. It also proves the
@@ -189,7 +203,8 @@ if ($Test) {
   }
   $before = if (Test-Path -LiteralPath $logPath) { @(Get-Content -LiteralPath $logPath).Count } else { 0 }
   Register-ScheduledTask -TaskName $selfTestName -Action $selfTestAction -Trigger $selfTestTrigger `
-    -Settings $selfTestSettings -Description "Temporary launcher self test for the Live Trading feed cadence." | Out-Null
+    -Settings $selfTestSettings -Principal $principal `
+    -Description "Temporary launcher self test for the Live Trading feed cadence." | Out-Null
   Start-ScheduledTask -TaskName $selfTestName
 
   $deadline = (Get-Date).AddSeconds(60)
@@ -242,10 +257,13 @@ if ($existing) {
 }
 
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
-  -Description $description | Out-Null
+  -Principal $principal -Description $description | Out-Null
 
 $task = Get-ScheduledTask -TaskName $TaskName
 $plan["task_state"] = $task.State
+# Read back rather than echoed: the point of the principal is what the scheduler stored, not what was asked for.
+$plan["task_run_as"] = [string]$task.Principal.UserId
+$plan["task_run_level"] = [string]$task.Principal.RunLevel
 $plan["registered_at"] = (Get-Date).ToString("o")
 
 if (-not $NoStart) {
