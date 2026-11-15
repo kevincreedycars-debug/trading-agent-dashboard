@@ -23,6 +23,12 @@
   matched dates reconcile, and an absent gate reports unavailable rather than zero) and
   `tests/backtesting_native.browser.test.js` 8/8 (the strip's lead, outcomes, rungs, blockers, tests, exemplar link and
   no overflow at 390 pixels).
+- Published: PR #8, merged to `main` as `35315dac` (feature commit `31dd5f97`), and live at
+  `https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html#backtesting`. The Pages build for that
+  merge completed at 18:56 UTC; read back through `tmp/probe-live-verify.js` at 1440 and 390 pixels, the strip leads
+  with `0 / 725`, the rungs read 618 / 617 / 0 / 0, all six blockers and four test denominators print, and the
+  exemplar link opens `#backtesting/four_markets/EURUSD/2024-02-06` as BULLISH, abstained at E6 with E1-E5 passed and
+  all 25 factor rows. No page error is raised and nothing overflows 390 pixels.
 - Layout: the strip is a card list, not a table, so the long fixes stack on a phone; `styles.css` gains the
   `.bt-verify` block and a 720-pixel rule, and the local probe reads no page error, no document overflow and a
   370-pixel strip at 390 pixels.

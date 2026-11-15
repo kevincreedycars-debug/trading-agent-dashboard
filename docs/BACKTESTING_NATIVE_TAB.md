@@ -8,9 +8,9 @@ the network beyond fetching those two files.
 
 ## Opening it
 
-- Side rail â†’ Evidence â†’ **Backtesting** (`data-tab="usd-layer1-backtester"`, unchanged, so saved navigation state
+- Side rail → Evidence → **Backtesting** (`data-tab="usd-layer1-backtester"`, unchanged, so saved navigation state
   still resolves).
-- Top menu â†’ **Backtesting**, which is `index.html#backtesting`.
+- Top menu → **Backtesting**, which is `index.html#backtesting`.
 - Deep links: `#backtesting`, `#backtesting/<date>`, `#backtesting/<test>/<market>/<date>`, for example
   `index.html#backtesting/l2l_full_5r/EURUSD/2026-11-05`. The address bar is kept in step as the reader selects.
 - The standalone rules page still works: `usd-l1-decision-rules-v1.html` opens with a link into the tab.
@@ -85,7 +85,7 @@ The four tests are (1) USD direction on the broker `DXY.cash` lane with the offi
 
 ## The map and the selected path
 
-Three.js draws the chain snapshot â†’ decision â†’ band â†’ trade â†’ test â†’ market â†’ date. The selected path is
+Three.js draws the chain snapshot → decision → band → trade → test → market → date. The selected path is
 highlighted; everything else fades so the chain the reader picked is the thing the eye follows. Clicking a test,
 market or date moves the selection, re-renders the diagram and keeps the printed path in step.
 
@@ -108,8 +108,8 @@ each input with the print date the run artefact recorded, its staleness and the 
 vote say so ("not a voting row", or "cannot vote today" for a direction row that is stale) rather than showing a vote
 they do not have.
 
-Every result also carries the version stamp (`usd-session-engine-v1 Â· book usd-l1-factor-rulebook-v1.0.0 Â·
-decision usd-l1-decision-rules-v1.0.0 Â· run usd-l1-backtester-r1`), so a reader can tell which model and which rule
+Every result also carries the version stamp (`usd-session-engine-v1 · book usd-l1-factor-rulebook-v1.0.0 ·
+decision usd-l1-decision-rules-v1.0.0 · run usd-l1-backtester-r1`), so a reader can tell which model and which rule
 version produced it. The nine-input `challenger_v1` experiment is labelled as the experiment throughout, and the
 execution demo is labelled as a demo wherever it appears.
 
@@ -137,9 +137,9 @@ Three additions answer the question a reader actually asks of a single morning: 
 whether it counted.
 
 - **The accuracy line** under the printed path says what the morning is in the directional-accuracy count: a hit or a
-  miss with the market's close and the flat band (`2026-10-12`: a bearish USD call, EUR/USD closed âˆ’0.3194%, counted as
-  a miss), â€œexcluded from directional accuracyâ€ when the engine issued no call (`2026-10-09`), or â€œnot scoredâ€ when no
-  priced outcome is stored for that market. Tests 2â€“4 say that they score a different question, so the morning does not
+  miss with the market's close and the flat band (`2026-10-12`: a bearish USD call, EUR/USD closed −0.3194%, counted as
+  a miss), “excluded from directional accuracy” when the engine issued no call (`2026-10-09`), or “not scored” when no
+  priced outcome is stored for that market. Tests 2–4 say that they score a different question, so the morning does not
   enter the USD-call count.
 - **Inputs the engine refused** lists every row the engine marked missing_or_stale with the reading that broke it and
   the age the book allows. On `2026-10-09` and `2026-10-12` those are `broad_dollar_d5_pct` and `broad_dollar_d1_pct`
@@ -148,7 +148,7 @@ whether it counted.
   is the same list the engine's own E3 sentence names, and a unit test holds the two together.
 - **Rows that could vote, and how they voted** prints the recorded vote symbol for each of the eleven direction rows
   with its state and whether it counted, plus a tally (`2026-10-09`: 3 bullish, 2 bearish, 4 flat, 2 could not vote).
-  Beside it, exit check E5's own sentence says whether the vote cleared the 0.20 deadband â€” on `2026-10-09` it did not,
+  Beside it, exit check E5's own sentence says whether the vote cleared the 0.20 deadband — on `2026-10-09` it did not,
   so the engine abstained.
 
 The tab deliberately does not print a family net score. The artefacts store one vote symbol per book row and the
@@ -184,15 +184,19 @@ in their own group and are never mixed into this programme's counts.
   per-morning `checks`), `book_detail` (25 named rows, 12 signals with owners, 6 families, eligibility) and
   `check_contract`. `node backtester/scripts/run_usd_l1_engine_v1.js --check` reports it current at 41 allowed,
   541 blocked and 143 abstained over 725 mornings.
-- `tests/backtesting_native.test.js` 13/13: versions, fail-safe statuses against the fired-rule log, the 25-row
+- `tests/backtesting_native.test.js` 18/18: versions, fail-safe statuses against the fired-rule log, the 25-row
   ledger against the stored strings, the map path, a scored morning, a stopped path, the equity gate, the lane
-  fail-safes, deep links, every link target, the refused inputs held against the engine's own E3 sentence, and the
-  vote register showing who could vote without inventing a family score.
-- `tests/backtesting_native.browser.test.js` 7/7: the normal menu and active styling, North Star above the map, three
-  columns with four ordinals, test 3 â†’ EUR/USD â†’ a stopped path and the labelled demo date, one scored morning and one
+  fail-safes, deep links, every link target, the refused inputs held against the engine's own E3 sentence, the
+  vote register showing who could vote without inventing a family score, and the verified-mornings model: the gate's
+  own zero, the four rungs and every blocker date re-derived from `validity_gate.days`, each named path present on
+  disk, the blocked exemplar a stored morning, the four tests' matched dates reconciling, and an absent gate reported
+  as unavailable rather than zero.
+- `tests/backtesting_native.browser.test.js` 8/8: the normal menu and active styling, North Star above the map, three
+  columns with four ordinals, test 3 → EUR/USD → a stopped path and the labelled demo date, one scored morning and one
   blocked morning with evidence and all 25 expandable factors, a deep link, a 390-pixel phone with no sideways
-  scroll, the 12 October miss and the 9 October no call read from the rendered tab, and both of those mornings again
-  at 390 pixels with the vote block and the accuracy line still readable.
+  scroll, the 12 October miss and the 9 October no call read from the rendered tab, both of those mornings again
+  at 390 pixels with the vote block and the accuracy line still readable, and the verified strip leading with
+  `0 / 725` with its four rungs, six blockers, four test denominators, exemplar link, and no overflow at 390 pixels.
 - Acceptance captures (ignored): `tmp/backtesting-acceptance/desktop-scored-2026-10-12.png`,
   `desktop-blocked-2026-10-09.png`, `mobile-blocked-2026-10-09.png` and `mobile-path-2026-10-09.png`.
 - Acceptance read back through `tmp/probe-acceptance.js` (ignored) at 1440 and 390 pixels: `2026-10-12` prints
@@ -201,6 +205,13 @@ in their own group and are never mixed into this programme's counts.
   `risk.usd-safe-haven-demand` with the unclocked-print reason, and a tally of 2 rows that could not vote. No page
   error was raised, and on the 390-pixel phone no section, panel, table or canvas exceeded the viewport - the votes
   and the fail-safes print as stacked cards there, so nothing needs a sideways scroll.
+- Live read-back (15 Nov 2026, after PR #8 merged `main` at `35315dac`): the published tab leads with
+  `0 / 725 verified mornings` at 1440 and 390 pixels, the rungs read `618 / 725`, `617 / 725`, `0 / 725` and
+  `0 / 725`, all six blockers and the four test denominators print, and the exemplar link opens
+  `#backtesting/four_markets/EURUSD/2024-02-06` - BULLISH, abstained at E6, E1 to E5 passed, 25 factor rows and the
+  vote tally `6/1/4/0`. No page error is raised and nothing overflows 390 pixels. Captures (ignored):
+  `tmp/live-verify/desktop-strip.png`, `phone-strip.png` and `blocked-morning-2024-02-06.png`; the local captures are
+  in `tmp/verify-acceptance/`.
 - Full `npm test` on this port, after the rebase onto `main`'s architecture-map work: 914 tests, 902 pass, 8 fail, and
   none of the 8 is this work. Six also fail in a clean worktree of `origin/main` with the same `node_modules` -
   `site_nav_consistency.browser.test.js` 3 of 5 (its `--check` reports the same one stale page, `index.html`, on both

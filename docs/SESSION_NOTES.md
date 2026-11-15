@@ -1,5 +1,29 @@
 # Session Notes
 
+2026-11-15 late evening (the verified-mornings strip, built on `origin/main` `478ab9b9`, merged `35315dac`) - the
+owner asked the tab one question: on how many of the 725 historical mornings can we prove the intended 25-factor USD
+agent had every input it needed by 05:00 London and applied the final adjudicator's logic? The answer already existed
+in `run-v1.json`'s `validity_gate` but nowhere a reader could see it - `research_gate.accepted` 0, a four-rung ladder
+at present 618 / fresh 617 / clocked 0 / identified 0, and one `days[]` row per morning naming the missing, stale,
+unclocked and wrong-instrument inputs. `lib/backtesting_native.js` gained `verification(run, engine)`, which reads
+those rows into one model - the count, the outcomes, the rungs, six blockers with the dates each touches and the file
+that closes it, the four tests with a zero verified denominator beside the artefact's experimental numbers, and one
+blocked morning to open - and `script.js` gained `renderBacktestingVerification()` to draw it above the three columns.
+Nothing is recomputed: the rungs and the blocker dates are the gate's own rows and the per-input counts inside the
+fixes are read from the same `days[]` rows, so a rewritten artefact cannot leave the prose behind. The strip says why
+the answer is none in the artefact's own terms: the intended candidate is `CONFIG_BLOCKED` with `rule_defined: false`,
+so all 725 mornings are undefined-rule mornings, and no print carries a receipt that puts it before 05:00 London - the
+clocked rung is 0 while presence is 618 and freshness 617 - and the blockers overlap rather than add, which the strip
+prints instead of a sum. Live read-back through `tmp/probe-live-verify.js` at 1440 and 390 pixels: the strip leads with
+`0 / 725`, the rungs read 618 / 617 / 0 / 0, all six blockers and four denominators print, the exemplar link opens
+`#backtesting/four_markets/EURUSD/2024-02-06` as BULLISH abstained at E6 with E1-E5 passed and 25 rows, no page error
+is raised and the 390-pixel strip is 370 wide with no document overflow. Guards: `tests/backtesting_native.test.js`
+18/18, `tests/backtesting_native.browser.test.js` 8/8 and the map suites 16/16. Published as PR #8, merged `35315dac`
+(feature `31dd5f97`); the two merged publication branches `publish/backtesting-native-20261115` (`cd5ce545`) and
+`docs/backtesting-published-20261115` (`cf67a858`) were deleted after both tips were confirmed ancestors of `main`,
+and `feat/verified-mornings` was deleted after its own merge. Evidence kept in ignored `tmp/verify-acceptance/` and
+`tmp/live-verify/`.
+
 2026-11-15 evening (the Backtesting tab made native, on `#backtesting`, ported onto `origin/main` `4b6423b0`) -
 the 10 November release put the USD Layer 1 backtester on a page of its own because `main` did not carry the panel;
 this port makes it a tab of the dashboard itself, `data-tab="usd-layer1-backtester"` unchanged so saved navigation
