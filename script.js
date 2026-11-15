@@ -21064,6 +21064,786 @@ function ensureSystemMap() {
   return systemMapLoad;
 }
 
+/* -------------------------------------------------------------------------------------------------
+ * Backtesting state and artefacts.
+ *
+ * The native tab reads two committed files and nothing else: run-v1.json (the saved run and its
+ * per-session records) and engine-v1.json (the frozen twenty-five-factor book, with one state row per
+ * morning). The render block below only draws what lib/backtesting_native.js reads out of them.
+ * ------------------------------------------------------------------------------------------------- */
+
+const backtestingRunUrl = "./data/usd-layer1-backtester/run-v1.json?v=20261115-backtesting-native";
+const backtestingEngineUrl = "./data/usd-layer1-backtester/engine-v1.json?v=20261115-backtesting-native";
+
+let backtestingRun = null;
+let backtestingRunError = null;
+let backtestingEngine = null;
+let backtestingEngineError = null;
+let backtestingRequest = null;
+let backtestingMapController = null;
+
+const backtestingState = {
+  mapTest: "four_markets",
+  mapMarket: "EURUSD",
+  selectedDate: null
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * Backtesting: the native tab's first screen.
+ *
+ * The left column is the 05:00 snapshot and the model that actually ran, the centre is the USD call, the right
+ * is the four tests. Everything under them is the selected path: what the engine knew, what it predicted for one
+ * market, and the first item the evidence does not contain. lib/backtesting_native.js does the reading; this block
+ * only draws it, so the browser test and the unit test can assert the same view model.
+ * ------------------------------------------------------------------------------------------------- */
+
+function backtestingLib() {
+  return typeof window !== "undefined" && window.BacktestingNative ? window.BacktestingNative : null;
+}
+
+function backtestingSelection() {
+  return {
+    test: backtestingState.mapTest || "four_markets",
+    market: backtestingState.mapMarket || null,
+    date: backtestingState.selectedDate || null
+  };
+}
+
+function backtestingStatusTone(status) {
+  if (status === "passed" || status === "allowed" || status === "hit") return "good";
+  if (status === "blocked" || status === "missing" || status === "miss") return "bad";
+  if (status === "abstained" || status === "not applicable" || status === "flat") return "warn";
+  return "muted";
+}
+
+function backtestingStatusChip(status, label = null) {
+  return `<span class="bt-status ${backtestingStatusTone(status)}" data-bt-status="${escapeHtml(status || "")}">${escapeHtml(
+    label || status || "unknown"
+  )}</span>`;
+}
+
+function backtestingVersionStamp(lib, payload) {
+  const versions = lib.versions(payload, backtestingEngine);
+  return `<p class="bt-stamp" data-bt-versions="${escapeHtml(versions.label)}">${escapeHtml(versions.label)} · ${escapeHtml(
+    versions.run || "run artefact"
+  )} · cutoff ${escapeHtml(versions.cutoff)}</p>`;
+}
+
+
+function renderBacktestingMap(payload) {
+  const host = document.getElementById("backtestingMap");
+  if (!host) return;
+  const lib = backtestingLib();
+  if (!lib) {
+    host.innerHTML = `<div class="bt-map-loading">The Backtesting view models did not load (lib/backtesting_native.js), so the map cannot be drawn.</div>`;
+    return;
+  }
+  if (!payload) {
+    host.innerHTML = `<div class="bt-map-loading">${
+      backtestingRunError ? escapeHtml(backtestingRunError) : "Loading the saved run artefact..."
+    }</div>`;
+    return;
+  }
+  const selection = backtestingSelection();
+  const model = lib.mapModel(payload, backtestingEngine, selection);
+  const detail = lib.pathDetail(payload, backtestingEngine, selection);
+  const versions = lib.versions(payload, backtestingEngine);
+  const headline = lib.headline(payload, backtestingEngine);
+  const ledger = lib.factorLedger(backtestingEngine, payload, selection.date);
+  const readable = ledger.filter((row) => row.readable).length;
+  const carried = ledger.filter((row) => row.carried).length;
+  const session = lib.sessionFor(payload, selection.date);
+  const band = detail.decision.band_label ? `${detail.decision.band}/5 ${detail.decision.band_label}` : "no band";
+  destroyBacktestingMap();
+  host.innerHTML = `
+    <div class="bt-map-head">
+      <div>
+        <p class="eyebrow">The model that ran</p>
+        <h3 data-bt-model>${escapeHtml(versions.engine || "engine unavailable")} · book ${escapeHtml(versions.book || "—")}</h3>
+        <p class="bt-note">${escapeHtml(versions.decision || "")} · ${escapeHtml(versions.challenger || "")} · ${escapeHtml(
+          String(headline.mornings)
+        )} mornings (${escapeHtml(headline.first_date || "")} → ${escapeHtml(headline.last_date || "")})</p>
+      </div>
+      <p class="bt-note muted">${
+        backtestingEngineError
+          ? `Engine artefact unavailable: ${escapeHtml(backtestingEngineError)}`
+          : `decisions replayed ${escapeHtml(versions.run_generated_at || "at an unrecorded time")} · research only`
+      }</p>
+    </div>
+    <div class="bt-columns">
+      <section class="bt-column" data-bt-column="snapshot">
+        <p class="eyebrow">Left · 05:00 snapshot</p>
+        <h4 data-bt-snapshot-date>${escapeHtml(selection.date || "no morning selected")}</h4>
+        <ul class="bt-facts">
+          <li><span>Cutoff</span><strong>${escapeHtml((session && session.cutoff_at_utc) || versions.cutoff)}</strong></li>
+          <li><span>Factors readable</span><strong>${readable} of ${ledger.length || 25}</strong></li>
+          <li><span>Carried forward</span><strong>${carried}</strong></li>
+          <li><span>Price outcome</span><strong>${session ? "05:00 bar staged" : "not staged"}</strong></li>
+        </ul>
+        <p class="eyebrow">Model that ran</p>
+        <ul class="bt-facts">
+          <li><span>Engine</span><strong>${escapeHtml(versions.engine || "—")}</strong></li>
+          <li><span>Book</span><strong>${escapeHtml(versions.book || "—")}</strong></li>
+          <li><span>Decision</span><strong>${escapeHtml(versions.decision || "—")}</strong></li>
+          <li><span>Run</span><strong>${escapeHtml(versions.run || "—")}</strong></li>
+        </ul>
+      </section>
+      <section class="bt-column bt-column-decision" data-bt-column="decision">
+        <p class="eyebrow">Centre · USD call</p>
+        <p class="bt-direction ${backtestingDirection(detail.decision.direction).tone}" data-bt-direction>${
+          detail.decision.direction === "NO_CALL" ? "No call" : escapeHtml(detail.decision.direction)
+        }</p>
+        <p class="bt-sub" data-bt-band>${escapeHtml(band)}</p>
+        <p class="bt-sub" data-bt-trade>Trade qualification: <strong>${detail.decision.trade ? "met" : "not met"}</strong></p>
+        <p class="bt-outcome" data-bt-outcome>${backtestingStatusChip(detail.decision.outcome || "no state")} ${escapeHtml(
+          detail.decision.note
+        )}</p>
+        <p class="bt-counts">${headline.allowed} allowed · ${headline.blocked} blocked · ${headline.abstained} abstained · ${
+          headline.traded
+        } traded</p>
+      </section>
+      <section class="bt-column" data-bt-column="tests">
+        <p class="eyebrow">Right · four selectable tests</p>
+        <div class="bt-tests" role="group" aria-label="Select a test">
+          ${lib.TESTS.map((test) => {
+            const status = lib.testStatus(payload, test.id);
+            const active = test.id === model.selection.test;
+            return `
+              <button type="button" class="bt-test${active ? " active" : ""}" data-bt-test="${escapeHtml(test.id)}"
+                aria-pressed="${active ? "true" : "false"}">
+                <span class="bt-ordinal">${test.ordinal}</span>
+                <span class="bt-test-title">${escapeHtml(test.title)}</span>
+                <span class="bt-test-status">${escapeHtml(status.label)}</span>
+                <span class="bt-test-markets">${test.markets.map((key) => escapeHtml(lib.marketLabel(key))).join(" · ")}</span>
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </section>
+    </div>
+    ${renderBacktestingPath(payload, lib, model, detail, ledger)}
+  `;
+  mountBacktestingMap(model);
+}
+
+
+/** The selectors, the 3D scene, the printed path, the fail-safes and the twenty-five row ledger. */
+function renderBacktestingPath(payload, lib, model, detail, ledger) {
+  const selection = model.selection;
+  const test = lib.testById(selection.test);
+  const sessions = asArray(payload.sessions);
+  const minDate = sessions[0]?.date || "";
+  const maxDate = sessions[sessions.length - 1]?.date || "";
+  const engineFails = lib.failSafes(backtestingEngine, selection.date);
+  const laneFails = lib.laneFailSafes(payload, backtestingEngine, selection);
+  const chips = model.nodes.filter((node) => node.kind === "date" && node.date);
+  return `
+    <div class="bt-controls">
+      <div class="bt-control-group" role="group" aria-label="Select a market">
+        <span class="bt-control-label">Market</span>
+        ${lib.TESTS.find((entry) => entry.id === test.id).markets
+          .map(
+            (key) => `
+            <button type="button" class="bt-chip${key === selection.market ? " active" : ""}" data-bt-market="${escapeHtml(key)}"
+              aria-pressed="${key === selection.market ? "true" : "false"}">${escapeHtml(lib.marketLabel(key))}</button>
+          `
+          )
+          .join("")}
+      </div>
+      <div class="bt-control-group" role="group" aria-label="Select a morning">
+        <span class="bt-control-label">Morning</span>
+        <input type="date" data-bt-date-input min="${escapeHtml(minDate)}" max="${escapeHtml(maxDate)}"
+          value="${escapeHtml(selection.date || "")}" aria-label="Pick a 05:00 London morning">
+        ${chips
+          .map(
+            (node) => `
+            <button type="button" class="bt-chip${node.date === selection.date ? " active" : ""}" data-bt-date="${escapeHtml(node.date)}"
+              title="${escapeHtml(node.status)}">${escapeHtml(node.date)}</button>
+          `
+          )
+          .join("")}
+      </div>
+    </div>
+    <div class="bt-canvas" data-bt-canvas="true" role="img"
+      aria-label="Selectable map: 05:00 snapshot, USD decision, four tests, markets and dates"></div>
+    <p class="bt-note muted" data-bt-mode>Drawing the map...</p>
+    <div class="bt-path" data-bt-path>
+      <div class="bt-path-head">
+        <p class="eyebrow">${test.ordinal} ${escapeHtml(test.title)} · ${escapeHtml(lib.marketLabel(selection.market))} · ${escapeHtml(
+          selection.date || "no date"
+        )}</p>
+        <p class="bt-note">${escapeHtml(test.question)} ${escapeHtml(test.prediction)}</p>
+      </div>
+      <ol class="bt-steps">
+        ${detail.steps
+          .map(
+            (step) => `
+          <li class="bt-step" data-bt-step="${escapeHtml(step.key)}" data-bt-step-status="${escapeHtml(step.status)}">
+            ${backtestingStatusChip(step.status)}
+            <span class="bt-step-label">${escapeHtml(step.label)}</span>
+            <span class="bt-step-value">${escapeHtml(step.value)}</span>
+          </li>
+        `
+          )
+          .join("")}
+      </ol>
+      ${backtestingAccuracyLine(test, detail, lib, selection)}
+
+      <div class="bt-missing" data-bt-missing="${detail.missing.length}">
+        <p class="eyebrow">Where the path stops</p>
+        ${
+          detail.missing.length
+            ? `<ul>${detail.missing.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+            : `<p class="bt-note">Nothing is missing on this path: every step from the snapshot to the outcome is stored.</p>`
+        }
+      </div>
+      ${renderBacktestingVotes(lib, payload, selection, engineFails)}
+
+      ${renderBacktestingFailsafes(engineFails, laneFails, selection)}
+    </div>
+    ${renderBacktestingFactors(ledger, selection)}
+  `;
+}
+
+/** The six engine checks and the lane's own data checks, each with what it checks and its evidence. */
+function renderBacktestingFailsafes(engineFails, laneFails, selection) {
+  const row = (check, prefix) => `
+    <tr data-bt-failsafe="${escapeHtml(prefix + check.id)}" class="bt-failsafe-row ${backtestingStatusTone(check.status)}">
+      <th scope="row"><span class="bt-failsafe-id">${escapeHtml(check.id)}</span>${escapeHtml(check.what || check.name || "")}</th>
+      <td>${backtestingStatusChip(check.status)}</td>
+      <td class="bt-failsafe-evidence">${
+        asArray(check.evidence).length
+          ? asArray(check.evidence).map((item) => `<span>${escapeHtml(item)}</span>`).join("")
+          : `<span class="usd-l1-muted">${
+              check.status === "passed" ? "no rule fired on this morning" : "no evidence recorded"
+            }</span>`
+      }</td>
+    </tr>
+  `;
+  return `
+    <details class="bt-section" data-bt-section="failsafes" open>
+      <summary>Fail-safes for ${escapeHtml(selection.date || "the selected morning")}</summary>
+      <div class="bt-failsafe-wrap">
+        <table class="usd-l1-table bt-failsafe-table">
+          <caption>Six engine checks, then the data checks this test owns. A check that did not apply says so instead of passing.</caption>
+          <thead><tr><th scope="col">Check</th><th scope="col">This morning</th><th scope="col">Evidence</th></tr></thead>
+          <tbody>
+            ${engineFails.map((check) => row(check, "")).join("")}
+            ${laneFails.map((check) => row(check, "data:")).join("")}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  `;
+}
+
+
+
+/** Where one morning lands in the directional-accuracy count, said the way the artefact scores it. */
+function backtestingAccuracyLine(test, detail, lib, selection) {
+  const date = escapeHtml(selection.date || "this morning");
+  if (test.id !== "four_markets") {
+    const what = test.id === "dxy_direction" ? "the DXY.cash direction" : "replayed trades";
+    return `<p class="bt-accuracy" data-bt-accuracy="not-scored">${backtestingStatusChip("not applicable")}<span><strong>Directional accuracy:</strong> ${escapeHtml(
+      test.ordinal
+    )} ${escapeHtml(test.title)} scores ${what}, so this morning does not enter the USD-call accuracy count.</span></p>`;
+  }
+  const outcome = detail.outcome || {};
+  const direction = (detail.decision && detail.decision.direction) || null;
+  const market = lib.marketLabel(selection.market);
+  if (!direction || direction === "NO_CALL") {
+    return `<p class="bt-accuracy" data-bt-accuracy="excluded">${backtestingStatusChip("excluded")}<span><strong>Excluded from directional accuracy:</strong> the engine issued no USD call on ${date}, so there is no prediction to score. A no call is neither a hit nor a miss.</span></p>`;
+  }
+  const call = `${direction.toLowerCase()} USD (predicts ${escapeHtml(market)} ${escapeHtml(outcome.prediction || "—")})`;
+  if (!outcome.available || !outcome.result) {
+    return `<p class="bt-accuracy" data-bt-accuracy="unscored">${backtestingStatusChip("unscored")}<span><strong>Not scored:</strong> challenger_v1 called a ${call} on ${date}, but no priced ${escapeHtml(
+      market
+    )} outcome is stored for this morning, so the call cannot be counted.</span></p>`;
+  }
+  const move = Number.isFinite(outcome.move_pct) ? `${outcome.move_pct.toFixed(4)}%` : "an unrecorded move";
+  const band = Number.isFinite(outcome.flat_band_pct) ? ` (flat band ±${outcome.flat_band_pct}%)` : "";
+  const sentence =
+    outcome.result === "hit"
+      ? `the market closed ${escapeHtml(move)}${escapeHtml(band)}, so the call is counted as a hit.`
+      : outcome.result === "miss"
+        ? `the market closed ${escapeHtml(move)}${escapeHtml(band)}, so the call is counted as a miss.`
+        : `the market closed ${escapeHtml(move)}${escapeHtml(band)} and stayed inside the flat band, so the call is not scored either way.`;
+  return `<p class="bt-accuracy" data-bt-accuracy="${escapeHtml(outcome.result)}" data-bt-accuracy-move="${escapeHtml(
+    String(outcome.move_pct)
+  )}">${backtestingStatusChip(outcome.result)}<span><strong>Directional accuracy:</strong> challenger_v1 called a ${call} on ${date}; ${sentence}</span></p>`;
+}
+
+/**
+ * Why the morning produced this call: the inputs the engine refused, and how the rows that could vote voted. The
+ * artefacts store one vote symbol per book row rather than a family score, so the rows are shown as recorded.
+ */
+function renderBacktestingVotes(lib, payload, selection, engineFails) {
+  if (!backtestingEngine) return "";
+  const stale = lib.staleInputs(backtestingEngine, payload, selection.date);
+  const votes = lib.voteRegister(backtestingEngine, payload, selection.date);
+  if (!votes.available) return "";
+  const e5 = engineFails.find((check) => check.id === "E5") || null;
+  const e3 = engineFails.find((check) => check.id === "E3") || null;
+  const tally = votes.tally;
+  const counted = votes.rows.filter((row) => row.counted);
+  const refused = stale.reduce((total, row) => total + row.inputs.length, 0);
+  return `
+    <details class="bt-section" data-bt-section="votes" data-bt-vote="true" data-bt-vote-tally="${tally.bullish}/${tally.bearish}/${tally.flat}/${tally.silent}" open>
+      <summary>How the vote was built on ${escapeHtml(selection.date || "the selected morning")} · ${tally.bullish} bullish · ${
+        tally.bearish
+      } bearish · ${tally.flat} flat · ${tally.silent} could not vote</summary>
+      <p class="bt-note" data-bt-deadband="${escapeHtml(e5 ? e5.status : "not recorded")}">${
+        e5
+          ? `${backtestingStatusChip(e5.status)} <strong>Exit check E5:</strong> ${
+              e5.status === "passed"
+                ? "the family vote cleared the 0.20 deadband, so a direction was issued."
+                : `the family vote sat inside the 0.20 deadband, so the engine abstained. The artefact records it as: “${escapeHtml(
+                    asArray(e5.evidence)[0] || "the family vote nets to no direction"
+                  )}”.`
+            }`
+          : "Exit check E5 is not recorded for this morning."
+      }</p>
+      ${
+        stale.length
+          ? `<p class="eyebrow">Inputs the engine refused${e3 ? ` (exit check E3: ${escapeHtml(e3.status)})` : ""}</p>
+        <ul class="bt-stale" data-bt-stale="${refused}">
+          ${stale
+            .map(
+              (row) => `
+            <li data-bt-stale-row="${escapeHtml(row.row_id)}">
+              <span class="bt-stale-row">${escapeHtml(row.row_name)} <code>${escapeHtml(row.row_id)}</code></span>
+              <span class="bt-stale-inputs">${row.inputs
+                .map(
+                  (input) =>
+                    `<span><code>${escapeHtml(input.key)}</code> ${escapeHtml(input.reason)}${
+                      Number.isFinite(input.staleness) && Number.isFinite(input.max_age)
+                        ? ` · ${input.staleness} of ${input.max_age} business days allowed`
+                        : ""
+                    }</span>`
+                )
+                .join("")}</span>
+            </li>`
+            )
+            .join("")}
+        </ul>`
+          : `<p class="bt-note muted">Every voting row was readable at the cutoff this morning, so nothing was refused.</p>`
+      }
+      <p class="eyebrow">Rows that could vote, and how they voted</p>
+      <div class="bt-vote-wrap">
+        <table class="usd-l1-table bt-vote-table">
+          <caption>${counted.length} of ${votes.rows.length} direction rows could vote. The artefacts record a symbol per book row, not a family score, so these votes are shown exactly as recorded.</caption>
+          <thead><tr><th scope="col">Row</th><th scope="col">Vote recorded</th><th scope="col">State</th><th scope="col">Counted</th></tr></thead>
+          <tbody>
+            ${votes.rows
+              .map(
+                (row) => `
+              <tr data-bt-vote-row="${escapeHtml(row.id)}" class="${row.counted ? "" : "bt-vote-row-muted"}">
+                <th scope="row">${escapeHtml(row.name)}<code>${escapeHtml(row.id)}</code></th>
+                <td>${escapeHtml(row.vote_label)}</td>
+                <td>${backtestingStatusChip(row.state, row.state === "V" ? "readable" : row.state === "S" ? "stale" : "not read")}</td>
+                <td>${row.counted ? "yes" : "no"}</td>
+              </tr>`
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  `;
+}
+
+/** All twenty-five rows, each one expandable: what it read, what it was allowed to do and what the engine did. */
+function renderBacktestingFactors(ledger, selection) {
+  if (!ledger.length) {
+    return `
+      <section class="bt-section" data-bt-section="factors">
+        <p class="bt-note">The engine artefact is not loaded, so the twenty-five row ledger cannot be shown.</p>
+      </section>
+    `;
+  }
+  const readable = ledger.filter((row) => row.readable).length;
+  const carried = ledger.filter((row) => row.carried).length;
+  const voted = ledger.filter((row) => row.may_vote && row.vote !== 0).length;
+  return `
+    <details class="bt-section" data-bt-section="factors" data-bt-factors="${ledger.length}">
+      <summary>All ${ledger.length} factors on ${escapeHtml(selection.date || "the selected morning")} · ${readable} readable · ${carried} carried forward · ${voted} voted</summary>
+      <p class="bt-note muted">Each row is one line of the frozen book. Expanding it shows the inputs the artefact stages for that row, the print date at the cutoff and the age the book allows.</p>
+      <div class="bt-factor-list">
+        ${ledger
+          .map(
+            (factor) => `
+          <details class="bt-factor" data-bt-factor="${escapeHtml(factor.id)}" data-bt-factor-state="${escapeHtml(factor.state)}">
+            <summary>
+              ${backtestingStatusChip(
+                factor.state,
+                factor.state === "V" ? "readable" : factor.state === "S" ? "stale" : factor.state === "A" ? "absent" : "not read"
+              )}
+              <span class="bt-factor-name">${escapeHtml(factor.name)}</span>
+              <span class="bt-factor-id">${escapeHtml(factor.id)}</span>
+              <span class="bt-factor-role">${escapeHtml(factor.role_label)}</span>
+              <span class="bt-factor-vote">${escapeHtml(
+                factor.may_vote ? factor.vote_label : factor.role === "direction" ? "cannot vote today" : "not a voting row"
+              )}</span>
+              <span class="bt-factor-age">${factor.carried ? `carried · ${factor.age}bd` : "printed this morning"}</span>
+            </summary>
+            <div class="bt-factor-body">
+              <dl class="bt-factor-meta">
+                <dt>Adjudication allowed</dt><dd>${escapeHtml(factor.treatment || "—")}${
+              factor.disposition ? ` · ${escapeHtml(factor.disposition)}` : ""
+            }</dd>
+                <dt>What the engine did</dt><dd>${escapeHtml(factor.state_label)} · ${factor.may_vote ? "may vote" : "may not vote"} · ${escapeHtml(
+              factor.vote_label
+            )}</dd>
+                <dt>Owning signals</dt><dd>${
+                  factor.signals.length ? factor.signals.map((signal) => escapeHtml(signal.label)).join(" · ") : "this row owns no signal"
+                }</dd>
+                ${factor.verdict ? `<dt>Research verdict</dt><dd>${escapeHtml(factor.verdict)}</dd>` : ""}
+              </dl>
+              <table class="usd-l1-table bt-factor-inputs">
+                <caption>Inputs as the artefact stamped them</caption>
+                <thead><tr><th scope="col">Input</th><th scope="col">Print</th><th scope="col">Age</th><th scope="col">Allowed</th></tr></thead>
+                <tbody>
+                  ${
+                    factor.inputs
+                      .map(
+                        (input) => `
+                    <tr>
+                      <th scope="row">${escapeHtml(input.key)}</th>
+                      <td>${
+                        input.recorded
+                          ? escapeHtml(input.print_date || "unstamped")
+                          : `<span class="usd-l1-missing">not in this artefact</span>`
+                      }</td>
+                      <td>${Number.isFinite(input.staleness_business_days) ? `${input.staleness_business_days}bd` : "—"}</td>
+                      <td>${Number.isFinite(input.max_age_business_days) ? `${input.max_age_business_days}bd` : "—"}</td>
+                    </tr>
+                  `
+                      )
+                      .join("") || `<tr><td colspan="4" class="usd-l1-muted">this row reads no staged input</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
+        `
+          )
+          .join("")}
+      </div>
+    </details>
+  `;
+}
+
+
+/** Rules and research, data and infrastructure, and fail-safes, as expandable sections on every test. */
+function renderBacktestingTestSections(testId, payload) {
+  const lib = backtestingLib();
+  if (!lib) return "";
+  const test = lib.testById(testId);
+  const selection = { test: test.id, market: backtestingState.mapMarket, date: backtestingState.selectedDate };
+  if (!test.markets.includes(selection.market)) selection.market = test.markets[0];
+  const links = lib.links(testId);
+  const engineFails = lib.failSafes(backtestingEngine, selection.date);
+  const laneFails = lib.laneFailSafes(payload, backtestingEngine, selection);
+  const list = (entries) =>
+    entries.length
+      ? `<ul class="bt-link-list">${entries
+          .map(
+            (entry) =>
+              `<li><a href="${escapeHtml(entry.href)}"${entry.external ? ' target="_blank" rel="noopener"' : ""}>${escapeHtml(
+                entry.label
+              )}</a><span>${escapeHtml(entry.note || "")}</span></li>`
+          )
+          .join("")}</ul>`
+      : `<p class="bt-note muted">Nothing extra is registered for this test; the shared entries above cover it.</p>`;
+  return `
+    <section class="bt-sections" data-bt-sections="${escapeHtml(testId)}">
+      ${backtestingVersionStamp(lib, payload)}
+      <details class="bt-section" data-bt-section="rules">
+        <summary>Rules and research</summary>
+        <p class="bt-note">${escapeHtml(test.question)}</p>
+        <p class="bt-note muted">${escapeHtml(test.prediction)}</p>
+        ${list(links.rules)}
+      </details>
+      <details class="bt-section" data-bt-section="data">
+        <summary>Data and infrastructure</summary>
+        ${list(links.data)}
+        ${list(links.infrastructure)}
+      </details>
+      <details class="bt-section" data-bt-section="failsafes">
+        <summary>Fail-safes for ${escapeHtml(selection.date || "the selected morning")} · ${escapeHtml(
+          lib.marketLabel(selection.market)
+        )}</summary>
+        <div class="bt-failsafe-wrap">
+          <table class="usd-l1-table bt-failsafe-table">
+            <caption>What each fail-safe checks, whether it passed for this date, and the evidence behind that status.</caption>
+            <thead><tr><th scope="col">Check</th><th scope="col">Status</th><th scope="col">Evidence</th></tr></thead>
+            <tbody>
+              ${[...engineFails, ...laneFails]
+                .map(
+                  (check) => `
+                <tr class="bt-failsafe-row ${backtestingStatusTone(check.status)}">
+                  <th scope="row"><span class="bt-failsafe-id">${escapeHtml(check.id)}</span>${escapeHtml(check.what)}</th>
+                  <td>${backtestingStatusChip(check.status)}</td>
+                  <td class="bt-failsafe-evidence">${
+                    asArray(check.evidence).length
+                      ? asArray(check.evidence).map((item) => `<span>${escapeHtml(item)}</span>`).join("")
+                      : `<span class="usd-l1-muted">${check.status === "passed" ? "no rule fired" : "no evidence recorded"}</span>`
+                  }</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  `;
+}
+
+/** The older runs keep their own group, and every review that has not happened yet says so. */
+function renderBacktestingArchive() {
+  const lib = backtestingLib();
+  if (!lib) return "";
+  return `
+    <section class="bt-archive" data-bt-archive="true">
+      <div class="bt-archive-group">
+        <p class="eyebrow">Older backtests</p>
+        <ul class="bt-link-list">
+          ${lib
+            .olderBacktests()
+            .map(
+              (entry) =>
+                `<li><a href="${escapeHtml(entry.href)}">${escapeHtml(entry.label)}</a><span>${escapeHtml(entry.note)}</span></li>`
+            )
+            .join("")}
+        </ul>
+      </div>
+      <div class="bt-archive-group">
+        <p class="eyebrow">Post-release reviews</p>
+        <ul class="bt-review-list">
+          ${lib
+            .plannedReviews()
+            .map(
+              (review) =>
+                `<li><span class="bt-status warn">${escapeHtml(review.status)}</span><strong>${escapeHtml(
+                  review.label
+                )}</strong><span>${escapeHtml(review.note)}</span></li>`
+            )
+            .join("")}
+        </ul>
+      </div>
+    </section>
+  `;
+}
+
+
+function backtestingMapResize() {
+  if (backtestingMapController && typeof backtestingMapController.resize === "function") {
+    backtestingMapController.resize();
+  }
+}
+
+function destroyBacktestingMap() {
+  if (backtestingMapController && typeof backtestingMapController.destroy === "function") {
+    backtestingMapController.destroy();
+  }
+  backtestingMapController = null;
+  window.removeEventListener("resize", backtestingMapResize);
+}
+
+/** Mount the 3D map (or its flat fallback) over the highlighted path the view model selected. */
+function mountBacktestingMap(model) {
+  const host = document.querySelector("[data-bt-canvas]");
+  const mode = document.querySelector("[data-bt-mode]");
+  if (!host || !window.UsdL1Diagram) {
+    if (mode) mode.textContent = "The diagram library is unavailable; the printed path below carries the same information.";
+    return;
+  }
+  backtestingMapController = window.UsdL1Diagram.create(host, {
+    nodes: model.nodes,
+    edges: model.edges,
+    columns: model.columns,
+    highlight: model.path,
+    onSelect: selectBacktestingNode
+  });
+  host.setAttribute("data-bt-diagram-mode", backtestingMapController.mode || "unknown");
+  if (mode) {
+    mode.textContent =
+      backtestingMapController.mode === "webgl"
+        ? "Three.js map: click a test, then a market, then a date. The highlighted path and the list below always agree."
+        : "3D is unavailable in this browser, so the same map is drawn flat. The list below carries the same path, the same detail and the same missing item.";
+  }
+  window.addEventListener("resize", backtestingMapResize);
+}
+
+function backtestingRerender() {
+  renderBacktestingView();
+  syncBacktestingHash();
+}
+
+/** A click on the map is a change of selection: a test re-picks its first market, a market or date narrows the path. */
+function selectBacktestingNode(node) {
+  const lib = backtestingLib();
+  if (!lib || !node) return;
+  if (node.kind === "test" && node.testId) {
+    backtestingState.mapTest = node.testId;
+    backtestingState.tab = node.testId;
+    const test = lib.testById(node.testId);
+    if (!test.markets.includes(backtestingState.mapMarket)) backtestingState.mapMarket = test.markets[0];
+  } else if (node.kind === "market" && node.market) {
+    backtestingState.mapMarket = node.market;
+  } else if (node.kind === "date" && node.date) {
+    backtestingState.selectedDate = node.date;
+  } else {
+    return;
+  }
+  backtestingRerender();
+}
+
+function setupBacktestingMapControls() {
+  const host = document.getElementById("backtestingMap");
+  if (!host || host.dataset.btBound === "true") return;
+  host.dataset.btBound = "true";
+  const lib = backtestingLib();
+  if (!lib) return;
+
+  host.addEventListener("click", (event) => {
+    const testButton = event.target.closest("[data-bt-test]");
+    if (testButton) {
+      backtestingState.mapTest = testButton.dataset.btTest || "four_markets";
+      backtestingState.tab = backtestingState.mapTest;
+      const test = lib.testById(backtestingState.mapTest);
+      if (!test.markets.includes(backtestingState.mapMarket)) backtestingState.mapMarket = test.markets[0];
+      backtestingRerender();
+      return;
+    }
+    const marketButton = event.target.closest("[data-bt-market]");
+    if (marketButton) {
+      backtestingState.mapMarket = marketButton.dataset.btMarket || backtestingState.mapMarket;
+      backtestingRerender();
+      return;
+    }
+    const dateButton = event.target.closest("[data-bt-date]");
+    if (dateButton) {
+      backtestingState.selectedDate = dateButton.dataset.btDate || backtestingState.selectedDate;
+      backtestingRerender();
+    }
+  });
+  host.addEventListener("change", (event) => {
+    const input = event.target.closest("[data-bt-date-input]");
+    if (input && input.value) {
+      backtestingState.selectedDate = input.value;
+      backtestingRerender();
+    }
+  });
+}
+
+/** Keep the address bar shareable, so a reader can send one morning rather than instructions. */
+function syncBacktestingHash() {
+  const lib = backtestingLib();
+  if (!lib || activeTab !== "usd-layer1-backtester") return;
+  if (!backtestingState.selectedDate) return;
+  const hash = lib.buildHash(backtestingSelection());
+  if (window.location.hash === hash) return;
+  try {
+    window.history.replaceState(null, "", hash);
+  } catch (error) {
+    console.warn("Could not update the Backtesting deep link", error);
+  }
+}
+
+/** `#backtesting[ /<test>/<market>/<date> ]` opens the native tab on that path, in any checkout. */
+function applyBacktestingDeepLink() {
+  const lib = backtestingLib();
+  if (!lib) return null;
+  const link = lib.parseHash(window.location.hash);
+  if (!link.tab) return null;
+  if (link.test) {
+    backtestingState.mapTest = link.test;
+    backtestingState.tab = link.test;
+  }
+  if (link.market) backtestingState.mapMarket = link.market;
+  if (link.date) backtestingState.selectedDate = link.date;
+  return "usd-layer1-backtester";
+}
+
+function backtestingDirection(direction) {
+  const text = String(direction || "").toUpperCase();
+  if (text === "BULLISH") return { label: "USD bullish", tone: "bull" };
+  if (text === "BEARISH") return { label: "USD bearish", tone: "bear" };
+  if (text === "NO_CALL") return { label: "No call", tone: "flat" };
+  return { label: direction ? String(direction) : "No call", tone: "flat" };
+}
+
+/** The morning a reader lands on: the latest one the run scored, else the last morning it holds. */
+function backtestingDefaultDate(payload = {}) {
+  const sessions = asArray(payload.sessions);
+  const scored = [...sessions].reverse().find((session) => {
+    const results = (session.results && (session.results.challenger_v1 || session.results.challenger)) || {};
+    return Object.values(results).some((result) => result === "hit" || result === "miss");
+  });
+  const chosen = scored || sessions[sessions.length - 1] || null;
+  return chosen ? chosen.date : null;
+}
+
+/** Draw the whole view from whatever is loaded: the map first, then the selected test's detail and the archive. */
+function renderBacktestingView() {
+  const updated = document.getElementById("usdLayer1Updated");
+  if (updated) {
+    updated.textContent = backtestingRunError
+      ? `Saved research results unavailable: ${backtestingRunError}`
+      : backtestingRun
+        ? `Last update: ${formatDashboardTime(backtestingRun.generated_at)} \u00b7 research only`
+        : "Loading saved research results...";
+  }
+  const detailHost = document.getElementById("backtestingDetail");
+  if (!backtestingRun) {
+    renderBacktestingMap(null);
+    if (detailHost) detailHost.innerHTML = "";
+    return;
+  }
+  if (!backtestingState.selectedDate) backtestingState.selectedDate = backtestingDefaultDate(backtestingRun);
+  renderBacktestingMap(backtestingRun);
+  if (detailHost) {
+    detailHost.innerHTML = `${renderBacktestingTestSections(backtestingState.mapTest, backtestingRun)}${renderBacktestingArchive()}`;
+  }
+}
+
+/** One request for both artefacts, so opening the tab twice does not fetch twice. */
+function ensureBacktestingLoaded() {
+  if (backtestingRequest) return backtestingRequest;
+  backtestingRequest = Promise.all([
+    fetchLocalJson(backtestingRunUrl)
+      .then((payload) => {
+        backtestingRun = payload;
+        backtestingRunError = null;
+        return payload;
+      })
+      .catch((error) => {
+        backtestingRun = null;
+        backtestingRunError = error?.message || String(error);
+        console.error("USD Layer 1 run artefact unavailable", error);
+        return null;
+      }),
+    fetchLocalJson(backtestingEngineUrl)
+      .then((payload) => {
+        backtestingEngine = payload;
+        backtestingEngineError = null;
+        return payload;
+      })
+      .catch((error) => {
+        backtestingEngine = null;
+        backtestingEngineError = error?.message || String(error);
+        console.error("USD Layer 1 engine artefact unavailable", error);
+        return null;
+      })
+  ]).finally(() => {
+    renderBacktestingView();
+  });
+  return backtestingRequest;
+}
+
 function setTab(tab) {
   const availableTabs = getAvailableTopLevelTabs();
   const fallbackTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -21081,6 +21861,7 @@ function setTab(tab) {
   const researchProofMapView = document.getElementById("researchProofMapView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
   const researchLibraryView = document.getElementById("researchLibraryView");
+  const usdLayer1BacktesterView = document.getElementById("usdLayer1BacktesterView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
   const liveTradingView = document.getElementById("liveTradingView");
   const architectureView = document.getElementById("architectureView");
@@ -21094,6 +21875,7 @@ function setTab(tab) {
   if (researchProofMapView) researchProofMapView.classList.toggle("active-view", activeTab === "research-proof-map");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
   if (researchLibraryView) researchLibraryView.classList.toggle("active-view", activeTab === "research-library");
+  if (usdLayer1BacktesterView) usdLayer1BacktesterView.classList.toggle("active-view", activeTab === "usd-layer1-backtester");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
   if (liveTradingView) liveTradingView.classList.toggle("active-view", activeTab === "live-trading");
   if (architectureView) architectureView.classList.toggle("active-view", activeTab === "architecture");
@@ -21106,6 +21888,12 @@ function setTab(tab) {
   if (activeTab === "research-proof-map") renderResearchProofMap(researchProofMapData || {});
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
   if (activeTab === "research-library") { renderResearchLibrary(); maybeProbeResearchLibraryService(); }
+  // The Backtesting tab is drawn from two committed artefacts: the map first, then the selected test's detail.
+  if (activeTab === "usd-layer1-backtester") {
+    setupBacktestingMapControls();
+    renderBacktestingView();
+    ensureBacktestingLoaded();
+  }
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
   if (activeTab === "live-trading") renderLiveTrading(liveTradingData || {});
   // The System section's own rule page: static copy, so it renders the same whether or not a snapshot loaded,
@@ -21164,6 +21952,12 @@ function tabFromHash() {
     return "";
   }
   hash = hash.trim();
+  // #backtesting and #backtesting/<test>/<market>/<date> are the tab's own links: the selection they carry is
+  // applied before the view is drawn, so a pasted link lands on the same test, market and morning.
+  if (hash === "backtesting" || hash.indexOf("backtesting/") === 0) {
+    applyBacktestingDeepLink();
+    return "usd-layer1-backtester";
+  }
   return getAvailableTopLevelTabs().includes(hash) ? hash : "";
 }
 
@@ -21864,6 +22658,7 @@ async function loadDashboard() {
 }
 
 setupTabs();
+setupBacktestingMapControls();
 setupResearchLibraryControls();
 setupBacktestEvidenceControls();
 setupArchitectureControls();

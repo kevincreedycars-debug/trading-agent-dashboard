@@ -1,5 +1,31 @@
 # Session Notes
 
+2026-11-15 evening (the Backtesting tab made native, on `#backtesting`, ported onto `origin/main` `4b6423b0`) -
+the 10 November release put the USD Layer 1 backtester on a page of its own because `main` did not carry the panel;
+this port makes it a tab of the dashboard itself, `data-tab="usd-layer1-backtester"` unchanged so saved navigation
+still resolves, reached from the top menu's `index.html#backtesting` and from the rail, with deep links
+`#backtesting/<test>/<market>/<date>` kept in step as the reader selects (`#backtesting/four_markets/EURUSD/2026-10-12`
+and `.../2026-10-09` are the two acceptance paths). The engine, the Three.js diagram and its 2D fallback, the two
+artefacts, the rulebook wiring, the n8n shadow export and the asset links are the research branch's own code, moved
+rather than rewritten, and `lib/backtesting_native.js` gains two readers: `staleInputs()` lists every row the engine
+refused with the reason (including prints that carry a date but no time of day, so they are unclocked at the 05:00
+cutoff) and `voteRegister()` prints the recorded vote symbol per direction row with its state, whether it counted and
+a tally. The tab prints those and E5's own deadband sentence and deliberately prints no family `net_score`, because
+the artefacts store one vote symbol per book row and a computed net would be the tab's arithmetic rather than the
+run's. Read back at 1440 and 390 pixels through `tmp/probe-acceptance.js`: `2026-10-12` is a miss with EUR/USD
+`-0.3194%`, `2026-10-09` is excluded from directional accuracy with E5 `abstained`, the refused rows
+`live.f5-dxy-delta` and `risk.usd-safe-haven-demand` named with the unclocked reason, 2 rows unable to vote, no page
+error and nothing wider than the phone. The phone needed one layout change: below 620 pixels the vote and fail-safe
+tables become stacked cards and `.bt-canvas` holds its canvas absolutely at `inset: 0` so the wide drawing buffer can
+no longer stretch the panel. Guards: `tests/backtesting_native.test.js` 13/13 and
+`tests/backtesting_native.browser.test.js` 7/7, the browser file now asserting that no section, panel, table or
+wrapper overflows 390 pixels. Triage of the full suite: the six failures left over - `site_nav_consistency` 3 of 5
+(same one stale `index.html` in both trees), chart pan, chart zoom, `backtesting_development_release` and
+`research_library.browser` - reproduce in a clean worktree of `origin/main` `4b6423b0`; the two that did not,
+`refresh_progress` and the research-library registry hashes, were stale working-tree copies of six
+`data/live-trading*.json` snapshots and two backtester artefacts, restored from `HEAD` and now 26/26 and 41/41.
+Nothing published yet: the commit, the PR and the live read-back are the remaining steps.
+
 2026-11-15 afternoon (the blind lane published beside the other two, and its feed task made able to write) -
 FTMO 3 now reads on the published dashboard like the other two lanes: its own strip, `Live L2L Blind · Connected`
 in the connected tone rather than the active one, its own lane tab and card, and `data/live-trading.blind.json` in

@@ -1,4 +1,26 @@
 # Changelog
+## 2026-11-15 - The USD Layer 1 backtester becomes the Backtesting tab
+
+- Why: the 10 November release had to cut the panel onto a standalone page, `usd-layer1-backtester.html`, because
+  the published `main` did not carry it. The owner asked for it inside the dashboard, reachable from the normal menu.
+- What was built: `index.html#backtesting` (`data-tab="usd-layer1-backtester"`, so saved navigation still resolves),
+  a deep-link grammar `#backtesting/<test>/<market>/<date>` kept in step with the reader's selection, and the panel
+  itself - the engine's morning states and the frozen book, the four tests, the map, the printed path, the fail-safes,
+  the 25-row factor ledger and the asset and infrastructure sections - rendered from the two committed artefacts and
+  nothing else. `lib/backtesting_native.js` adds `staleInputs()`, the rows the engine refused with the reading that
+  broke them, and `voteRegister()`, the recorded vote symbol per direction row with its state and a tally. No family
+  `net_score` is printed: the artefacts store one vote symbol per row, so a net would be the tab's arithmetic.
+- Phone: below 620 pixels the vote and fail-safe tables print as stacked cards, and the map canvas is held absolutely
+  at `inset: 0` so its wide drawing buffer cannot stretch the panel; no section, panel, table or wrapper overflows.
+- Guards: `tests/backtesting_native.test.js` 13/13 (every link target, the fail-safe statuses against the fired-rule
+  log, the ledger against the stored strings, the refused inputs against the engine's own E3 sentence, the deep
+  links), `tests/backtesting_native.browser.test.js` 7/7 (normal menu, the three columns, a scored and a blocked
+  morning with all 25 factors, a deep link, 390 pixels with no sideways scroll, and the 12 October miss and
+  9 October no call read from the rendered tab at both widths).
+- Still open: publication to `main` re-publishes GitHub Pages, so it is done as its own operation, and the suite's
+  remaining failures are the ones that already fail on `origin/main` (nav drift in `index.html`, chart pan and zoom,
+  the old release board's `Backtest Engine` selector and the research-library browser file).
+
 ## 2026-11-10 - USD Layer 1 Backtester published as a page of its own
 
 - Why: the panel was finished on `research/usd-session-20261013`, but the published dashboard is served from
