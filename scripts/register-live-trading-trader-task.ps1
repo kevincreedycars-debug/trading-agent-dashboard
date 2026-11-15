@@ -98,6 +98,13 @@ param(
   # instead of looking for a tree nobody has created.
   [string] $Published = "",
   [switch] $Arm,
+  # The token the task runs with. Off is the engine's default - the interactive user with the token it holds, which
+  # is what lanes 1 and 2 were registered with. On asks for `Highest`, and a lane whose private identity file is ACL'd
+  # to `Administrators` and `SYSTEM` needs it: under the filtered token of a Limited task the Administrators group is
+  # deny-only, so the order tool cannot read the file it has to check, and the loop refuses every tick with
+  # `identity_missing` while sending nothing (lane 3, 2026-11-15, first armed tick). Stated as a switch rather than a
+  # default so no existing lane's registration changes because this file did.
+  [switch] $Elevated,
   [switch] $NoStart,
   [switch] $Remove,
   [switch] $Show,
@@ -452,6 +459,7 @@ $plan = [ordered]@{
   live_wrapper_armed = $liveWrapperArmed
   order_path         = "tools/mt5-bridge/live-trading-order.py, one pending limit per confirmed row"
   armed              = [bool]$Arm
+  run_level          = $(if ($Elevated) { "Highest (asked for with -Elevated: the private identity file admits Administrators and SYSTEM only)" } else { "the engine's default for the interactive user (no -Elevated)" })
   chain_feed         = [bool]$ChainFeed
   feed_snapshot      = $(if ($ChainFeed) { $feedOutPath } else { "separate task (not chained)" })
   feed_log           = $(if ($ChainFeed) { $feedLogPath } else { "separate task (not chained)" })
@@ -567,6 +575,17 @@ $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(20) `
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew `
   -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
   -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
+# An empty splat leaves the principal exactly as the engine would register it, which is what every lane before this
+# switch was registered with. -Elevated names the same interactive user at `Highest`, so the task's token is a member
+# of the Administrators group rather than the deny-only filtered copy of it, and the order tool can read the private
+# identity file it has to check before any send. Both words are stated here rather than inherited from a console
+# that happened to be open.
+$principalArgument = @{}
+if ($Elevated) {
+  $principalArgument = @{
+    Principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
+  }
+}
 $ruleSourceWords = if ($Blind) { "the published ladder" } else { "the published calls and ladder" }
 $dayCapWords = if ($MaxPerDay -gt 0) { "a cap of $MaxPerDay trades a day" } else { "no daily entry cap" }
 $description = "Live Trading trader loop: one run per M5 bar, reading $ruleSourceWords and " +
@@ -583,10 +602,11 @@ if ($existing) {
 }
 
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
-  -Description $description | Out-Null
+  -Description $description @principalArgument | Out-Null
 
 $task = Get-ScheduledTask -TaskName $TaskName
 $plan["task_state"] = $task.State
+$plan["task_principal"] = "$($task.Principal.UserId) / $($task.Principal.LogonType) / $($task.Principal.RunLevel)"
 $plan["registered_at"] = (Get-Date).ToString("o")
 
 if (-not $NoStart) {

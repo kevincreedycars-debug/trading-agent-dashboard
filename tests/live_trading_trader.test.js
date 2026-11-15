@@ -2470,7 +2470,34 @@ test("the registration script rewrites the live wrapper only when it registers, 
   );
 });
 
-// The page can only tell one host from another if the heartbeat says which host wrote it. During a migration
+// A lane's private identity file is ACL'd to Administrators and SYSTEM, and a task registered at the engine's default
+// run level runs with the filtered token in which that group is deny-only: lane 3's first armed tick was refused with
+// identity_missing and sent nothing, and the journal shows the refusal rather than a placement. The run level is a
+// registration switch so that no existing lane's principal changes because this file did.
+test("a lane whose identity file admits Administrators only is registered elevated, and only when asked", () => {
+  const source = fs.readFileSync(path.join(repoRoot, "scripts", "register-live-trading-trader-task.ps1"), "utf8");
+  assert.match(source, /\[switch\] \$Elevated/, "the run level is a registration flag rather than a default");
+  assert.match(source, /run_level\s+=/, "the plan states the run level the registration would write");
+  const principalBranch = source.indexOf("$principalArgument = @{}");
+  assert.ok(principalBranch > 0, "one place builds the principal the registration carries");
+  assert.match(
+    source.slice(principalBranch, principalBranch + 700),
+    /New-ScheduledTaskPrincipal[^\n]*-UserId [^\n]*-LogonType Interactive -RunLevel Highest/,
+    "the elevated branch names the interactive user at Highest"
+  );
+  assert.equal(
+    /-RunLevel Highest/.test(source.slice(0, principalBranch)),
+    false,
+    "no earlier line asks for Highest, so a registration without the switch is the one it always was"
+  );
+  assert.match(
+    source,
+    /-Description \$description @principalArgument/,
+    "the task is registered with the principal the switch built, and with nothing when it did not"
+  );
+});
+
+
 // two machines can hold the same lane, each with its own lock, and a lock on one of them says nothing about the
 // other: the computer name in the heartbeat is the only evidence of which one actually ran. The absolute path
 // is deliberately left out, because it would name the operator's Windows profile on a public page.
