@@ -8335,6 +8335,7 @@ body {
 .live-trading-lane-card.stale { border-color: #b4742a; background: #12141a; }
 .live-trading-lane-card.error { border-color: #7a3a44; }
 .live-trading-lane-card.parked { border-color: #35485f; background: #0b131d; }
+.live-trading-lane-card.connected { border-color: #3d6f8a; }
 .live-trading-lane-card header { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .live-trading-lane-heading { display: grid; gap: 2px; min-width: 0; }
 .live-trading-lane-card h4 { margin: 0; min-width: 0; color: #dbe6f3; font: 700 12px 'IBM Plex Mono', monospace; letter-spacing: .04em; overflow-wrap: anywhere; }
@@ -8347,6 +8348,7 @@ body {
 .live-trading-lane-badge.stale { color: #ffcf8a; border-color: #b4742a; background: rgba(224, 165, 60, .22); }
 .live-trading-lane-badge.error { color: #ff9aa4; border-color: #7a3a44; background: rgba(255, 107, 122, .12); }
 .live-trading-lane-badge.parked { color: #93a7bf; border-color: #35485f; background: rgba(123, 142, 166, .10); }
+.live-trading-lane-badge.connected { color: #8fd3f0; border-color: #3d6f8a; background: rgba(80, 184, 226, .12); }
 .live-trading-alert { margin: 0; padding: 8px 10px; border: 1px solid #7a5a24; border-left: 3px solid #e0a53c; border-radius: 8px; background: rgba(224, 165, 60, .08); color: #f0c274; font: 500 11px 'IBM Plex Mono', monospace; line-height: 1.5; overflow-wrap: anywhere; }
 .live-trading-lane-alert { margin: 0; padding: 7px 9px; border: 1px solid #b4742a; border-left: 3px solid #e0a53c; border-radius: 6px; background: rgba(224, 165, 60, .10); color: #ffd9a3; font: 600 11px/1.5 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-lane-rows { display: grid; gap: 4px; margin: 0; min-width: 0; }
@@ -8383,6 +8385,8 @@ body {
 .live-trader-status.stale { color: #ffcf8a; border-color: #b4742a; background: rgba(28, 22, 10, .94); }
 .live-trader-status.error { color: #ff9aa4; border-color: #7a3a44; }
 .live-trader-status.disabled { color: #93a7bf; border-color: #35485f; }
+.live-trader-status.connected { color: #8fd3f0; border-color: #3d6f8a; background: rgba(8, 20, 30, .94); }
+.live-trader-status.parked { color: #93a7bf; border-color: #35485f; }
 .live-trader-status.unknown { color: #b9c8d9; border-color: #35485f; }
 @keyframes live-trader-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(126, 240, 196, .16); } 50% { box-shadow: 0 0 0 8px rgba(126, 240, 196, .04); } }
 @media (prefers-reduced-motion: reduce) { .live-trader-status.live .live-trader-dot { animation: none; } }
@@ -8490,6 +8494,7 @@ body {
 .live-trading-kind { display: inline-block; padding: 2px 7px; border: 1px solid #35485f; border-radius: 999px; color: #9fb3c9; font: 700 9.5px 'IBM Plex Mono', monospace; letter-spacing: .04em; white-space: nowrap; }
 .live-trading-kind.put-back { color: #f3cd85; border-color: #6b5525; background: rgba(224, 165, 60, .1); }
 .live-trading-kind.flag { color: #ffb2a8; border-color: #7a3a3a; background: rgba(255, 138, 128, .14); }
+.live-trading-kind.connection-test { color: #9fd8f2; border-color: #3d6f8a; background: rgba(80, 184, 226, .14); }
 .live-trading-card { display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid #26374b; border-radius: 10px; background: linear-gradient(180deg, #111c2b, #0c1520); }
 .live-trading-card.unavailable { border-style: dashed; }
 .live-trading-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; min-width: 0; }
@@ -8568,6 +8573,7 @@ body {
 .live-trading-status.stale { border-left-color: #b4742a; }
 .live-trading-status.error { border-left-color: #7a3a44; }
 .live-trading-status.muted { border-left-color: #35485f; }
+.live-trading-status.connected { border-left-color: #3d6f8a; }
 .live-trading-status-bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px 12px; min-width: 0; }
 .live-trading-status-button { display: grid; gap: 1px; padding: 7px 12px; border: 1px solid #233246; border-radius: 8px; background: #131722; color: #a9bdd4; font: 600 12px 'IBM Plex Mono', monospace; text-align: left; cursor: pointer; }
 .live-trading-status-button:hover { border-color: #3d5a7a; }
@@ -8579,6 +8585,12 @@ body {
 .live-trading-status-button.waiting .live-trading-status-word { color: #f0c274; }
 .live-trading-status-button.stale .live-trading-status-word { color: #ffcf8a; }
 .live-trading-status-button.error .live-trading-status-word { color: #ff9aa4; }
+.live-trading-status-button.connected .live-trading-status-word { color: #8fd3f0; }
+.live-trading-status-button.muted .live-trading-status-word { color: #a9bdd4; }
+/* The lane's own rule, stated above the pair-by-pair table for the lane whose rule was stated separately. It is a
+   card rather than a caption so it reads as configuration, not as a reading of the feed. */
+.live-trading-lane-rule-card { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid #26374b; border-left: 3px solid #3d6f8a; border-radius: 8px; background: #0a1420; }
+.live-trading-lane-rule-title { margin: 0; color: #dbe6f3; font: 700 11px 'IBM Plex Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
 .live-trading-status-meta { color: #8ea6c0; font: 500 10px 'IBM Plex Mono', monospace; }
 .live-trading-status-caption { margin: 0; max-width: 62ch; color: #90a4bb; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .live-trading-status-panel { display: grid; gap: 8px; padding-top: 6px; border-top: 1px solid #1d2a3a; }

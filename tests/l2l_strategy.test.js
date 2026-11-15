@@ -831,6 +831,8 @@ test("a held pair is read as in-trade for every pair the feed publishes, and cou
 
   // The chart's three lines are the trade's own ticket, with the entry named as the trade's rather than as
   // a fresh L2L crossing.
+
+
   const markers = planMarkerPrices(readings[2]);
   assert.deepEqual(markers.map(marker => marker.price), [30774.61, 30719.646, 31049.43]);
   assert.equal(markers[0].label, "trade entry 30774.61");
@@ -896,3 +898,59 @@ test("a holding whose side or level cannot be read states what it can and no ari
   assert.deepEqual([...STAGES], ["unavailable", "no-call", "no-levels", "waiting", "confirmed", "in-trade", "blocked"]);
 });
 
+// ---- The stop is one fifth of the distance the ticket actually has to travel --------------------------
+// The owner's rule of 2026-11-15 is that the stop is one fifth of the entry-to-target distance on both sides.
+// The ladder on FTMO 3 is uniform, so an even ladder cannot tell "one fifth of this ticket's reward" apart from
+// "one fifth of the ladder's spacing": a module that measured spacing would pass on the real ladder and be wrong
+// the first time a line was marked off-grid. These two cases use an uneven ladder - a 1,500 gap either side of the
+// entry and a 2,600 gap beyond the target - so the only reading that produces the asserted stops is the ticket's
+// own entry-to-target distance.
+const UNEVEN_LEVELS = [
+  { price: 81900.0, role: "derived", label: "derived 81900" },
+  { price: 83000.0, role: "seed", label: "seed 83000" },
+  { price: 84500.0, role: "seed", label: "seed 84500" },
+  { price: 86000.0, role: "derived", label: "derived 86000" },
+  { price: 88600.0, role: "derived", label: "derived 88600" }
+];
+
+test("a buy stop sits one fifth of its own entry-to-target distance below the level", () => {
+  const plan = buildPlan({
+    symbol: "BTCUSD",
+    direction: "BULLISH",
+    levels: UNEVEN_LEVELS,
+    bars: barsEndingAt(84620, { previousClose: 84480, low: 84450, high: 84660 }),
+    point: 0.01,
+    rMultiple: 5
+  });
+  assert.equal(plan.stage, "confirmed", plan.reason);
+  const geometry = plan.plan;
+  assert.equal(geometry.entry, 84500);
+  assert.equal(geometry.target, 86000, "the target is the next marked line, not the ladder's spacing");
+  assert.equal(geometry.target - geometry.entry, 1500);
+  assert.equal(geometry.risk, 300, "one fifth of 1,500");
+  assert.equal(geometry.stop, 84200, "84500 - 300");
+  assert.equal(geometry.r_multiple, 5);
+  // Stated as the arithmetic itself, so a rounding change cannot quietly satisfy the numbers above.
+  assert.equal(Math.round((geometry.target - geometry.entry) / geometry.r_multiple * 100) / 100, geometry.risk);
+  assert.equal(geometry.entry - geometry.risk, geometry.stop);
+});
+
+test("a sell stop sits one fifth of its own entry-to-target distance above the level", () => {
+  const plan = buildPlan({
+    symbol: "BTCUSD",
+    direction: "BEARISH",
+    levels: UNEVEN_LEVELS,
+    bars: barsEndingAt(84380, { previousClose: 84520, low: 84340, high: 84550 }),
+    point: 0.01,
+    rMultiple: 5
+  });
+  assert.equal(plan.stage, "confirmed", plan.reason);
+  const geometry = plan.plan;
+  assert.equal(geometry.entry, 84500);
+  assert.equal(geometry.target, 83000, "the target is the next marked line the other way");
+  assert.equal(geometry.entry - geometry.target, 1500);
+  assert.equal(geometry.risk, 300, "one fifth of 1,500");
+  assert.equal(geometry.stop, 84800, "84500 + 300");
+  assert.equal(geometry.r_multiple, 5);
+  assert.equal(geometry.entry + geometry.risk, geometry.stop);
+});

@@ -142,9 +142,9 @@ test("each account card states the lane, the arming, the heartbeat and its age, 
       assert.ok(card.includes(expected), `the card must state ${expected}`);
     }
     // The heartbeat row carries both the age and the instant, so a reader can see which run wrote it.
-    assert.match(card, /Heartbeat\s*1m ago - \d{4}-\d{2}-\d{2}T/, "the heartbeat row must carry its age and its timestamp");
+    assert.match(card, /Last strategy tick\s*1m ago - \d{4}-\d{2}-\d{2}T/, "the strategy tick row must carry its age and its timestamp");
     // The snapshot row is the account's own snapshot age, drawn from the snapshot rather than the heartbeat.
-    assert.match(card, /Snapshot\s*[0-9]+[a-z]? ?[0-9]*m? ?ago|[0-9]+d ago/, "the card must state the snapshot's age");
+    assert.match(card, /Last broker update\s*[0-9]+[a-z]? ?[0-9]*m? ?ago|[0-9]+d ago/, "the card must state the broker snapshot's age");
 
     const rows = await page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-1"] .live-trading-lane-row').count();
     assert.ok(rows >= 7, `the primary card must draw its rows, saw ${rows}`);

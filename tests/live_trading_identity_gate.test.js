@@ -231,3 +231,104 @@ test("lane 1's own run is unchanged: no identity file, no magic flag, its own nu
   assert.equal(sends[0].magic, 20261004, "the tool's own default magic is lane 1's");
 });
 
+// ---- The blind lane's own close path ---------------------------------------------------------------
+// What the 2026-11-14 connection test actually exercised, reproduced offline. The FTMO 3 lane owns magic
+// 20261006; the tool's default is still lane 1's 20261004, and a run has to name its lane's number *and* its
+// identity file before it may touch a ticket carrying it. The first test is the refusal that cost the test 31
+// seconds on the day; the second is the close that worked on the retry; the third is the refusal that protects
+// the other lane's tickets.
+const LANE3_MAGIC = 20261006;
+const LANE3_LOGIN = 531000584;
+const TERMINAL3 = "C:\\Program Files\\FTMO Global Markets MT5 Terminal 3";
+
+function laneThreeState(over = {}) {
+  return baseState({
+    login: LANE3_LOGIN,
+    server: "FTMO-Server3",
+    terminal_path: TERMINAL3,
+    terminal_name: "FTMO Global Markets MT5 Terminal 3",
+    symbols: {
+      BTCUSD: {
+        name: "BTCUSD",
+        digits: 2,
+        point: 0.01,
+        volume_min: 0.01,
+        volume_step: 0.01,
+        volume_max: 5,
+        trade_stops_level: 0,
+        filling_mode: 2,
+        trade_mode: 4
+      }
+    },
+    ticks: { BTCUSD: { bid: 64568.1, ask: 64568.5 } },
+    positions: [{
+      ticket: 700002,
+      symbol: "BTCUSD",
+      magic: LANE3_MAGIC,
+      type: 0,
+      volume: 0.01,
+      price_open: 64493.98,
+      sl: 64008.85,
+      tp: 0
+    }],
+    ...over
+  });
+}
+
+function laneThreeIdentity() {
+  return { login: LANE3_LOGIN, server: "FTMO-Server3", terminal_path: TERMINAL3 };
+}
+
+test("the FTMO 3 close accepts its own ticket when the run names magic 20261006 and its identity", () => {
+  const closed = run({
+    action: "close",
+    state: laneThreeState(),
+    identityDocument: laneThreeIdentity(),
+    args: ["--magic", String(LANE3_MAGIC), "--path", TERMINAL3]
+  });
+  assert.equal(closed.status, 0, closed.stderr || closed.stdout);
+  assert.equal(closed.sends.length, 1);
+  assert.equal(closed.sends[0].magic, LANE3_MAGIC);
+  assert.equal(closed.sends[0].position, 700002);
+  assert.equal(closed.record?.answer?.done, true);
+});
+
+test("the FTMO 3 close refuses a ticket carrying another lane's magic", () => {
+  const refused = run({
+    action: "close",
+    state: laneThreeState({ positions: [{
+      ticket: 700002,
+      symbol: "BTCUSD",
+      magic: 20261004,
+      type: 0,
+      volume: 0.01,
+      price_open: 64493.98,
+      sl: 64008.85,
+      tp: 0
+    }] }),
+    identityDocument: laneThreeIdentity(),
+    args: ["--magic", String(LANE3_MAGIC), "--path", TERMINAL3]
+  });
+  assert.equal(refused.status, 3);
+  assert.equal(refused.sends.length, 0, "nothing was sent");
+  assert.match(refused.record?.message || "", /magic 20261004/);
+});
+
+test("the 2026-11-14 refusal is reproduced: its own ticket under the default magic is not touched", () => {
+  // No --magic and no identity: exactly the run that was refused at 21:49:36, one minute before the retry.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "identity-gate-"));
+  const statePath = path.join(dir, "state.json");
+  const sendsPath = path.join(dir, "sends.log");
+  fs.writeFileSync(statePath, JSON.stringify(laneThreeState()), "utf8");
+  const env = { ...process.env, FAKE_MT5_STATE: statePath, FAKE_MT5_SENDS: sendsPath, FAKE_MT5_COUNTER: path.join(dir, "calls.txt") };
+  env.PYTHONPATH = FAKE_MT5 + (env.PYTHONPATH ? path.delimiter + env.PYTHONPATH : "");
+  const result = spawnSync(PYTHON, [
+    TOOL, "close", "--ticket", "700002",
+    "--journal", path.join(dir, "orders.log"), "--path", TERMINAL3, "--confirm-live"
+  ], { cwd: dir, encoding: "utf8", env, timeout: 60000 });
+  assert.equal(result.status, 3);
+  assert.match(String(result.stdout), /carries magic 20261006, not this (tool's|lane's) 20261004/);
+  assert.equal(fs.existsSync(sendsPath), false, "the bridge was never handed an order");
+});
+
+

@@ -350,7 +350,7 @@ test("ftmo-1 selected with the second account's magic refuses, so a lane cannot 
 });
 
 test("a lane the lanes file does not carry is refused instead of guessed", () => {
-  assertRefusedBeforeAnySend(["--lane", "ftmo-3"], /is not one of the lanes config\/live-trading-lanes\.json carries/);
+  assertRefusedBeforeAnySend(["--lane", "ftmo-4"], /is not one of the lanes config\/live-trading-lanes\.json carries/);
 });
 
 

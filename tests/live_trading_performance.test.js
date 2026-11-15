@@ -281,7 +281,7 @@ test("a close is fresh on its first ticket and a put-back when it re-aims at the
   assert.equal(byId.get(199500177).kind, "put-back");
   assert.equal(byId.get(199442155).kind, "fresh");
 
-  assert.deepEqual(kinds.counts, { fresh: 4, putBack: 3, fiveR: 3, unstated: 0 });
+  assert.deepEqual(kinds.counts, { fresh: 4, putBack: 3, fiveR: 3, unstated: 0, connectionTest: 0 });
 });
 
 test("the three bitcoin put-backs are flagged at five to one on a lane whose rule is three", () => {
@@ -331,6 +331,7 @@ test("the lane names its own re-entry, and the three five-to-one rows keep the n
 test("a stop that has been moved to the entry leaves the multiple unstated rather than invented", () => {
   const rows = [{
     position_id: 1,
+
     symbol: "EURUSD",
     side: "sell",
     price_open: 1.11677,
@@ -378,3 +379,98 @@ test("the Closed trades table prints the kind and states what a re-entry and a 5
   assert.match(panel, /performance\.ticketKinds\(trades, \{ rMultiple: laneView\?\.rMultiple, reentryLabel: reentry\.label \}\)/);
 });
 
+// ---- The connection test on the blind lane ---------------------------------------------------------------
+// The 2026-11-14 deployment proof on FTMO 3 was one minimum-size BTCUSD ticket commented
+// `tech-conn-test-ftmo3`, closed 151 seconds later for +0.32 net. It is a real close on the account, so it stays
+// in the Closed trades table and in the balance, and it is not a run of the rule, so it is in none of the
+// strategy figures. These tests hold the module to both halves of that.
+function connectionTestTrade(over = {}) {
+  return {
+    position_id: 200523930,
+    symbol: "BTCUSD",
+    dashboard_asset: "BTC",
+    side: "buy",
+    volume: 0.01,
+    price_open: 64493.98,
+    price_close: 64568.15,
+    stop_loss: 64008.85,
+    take_profit: null,
+    net_profit: 0.32,
+    comment: "tech-conn-test-ftmo3",
+    opened: { time_utc: "2026-11-14T21:47:35+00:00" },
+    closed: { time_utc: "2026-11-14T21:50:06+00:00" },
+    duration_seconds: 151,
+    ...over
+  };
+}
+
+function ruleTrade(over = {}) {
+  return {
+    position_id: 300000001,
+    symbol: "EURUSD",
+    dashboard_asset: "EUR",
+    side: "buy",
+    volume: 0.01,
+    price_open: 1.08,
+    price_close: 1.0809,
+    stop_loss: 1.07982,
+    take_profit: 1.0818,
+    net_profit: 0.09,
+    comment: "l2l-rule-eur",
+    opened: { time_utc: "2026-11-13T09:00:00+00:00" },
+    closed: { time_utc: "2026-11-13T10:00:00+00:00" },
+    duration_seconds: 3600,
+    ...over
+  };
+}
+
+test("a connection test is in the account's own close count and in none of the strategy rows", () => {
+  const trades = [ruleTrade(), ruleTrade({ position_id: 300000002, net_profit: -0.09 }), connectionTestTrade()];
+  const summary = performance.summarise(trades, { history: { window_days: 14 } });
+
+  assert.equal(summary.trades, 2, "the Blind trade count is the two rule trades");
+  assert.equal(summary.totals.trades, 2);
+  assert.equal(summary.totals.wins, 1);
+  assert.equal(summary.totals.losses, 1);
+  assert.equal(summary.totals.net, 0, "the test's +0.32 is not in the Blind net");
+  assert.deepEqual(summary.connectionTests, { trades: 1, net: 0.32, position_ids: [200523930] });
+  assert.deepEqual(summary.account, { trades: 3, net: 0.32 }, "the account's own total still carries every close");
+  // The three slices add back to the Blind count, not to the account's, and never contain the test's asset.
+  assert.equal(summary.weekday.reduce((total, row) => total + row.trades, 0), 2);
+  assert.equal(summary.asset.reduce((total, row) => total + row.trades, 0), 2);
+  assert.equal(summary.asset.some(row => row.key === "btc"), false);
+  assert.equal(summary.strategy.some(row => row.key === "unknown_key" || row.label === performance.UNKNOWN_STRATEGY), false);
+  assert.equal(Math.round(summary.weekday.reduce((total, row) => total + row.net, 0) * 100) / 100, 0);
+});
+
+test("the connection test is labelled as its own kind and does not make the next real ticket a put-back", () => {
+  const firstRule = ruleTrade({ position_id: 300000003, symbol: "BTCUSD", dashboard_asset: "BTC" });
+  const secondRule = ruleTrade({
+    position_id: 300000004,
+    symbol: "BTCUSD",
+    dashboard_asset: "BTC",
+    price_open: 64500,
+    close: undefined,
+    take_profit: firstRule.take_profit
+  });
+  const kinds = performance.ticketKinds([connectionTestTrade(), firstRule, secondRule], { rMultiple: 5 });
+  const byId = new Map(kinds.rows.map(row => [row.position_id, row]));
+
+  assert.equal(byId.get(200523930).kind, "connection-test");
+  assert.equal(byId.get(200523930).label, "Connection test");
+  assert.equal(byId.get(200523930).connectionTest, true);
+  assert.equal(byId.get(200523930).fiveR, false);
+  assert.equal(byId.get(300000003).kind, "fresh", "the first rule ticket is not read against the test");
+  assert.equal(byId.get(300000004).kind, "put-back", "the rule's own second ticket still reads as a put-back");
+  assert.equal(kinds.counts.connectionTest, 1);
+  assert.equal(kinds.counts.fresh, 1);
+  assert.equal(kinds.counts.putBack, 1);
+});
+
+test("a caller may include the tests explicitly, and the default is to leave them out", () => {
+  const trades = [ruleTrade(), connectionTestTrade()];
+  const included = performance.summarise(trades, { includeConnectionTests: true, history: {} });
+  assert.equal(included.trades, 2);
+  assert.equal(included.connectionTests.trades, 1);
+  assert.equal(included.totals.net, 0.41);
+});

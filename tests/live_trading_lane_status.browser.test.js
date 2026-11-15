@@ -60,7 +60,7 @@ function heartbeat({ lane, writtenAt, armed, status = "nothing_to_place", grid, 
 }
 
 
-function lanesDocument({ laneTwoEnabled = true, laneTwoLogin = "***222", laneTwoServer = "FTMO-Server3" } = {}) {
+function lanesDocument({ laneTwoEnabled = true, laneTwoLogin = "***222", laneTwoServer = "FTMO-Server3", laneThree = false } = {}) {
   return {
     schema_version: "live-trading-lanes-v1",
     generated_at_utc: new Date().toISOString(),
@@ -89,7 +89,19 @@ function lanesDocument({ laneTwoEnabled = true, laneTwoLogin = "***222", laneTwo
         status: laneTwoEnabled ? "published" : "disabled",
         trader: { published: "data/live-trading-trader.ftmo-2.json" }
       }
-    ]
+    ].concat(laneThree ? [{
+      id: "ftmo-3",
+      label: "Live L2L Blind",
+      enabled: true,
+      feed: "data/live-trading.blind.json",
+      magic: 20261006,
+      strategy: { grid: "full", r_multiple: 5 },
+      account_login_masked: "***584",
+      account_server: "FTMO-Server3",
+      status: "published",
+      // No heartbeat has ever been published for this lane: its trader is registered and disabled.
+      trader: { published: null, reason: "no heartbeat at C:\\ftmo3\\tmp\\live-trading-trader-status.json" }
+    }] : [])
   };
 }
 
@@ -103,7 +115,7 @@ function contentType(filePath) {
   return "text/plain; charset=utf-8";
 }
 
-async function createHarness({ lanes, laneOne = null, laneTwo = null, heartbeats = {} } = {}) {
+async function createHarness({ lanes, laneOne = null, laneTwo = null, laneThree = null, heartbeats = {} } = {}) {
   const server = http.createServer((req, res) => {
     const pathname = new URL(req.url || "/", "http://127.0.0.1").pathname;
     const json = body => {
@@ -117,6 +129,7 @@ async function createHarness({ lanes, laneOne = null, laneTwo = null, heartbeats
     if (pathname === "/data/live-trading-lanes.json") return json(lanes);
     if (pathname === "/data/live-trading.json") return laneOne ? json(laneOne) : missing();
     if (pathname === "/data/live-trading.account2.json") return laneTwo ? json(laneTwo) : missing();
+    if (pathname === "/data/live-trading.blind.json") return laneThree ? json(laneThree) : missing();
     if (pathname === "/data/live-trading-trader.ftmo-1.json") return heartbeats["ftmo-1"] ? json(heartbeats["ftmo-1"]) : missing();
     if (pathname === "/data/live-trading-trader.ftmo-2.json") return heartbeats["ftmo-2"] ? json(heartbeats["ftmo-2"]) : missing();
     const relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
@@ -174,8 +187,8 @@ test("the button follows the selector, and its panel states the facts behind the
   try {
     const { page, errors } = await openLiveTrading(harness);
     // Lane 1: a fresh armed heartbeat, a fresh feed, an account that matches and a terminal that allows it.
-    assert.equal(await statusWord(page), "Live \u00b7 armed");
-    assert.equal(await statusState(page), "live");
+    assert.equal(await statusWord(page), "Active");
+    assert.equal(await statusState(page), "active");
     assert.equal(await page.locator("#liveTradingStatusPanel").isVisible(), false, "closed until it is pressed");
 
     await page.locator("#liveTradingPanel .live-trading-status-button").click();
@@ -183,19 +196,19 @@ test("the button follows the selector, and its panel states the facts behind the
     assert.equal(await page.locator("#liveTradingPanel .live-trading-status-button").getAttribute("aria-expanded"), "true");
     const laneOnePanel = await page.locator("#liveTradingStatusPanel").innerText();
     assert.match(laneOnePanel, /\*\*\*614 on FTMO-Server/);
-    assert.match(laneOnePanel, /feed age[\s\S]*inside the 15m window/i);
-    assert.match(laneOnePanel, /last tick \(uk\)[\s\S]*UK/i);
+    assert.match(laneOnePanel, /last broker update[\s\S]*inside the 15m window/i);
+    assert.match(laneOnePanel, /last strategy tick \(uk\)[\s\S]*UK/i);
     assert.match(laneOnePanel, /tick outcome[\s\S]*nothing to place, armed/i);
     assert.match(laneOnePanel, /trading permission[\s\S]*algo trading allowed/i);
     assert.match(laneOnePanel, /loaded rules[\s\S]*full grid \u00b7 5R \u00b7 magic 20261004/i);
     assert.match(laneOnePanel, /effective cap[\s\S]*not stated by the heartbeat/i);
     assert.match(laneOnePanel, /identity check[\s\S]*verified against the lane's private identity file/i);
-    assert.match(laneOnePanel, /Live \u00b7 armed/);
+    assert.match(laneOnePanel, /Active/);
 
     // Switching account moves the button and the open panel together, and no lane-1 figure follows it.
     await selectLane(page, "ftmo-2", "222");
-    assert.equal(await statusWord(page), "Monitoring \u00b7 unarmed");
-    assert.equal(await statusState(page), "monitoring");
+    assert.equal(await statusWord(page), "Connected \u00b7 strategy unarmed");
+    assert.equal(await statusState(page), "unarmed");
     assert.equal(await page.locator("#liveTradingStatusPanel").isVisible(), true, "the panel stays open across a switch");
     const laneTwoPanel = await page.locator("#liveTradingStatusPanel").innerText();
     assert.match(laneTwoPanel, /\*\*\*222 on FTMO-Server3/);
@@ -230,7 +243,7 @@ test("a silent loop reads stale, in UK time, and the page re-reads its own holdi
     assert.equal(await statusWord(page), "Stale");
     await page.locator("#liveTradingPanel .live-trading-status-button").click();
     const stalePanel = await page.locator("#liveTradingStatusPanel").innerText();
-    assert.match(stalePanel, /last tick \(uk\)[\s\S]*2026-07-01 13:00:00 UK/i);
+    assert.match(stalePanel, /last strategy tick \(uk\)[\s\S]*2026-07-01 13:00:00 UK/i);
     assert.match(stalePanel, /outside the 15 minute window/);
 
     // The clock the panel runs on is installed, and one repaint of the page's own holding moves the word: the
@@ -243,7 +256,7 @@ test("a silent loop reads stale, in UK time, and the page re-reads its own holdi
       artifact.data.at_utc = nowIso;
       renderLiveTradingStatus();
     });
-    assert.equal(await statusWord(page), "Live \u00b7 armed");
+    assert.equal(await statusWord(page), "Active");
     assert.match(await page.locator("#liveTradingStatusPanel").innerText(), /inside the 15m window/);
     assert.deepEqual(errors, []);
     await page.close();
@@ -323,4 +336,54 @@ test("entries switched off are named as paused even while the loop is armed", as
     await harness.close();
   }
 });
+
+// The blind lane: a fresh broker snapshot, no strategy heartbeat at all, and nothing armed. That is not a fault
+// and it is not "Stale": the account is connected and the strategy is parked, so the strip says both, and the two
+// ages - the last broker update and the last strategy tick - are separate rows a reader can tell apart.
+test("a fresh blind feed with no heartbeat reads connected with the strategy unarmed, and shows both ages apart", async () => {
+  const harness = await createHarness({
+    lanes: lanesDocument({ laneThree: true }),
+    laneOne: snapshot({ login: "***614" }),
+    laneTwo: snapshot({ login: "***222", server: "FTMO-Server3" }),
+    laneThree: snapshot({ login: "***584", server: "FTMO-Server3" })
+  });
+  try {
+    const { page, errors } = await openLiveTrading(harness);
+    await selectLane(page, "ftmo-3", "584");
+    assert.equal(await statusWord(page), "Connected \u00b7 strategy unarmed");
+    assert.equal(await statusState(page), "connected");
+
+    await page.locator("#liveTradingPanel .live-trading-status-button").click();
+    const panel = await page.locator("#liveTradingStatusPanel").innerText();
+    assert.match(panel, /\*\*\*584 on FTMO-Server3/);
+    assert.match(panel, /last broker update[\s\S]*inside the 15m window/i);
+    assert.match(panel, /last strategy tick \(uk\)[\s\S]*never/i);
+    assert.match(panel, /strategy[\s\S]*unarmed/i);
+    assert.doesNotMatch(panel, /Active/);
+
+    // The badge on the selector and the card say the same word, and neither carries lane 1's login.
+    const badge = await page.locator('[data-live-lane="ftmo-3"] .live-trading-lane-badge').innerText();
+    assert.equal(badge.trim(), "Connected");
+    const card = await page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-3"]').innerText();
+    assert.match(card, /\*\*\*584 \/ FTMO-Server3/);
+    assert.match(card, /Last broker update/i);
+    assert.match(card, /Last strategy tick/i);
+    assert.match(card, /no heartbeat published/);
+    assert.doesNotMatch(card, /614/);
+
+    // The blind rule is stated on the page for the blind lane, and it is configuration rather than a reading.
+    const ruleCard = await page.locator("#liveTradingPanel .live-trading-lane-rule-card").innerText();
+    assert.match(ruleCard, /either direction/i);
+    assert.match(ruleCard, /full l2l/i);
+    assert.match(ruleCard, /5R/i);
+    assert.match(ruleCard, /0\.01 lot/i);
+    assert.match(ruleCard, /no daily entry cap/i);
+
+    assert.deepEqual(errors, []);
+    await page.close();
+  } finally {
+    await harness.close();
+  }
+});
+
 

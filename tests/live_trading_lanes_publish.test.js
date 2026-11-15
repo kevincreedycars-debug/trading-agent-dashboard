@@ -603,30 +603,44 @@ test("an unknown argument is a usage error rather than a silent default", () => 
 // document, not a scratch file: a fresh clone that does not carry it cannot run the coordinated publisher at all,
 // because `--config` defaults to it. So the shipped file is read here through the publisher's own loader, which is
 // the only reading that decides what a run on a host would actually see.
-test("the shipped lanes file is the publisher's own default and names both accounts", () => {
+test("the shipped lanes file is the publisher's own default and names all three accounts", () => {
   assert.equal(lanes.DEFAULT_CONFIG, "config/live-trading-lanes.json");
   const configPath = path.join(root, lanes.DEFAULT_CONFIG);
   assert.equal(fs.existsSync(configPath), true, `${lanes.DEFAULT_CONFIG} has to travel with the code that reads it`);
 
   const config = lanes.loadLanes(configPath);
 
-  assert.deepEqual(config.lanes.map((lane) => lane.id), ["ftmo-1", "ftmo-2"]);
+  assert.deepEqual(config.lanes.map((lane) => lane.id), ["ftmo-1", "ftmo-2", "ftmo-3"]);
   // Account 1 is the lane this checkout runs; account 2 is switched on now that its own terminal is installed and
-  // signed in, and its row is what makes the publisher read that account's snapshot and refuse it if it is another
-  // account. Switching it off again is the same one line, and a parked lane says so rather than failing as a
-  // missing snapshot.
+  // signed in, and account 3 - the blind lane - is switched on now that its terminal, identity file and snapshot
+  // cadence are staged on the host. Its row is what makes the publisher read its snapshot and refuse it if it is
+  // another account. Switching any of them off again is the same one line, and a parked lane says so rather than
+  // failing as a missing snapshot.
   assert.equal(config.lanes[0].enabled, true);
   assert.equal(config.lanes[1].enabled, true);
+  assert.equal(config.lanes[2].enabled, true);
   // Each lane's snapshot and heartbeat land on their own paths beside the lanes document, which is what stops one
   // account's read being published under the other's name.
   assert.equal(config.lanes[0].published, "data/live-trading.json");
   assert.equal(config.lanes[1].published, "data/live-trading.account2.json");
+  assert.equal(config.lanes[2].published, "data/live-trading.blind.json");
   assert.deepEqual(
     config.lanes.map((lane) => lane.status_published),
-    ["data/live-trading-trader.ftmo-1.json", "data/live-trading-trader.ftmo-2.json"]
+    [
+      "data/live-trading-trader.ftmo-1.json",
+      "data/live-trading-trader.ftmo-2.json",
+      "data/live-trading-trader.ftmo-3.json"
+    ]
   );
   assert.equal(config.lanes[0].root, ".");
   assert.equal(config.lanes[1].root, "../ftmo2");
+  assert.equal(config.lanes[2].root, "../ftmo3");
+  // The blind lane's own ownership number and rule travel with its row, so the page can name them and the loop
+  // can check them against its heartbeat.
+  assert.equal(config.lanes[2].magic, 20261006);
+  assert.deepEqual(config.lanes[2].strategy, { grid: "full", r_multiple: 5 });
+  assert.equal(config.lanes[2].account_login_masked, "***584");
+  assert.equal(config.lanes[2].account_server, "FTMO-Server3");
   assert.equal(config.minIntervalSeconds, 600);
   assert.equal(config.state, "tmp/live-trading-publish-state.json");
   assert.equal(config.summary, "data/live-trading-lanes.json");
