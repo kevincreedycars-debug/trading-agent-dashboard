@@ -1,0 +1,683 @@
+{
+  "version": "usd-l1-factor-rulebook-v1.0.0",
+  "status": "FROZEN_EXPERIMENTAL",
+  "research_only": true,
+  "frozen_on": "2026-11-15",
+  "title": "USD Layer 1 factor rulebook, version 1",
+  "scope": "Turns the 2026-11-04 final adjudication's twenty-five factor verdicts into one row per factor: when the reading becomes usable, how long it stays usable, when it applies, what it may do to the morning, and which interaction rules bind it. It is the book the backtester and the n8n shadow run both read.",
+  "cutoff": "05:00 Europe/London. A reading becomes usable only when its evidence instant is at or before the cutoff; nothing is back-filled from a later print.",
+  "decision_rules": {
+    "path": "config/usd_l1_decision_rules_v1.json",
+    "version": "usd-l1-decision-rules-v1.0.0",
+    "note": "This book does not restate the arithmetic. It names what each factor may feed into, and the decision file fixes the arithmetic that consumes it."
+  },
+  "adjudication": {
+    "manifest": "data/research/usd-session/final-adjudication-manifest.json",
+    "document": "docs/research/final/usd/final-asset-analysis/USD_Asset_Level_Final_Adjudication_Stage3_2026-11-04.md",
+    "review_module": "backtester/lib/usd_layer1_backtester/adjudication_review.js",
+    "join_rule": "Each row's disposition, treatment, verdict, candidate and reason are joined at load time from the review module, which is bound to the registered adjudication documents by sha256. The row's id is the join key and must appear exactly once in the review. The adjudication text is not copied here, so the book cannot drift from the adjudication it cites."
+  },
+  "age_profiles": {
+    "fred_daily": {
+      "max_age_business_days": 4,
+      "first_usable": "the newest FRED observation dated strictly before the session date, printed before the cutoff",
+      "carried_unchanged": "a London morning with no new print (weekend, US holiday, or a series that updates later in the day) carries the previous reading unchanged",
+      "why": "Four business days covers a long weekend plus one exchange holiday without accepting a print that a week of sessions has already overtaken."
+    },
+    "bundesbank_daily": {
+      "max_age_business_days": 5,
+      "first_usable": "the newest Bundesbank BBSIS observation dated strictly before the session date",
+      "carried_unchanged": "German public holidays do not invalidate the leg; the previous observation is carried unchanged",
+      "why": "The German leg is a T-1 join against a calendar with more holidays than the US one, so it gets one business day of extra headroom over fred_daily."
+    },
+    "intraday_bar": {
+      "max_age_business_days": 1,
+      "first_usable": "the hourly bar that opens at or before the cutoff",
+      "carried_unchanged": "a bar older than the previous session is never carried; a missing tape end is a missing reading",
+      "why": "An intraday proxy that has not updated within one session is not a reading of this morning's dollar."
+    },
+    "derived_spread": {
+      "max_age_business_days": 5,
+      "first_usable": "the US minus Germany differential computed from the two legs at their own as-of instants",
+      "carried_unchanged": "the differential inherits the older leg's age",
+      "clock_from": ["us_2y_d5_bps", "de_2y_yield"],
+      "why": "The spread has no print of its own, so it is only as fresh as its older leg."
+    }
+  },
+  "input_ages": {
+    "vix_level": "fred_daily",
+    "vix_d5_chg": "fred_daily",
+    "us_2y_yield": "fred_daily",
+    "us_2y_d5_bps": "fred_daily",
+    "us_10y_real_yield": "fred_daily",
+    "us_10y_real_d5_bps": "fred_daily",
+    "broad_dollar_d1_pct": "fred_daily",
+    "broad_dollar_d5_pct": "fred_daily",
+    "de_2y_yield": "bundesbank_daily",
+    "us_de_2y_spread_d5_bps": "derived_spread",
+    "gold_price": "intraday_bar",
+    "gold_d1_pct": "intraday_bar",
+    "gold_d5_pct": "intraday_bar",
+    "nasdaq100_price": "intraday_bar",
+    "nasdaq100_d5_pct": "intraday_bar",
+    "usdjpy_d1_pct": "fred_daily",
+    "usdchf_d1_pct": "fred_daily",
+    "fx_eurusd_momentum_1s_pct": "intraday_bar",
+    "fx_eurusd_momentum_5s_pct": "intraday_bar",
+    "fx_overnight_range_position": "intraday_bar",
+    "fx_overnight_range_pips": "intraday_bar",
+    "fx_eurusd_volatility_120h_pct": "intraday_bar",
+    "fx_eurusd_volatility_ratio_60s": "intraday_bar"
+  },
+  "rows": [
+    {
+      "id": "live.f1-vix-level",
+      "role": "direction",
+      "signals": ["vix_level", "vix_change"],
+      "inputs": ["vix_level", "vix_d5_chg"],
+      "applies_when": "Every morning on which a VIXCLS print dated strictly before the session date exists and a five-session change can be formed.",
+      "usability": {
+        "becomes_usable": "the VIXCLS observation dated strictly before the session date, received before the cutoff",
+        "carried_unchanged": "the same print is carried across non-print days and London mornings until it is four business days old",
+        "expires": "no print at or before the cutoff, or a carried print older than four business days",
+        "evidence": "print date and staleness per morning in input_meta"
+      },
+      "interactions": ["IR-1", "IR-6"],
+      "effect": {
+        "direction": "two of the twelve votes: the frozen VIX regime vote on the level (high and rising volatility -1 USD, low and falling +1) and the frozen momentum vote on the change (a rising five-session change -1, a falling change +1)",
+        "conviction": "averaged inside the risk family, which carries one unit of say",
+        "trade": "both votes are required for the twelve-signal test in the provisional trade rule"
+      },
+      "frozen_choice": "The regime vote is carried from the nine-input book unchanged. The adjudication blocks F1; the rulebook still lets it vote because the published rule states a direction, and the accuracy record decides whether that was earned.",
+      "open_judgement": "OJ-1"
+    },
+    {
+      "id": "risk.vix-level-and-change-at-cutoff",
+      "role": "counted_elsewhere",
+      "signals": ["vix_level", "vix_change"],
+      "inputs": ["vix_level", "vix_d5_chg"],
+      "applies_when": "Every morning on which F1's print is present. The row never adds a third vote on that print.",
+      "usability": {
+        "becomes_usable": "with F1, from the same VIXCLS print",
+        "carried_unchanged": "with F1; the row owns no clock of its own",
+        "expires": "with F1",
+        "evidence": "F1's print date and staleness"
+      },
+      "interactions": ["IR-1"],
+      "effect": {
+        "direction": "none of its own: it names the two signals that consume the shared print",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "The adjudication's instruction is explicit - no second vote from the same VIX observation. The row stays in the book so the duplicate remains visible on the page instead of disappearing.",
+      "open_judgement": null
+    },
+    {
+      "id": "live.f2-us-2y-delta",
+      "role": "direction",
+      "signals": ["us_2y"],
+      "inputs": ["us_2y_d5_bps", "us_2y_yield"],
+      "applies_when": "Every morning on which DGS2 has an observation strictly older than the session date and a five-session change can be formed.",
+      "usability": {
+        "becomes_usable": "the DGS2 print at or before the cutoff, plus the five earlier sessions the change needs",
+        "carried_unchanged": "level and change are carried together; a non-print day does not reset the window",
+        "expires": "no print, a newest print older than four business days, or fewer than six observations behind the change",
+        "evidence": "staleness per morning in input_meta"
+      },
+      "interactions": ["IR-2", "IR-8"],
+      "effect": {
+        "direction": "sign of the five-session change in basis points: higher votes +1 USD, lower -1, unchanged 0",
+        "conviction": "averaged inside the rates family",
+        "trade": "counts toward the twelve-signal test"
+      },
+      "frozen_choice": "Sign only, frozen by RG-1 on 2026-11-13. No magnitude weight and no threshold is fitted to the replayed mornings.",
+      "open_judgement": null
+    },
+    {
+      "id": "live.f3-us-de-2y-spread-delta",
+      "role": "counted_elsewhere",
+      "signals": ["relative_front_end"],
+      "inputs": ["us_de_2y_spread_d5_bps", "us_2y_yield", "de_2y_yield"],
+      "applies_when": "Every morning on which both legs of the US minus Germany differential exist at their own as-of instants.",
+      "usability": {
+        "becomes_usable": "when both legs are usable; the differential has no print of its own",
+        "carried_unchanged": "with the older leg, which sets its age",
+        "expires": "when either leg expires",
+        "evidence": "the older leg's print date and staleness"
+      },
+      "interactions": ["IR-2"],
+      "effect": {
+        "direction": "none of its own: the relative-front-end signal consumes this differential",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "F3 and rates.relative-front-end-delta read one differential, so exactly one of them may vote. The adjudication labels both as a direction; the book resolves that duplicate instead of counting it twice, and the vote belongs to the row the decision file names.",
+      "open_judgement": null
+    },
+    {
+      "id": "live.f4-real-yield-delta",
+      "role": "direction",
+      "signals": ["real_yield"],
+      "inputs": ["us_10y_real_d5_bps", "us_10y_real_yield"],
+      "applies_when": "Every morning on which DFII10 has an observation strictly older than the session date and a five-session change can be formed.",
+      "usability": {
+        "becomes_usable": "the DFII10 print at or before the cutoff, plus the five earlier sessions the change needs",
+        "carried_unchanged": "carried across non-print days until four business days old",
+        "expires": "no print, a print older than four business days, or a change that cannot be formed",
+        "evidence": "staleness per morning in input_meta"
+      },
+      "interactions": ["IR-3", "IR-8"],
+      "effect": {
+        "direction": "sign of the five-session real-yield change in basis points: higher votes +1 USD, lower -1, unchanged 0",
+        "conviction": "averaged inside the rates family",
+        "trade": "counts toward the twelve-signal test"
+      },
+      "frozen_choice": "One vote from DFII10, sign only. The adjudication keeps the real-rate channel as a candidate and refuses to call the sign established; the rulebook votes it and books the accuracy.",
+      "open_judgement": null
+    },
+    {
+      "id": "rates.us-front-end-delta",
+      "role": "counted_elsewhere",
+      "signals": ["us_2y"],
+      "inputs": ["us_2y_d5_bps"],
+      "applies_when": "Every morning on which F2's DGS2 print is usable. It adds no information of its own.",
+      "usability": {
+        "becomes_usable": "with F2, from the same DGS2 print",
+        "carried_unchanged": "with F2",
+        "expires": "with F2",
+        "evidence": "F2's print date and staleness"
+      },
+      "interactions": ["IR-2"],
+      "effect": {
+        "direction": "none: the US leg is the DGS2 coordinate F2 already reads",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "Read through F2's mechanism with no extra weight. A second vote from one DGS2 print would give the front end two units of say that the research never granted.",
+      "open_judgement": null
+    },
+    {
+      "id": "rates.relative-front-end-delta",
+      "role": "direction",
+      "signals": ["relative_front_end"],
+      "inputs": ["us_de_2y_spread_d5_bps", "us_2y_yield", "de_2y_yield"],
+      "applies_when": "Every morning on which both legs of the differential exist and a five-session change can be formed.",
+      "usability": {
+        "becomes_usable": "when the US leg and the German leg are both usable at their own as-of instants",
+        "carried_unchanged": "with the older leg; a German holiday does not invalidate the differential",
+        "expires": "when either leg expires, or when the five-session change cannot be formed",
+        "evidence": "the older leg's print date and staleness"
+      },
+      "interactions": ["IR-2", "IR-8"],
+      "effect": {
+        "direction": "sign of the five-session spread change: widening +1 USD, narrowing -1, unchanged 0",
+        "conviction": "averaged inside the rates family",
+        "trade": "counts toward the twelve-signal test"
+      },
+      "frozen_choice": "This is the row that owns the relative-front-end vote, and F3 is the same print counted once. The German leg is the Bundesbank BBSIS 2.0-year spot rate read at 05:00 London.",
+      "open_judgement": null
+    },
+    {
+      "id": "rates.real-yield-delta",
+      "role": "counted_elsewhere",
+      "signals": ["real_yield"],
+      "inputs": ["us_10y_real_d5_bps"],
+      "applies_when": "Every morning on which F4's DFII10 print is usable.",
+      "usability": {
+        "becomes_usable": "with F4, from the same DFII10 print",
+        "carried_unchanged": "with F4",
+        "expires": "with F4",
+        "evidence": "F4's print date and staleness"
+      },
+      "interactions": ["IR-3"],
+      "effect": {
+        "direction": "none: the real-yield signal is F4's vote",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "Counted once through F4. The row is kept so the book accounts for all twenty-five intended factors rather than shrinking to the ones that vote.",
+      "open_judgement": null
+    },
+    {
+      "id": "rates.term-premium-and-curve",
+      "role": "excluded",
+      "signals": [],
+      "inputs": [],
+      "applies_when": "Never. The adjudication excludes it and no decision signal consumes it.",
+      "usability": {
+        "becomes_usable": "not applicable: no proposed definition survived adjudication",
+        "carried_unchanged": "not applicable",
+        "expires": "not applicable",
+        "evidence": "the registered adjudication document"
+      },
+      "interactions": ["IR-9"],
+      "effect": {
+        "direction": "none, by exclusion",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "Excluded rather than left missing. A factor with no accepted definition cannot be scored, and leaving it open would invite a later pass to add it to the same mornings.",
+      "open_judgement": null
+    },
+    {
+      "id": "rates.credit-spread-delta",
+      "role": "excluded",
+      "signals": [],
+      "inputs": [],
+      "applies_when": "Never. The adjudication excludes it and no decision signal consumes it.",
+      "usability": {
+        "becomes_usable": "not applicable: the credit channel was not accepted at this horizon",
+        "carried_unchanged": "not applicable",
+        "expires": "not applicable",
+        "evidence": "the registered adjudication document"
+      },
+      "interactions": ["IR-9"],
+      "effect": {
+        "direction": "none, by exclusion",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "Excluded, even though a high-yield spread series is present in the stored inputs. Presence is not permission: the credit channel was refused and it does not vote.",
+      "open_judgement": null
+    },
+    {
+      "id": "live.f5-dxy-delta",
+      "role": "direction",
+      "signals": ["broad_dollar"],
+      "inputs": ["broad_dollar_d5_pct", "broad_dollar_d1_pct"],
+      "applies_when": "Every morning on which the broad dollar series has an observation strictly older than the session date and a five-session change can be formed.",
+      "usability": {
+        "becomes_usable": "the newest broad-dollar print at or before the cutoff",
+        "carried_unchanged": "carried across non-print days until four business days old",
+        "expires": "no print, or a carried print older than four business days",
+        "evidence": "staleness per morning in input_meta"
+      },
+      "interactions": ["IR-8"],
+      "effect": {
+        "direction": "sign of the five-session broad-dollar change: up +1 USD, down -1, unchanged 0",
+        "conviction": "averaged inside the USD family",
+        "trade": "counts toward the twelve-signal test"
+      },
+      "frozen_choice": "FRED DTWEXBGS stands in for ICE DXY as a declared proxy. The outcome is scored against the broker's DXY.cash, which is a different basket, and the page says so rather than treating the proxy as the index.",
+      "open_judgement": null
+    },
+    {
+      "id": "live.f6-gold-delta",
+      "role": "direction",
+      "signals": ["gold"],
+      "inputs": ["gold_d5_pct", "gold_price"],
+      "applies_when": "Every morning on which the cached gold H1 tape has a bar at the cutoff and a five-session change can be formed.",
+      "usability": {
+        "becomes_usable": "the hourly bar opening at or before the cutoff",
+        "carried_unchanged": "intraday probes are never carried past the previous session",
+        "expires": "a tape end earlier than the previous session, or a change that cannot be formed",
+        "evidence": "the bar instant recorded in input_meta"
+      },
+      "interactions": ["IR-8"],
+      "effect": {
+        "direction": "sign of the five-session gold change, inverted for USD: a fall +1, a rise -1",
+        "conviction": "the commodities family carries one unit of say",
+        "trade": "counts toward the twelve-signal test"
+      },
+      "frozen_choice": "The cached quote is labelled as the Coinbase XAU/USD print rather than a bullion benchmark, and the label travels with the reading.",
+      "open_judgement": null
+    },
+    {
+      "id": "live.f9-dollar-smile",
+      "role": "counted_elsewhere",
+      "signals": ["vix_level", "vix_change"],
+      "inputs": ["vix_level", "vix_d5_chg"],
+      "applies_when": "Every morning on which the VIX print is usable. The smile is read through the VIX signals, not beside them.",
+      "usability": {
+        "becomes_usable": "with F1's VIX print",
+        "carried_unchanged": "with F1",
+        "expires": "with F1",
+        "evidence": "F1's print date and staleness"
+      },
+      "interactions": ["IR-1", "IR-9"],
+      "effect": {
+        "direction": "none of its own: the two VIX signals already carry this channel",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "The smile is a reading of the same VIX coordinates, so a separate vote would multiply one observation into three. It is named, not voted.",
+      "open_judgement": null
+    },
+    {
+      "id": "live.f10-equity-versus-usd",
+      "role": "direction",
+      "signals": ["equities"],
+      "inputs": ["nasdaq100_d5_pct", "nasdaq100_price"],
+      "applies_when": "Every morning on which the cached NAS100 H1 tape has a bar at the cutoff and a five-session change can be formed.",
+      "usability": {
+        "becomes_usable": "the hourly bar opening at or before the cutoff",
+        "carried_unchanged": "intraday probes are never carried past the previous session",
+        "expires": "a tape end earlier than the previous session, or a change that cannot be formed",
+        "evidence": "the bar instant recorded in input_meta"
+      },
+      "interactions": ["IR-8"],
+      "effect": {
+        "direction": "sign of the five-session equity change, inverted for USD: a fall +1, a rise -1",
+        "conviction": "the cross-asset family carries one unit of say",
+        "trade": "counts toward the twelve-signal test"
+      },
+      "frozen_choice": "NAS100 stands in for the QQQ series the rule names; the substitution is declared on the face of the artefact, not hidden in a footnote.",
+      "open_judgement": null
+    },
+    {
+      "id": "live.f7-economic-surprise",
+      "role": "event_missing",
+      "signals": [],
+      "inputs": [],
+      "applies_when": "Never in version 1. The release clock is staged for FOMC statements only, and a surprise needs a consensus and a first print for the same release.",
+      "usability": {
+        "becomes_usable": "when a release calendar with consensus and first print is staged before the cutoff",
+        "carried_unchanged": "not applicable",
+        "expires": "not applicable",
+        "evidence": "the staged calendar's window and release list per morning"
+      },
+      "interactions": ["IR-4", "IR-10"],
+      "effect": {
+        "direction": "none in version 1",
+        "conviction": "the missing event type is why band 5 is unreachable and why band 4 carries a cap",
+        "trade": "none directly; the event family is carried by F8"
+      },
+      "frozen_choice": "A gap, not a zero vote. The morning's book records the factor as present in the plan and absent from the data, and nothing is imputed from a later print.",
+      "open_judgement": "OJ-3"
+    },
+    {
+      "id": "live.f8-fed-bias",
+      "role": "direction",
+      "signals": ["fed_bias"],
+      "inputs": [],
+      "applies_when": "Every morning on which the archived FOMC statements contain one released at or before the cutoff.",
+      "usability": {
+        "becomes_usable": "a policy statement whose release instant is at or before the cutoff",
+        "carried_unchanged": "the most recent statement is carried forward until a newer one is released, with its age recorded",
+        "expires": "never by age: the label describes the last stance, and a newer statement replaces it",
+        "evidence": "the statement archive's release clock and the archive hash"
+      },
+      "interactions": ["IR-4", "IR-5", "IR-10"],
+      "effect": {
+        "direction": "RG-2: a hawkish statement shift votes +1 USD, a dovish shift -1, neutral 0; a statement released after the cutoff cannot vote that morning",
+        "conviction": "the event family carries one unit of say",
+        "trade": "the event family must be usable before the provisional trade rule can be met"
+      },
+      "frozen_choice": "A statement released after the cutoff cannot vote that morning, and no value is back-filled from the next statement. The archive holds twenty-three statements and its hash is recorded in the artefacts.",
+      "open_judgement": "OJ-2"
+    },
+    {
+      "id": "macro.release-surprise-at-first-print",
+      "role": "event_missing",
+      "signals": [],
+      "inputs": [],
+      "applies_when": "Never in version 1. It describes the same event channel as F7 and inherits the same gap.",
+      "usability": {
+        "becomes_usable": "when a release calendar with consensus and first print is staged before the cutoff",
+        "carried_unchanged": "not applicable",
+        "expires": "not applicable",
+        "evidence": "the staged calendar's window and release list per morning"
+      },
+      "interactions": ["IR-4"],
+      "effect": {
+        "direction": "none in version 1",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "The row is the second statement of one gap, kept because the plan named it separately. It does not create a second chance to vote.",
+      "open_judgement": "OJ-3"
+    },
+    {
+      "id": "fx.usd-session-momentum",
+      "role": "direction",
+      "signals": ["session_momentum"],
+      "inputs": ["fx_eurusd_momentum_1s_pct", "fx_eurusd_momentum_5s_pct"],
+      "applies_when": "Every morning on which both cached H1 tapes reach back one session; the pair votes once, never twice.",
+      "usability": {
+        "becomes_usable": "the EURUSD and USDJPY H1 bars behind the one-session mirrors, both opening at or before the cutoff",
+        "carried_unchanged": "intraday probes are never carried past the previous session",
+        "expires": "a tape end earlier than the previous session on either leg, because the vote averages both",
+        "evidence": "each tape's newest bar instant and tape end in input_meta"
+      },
+      "interactions": ["IR-7"],
+      "effect": {
+        "direction": "the mean of the two mirror votes: a weaker USD on either leg votes -1 USD, a stronger one +1",
+        "conviction": "the USD family carries one unit of say",
+        "trade": "one of the four markets the outcome is scored on, and a vote in the twelve-signal test"
+      },
+      "frozen_choice": "The decision file averages the EURUSD and USDJPY mirrors into a single vote rather than two, since both are dollar pairs reading one move. The plan's intraday momentum probes are recorded each morning beside the mirrors as staging evidence, not as a second vote. GBP/USD and USD/CHF are scored, not counted.",
+      "open_judgement": null
+    },
+    {
+      "id": "fx.usd-overnight-range-position",
+      "role": "direction",
+      "signals": ["overnight_range"],
+      "inputs": ["fx_overnight_range_position", "fx_overnight_range_pips"],
+      "applies_when": "Every morning on which the cached EURUSD tape covers the overnight window ending at the cutoff.",
+      "usability": {
+        "becomes_usable": "the overnight window's high, low and last price, all from bars opening at or before the cutoff",
+        "carried_unchanged": "intraday probes are never carried past the previous session",
+        "expires": "a tape end earlier than the previous session, an empty or flat range",
+        "evidence": "the window bounds and the bar instants in input_meta"
+      },
+      "interactions": ["IR-7", "IR-9"],
+      "effect": {
+        "direction": "RG-3: range position at least 0.70 votes +1 USD, at most 0.30 -1, otherwise 0; a range below 10 pips is undefined",
+        "conviction": "averaged inside the USD family with momentum",
+        "trade": "counts toward the twelve-signal test"
+      },
+      "frozen_choice": "Half-range position with no band, no threshold and no size weighting. The cutoff defines the window, so a range measured to a later hour cannot enter.",
+      "open_judgement": null
+    },
+    {
+      "id": "fx.usd-session-volatility-regime",
+      "role": "inactive",
+      "signals": [],
+      "inputs": ["fx_eurusd_volatility_ratio_60s", "fx_eurusd_volatility_120h_pct"],
+      "applies_when": "Never. The row is inactive: it names no signal, so no morning can turn it on.",
+      "usability": {
+        "becomes_usable": "not applicable until a signal is attached to it in a later version",
+        "carried_unchanged": "not applicable",
+        "expires": "not applicable",
+        "evidence": "the staged inputs are still recorded per morning, unused"
+      },
+      "interactions": ["IR-9"],
+      "effect": {
+        "direction": "none: an inactive row cannot vote, and its inputs never enter a family mean",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "Inactive with its inputs still collected and graded. The volatility ratio also feeds the quality gate as a diagnostic, which is a monitoring use, not a vote.",
+      "open_judgement": null
+    },
+    {
+      "id": "risk.usd-safe-haven-demand",
+      "role": "direction",
+      "signals": ["safe_haven"],
+      "inputs": ["gold_d1_pct", "usdjpy_d1_pct", "usdchf_d1_pct"],
+      "applies_when": "Every morning on which all three one-day changes exist at or before the cutoff.",
+      "usability": {
+        "becomes_usable": "the gold, USDJPY and USDCHF one-session changes, each from its own series",
+        "carried_unchanged": "daily legs are carried to their own profile age; the row takes the oldest leg",
+        "expires": "when any leg expires, because the composite needs all three",
+        "evidence": "each leg's print date and staleness in input_meta"
+      },
+      "interactions": ["IR-6"],
+      "effect": {
+        "direction": "RG-5: gold and JPY both weaken by more than 0.25% votes +1 USD, both strengthen -1, otherwise 0; CHF never votes alone",
+        "conviction": "averaged inside the risk family",
+        "trade": "counts toward the twelve-signal test"
+      },
+      "frozen_choice": "The composite is the rule's own statement, so the rulebook does not re-derive it. The money moves are read against the dollar's quote convention rather than an assumed sign.",
+      "open_judgement": null
+    },
+    {
+      "id": "risk.risk-on-off-cross-asset-state",
+      "role": "counted_elsewhere",
+      "signals": ["vix_level", "equities", "gold"],
+      "inputs": ["vix_level", "nasdaq100_d5_pct", "gold_d5_pct"],
+      "applies_when": "Every morning on which the VIX, NAS100 and gold readings it assembles are each usable.",
+      "usability": {
+        "becomes_usable": "when all three component rows are usable",
+        "carried_unchanged": "with the oldest of its three components",
+        "expires": "when any component expires",
+        "evidence": "the three component rows' print instants and staleness"
+      },
+      "interactions": ["IR-1", "IR-6", "IR-9"],
+      "effect": {
+        "direction": "none of its own: VIX, equities and gold already vote separately",
+        "conviction": "none",
+        "trade": "none"
+      },
+      "frozen_choice": "The state is a summary of three votes the book already books. Giving it a fourth vote would count each of those readings twice.",
+      "open_judgement": null
+    },
+    {
+      "id": "calendar.known-releases-between-cutoff-and-endpoint",
+      "role": "calendar_window",
+      "signals": [],
+      "inputs": [],
+      "applies_when": "Every morning, as a description. It records which staged releases fall between the cutoff and the outcome endpoint; it never votes.",
+      "usability": {
+        "becomes_usable": "when the staged release clock covers the window from the cutoff to the endpoint",
+        "carried_unchanged": "not applicable: the window is rebuilt for each morning",
+        "expires": "not applicable",
+        "evidence": "the staged clock's coverage and release list per morning"
+      },
+      "interactions": ["IR-4", "IR-10"],
+      "effect": {
+        "direction": "none: a calendar window is context, not a vote",
+        "conviction": "none",
+        "trade": "recorded beside the call so a morning whose endpoint contains a release can be read with that in mind"
+      },
+      "frozen_choice": "Only FOMC statement timing is staged, so the window is honest about being partly blind: it lists what it knows and the artefact states what is missing.",
+      "open_judgement": "OJ-3"
+    },
+    {
+      "id": "calendar.days-since-and-until-high-impact-events",
+      "role": "calendar_window",
+      "signals": [],
+      "inputs": [],
+      "applies_when": "Every morning, as a description of distance from the nearest staged release. It never votes.",
+      "usability": {
+        "becomes_usable": "when the staged clock's nearest past and nearest future release can both be identified",
+        "carried_unchanged": "not applicable: distances are recomputed each morning",
+        "expires": "not applicable",
+        "evidence": "the staged clock's nearest entries and their instants"
+      },
+      "interactions": ["IR-4"],
+      "effect": {
+        "direction": "none: distance from an event is not a direction",
+        "conviction": "none",
+        "trade": "none; the number is published so a reader can judge the morning's context"
+      },
+      "frozen_choice": "Kept as a description and refused as a signal. Turning distance-to-event into a vote would need a fitted horizon, and nothing here is fitted.",
+      "open_judgement": "OJ-3"
+    },
+    {
+      "id": "data.quality-gate-for-abstention",
+      "role": "gate",
+      "signals": [],
+      "inputs": ["fx_eurusd_volatility_ratio_60s"],
+      "applies_when": "Every morning. It is checked before any vote is counted, and it can stop the morning regardless of how many factors are usable.",
+      "usability": {
+        "becomes_usable": "when the quality diagnostics for the morning can be computed at all",
+        "carried_unchanged": "not applicable: a gate is evaluated for its own morning or not at all",
+        "expires": "not applicable",
+        "evidence": "the gate's own record per morning, stored beside the call"
+      },
+      "interactions": ["IR-6", "IR-10"],
+      "effect": {
+        "direction": "none: the gate has no say in which way the dollar moves",
+        "conviction": "none directly; a blocked morning produces no band",
+        "trade": "the gate must be open before a morning may trade, and a blocked morning is abstention rather than a neutral call"
+      },
+      "frozen_choice": "The gate is non-voting and fails closed: a morning it cannot clear is recorded as abstained, never as a zero vote that would let the book trade on data it could not verify.",
+      "open_judgement": null
+    }
+  ],
+  "interaction_rules": [
+    {
+      "id": "IR-1",
+      "rule": "One VIX print, one vote.",
+      "detail": "F1, the cutoff row, F9 and the risk-on-off state all read the same VIXCLS observation. Only vix_level and vix_change may vote; the other three rows are named and silent.",
+      "bound_rows": ["live.f1-vix-level", "risk.vix-level-and-change-at-cutoff", "live.f9-dollar-smile", "risk.risk-on-off-cross-asset-state"]
+    },
+    {
+      "id": "IR-2",
+      "rule": "One front-end differential, one vote.",
+      "detail": "F2 and rates.us-front-end-delta read DGS2; F3 and rates.relative-front-end-delta read the US minus Germany spread. Each pair contributes exactly one vote, and the vote belongs to the row the decision file names.",
+      "bound_rows": ["live.f2-us-2y-delta", "rates.us-front-end-delta", "live.f3-us-de-2y-spread-delta", "rates.relative-front-end-delta"]
+    },
+    {
+      "id": "IR-3",
+      "rule": "One real-yield series, one vote.",
+      "detail": "F4 and rates.real-yield-delta read the same DFII10 print; only F4 votes.",
+      "bound_rows": ["live.f4-real-yield-delta", "rates.real-yield-delta"]
+    },
+    {
+      "id": "IR-4",
+      "rule": "Events vote only through F8, and only when their clock is staged.",
+      "detail": "F7, macro.release-surprise-at-first-print and both calendar rows describe the event channel without voting. Fed bias is the only event signal, it needs a statement released at or before the cutoff, and the release-surprise rule has no consensus staged.",
+      "bound_rows": ["live.f7-economic-surprise", "macro.release-surprise-at-first-print", "live.f8-fed-bias", "calendar.known-releases-between-cutoff-and-endpoint", "calendar.days-since-and-until-high-impact-events"]
+    },
+    {
+      "id": "IR-5",
+      "rule": "A statement after the cutoff cannot vote this morning.",
+      "detail": "F8 reads the newest archived statement released at or before the cutoff. A statement released later in the day reaches the next morning's book and never rewrites the current one.",
+      "bound_rows": ["live.f8-fed-bias"]
+    },
+    {
+      "id": "IR-6",
+      "rule": "A blocked morning is abstention, not a neutral call.",
+      "detail": "When the quality gate fails or too few families are usable, the morning records no direction and no band. It is never converted into a zero vote or a hold.",
+      "bound_rows": ["data.quality-gate-for-abstention", "live.f1-vix-level", "risk.usd-safe-haven-demand", "risk.risk-on-off-cross-asset-state"]
+    },
+    {
+      "id": "IR-7",
+      "rule": "The FX family votes through its two staged signals only; GBP and CHF are scored, not counted.",
+      "detail": "Momentum reads the EURUSD and USDJPY H1 mirrors as one averaged vote, and the overnight range reads the EURUSD tape. GBP/USD and USD/CHF are outcome targets, so the family is not four correlated readings of one move.",
+      "bound_rows": ["fx.usd-session-momentum", "fx.usd-overnight-range-position"]
+    },
+    {
+      "id": "IR-8",
+      "rule": "A vote inside a family is one unit of say, however many rows share it.",
+      "detail": "Six families, one unit each. A family with two usable signals averages them; a family with none is absent and is not reweighted into the others.",
+      "bound_rows": ["rates.relative-front-end-delta", "live.f2-us-2y-delta", "live.f4-real-yield-delta", "live.f5-dxy-delta", "live.f6-gold-delta", "live.f10-equity-versus-usd"]
+    },
+    {
+      "id": "IR-9",
+      "rule": "An inactive or uncounted row cannot be switched on by a good morning.",
+      "detail": "The volatility regime, the smile, the cross-asset state and both excluded rates rows stay silent even when their inputs are present and usable. Usability is not permission.",
+      "bound_rows": ["fx.usd-session-volatility-regime", "fx.usd-overnight-range-position", "live.f9-dollar-smile", "risk.risk-on-off-cross-asset-state", "rates.term-premium-and-curve", "rates.credit-spread-delta"]
+    },
+    {
+      "id": "IR-10",
+      "rule": "Missing data is recorded, never imputed.",
+      "detail": "A factor with no usable reading at the cutoff is booked as absent with its reason. No value is carried from a later print, and no family is topped up to reach a band.",
+      "bound_rows": ["live.f7-economic-surprise", "live.f8-fed-bias", "data.quality-gate-for-abstention", "calendar.known-releases-between-cutoff-and-endpoint"]
+    }
+  ],
+  "open_judgements": {
+    "OJ-1": {
+      "row": "live.f1-vix-level",
+      "question": "The adjudication blocks F1 as a direction while the decision rule spends one of twelve votes on it. The book keeps the vote and records what it achieves rather than resolving the disagreement by deleting the row.",
+      "resolved_by": "the per-factor accuracy record on replayed mornings; a vote that does not beat its own absence is a reason to change the rulebook, not this config"
+    },
+    "OJ-2": {
+      "row": "live.f8-fed-bias",
+      "question": "A morning with no statement released before its cutoff has no fed-bias reading. Version 1 books the signal absent rather than neutral.",
+      "resolved_by": "counting how many mornings are absent and whether the event family's absence moves the band distribution"
+    },
+    "OJ-3": {
+      "row": "live.f7-economic-surprise",
+      "also_rows": [
+        "macro.release-surprise-at-first-print",
+        "calendar.known-releases-between-cutoff-and-endpoint",
+        "calendar.days-since-and-until-high-impact-events"
+      ],
+      "question": "No consensus or first-print source is staged, so the release-surprise rule has a clock and no reading, and band 5 cannot be reached.",
+      "resolved_by": "staging a release calendar with consensus and first print; until then band 5 stays defined and unreachable"
+    }
+  }
+}

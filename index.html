@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261115-architecture-map-r4" />
+  <link rel="stylesheet" href="styles.css?v=20261115-backtesting-native" />
   <link rel="stylesheet" href="system-map.css?v=20261115-factory-3d" />
 </head>
 <body>
@@ -19,7 +19,7 @@
     <a class="topbar-link" href="dashboard-northstar.html" target="_top">North Star Brief</a>
     <a class="topbar-link" href="standing-dashboard.html" target="_top">Standing Dashboard</a>
     <a class="topbar-link" href="gold.html" target="_top">Gold</a>
-    <a class="topbar-link" href="backtesting.html" target="_top">Backtesting</a>
+    <a class="topbar-link" href="index.html#backtesting" target="_top">Backtesting</a>
     <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
     <a class="topbar-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
     <a class="topbar-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
@@ -56,13 +56,14 @@
     <button class="tab-button" data-tab="live-trading">Live Trading</button>
     <span class="side-rail-group">Evidence</span>
     <button class="tab-button" data-tab="research-library">Research Library</button>
-    <a class="side-rail-link" href="backtesting.html" target="_top">Backtesting</a>
+    <button class="tab-button" data-tab="usd-layer1-backtester">Backtesting</button>
     <details><summary class="side-rail-link">Research tools</summary>
     <button class="tab-button" data-tab="backtest">Backtest / Accuracy</button>
     <button class="tab-button" data-tab="backtest-engine">Backtest Engine</button>
     <button class="tab-button" data-tab="research-proof-map">Research Proof Map</button>
     <button class="tab-button" data-tab="factor-edge-lab">Factor Edge Lab</button>
     <button class="tab-button" data-tab="shadow-logic-backtest">Shadow Logic Backtest</button>
+    <a class="side-rail-link" href="backtesting.html" target="_top">Backtesting overview</a>
     </details>
     <span class="side-rail-group">System</span>
     <button class="tab-button" data-tab="architecture">Architecture</button>
@@ -389,6 +390,36 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
       <section id="backtestPanel" class="backtest-panel"></section>
     </section>
 
+    <section id="usdLayer1BacktesterView" class="view">
+      <section class="section-header backtest-title">
+        <div>
+          <p class="eyebrow">Backtesting</p>
+          <h2>What are we testing, on which markets, using which rules?</h2>
+        </div>
+        <p id="usdLayer1Updated" role="status">Loading saved research results...</p>
+      </section>
+
+      <section class="backtest-panel usd-l1-panel" aria-label="Backtesting: the map, the selected path and the saved research">
+        <article class="usd-l1-north-star" data-usd-l1-north-star="true">
+          <p class="eyebrow">North Star</p>
+          <p class="usd-l1-north-star-text">Can a USD Layer 1 call, made using only the 25-factor research and information available at 05:00 London, improve on our current model&rsquo;s directional accuracy and produce viable L2L trades? We measure four things: &#9312; DXY direction, &#9313; the USD call applied to four markets, &#9314; original L2L at 5R and &#9315; half L2L at 3R. Both trade simulations start at &pound;100,000 and risk 1% of the running balance per filled trade.</p>
+          <p class="usd-l1-north-star-note">Research only. Neither model is published as a live call, and no figure here is an edge claim.</p>
+        </article>
+
+        <div id="backtestingMap" class="bt-map" data-bt-map="true" aria-label="Backtesting map: snapshot, decision, four tests, markets and dates">
+          <div class="bt-map-loading">Loading the 05:00 snapshot, the model that ran and the four tests...</div>
+        </div>
+
+        <details class="usd-l1-eligibility" data-bt-scope="true">
+          <summary>Scope and caveats behind this tab</summary>
+          <p class="usd-l1-eligibility-headline">USD Layer 1 decision rules v1 are frozen: 320 of 725 mornings pass the gate, 196 issue a direction and 62 meet the provisional trade rule.</p>
+          <p class="usd-l1-eligibility-note">The frozen rules are also published on <a href="usd-l1-decision-rules-v1.html">USD Rules v1</a>, which links back into this tab, and the long saved-research cards stay on <a href="usd-layer1-backtester.html">the standalone USD Layer 1 backtester</a>. No morning passed the required 05:00 London receipt check, and F8 Fed bias is specified in v1 but not yet consumed by the published artefact. The v1 replay counts are a reconstruction over stored inputs, not live calls. Everything this tab draws comes from two committed artefacts, <code>run-v1.json</code> and <code>engine-v1.json</code>, and the version stamps name them.</p>
+        </details>
+
+        <div id="backtestingDetail" class="bt-detail" aria-live="polite"></div>
+      </section>
+    </section>
+
     <section id="researchProofMapView" class="view">
       <section class="section-header backtest-title">
         <div>
@@ -512,7 +543,10 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
   <script src="lib/research_upload_adapter.js?v=20261103-open-access-v1"></script>
   <script src="lib/live_trading_close_request.js?v=20261024-live-trading-close-request-v2"></script>
 <script src="lib/live_trading_performance.js?v=20261115-connection-test-exclusion"></script>
-<script src="script.js?v=20261115-architecture-map-r4"></script>
+  <script src="lib/vendor/three.min.js?v=20261115-backtesting-native"></script>
+  <script src="lib/usd_l1_diagram.js?v=20261115-backtesting-native"></script>
+  <script src="lib/backtesting_native.js?v=20261115-backtesting-native"></script>
+<script src="script.js?v=20261115-backtesting-native"></script>
   <script src="lib/ftmo2_status_widget.js?v=20261113-lane-state-clock"></script>
   <script src="lib/ftmo3_status_widget.js?v=20261115-live-trading-blind"></script>
 </body>

@@ -1,0 +1,78 @@
+{
+  "name": "USD Layer 1 - shadow decision (engine v1)",
+  "active": false,
+  "settings": { "timezone": "Europe/London", "executionTimeout": 180 },
+  "nodes": [
+    {
+      "name": "Schedule 05:05 London",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-380, 0],
+      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "5 5 * * 1-5" }] } },
+      "notes": "Five minutes after the cutoff, so the 04:45 sealed collection has already finished writing its file."
+    },
+    {
+      "name": "Decide with engine v1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [-120, 0],
+      "parameters": {
+        "command": "cd /opt/trading-agent-dashboard-codex && node backtester/scripts/run_usd_l1_shadow_decision.js --sealed \"backtester/tmp/usd-session-collections/$(TZ=Europe/London date +%F).json\""
+      },
+      "notes": "Calls the same engine_v1.decide the backtester calls. The script verifies the seal, prints the decision record and exits non-zero on a refusal, so a blocked morning is never mistaken for a call."
+    },
+    {
+      "name": "Allowed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [140, 0],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "version": 2 },
+          "conditions": [
+            {
+              "leftValue": "={{ JSON.parse($json.stdout).status }}",
+              "rightValue": "allowed",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Record shadow call",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [400, -140],
+      "parameters": {},
+      "notes": "Wire to the shadow log. A shadow call is a record of what the frozen book would have said; it places no order and changes no live path."
+    },
+    {
+      "name": "Alert shadow refusal",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [400, 140],
+      "parameters": {},
+      "notes": "Wire to the existing alert channel. A blocked or abstained morning names the rule that refused it (E1 to E6), so the alert should quote fired_rules rather than only saying no call."
+    },
+    {
+      "name": "Research only",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-380, 220],
+      "parameters": {
+        "content": "Shadow only. This workflow reads the sealed 05:00 collection, asks engine v1 for the decision and reports it. It writes no warehouse rows, publishes nothing to the dashboard and is not connected to any execution path. A green shadow morning is not evidence of live deployment, causal feature timing or trading edge."
+      }
+    }
+  ],
+  "connections": {
+    "Schedule 05:05 London": { "main": [[{ "node": "Decide with engine v1", "type": "main", "index": 0 }]] },
+    "Decide with engine v1": { "main": [[{ "node": "Allowed", "type": "main", "index": 0 }]] },
+    "Allowed": {
+      "main": [
+        [{ "node": "Record shadow call", "type": "main", "index": 0 }],
+        [{ "node": "Alert shadow refusal", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}
