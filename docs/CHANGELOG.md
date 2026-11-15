@@ -17,9 +17,23 @@
   links), `tests/backtesting_native.browser.test.js` 7/7 (normal menu, the three columns, a scored and a blocked
   morning with all 25 factors, a deep link, 390 pixels with no sideways scroll, and the 12 October miss and
   9 October no call read from the rendered tab at both widths).
-- Still open: publication to `main` re-publishes GitHub Pages, so it is done as its own operation, and the suite's
-  remaining failures are the ones that already fail on `origin/main` (nav drift in `index.html`, chart pan and zoom,
-  the old release board's `Backtest Engine` selector and the research-library browser file).
+- Published: PR #6, merged to `main` as `a289a259` (feature commit `cd5ce545`), and live at
+  `https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html#backtesting`. The branch was rebased
+  onto `main` after the architecture-map work, so `index.html` and `script.js` carry both sides - the system map's
+  loader and stylesheet beside the backtesting scripts and render block - and `system_factory`, `system_map` and
+  `validate_architecture_map` read 16/16 with `backtesting_native` at 20/20 after the union.
+- Read back from the live site at 1440 and 390 pixels, reached both by clicking the top menu's `Backtesting` link and
+  by the deep links: `#backtesting/four_markets/EURUSD/2026-10-12` is a miss with EUR/USD `-0.3194%` and E5 `passed`,
+  and `.../2026-10-09` is excluded from directional accuracy with E5 `abstained`, the refused rows `live.f5-dxy-delta`
+  and `risk.usd-safe-haven-demand` named with the unclocked-print reason and a tally of 3 bullish, 2 bearish, 4 flat
+  and 2 rows unable to vote. `lib/backtesting_native.js` and both artefacts return 200 at both widths, the map draws
+  in WebGL, no page error is raised and nothing overflows 390 pixels.
+- Guards: `tests/backtesting_native.test.js` 13/13 and `tests/backtesting_native.browser.test.js` 7/7. The full suite
+  reads 914 tests, 902 pass, 8 fail, and none of the 8 is this work: six already fail on `origin/main` (nav drift in
+  `index.html`, chart pan, chart zoom, the old release board's `Backtest Engine` selector, the research-library browser
+  file), and the other two depend on the published feed files and the wall clock -
+  `live_trading_publication_monitor` 1 of 10 and `refresh_progress.browser.test.js` 1 of 26 in the run, both 10/10 and
+  25/26 or better when run alone, and a clean worktree of `origin/main` fails 2 of the same 26 at the same moment.
 
 ## 2026-11-10 - USD Layer 1 Backtester published as a page of its own
 
