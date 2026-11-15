@@ -1,5 +1,33 @@
 # Session Notes
 
+2026-11-15 late evening, second lane (factory drill-downs, branch `design/architecture-factory-drilldowns` off
+`origin/main` `fb059c17`) - the Architecture factory gained its two second levels and a corrected execution floor.
+Each replay chamber now offers **Explore test library**: the camera drops below the floor, the chamber keeps its
+label above, five plaques stand in investigation order (research → model → inputs → replay → results) and the side
+panel lists each group's committed documents with a tag that separates what the replay reads from related research.
+The USD chamber exposes its four tests separately with market, logic, required data and result artefact: T1 is
+blocked on the official cash DXY series with a broker proxy scored, T2 is scored, T3 and T4 are blocked for all four
+markets on the missing M5 tape and pre-session ladder, and the two-day execution demo is labelled a demo. Each Layer
+1 core now offers **Inspect n8n flow**: `scripts/build_factory_flows.js` copies an allowlist (node names, types, type
+versions, edges, written purposes) out of the six committed agent exports into `lib/factory-flows.js` and writes
+`docs/dashboard-design/n8n-agent-flows.md`; `--check` fails on drift, and the builder rejects a URL, key, token,
+secret, webhook or credential-shaped string before writing. USD is the one *verified* flow (the logic dossier walks
+it); the other five read *documented workflow*, and WTI and GBP have no export so their panel says so. The floor now
+draws three FTMO traders: lane 1 (full ladder, 5R), lane 2 (half grid, 3R) and a third blind trader with its own M5
+feed and M5 deviation rule, connected but unarmed, with no Layer 1 or Layer 2 input and no payout route. A fourth,
+visually distinct cTrader component is drawn apart with dotted grey *hosting* links that are not counted as data flow;
+its four states read installation (source committed, deployment not evidenced), account connection (verification
+pending), trading authorisation (**pending**, orders default to disabled) and active copying (**none documented**).
+**No order-copying relay exists in this checkout** - the only cTrader artefact is the independent `ctrader/Ftmo3L2L`
+robot - so none is drawn and the station says it twice. Guards: `tests/factory_library.test.js` 7/7,
+`tests/factory_flows.test.js` 5/5, `tests/system_factory.browser.test.js` 11/11 and
+`tests/system_map.browser.test.js` 2/2; the local unit bucket ran 807 tests with 803 pass / 4 skipped / 0 fail, and
+the browser bucket 129 with 122 pass and the same 7 failures seen at `origin/main` in a clean worktree (nav partial
+2, XAU/USD dev board, two M5 pan/zoom, research-library, and one clock-dependent blind-lane freshness check). Local
+preview: `node scripts/research-library-server.js --serve-repo --port 8815`; screenshots in `tmp/shots/`
+(`journey-1-usd-library.png`, `journey-2-usd-flow.png`, `journey-3-floor-relay.png`, `phone-library.png`). Nothing is
+published: the branch is local, `main` and Pages are untouched.
+
 2026-11-15 late evening (the verified-mornings strip, built on `origin/main` `478ab9b9`, merged `35315dac`) - the
 owner asked the tab one question: on how many of the 725 historical mornings can we prove the intended 25-factor USD
 agent had every input it needed by 05:00 London and applied the final adjudicator's logic? The answer already existed
