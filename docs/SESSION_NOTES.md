@@ -24,7 +24,18 @@ wrapper overflows 390 pixels. Triage of the full suite: the six failures left ov
 `research_library.browser` - reproduce in a clean worktree of `origin/main` `4b6423b0`; the two that did not,
 `refresh_progress` and the research-library registry hashes, were stale working-tree copies of six
 `data/live-trading*.json` snapshots and two backtester artefacts, restored from `HEAD` and now 26/26 and 41/41.
-Nothing published yet: the commit, the PR and the live read-back are the remaining steps.
+Nothing published yet: the commit, the PR and the live read-back are the remaining steps. Published afterwards the
+same evening: PR #6, `main` at `a289a259` with the work as `cd5ce545`, after a rebase onto `main`'s architecture-map
+commits - `index.html` and `script.js` carry both sides, the map's `ensureSystemMap()` and `system-map.css` beside the
+backtesting scripts and render block, the three map suites 16/16 and `backtesting_native` 20/20 after the union. The
+rebased full suite reads 914 tests, 902 pass, 8 fail: the six that already fail on `origin/main`, plus two that read the
+published feed files and the clock - `live_trading_publication_monitor` 1 of 10 in the parallel run and 10/10 alone,
+`refresh_progress.browser.test.js` 1 of 26 in the run, 1 of 26 alone and 2 of the same 26 in the clean `origin/main`
+worktree at the same moment. Read back from the live site at 1440 and 390 pixels, by the menu link and by both deep
+links: `2026-10-12` a `miss` with EUR/USD `-0.3194%` and E5 `passed`, `2026-10-09` `excluded` with E5 `abstained`, the
+refused rows `live.f5-dxy-delta` and `risk.usd-safe-haven-demand` named with the unclocked reason, a tally of 3
+bullish, 2 bearish, 4 flat and 2 unable to vote, the map in WebGL, no page error and no 390-pixel overflow; evidence in
+`tmp/live-acceptance/` and `tmp/live-probe-out.txt` (both ignored).
 
 2026-11-15 afternoon (the blind lane published beside the other two, and its feed task made able to write) -
 FTMO 3 now reads on the published dashboard like the other two lanes: its own strip, `Live L2L Blind · Connected`

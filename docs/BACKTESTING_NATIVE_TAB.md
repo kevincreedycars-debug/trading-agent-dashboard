@@ -149,14 +149,27 @@ in their own group and are never mixed into this programme's counts.
   `risk.usd-safe-haven-demand` with the unclocked-print reason, and a tally of 2 rows that could not vote. No page
   error was raised, and on the 390-pixel phone no section, panel, table or canvas exceeded the viewport - the votes
   and the fail-safes print as stacked cards there, so nothing needs a sideways scroll.
-- Full `npm test` on this port: every failure that remains also fails in a clean worktree of `origin/main` `4b6423b0`
-  with the same `node_modules` - `site_nav_consistency.browser.test.js` 3 of 5 (its `--check` reports the same one
-  stale page, `index.html`, on both trees), `live_trading_chart_pan.browser.test.js`,
-  `live_trading_chart_zoom.browser.test.js`, `backtesting_development_release.browser.test.js` (it waits for a
-  `Backtest Engine` button that page no longer has) and `tests/research_library.browser.test.js`. Two failures were
-  local state rather than code: six `data/live-trading*.json` snapshots and two backtester artefacts had been
-  rewritten in the working tree, so `refresh_progress.browser.test.js` and the registry hash checks read stale and
-  re-encoded bytes; restored from `HEAD`, they pass 26 of 26 and 41 of 41.
+- Full `npm test` on this port, after the rebase onto `main`'s architecture-map work: 914 tests, 902 pass, 8 fail, and
+  none of the 8 is this work. Six also fail in a clean worktree of `origin/main` with the same `node_modules` -
+  `site_nav_consistency.browser.test.js` 3 of 5 (its `--check` reports the same one stale page, `index.html`, on both
+  trees), `live_trading_chart_pan.browser.test.js`, `live_trading_chart_zoom.browser.test.js`,
+  `backtesting_development_release.browser.test.js` (it waits for a `Backtest Engine` button that page no longer has)
+  and `tests/research_library.browser.test.js`. The other two read the published feed files and the wall clock:
+  `live_trading_publication_monitor.test.js` fails 1 of 10 in the parallel run and passes 10/10 alone, and
+  `refresh_progress.browser.test.js` fails 1 of 26 in the run, 1 of 26 alone a few minutes later, and 2 of the same 26
+  in the clean `origin/main` worktree at the same moment - the publish windows it asserts move as the snapshots age.
+  Two failures earlier in the session were local state rather than code: six `data/live-trading*.json` snapshots and
+  two backtester artefacts had been rewritten in the working tree, so `refresh_progress.browser.test.js` and the
+  registry hash checks read stale and re-encoded bytes; restored from `HEAD`, they passed 26 of 26 and 41 of 41.
+- Published from a branch rebased onto `main`: `index.html` and `script.js` end up carrying both sides, the
+  architecture map's `ensureSystemMap()` loader and `system-map.css` beside the backtesting scripts and render block,
+  and the three map suites read 16/16 with `backtesting_native` at 20/20 after the union resolution.
+- Live read-back (15 Nov 2026, after PR #6 merged `main` at `a289a259`): the top menu's `Backtesting` link opens
+  `index.html#backtesting` at 1440 and 390 pixels with the panel drawn, and both deep links read the same as the local
+  captures - `2026-10-12` a `miss` with EUR/USD `-0.3194%` and E5 `passed`, `2026-10-09` `excluded` with E5
+  `abstained`, the two refused rows and a vote tally of 3 bullish, 2 bearish, 4 flat and 2 unable to vote. The live
+  `lib/backtesting_native.js` is 12,204 bytes, both artefacts return 200, the map draws in WebGL at both widths, no
+  page error is raised and `documentElement` reports no horizontal overflow at 390 pixels.
 
 ## Gaps that are displayed, not hidden
 
@@ -167,7 +180,8 @@ in their own group and are never mixed into this programme's counts.
   evidence and is a book change (v1.1), not a setting.
 - Tests 3 and 4 replay only the two-day EUR/USD execution demo and the six archived ladders; no market besides
   EUR/USD has a tape in this checkout.
-- Publication to production `main` is a separate operation because a push there publishes GitHub Pages. The live URL
-  for this tab once published is
-  `https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html#backtesting`.
+- The tab is published on `main` (`a289a259`, feature commit `cd5ce545`) and reads at
+  `https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html#backtesting`. Publishing it re-published
+  GitHub Pages, so a later change to the panel is its own operation again, and the live page still shows the two refused
+  F5 and safe-haven prints on both acceptance mornings rather than a scored book.
 
