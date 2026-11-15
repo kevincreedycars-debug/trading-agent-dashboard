@@ -73,7 +73,11 @@ C:\ftmo3\tmp\live-trading-trader-status.json: the trader has not run in this che
 description of a lane whose loop is registered and disabled.
 
 `35bc8b03` then carried the lane's `blind: true` into the published row: the lanes loader normalised `strategy` to
-`grid` and `r_multiple` and dropped the flag, so the document whose label says "Blind" could not say why.
+`grid` and `r_multiple` and dropped the flag, so the document whose label says "Blind" could not say why. The flag
+reached the published document in the publisher's own run at `14:33:00Z` (commit `00fce252`), which states
+`strategy: {grid: full, r_multiple: 5, blind: true}` for `ftmo-3` and `grid`/`r_multiple` alone for the other two -
+read back from `main` and from the hosted path. The run before it, at `14:20:55Z`, still wrote the old shape because
+that process had loaded the publisher from a checkout that predated the change; its next run picked the new one up.
 
 ## Read back on the published page
 
