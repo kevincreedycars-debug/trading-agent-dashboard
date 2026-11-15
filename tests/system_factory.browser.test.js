@@ -589,6 +589,97 @@ test("reduced motion draws a still frame, and the keyboard selects a station", a
   }
 });
 
+test("every evidence link the factory can show resolves and stays inside the published scope", async () => {
+  // A localhost 200 only proves the development server can read a file. This guard holds the two properties the
+  // release needs: each target is a committed file that GitHub Pages serves from the repository root, and none of
+  // them is operator material - a host, an address, login references, a deployment step, a provider endpoint or a
+  // credential reference. Those files stay in the repository; the map must not send a visitor into them.
+  const WITHHELD = [
+    /^docs\/live-trading\/(?:VPS_|LANE2_VPS|FTMO_SETUP_GUIDE|SECOND_LANE_HALF_L2L|STRATEGY_LIVE)/,
+    /^exports\/[a-z0-9_]+_collector\.json$/
+  ];
+
+  const server = await startServer();
+  const browser = await chromium.launch({ headless: true });
+  try {
+    // Reduced motion keeps the camera still, so the walk is about the links rather than about 46 camera tweens.
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
+    const page = await openFactory(context, server.origin);
+
+    // One in-page walk: the index renders a button per station, each click re-renders the card synchronously, so the
+    // whole evidence surface is collected without 46 round trips.
+    const walk = await page.evaluate(() => {
+      const root = document.querySelector("[data-system-map]");
+      const buttons = [...root.querySelectorAll("[data-factory-station]")];
+      const links = new Set();
+      const missing = [];
+      for (const button of buttons) {
+        button.click();
+        const id = button.getAttribute("data-factory-station");
+        const card = root.querySelector(".factory-inspector-card");
+        if (!card || card.getAttribute("data-inspector-for") !== id) {
+          missing.push(id);
+          continue;
+        }
+        for (const link of card.querySelectorAll("a[data-evidence-path]")) links.add(link.getAttribute("href"));
+      }
+      return { count: buttons.length, missing, links: [...links] };
+    });
+    assert.equal(walk.count, 46, "the walk covers every station in the index");
+    assert.deepEqual(walk.missing, [], "every index button opens its own inspector card");
+    const hrefs = new Set(walk.links);
+
+    // The two journey panels carry their own links, including the route into the 25-factor register.
+    await page.evaluate(() => {
+      document.querySelector("[data-factory-journey-select]").value = "usd-research";
+    });
+    await page.click("[data-factory-journey-start]");
+    await page.waitForSelector("[data-factory-journey-active]");
+    for (let step = 0; step < 4; step += 1) {
+      await page.click("[data-factory-journey-next]");
+      await page.waitForTimeout(120);
+    }
+    const factorPanelLinks = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-factory-panel="factors"] a[data-evidence-path]')].map(a => a.getAttribute("href"))
+    );
+    factorPanelLinks.forEach(href => hrefs.add(href));
+    await page.click("[data-factory-journey-next]");
+    await page.waitForTimeout(150);
+    const testPanelLinks = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-factory-panel="tests"] a[data-evidence-path]')].map(a => a.getAttribute("href"))
+    );
+    testPanelLinks.forEach(href => hrefs.add(href));
+
+    assert.ok(hrefs.size >= 40, `the walk collects the whole evidence surface, saw ${hrefs.size}`);
+
+    for (const href of hrefs) {
+      assert.match(href, /^[a-z0-9_]+\/[^:\s]+$/, `${href} is a repository-relative path`);
+      assert.match(href, /\.[a-z0-9]+$/, `${href} names a file, not a folder`);
+      for (const pattern of WITHHELD) {
+        assert.doesNotMatch(href, pattern, `${href} is operator material and must not be linked from the map`);
+      }
+      assert.ok(fs.existsSync(path.join(repoRoot, href)), `${href} is a committed path`);
+    }
+
+    // The withheld files are withheld, not deleted: the inspector says so in its copy.
+    assert.ok(fs.existsSync(path.join(repoRoot, "exports", "usd_collector.json")));
+    assert.ok(fs.existsSync(path.join(repoRoot, "docs", "live-trading", "VPS_ACCESS_HANDOFF.md")));
+
+    // The research desk routes a visitor to the 25-factor register and to the summary that separates the factor sets.
+    assert.ok(hrefs.has("data/research-library/catalog.json"), "the 25-factor catalogue is reachable");
+    assert.ok(hrefs.has("docs/dashboard-design/usd-factor-sets.md"), "the factor-set summary is reachable");
+    assert.ok(hrefs.has("docs/dashboard-design/execution-path-summary.md"), "the execution summary is reachable");
+
+    const statuses = await statusesOf(page, [...hrefs]);
+    for (const [href, status] of Object.entries(statuses)) {
+      assert.equal(status, 200, `${href} must resolve from the preview root`);
+    }
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+
 test("the phone layout keeps the scene, the panel and the station index usable", async () => {
   const server = await startServer();
   const browser = await chromium.launch({ headless: true });
