@@ -1,5 +1,30 @@
 # Session Notes
 
+2026-11-15 afternoon (the blind lane published beside the other two, and its feed task made able to write) -
+FTMO 3 now reads on the published dashboard like the other two lanes: its own strip, `Live L2L Blind · Connected`
+in the connected tone rather than the active one, its own lane tab and card, and `data/live-trading.blind.json` in
+the same commit as `data/live-trading.json` and `data/live-trading.account2.json`. The account's one closed trade -
+the owner's BTC connection test of 14 Nov, `tech-conn-test-ftmo3`, #200523930, +0.32 net, 151 s - shows as `Kind:
+Connection test` in the closed-trades table and in the account balance, and the note above the table says its net is
+in the balance and excluded from the Blind win rate, trade count and expectancy, which stay at zero. The lane had
+written nothing since 13:35Z because its feed task was registered without a principal: the scheduler stored it at
+`Limited`, the unelevated Administrator token's `BUILTIN\Administrators` is deny-only, and every scheduled run died
+with `EPERM ... C:\ftmo3\tmp\live-trading-feed.log` while the same command over ssh wrote it - the fault
+`VPS_DEPLOYMENT_STATUS_20261024.md` §14.2 records for lane 1. `scripts/register-live-trading-feed-task.ps1` now
+takes `-RunLevel` (default `Highest`) and `-RunAs`, resolves the account from the token and translates it to a SID
+before anything is unregistered (the first attempt took `USERDOMAIN`/`USERNAME`, empty over ssh, and the
+registration had already removed the task by the time it refused), and reads the stored run level back as
+`task_run_level`; lane 3 returns `Administrator` / `Highest` / `LastTaskResult 0` and wrote a fresh snapshot at
+`14:00:20Z`. Published `27967f28` at `14:01:00Z` with all three lanes and `validate_error_count` 0, then `35bc8b03`
+to carry the lane's `blind: true` into the published row, which the loader had normalised away. Read back on the
+hosted page at `14:2xZ` with the lanes walked `ftmo-3 -> ftmo-2 -> ftmo-1`: badges `Connected`, `Active`, `Active`;
+tab bodies 5, 47 and 78 rows; no other lane's login on any card; no page error. Focused suites 25/25, 43/43, 77/77;
+the browser suite's 5 failures are the same 5 that fail at `8a3361e6` in a clean worktree with the same
+`node_modules`. Record: `docs/live-trading/LANE3_BLIND_ON_DASHBOARD_20261115.md`. Still unarmed:
+`LiveTradingTraderTick-ftmo3` is `Disabled`, no order was sent, and no rule, grid, size or other lane moved.
+
+
+
 2026-11-13 evening (both corner strips name the model and state three words, published) -
 `Live L2L Directional` and `Live 0.5L2L Directional` are page constants again and each strip says one of
 `Active`, `Stale`, `Paused` beside the name, the reason living on the tooltip; `liveTradingLaneWord()` is the one
