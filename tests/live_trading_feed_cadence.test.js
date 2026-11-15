@@ -479,6 +479,10 @@ test("the scheduled task calls that runner, hides it, and schedules nothing else
   assert.match(registerSource, /-RunLevel \$RunLevel/);
   assert.match(registerSource, /-Principal \$principal/);
   assert.match(registerSource, /task_run_level/);
+  // The account is taken from the token and translated before anything is registered: an unresolvable account must
+  // fail the run before the previous task is removed, not after.
+  assert.match(registerSource, /WindowsIdentity\]::GetCurrent\(\)\.Name/);
+  assert.match(registerSource, /\.Translate\(\[Security\.Principal\.SecurityIdentifier\]\)/);
   assert.match(registerSource, /order_path\s+=\s+"none"/);
   // Publication is a switch on this script and nowhere else, so re-registering for any other reason cannot start
   // writing to the branch Pages serves; the interval it passes is the publisher's own gate value.

@@ -36,7 +36,7 @@ param(
   # §14.2, and lane 3 met it again on 2026-11-15 because it was registered without this. `Interactive` is the logon
   # type the terminal's own task uses, so the cadence attaches to the terminal in the session that is signed in.
   [string] $RunLevel = "Highest",
-  [string] $RunAs = "$env:USERDOMAIN\$env:USERNAME",
+  [string] $RunAs = "",
   # The minimum seconds between two publishes, enforced by the publisher itself. 600 is six Pages builds an hour,
   # inside GitHub's documented soft limit of ten; the exact floor is 360, so this leaves deliberate headroom.
   [int] $PublishMinIntervalSeconds = 600,
@@ -156,6 +156,18 @@ function Write-Plan($dictionary) {
   }
 }
 
+# Named rather than left to the scheduler's default, because the default is the one that cannot write the snapshot.
+# It is resolved here, before the plan is printed and before any earlier task is removed, so an account the scheduler
+# cannot resolve fails the run while the previous registration is still in place. The default is the token's own name
+# rather than `$env:USERDOMAIN\$env:USERNAME`: over ssh those variables can be absent, and an empty domain made the
+# scheduler refuse a whole registration with "No mapping between account names and security IDs was done".
+if (-not $RunAs) { $RunAs = [Security.Principal.WindowsIdentity]::GetCurrent().Name }
+try {
+  $null = (New-Object Security.Principal.NTAccount($RunAs)).Translate([Security.Principal.SecurityIdentifier])
+} catch {
+  throw "The account '$RunAs' cannot be resolved on this host, so no task was registered: $($_.Exception.Message)"
+}
+
 $plan = [ordered]@{
   task_name          = $TaskName
   interval_minutes   = $IntervalMinutes
@@ -182,7 +194,8 @@ if ($Show) {
 }
 
 # Named rather than left to the scheduler's default, because the default is the one that cannot write the snapshot.
-# It is built here, before the self test, so the throwaway task runs at the same integrity level as the cadence.
+# It is built from the resolved account above, before the self test, so the throwaway task runs at the same
+# integrity level as the cadence itself.
 $principal = New-ScheduledTaskPrincipal -UserId $RunAs -LogonType Interactive -RunLevel $RunLevel
 
 # -Test proves the launcher, not the cadence: it registers a throwaway task with the same action and runtime, but a
