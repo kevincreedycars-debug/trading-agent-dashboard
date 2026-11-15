@@ -77,13 +77,13 @@ async function startServer() {
   };
 }
 
-async function openDashboard(page, origin) {
+async function openDashboard(page, origin, query) {
   await page.route("**/*", route => {
     const url = route.request().url();
     if (url.startsWith(origin) || url.startsWith("data:") || url.startsWith("blob:")) return route.continue();
     return route.abort();
   });
-  await page.goto(`${origin}/index.html`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${origin}/index.html${query || ""}`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector(".overview-map-link", { timeout: 20000 });
 }
 
@@ -91,8 +91,9 @@ test("the overview link opens an embedded map that asks for nothing outside this
   // Static half of the same rule: the module and its stylesheet carry no request of their own.
   assert.doesNotMatch(mapScript, /\bfetch\s*\(|XMLHttpRequest|sendBeacon/, "the map must not call the network");
   assert.doesNotMatch(mapStyles, /@import|url\s*\(/, "the map stylesheet must not load a font, image or frame");
-  assert.match(indexPage, /system-map\.css\?v=20261114-eight-paths-r3/, "the page must request the current map stylesheet");
-  assert.match(hostScript, /lib\/system-map\.js\?v=20261114-eight-paths-r3/, "the host must request the current map script");
+  assert.match(indexPage, /system-map\.css\?v=20261115-factory-3d/, "the page must request the current map stylesheet");
+  assert.match(hostScript, /lib\/system-map\.js\?v=20261115-factory-3d/, "the host must request the current map script");
+  assert.match(mapScript, /lib\/vendor\/three\.min\.js/, "the factory loads the vendored three.js bundle, not a CDN");
   assert.match(mapScript, /registered 25 factors/, "the map must record that the programme registered 25 factors");
   assert.doesNotMatch(mapScript, /25-factor challenger/, "no label may call the implemented challenger a 25-factor model");
   assert.match(mapScript, /no replay uses all 25/, "the map must not imply a replay used all 25 factors");
@@ -121,7 +122,10 @@ test("the overview link opens an embedded map that asks for nothing outside this
     );
 
     await page.click(".overview-map-link");
-    await page.waitForSelector("[data-system-map] .map-lane", { timeout: 20000 });
+    // The factory is the default view: the flat board is in the DOM but hidden, so the guard waits on the scene.
+    await page.waitForSelector("[data-factory-scene]", { state: "attached", timeout: 20000 });
+    // The factory is the default view, so the shape is read once the scene reports that it is ready.
+    await page.waitForSelector('[data-factory-scene][data-scene-state="ready"]', { timeout: 30000 });
 
     const shape = await page.evaluate(() => {
       const root = document.querySelector("[data-system-map]");
@@ -129,8 +133,10 @@ test("the overview link opens an embedded map that asks for nothing outside this
         hash: location.hash,
         tab: document.querySelector('.tab-button[data-tab="architecture"]').classList.contains("active"),
         embed: root.dataset.embed,
+        mode: root.dataset.mapMode,
         hero: root.querySelectorAll(".map-hero").length,
         canvases: root.querySelectorAll("canvas").length,
+        hologram: root.querySelectorAll(".map-hologram").length,
         lanes: root.querySelectorAll(".map-lane").length,
         nodes: root.querySelectorAll(".map-node").length,
         stages: root.querySelectorAll(".map-stage-head").length,
@@ -149,7 +155,9 @@ test("the overview link opens an embedded map that asks for nothing outside this
     assert.equal(shape.tab, true);
     assert.equal(shape.embed, "true");
     assert.equal(shape.hero, 0, "the host supplies the heading, so the map's own hero stays out");
-    assert.equal(shape.canvases, 0, "the embedded map has no hologram canvas");
+    assert.equal(shape.mode, "factory", "the factory is the default Architecture view");
+    assert.equal(shape.hologram, 0, "the embedded map has no hologram canvas");
+    assert.equal(shape.canvases, 1, "the factory mounts one canvas and nothing else draws into the map");
     assert.equal(shape.lanes, 8);
     assert.equal(shape.nodes, 48);
     assert.equal(shape.stages, 6);
@@ -259,8 +267,9 @@ test("the map keeps every label whole and its row labels in view from wide to ph
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-    await openDashboard(page, server.origin);
-    await page.goto(`${server.origin}/index.html#architecture`, { waitUntil: "domcontentloaded" });
+    // The flat board is the alternative view, so its layout guard opens the page pinned to it.
+    await openDashboard(page, server.origin, "?map=flat");
+    await page.goto(`${server.origin}/index.html?map=flat#architecture`, { waitUntil: "domcontentloaded" });
     await page.waitForSelector("[data-system-map] .map-lane", { timeout: 20000 });
     await page.waitForTimeout(350);
 

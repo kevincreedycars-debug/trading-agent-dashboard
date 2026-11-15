@@ -21052,7 +21052,7 @@ function ensureSystemMap() {
   if (systemMapLoad) return systemMapLoad;
   systemMapLoad = new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "lib/system-map.js?v=20261114-eight-paths-r3";
+    script.src = "lib/system-map.js?v=20261115-factory-3d";
     script.async = true;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("System map script failed to load"));
