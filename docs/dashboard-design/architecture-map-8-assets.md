@@ -108,6 +108,12 @@ geometries and the conditional payout without naming a host, an address or an ac
 - GitHub Pages was probed directly, not only through the preview server: `docs/ARCHITECTURE.md`,
   `docs/research/handoff/usd/v1/USD_FACTOR_REGISTER.md` and `data/research-library/catalog.json` answer 200 with
   `text/markdown` / `application/json` from `https://kevincreedycars-debug.github.io/trading-agent-dashboard/`.
+- After the publish, the live page was opened from that origin, not from the preview: `index.html` followed by
+  `Open architecture map`, and a cold `index.html#architecture`, both land on the factory with one canvas, 46
+  stations, `data-scene-state="ready"` and no page error; the USD core inspector's four links and the research desk's
+  seven all return 200 from the public origin; the EUR/USD journey lights EUR alone at its first step and both EUR,
+  USD and both lanes at the pair step; a phone context keeps a 344 by 439 stage, the inspector under it and no
+  horizontal overflow. A separate audit fetched the 69 paths the factory names and found every one served.
 - Local captures (ignored by git, in `tmp/preview/`): `shot-1-whole-factory.png`, `shot-2-usd-factor.png`,
   `shot-3-eurusd-lanes.png`, and `journey-eurusd.webm`, a recording of the execution journey.
 - Preview: `node scripts/research-library-server.js --serve-repo`, then open `index.html` and follow
