@@ -15,11 +15,63 @@ the network beyond fetching those two files.
   `index.html#backtesting/l2l_full_5r/EURUSD/2026-11-05`. The address bar is kept in step as the reader selects.
 - The standalone rules page still works: `usd-l1-decision-rules-v1.html` opens with a link into the tab.
 
+## The verified count: 0 / 725
+
+The strip immediately above the columns answers one question in one place: on how many of the 725 historical mornings
+can we prove the intended 25-factor USD agent had every input it needed by 05:00 London and applied the final
+adjudicator's logic? The answer is none, and it is the artefact's verdict rather than the tab's arithmetic.
+`run-v1.json` carries a `validity_gate` whose `research_gate.accepted` is 0 and whose note is: presence, freshness, a
+verified clock and the named instrument - no replayed morning passes all four rungs, so the strict gate accepts no
+call and no accuracy denominator survives unqualified.
+
+The gate's own ladder, over 725 sessions:
+
+| Rung | Mornings passing | What it asks |
+| --- | --- | --- |
+| present | 618 | every required input has a value |
+| fresh | 617 | inside the age its release allows |
+| clocked | 0 | a receipt proves the print existed at 05:00 London |
+| identified | 0 | the instrument the research names, not a declared proxy |
+
+The intended candidate is `CONFIG_BLOCKED` with `rule_defined: false` in `run-v1.json`
+(`validity_gate.intended_model`), so all 725 mornings are undefined-rule mornings for it whatever the data says; the
+book that actually ran - v1.0.0's `challenger_v1`, the equal-weight null hypothesis - is quoted beside it and labelled
+experimental. The strip prints six blockers, each with the dates it touches and the file that closes it:
+
+| Reason | Mornings | Closes with |
+| --- | --- | --- |
+| No adjudicated rule: the candidate is `CONFIG_BLOCKED` | 725 | a frozen combined rule, then `rule_defined` in `backtester/lib/usd_layer1_backtester/model_identity.js` |
+| No receipt proves the print existed at 05:00 London | 718 | receipt times archived by the 05:00 collection (`collection.js`, `automation/n8n/usd-l1-shadow-decision.workflow.json`) |
+| The staged series is a declared proxy | 720 | the named gold, NAS100, EUR/USD and JPY instruments, then `same_instrument` in `model_identity.js` |
+| A required input is absent | 107 | backfill of the five-day legs into `run-v1.json`'s per-morning inputs |
+| Older than the gate's freshness limit | 1 | book v1.1 (`config/usd_l1_factor_rulebook_v1.json`); the frozen 4-business-day age also refuses F5 and safe-haven demand on 311 and 310 mornings |
+| F8 Fed bias has no source | 725 | acquire a Fed-bias source, or record it permanently absent in the rulebook |
+
+The rows overlap and are not additive: 725 of 725 mornings fail at least one data rung and 725 are undefined-rule
+mornings, so the rows meet at 0 and must never be summed. The strip says that in the same words the gate does.
+
+Below the blockers, each of the four tests carries its own denominator: `verified 0 / 725`, with the artefact's
+experimental numbers printed beside it and marked experimental - the broker `DXY.cash` lane (current 141 of 284,
+challenger_v1 91 of 209), the four markets with their matched-date corrections and spoilages, and the two-day
+2026-11-05/06 EUR/USD execution demo (6 fills / 7R for 5R; 10 fills / 8R for the midpoint geometry), which sits
+outside the 725 and has no engine state row.
+
+No verified morning exists to link, so the strip says so and links the morning that comes closest instead:
+`#backtesting/four_markets/EURUSD/2024-02-06`, the artefact's own worked morning - every stored input accounted for,
+abstained BULLISH at band 2, and still unscorable because the rule it would be scored against is undefined. The
+inputs that fail a rung are named there.
+
+The strip's hooks are stable for the tests: `[data-bt-verify="0 / 725"]`, `[data-bt-verify-lead]`,
+`[data-bt-verified-outcome]`, `[data-bt-rung]`, `[data-bt-blocker]`, `[data-bt-verified-test]`,
+`[data-bt-verified-market]`, `[data-bt-verify-overlap]`, `[data-bt-verified-exemplar]` and `[data-bt-verified-blocked]`.
+
+
+
 ## What the first screen says
 
-Above everything: the North Star, in the brief's own words, including the four tests and the Â£100,000 / 1% account.
+Above everything: the North Star, in the brief's own words, including the four tests and the £100,000 / 1% account.
 
-Under it, three columns:
+Under the strip, three columns:
 
 | Column | What it shows | Where it comes from |
 | --- | --- | --- |

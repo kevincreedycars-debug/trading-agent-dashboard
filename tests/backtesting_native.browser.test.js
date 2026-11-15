@@ -334,6 +334,108 @@ test("a scored miss and a no-call morning each say why: refused inputs, deadband
   }
 });
 
+test("the verified count leads the tab, with its rungs, blockers, tests and one blocked morning to open", async () => {
+  const server = serveRepo();
+  await listenSafe(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const page = await context.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+
+  try {
+    await openTab(page, base);
+    const gate = run.validity_gate;
+    assert.equal(
+      await page.getAttribute("[data-bt-verify]", "data-bt-verify"),
+      `${gate.research_gate.accepted} / ${gate.intended.sessions}`,
+      "the strip leads with the gate's own count"
+    );
+    const lead = (await page.textContent("[data-bt-verify-lead]")).replace(/\s+/g, " ").trim();
+    assert.match(lead, new RegExp(`^0 / 725 verified mornings$`));
+    const why = (await page.textContent("[data-bt-verify-why]")).replace(/\s+/g, " ");
+    assert.match(why, /CONFIG_BLOCKED/);
+    assert.match(why, /rule_defined false/);
+
+    const outcomes = await page.$$eval("[data-bt-verified-outcome]", (nodes) =>
+      nodes.map((node) => [node.getAttribute("data-bt-verified-outcome"), node.lastElementChild.textContent.trim()])
+    );
+    assert.deepEqual(outcomes, [
+      ["directional", "0"],
+      ["abstained", "0"],
+      ["trading", "0"]
+    ]);
+
+    const rungs = await page.$$eval("[data-bt-rung]", (nodes) =>
+      nodes.map((node) => ({
+        id: node.getAttribute("data-bt-rung"),
+        text: node.textContent.replace(/\s+/g, " ").trim()
+      }))
+    );
+    assert.deepEqual(rungs.map((rung) => rung.id), ["present", "fresh", "clocked", "identified"]);
+    const ladder = gate.ladder.filter((row) => row.scope === "sessions");
+    for (const [index, rung] of rungs.entries()) {
+      assert.match(rung.text, new RegExp(`${ladder[index].sessions_passing} / 725`), `${rung.id} quotes the gate`);
+    }
+    assert.match(rungs[2].text, /^A receipt proves the print existed before 05:00 London 0 \/ 725/);
+
+    const blockers = await page.$$eval("[data-bt-blocker]", (nodes) =>
+      nodes.map((node) => ({ id: node.getAttribute("data-bt-blocker"), text: node.textContent.replace(/\s+/g, " ").trim() }))
+    );
+    assert.deepEqual(
+      blockers.map((row) => row.id),
+      ["undefined-rule", "unclocked", "wrong-instrument", "missing-input", "stale-input", "fed-bias-no-source"]
+    );
+    assert.match(blockers[0].text, /725 dates/);
+    assert.match(blockers[0].text, /model_identity\.js/);
+    const overlap = (await page.textContent("[data-bt-verify-overlap]")).replace(/\s+/g, " ");
+    assert.match(overlap, /must not be added/);
+
+    const tests = await page.$$eval("[data-bt-verified-test]", (nodes) =>
+      nodes.map((node) => ({
+        id: node.getAttribute("data-bt-verified-test"),
+        text: node.textContent.replace(/\s+/g, " ").trim()
+      }))
+    );
+    assert.deepEqual(tests.map((entry) => entry.id), ["dxy_direction", "four_markets", "l2l_full_5r", "l2l_half_3r"]);
+    assert.ok(tests.every((entry) => /verified 0 \/ 725/.test(entry.text)), "each test carries its own zero denominator");
+    const markets = await page.$$eval("[data-bt-verified-market]", (nodes) =>
+      nodes.map((node) => node.getAttribute("data-bt-verified-market"))
+    );
+    assert.deepEqual(markets, ["EURUSD", "XAUUSD", "NAS100", "BTCUSD"]);
+
+    assert.equal((await page.$$("[data-bt-verified-exemplar]")).length, 1, "the strip says no verified morning exists");
+    const blocked = page.locator("[data-bt-verified-blocked]");
+    assert.equal(await blocked.getAttribute("data-bt-verified-blocked"), engine.proof_morning.date);
+    assert.equal(
+      await blocked.locator("a").getAttribute("href"),
+      `#backtesting/four_markets/EURUSD/${engine.proof_morning.date}`
+    );
+    await blocked.locator("a").click();
+    await page.waitForSelector(`[data-bt-snapshot-date]`);
+    assert.equal((await page.textContent("[data-bt-snapshot-date]")).trim(), engine.proof_morning.date);
+    assert.deepEqual(pageErrors, [], "the strip renders without page errors");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(300);
+    const layout = await page.evaluate(() => {
+      const strip = document.querySelector("[data-bt-verify]");
+      return {
+        pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        stripWidth: Math.round(strip.getBoundingClientRect().width),
+        stripOverflow: strip.scrollWidth - strip.clientWidth
+      };
+    });
+    assert.ok(layout.pageOverflow <= 2, `the strip must not scroll the phone sideways (${layout.pageOverflow}px)`);
+    assert.ok(layout.stripWidth <= 390, `the strip fits the phone viewport (${layout.stripWidth}px)`);
+    assert.ok(layout.stripOverflow <= 2, `the strip's own content must not overflow (${layout.stripOverflow}px)`);
+  } finally {
+    await browser.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("the miss and the no call stay readable on a phone, with no sideways scroll", async () => {
   const server = serveRepo();
   await listenSafe(server);

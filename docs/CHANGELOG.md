@@ -1,4 +1,31 @@
 # Changelog
+## 2026-11-15 - The verified-mornings answer leads the Backtesting tab
+
+- Why: the owner asked one question of the tab - on how many of the 725 historical mornings can we prove the intended
+  25-factor USD agent had every input it needed by 05:00 London and applied the final adjudicator's logic - and the
+  answer existed only inside the run artefact's `validity_gate`, spread over a ladder, six placeholder lists and a
+  validator that never ran in the browser.
+- What was built: `lib/backtesting_native.js` gains `verification(run, engine)`, which reads `run-v1.json`'s
+  `validity_gate` and returns the count (`0 / 725`), the four-rung ladder (present 618, fresh 617, clocked 0,
+  identified 0), the outcome buckets for verified mornings, the six blockers with the dates each touches and the file
+  that closes it, the four tests with a zero verified denominator beside the artefact's experimental numbers, and one
+  blocked morning to open. No figure is recomputed: the rungs and the blocker dates are the gate's own rows, and the
+  per-input counts inside the fixes are read from `validity_gate.days` rather than typed. `script.js` adds
+  `renderBacktestingVerification()`, a strip above the three columns that leads with `0 / 725`, names the intended
+  candidate's `CONFIG_BLOCKED` / `rule_defined: false` state, and labels every implemented-book number experimental.
+- What it says: no morning can be proved, because the intended candidate's rule is undefined (725 of 725 are
+  undefined-rule mornings) and no print carries a receipt that puts it before 05:00 London (718 mornings name an
+  unclocked input; the ladder's clocked rung is 0 of 725). The blockers overlap and are not additive - 725 fail at
+  least one data rung - and the strip prints that reconciliation instead of a sum. The nearest blocked morning,
+  `2024-02-06`, is linked with its full trace; no verified morning exists to link, and the strip says so.
+- Guards: `tests/backtesting_native.test.js` 18/18 (the gate's own zero, the rungs and blocker dates re-derived from
+  `validity_gate.days`, every named path exists on disk, the blocked exemplar is a stored morning, the four tests'
+  matched dates reconcile, and an absent gate reports unavailable rather than zero) and
+  `tests/backtesting_native.browser.test.js` 8/8 (the strip's lead, outcomes, rungs, blockers, tests, exemplar link and
+  no overflow at 390 pixels).
+- Layout: the strip is a card list, not a table, so the long fixes stack on a phone; `styles.css` gains the
+  `.bt-verify` block and a 720-pixel rule, and the local probe reads no page error, no document overflow and a
+  370-pixel strip at 390 pixels.
 ## 2026-11-15 - The USD Layer 1 backtester becomes the Backtesting tab
 
 - Why: the 10 November release had to cut the panel onto a standalone page, `usd-layer1-backtester.html`, because
