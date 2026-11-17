@@ -1,0 +1,601 @@
+{
+  "fixture": {
+    "date": "2026-11-16",
+    "endDate": "2026-11-17",
+    "evidence": "synthetic fixture",
+    "inputs": {
+      "vix": {
+        "source": "Cboe",
+        "instrument": "VIX spot close",
+        "transform": "index points, latest completed close",
+        "observed": "2026-11-13T20:00:00Z",
+        "published": "2026-11-13T20:00:00Z",
+        "received": "2026-11-13T20:00:00Z",
+        "original": true,
+        "value": 17
+      },
+      "front": {
+        "source": "Federal Reserve H.15",
+        "instrument": "DGS2",
+        "transform": "5 completed observation intervals, bp",
+        "observed": "2026-11-13T20:00:00Z",
+        "published": "2026-11-13T20:00:00Z",
+        "received": "2026-11-13T20:00:00Z",
+        "original": true,
+        "value": 8
+      },
+      "spread": {
+        "source": "H.15 + Bundesbank BBSIS",
+        "instrument": "DGS2 minus DE sovereign Svensson 2.0-year zero-coupon spot",
+        "transform": "5 common observation intervals, change of spread in bp",
+        "observed": "2026-11-13T20:00:00Z",
+        "published": "2026-11-13T20:00:00Z",
+        "received": "2026-11-13T20:00:00Z",
+        "original": true,
+        "value": 7
+      },
+      "real": {
+        "source": "Federal Reserve H.15",
+        "instrument": "DFII10",
+        "transform": "5 completed observation intervals, bp",
+        "observed": "2026-11-13T20:00:00Z",
+        "published": "2026-11-13T20:00:00Z",
+        "received": "2026-11-13T20:00:00Z",
+        "original": true,
+        "value": 6
+      },
+      "broad": {
+        "source": "Federal Reserve H.10",
+        "instrument": "DTWEXBGS",
+        "transform": "5 observation intervals, simple return in percent",
+        "observed": "2026-11-13T20:00:00Z",
+        "published": "2026-11-13T20:00:00Z",
+        "received": "2026-11-13T20:00:00Z",
+        "original": true,
+        "value": 0.4
+      },
+      "ice": {
+        "source": "ICE",
+        "instrument": "US Dollar Index spot",
+        "transform": "previous eligible London 05:00 fixing to current 05:00, simple return in percent",
+        "observed": "2026-11-16T05:00:00Z",
+        "published": "2026-11-16T05:00:00Z",
+        "received": "2026-11-16T05:00:00Z",
+        "original": true,
+        "value": 0.2
+      },
+      "gold": {
+        "source": "LBMA",
+        "instrument": "LBMA Gold Price PM USD",
+        "transform": "5 completed fixing intervals, simple return in percent",
+        "observed": "2026-11-13T20:00:00Z",
+        "published": "2026-11-13T20:00:00Z",
+        "received": "2026-11-13T20:00:00Z",
+        "original": true,
+        "value": -1.3
+      },
+      "qqq": {
+        "source": "Nasdaq",
+        "instrument": "QQQ official close",
+        "transform": "5 completed close intervals, split-adjusted as known at cutoff, simple return in percent",
+        "observed": "2026-11-13T20:00:00Z",
+        "published": "2026-11-13T20:00:00Z",
+        "received": "2026-11-13T20:00:00Z",
+        "original": true,
+        "value": 1.1
+      },
+      "calendar": {
+        "source": "BLS + BEA + Federal Reserve",
+        "instrument": "CPI, Employment Situation, advance GDP, Personal Income and Outlays, FOMC policy decisions",
+        "transform": "scheduled release count in [cutoff,endpoint), complete archived schedules required",
+        "observed": "2026-11-16T04:30:00Z",
+        "published": "2026-11-16T04:30:00Z",
+        "received": "2026-11-16T04:30:00Z",
+        "original": true,
+        "value": 0
+      }
+    }
+  },
+  "baseline": {
+    "model": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+    "date": "2026-11-16",
+    "cutoff": "2026-11-16T05:00:00.000Z",
+    "end": "2026-11-17T05:00:00.000Z",
+    "evidence": "synthetic fixture",
+    "status": "directional",
+    "direction": "BULLISH",
+    "conviction": 3,
+    "trade": true,
+    "trace": {
+      "model": "current",
+      "model_label": "Current USD model",
+      "version": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+      "logic_document_version": "2.1_weighted_engine",
+      "direction_label": "BULLISH",
+      "direction": "BULLISH",
+      "conviction": 3,
+      "conviction_raw": 63,
+      "conviction_scale": "0-100 (the model's own scale, banded to 1-5)",
+      "raw_score": {
+        "bullish_weight": 38,
+        "bearish_weight": 0,
+        "active_weight": 38,
+        "net_weight": 38
+      },
+      "factors": [
+        {
+          "id": "F1 VIX",
+          "signal": "NEUTRAL",
+          "weight": 10,
+          "evidence": "VIX 17",
+          "reason": "Domestic drivers dominate."
+        },
+        {
+          "id": "F2 US 2Y Yield Delta",
+          "signal": "BULLISH",
+          "weight": 14,
+          "evidence": "US 2Y 5d bps 8",
+          "reason": "US front-end yields support USD"
+        },
+        {
+          "id": "F3 US-DE 2Y Spread Delta",
+          "signal": "NEUTRAL",
+          "weight": 10,
+          "evidence": "Missing US-DE 2Y spread 5d bps",
+          "reason": "Missing input"
+        },
+        {
+          "id": "F4 US 10Y Real Yield Delta",
+          "signal": "BULLISH",
+          "weight": 10,
+          "evidence": "Real yield 5d bps 6",
+          "reason": "Rising real yields support USD"
+        },
+        {
+          "id": "F5 DXY Delta",
+          "signal": "BULLISH",
+          "weight": 14,
+          "evidence": "DXY 1d % 0.4",
+          "reason": "DXY confirms USD strength"
+        },
+        {
+          "id": "F6 Gold Delta",
+          "signal": "NEUTRAL",
+          "weight": 4,
+          "evidence": "Missing gold delta",
+          "reason": "Missing input"
+        },
+        {
+          "id": "F7 US Economic Surprise",
+          "signal": "NEUTRAL",
+          "weight": 24,
+          "evidence": "No recent US event",
+          "reason": "No confirmed surprise"
+        },
+        {
+          "id": "F8 Fed Bias",
+          "signal": "NEUTRAL",
+          "weight": 12,
+          "evidence": "Fed bias unknown",
+          "reason": "Missing input"
+        },
+        {
+          "id": "F9 Dollar Smile",
+          "signal": "NEUTRAL",
+          "weight": 1,
+          "evidence": "VIX 17",
+          "reason": "Insufficient regime evidence"
+        },
+        {
+          "id": "F10 Equity Regime",
+          "signal": "NEUTRAL",
+          "weight": 1,
+          "evidence": "Missing NQ/VIX",
+          "reason": "Missing input"
+        }
+      ],
+      "inputs_used": [
+        "F2 US 2Y Yield Delta",
+        "F4 US 10Y Real Yield Delta",
+        "F5 DXY Delta"
+      ],
+      "missing_inputs": [
+        "us_de_2y_spread_d5_bps",
+        "gold_d5_pct",
+        "latest_us_event",
+        "fed_bias",
+        "nq_d1_pct",
+        "nq_d5_pct",
+        "gold_d20_pct",
+        "nq_d20_pct"
+      ],
+      "reason": "BULLISH at conviction 63 on the model's own 0-100 scale"
+    }
+  },
+  "call": {
+    "model": "USD-L1-25F-H1-v0.1.0",
+    "date": "2026-11-16",
+    "cutoff": "2026-11-16T05:00:00.000Z",
+    "end": "2026-11-17T05:00:00.000Z",
+    "evidence": "synthetic fixture",
+    "status": "directional",
+    "direction": "BULLISH",
+    "conviction": 4,
+    "trade": true,
+    "trace": {
+      "factors": [
+        {
+          "id": "live.f1-vix-level",
+          "role": "HYPOTHESIS: regime gate",
+          "source": "vix",
+          "value": 17
+        },
+        {
+          "id": "risk.vix-level-and-change-at-cutoff",
+          "role": "HYPOTHESIS: shared F1",
+          "source": "vix",
+          "value": 17
+        },
+        {
+          "id": "live.f2-us-2y-delta",
+          "role": "HYPOTHESIS: decomposition only, DGS2 is counted inside F19",
+          "source": "front",
+          "value": 8
+        },
+        {
+          "id": "live.f3-us-de-2y-spread-delta",
+          "role": "HYPOTHESIS: shared F19",
+          "source": "spread",
+          "value": 7
+        },
+        {
+          "id": "live.f4-real-yield-delta",
+          "role": "HYPOTHESIS: rates vote",
+          "source": "real",
+          "value": 6
+        },
+        {
+          "id": "rates.us-front-end-delta",
+          "role": "HYPOTHESIS: shared F2",
+          "source": "front",
+          "value": 8
+        },
+        {
+          "id": "rates.relative-front-end-delta",
+          "role": "HYPOTHESIS: rates vote",
+          "source": "spread",
+          "value": 7
+        },
+        {
+          "id": "rates.real-yield-delta",
+          "role": "HYPOTHESIS: shared F4",
+          "source": "real",
+          "value": 6
+        },
+        {
+          "id": "rates.term-premium-and-curve",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "rates.credit-spread-delta",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "live.f5-dxy-delta",
+          "role": "HYPOTHESIS: USD momentum vote",
+          "source": "broad",
+          "value": 0.4
+        },
+        {
+          "id": "live.f6-gold-delta",
+          "role": "HYPOTHESIS: cross-market vote",
+          "source": "gold",
+          "value": -1.3
+        },
+        {
+          "id": "live.f9-dollar-smile",
+          "role": "HYPOTHESIS: context only",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "live.f10-equity-versus-usd",
+          "role": "HYPOTHESIS: cross-market vote",
+          "source": "qqq",
+          "value": 1.1
+        },
+        {
+          "id": "live.f7-economic-surprise",
+          "role": "HYPOTHESIS: excluded from 05:00 score and gates",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "live.f8-fed-bias",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "macro.release-surprise-at-first-print",
+          "role": "HYPOTHESIS: excluded from 05:00 score and gates",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "fx.usd-session-momentum",
+          "role": "HYPOTHESIS: USD momentum vote",
+          "source": "ice",
+          "value": 0.2
+        },
+        {
+          "id": "fx.usd-overnight-range-position",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "fx.usd-session-volatility-regime",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "risk.usd-safe-haven-demand",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "risk.risk-on-off-cross-asset-state",
+          "role": "HYPOTHESIS: shared F1",
+          "source": "vix",
+          "value": 17
+        },
+        {
+          "id": "calendar.known-releases-between-cutoff-and-endpoint",
+          "role": "HYPOTHESIS: event gate",
+          "source": "calendar",
+          "value": 0
+        },
+        {
+          "id": "calendar.days-since-and-until-high-impact-events",
+          "role": "HYPOTHESIS: shared F23",
+          "source": "calendar",
+          "value": 0
+        },
+        {
+          "id": "data.quality-gate-for-abstention",
+          "role": "HYPOTHESIS: integrity gate",
+          "source": null,
+          "value": null
+        }
+      ],
+      "votes": {
+        "front": 1,
+        "spread": 1,
+        "real": 1,
+        "broad": 1,
+        "ice": 1,
+        "gold": 1,
+        "qqq": -1
+      },
+      "families": {
+        "rates": 1,
+        "momentum": 1,
+        "crossMarket": 0
+      },
+      "score": 0.6666666666666666,
+      "vixGate": false,
+      "deadband": false,
+      "eventGate": false,
+      "frontCounted": false
+    }
+  },
+  "abstain": {
+    "model": "USD-L1-25F-H1-v0.1.0",
+    "date": "2026-11-16",
+    "cutoff": "2026-11-16T05:00:00.000Z",
+    "end": "2026-11-17T05:00:00.000Z",
+    "evidence": "synthetic fixture",
+    "status": "abstained",
+    "direction": null,
+    "conviction": null,
+    "trade": false,
+    "trace": {
+      "factors": [
+        {
+          "id": "live.f1-vix-level",
+          "role": "HYPOTHESIS: regime gate",
+          "source": "vix",
+          "value": 30
+        },
+        {
+          "id": "risk.vix-level-and-change-at-cutoff",
+          "role": "HYPOTHESIS: shared F1",
+          "source": "vix",
+          "value": 30
+        },
+        {
+          "id": "live.f2-us-2y-delta",
+          "role": "HYPOTHESIS: decomposition only, DGS2 is counted inside F19",
+          "source": "front",
+          "value": 8
+        },
+        {
+          "id": "live.f3-us-de-2y-spread-delta",
+          "role": "HYPOTHESIS: shared F19",
+          "source": "spread",
+          "value": 7
+        },
+        {
+          "id": "live.f4-real-yield-delta",
+          "role": "HYPOTHESIS: rates vote",
+          "source": "real",
+          "value": 6
+        },
+        {
+          "id": "rates.us-front-end-delta",
+          "role": "HYPOTHESIS: shared F2",
+          "source": "front",
+          "value": 8
+        },
+        {
+          "id": "rates.relative-front-end-delta",
+          "role": "HYPOTHESIS: rates vote",
+          "source": "spread",
+          "value": 7
+        },
+        {
+          "id": "rates.real-yield-delta",
+          "role": "HYPOTHESIS: shared F4",
+          "source": "real",
+          "value": 6
+        },
+        {
+          "id": "rates.term-premium-and-curve",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "rates.credit-spread-delta",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "live.f5-dxy-delta",
+          "role": "HYPOTHESIS: USD momentum vote",
+          "source": "broad",
+          "value": 0.4
+        },
+        {
+          "id": "live.f6-gold-delta",
+          "role": "HYPOTHESIS: cross-market vote",
+          "source": "gold",
+          "value": -1.3
+        },
+        {
+          "id": "live.f9-dollar-smile",
+          "role": "HYPOTHESIS: context only",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "live.f10-equity-versus-usd",
+          "role": "HYPOTHESIS: cross-market vote",
+          "source": "qqq",
+          "value": 1.1
+        },
+        {
+          "id": "live.f7-economic-surprise",
+          "role": "HYPOTHESIS: excluded from 05:00 score and gates",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "live.f8-fed-bias",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "macro.release-surprise-at-first-print",
+          "role": "HYPOTHESIS: excluded from 05:00 score and gates",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "fx.usd-session-momentum",
+          "role": "HYPOTHESIS: USD momentum vote",
+          "source": "ice",
+          "value": 0.2
+        },
+        {
+          "id": "fx.usd-overnight-range-position",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "fx.usd-session-volatility-regime",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "risk.usd-safe-haven-demand",
+          "role": "HYPOTHESIS: excluded",
+          "source": null,
+          "value": null
+        },
+        {
+          "id": "risk.risk-on-off-cross-asset-state",
+          "role": "HYPOTHESIS: shared F1",
+          "source": "vix",
+          "value": 30
+        },
+        {
+          "id": "calendar.known-releases-between-cutoff-and-endpoint",
+          "role": "HYPOTHESIS: event gate",
+          "source": "calendar",
+          "value": 0
+        },
+        {
+          "id": "calendar.days-since-and-until-high-impact-events",
+          "role": "HYPOTHESIS: shared F23",
+          "source": "calendar",
+          "value": 0
+        },
+        {
+          "id": "data.quality-gate-for-abstention",
+          "role": "HYPOTHESIS: integrity gate",
+          "source": null,
+          "value": null
+        }
+      ],
+      "votes": {
+        "front": 1,
+        "spread": 1,
+        "real": 1,
+        "broad": 1,
+        "ice": 1,
+        "gold": 1,
+        "qqq": -1
+      },
+      "families": {
+        "rates": 1,
+        "momentum": 1,
+        "crossMarket": 0
+      },
+      "score": 0.6666666666666666,
+      "vixGate": true,
+      "deadband": false,
+      "eventGate": false,
+      "frontCounted": false
+    }
+  },
+  "blocked": {
+    "model": "USD-L1-25F-H1-v0.1.0",
+    "date": "2026-11-16",
+    "cutoff": "2026-11-16T05:00:00.000Z",
+    "end": "2026-11-17T05:00:00.000Z",
+    "evidence": "synthetic fixture",
+    "status": "blocked",
+    "direction": null,
+    "conviction": null,
+    "trade": false,
+    "trace": [
+      "calendar: missing"
+    ]
+  },
+  "dst": [
+    "2026-10-23T04:00:00.000Z",
+    "2026-10-26T05:00:00.000Z"
+  ]
+}
