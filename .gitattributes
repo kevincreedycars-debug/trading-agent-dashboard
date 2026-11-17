@@ -5,6 +5,13 @@
 # disk. `-text` disables line-ending conversion in both directions, so a checkout hands back the
 # bytes the builder wrote and one hash keeps meaning the same thing on every machine. Scoped to
 # this folder, which this commit introduces; no path that already ships is covered.
+# The supplied USD-L1-25F-H1 acceptance package, added 2026-11-17 with the candidate registration.
+# `SHA256SUMS` declares the sha256 of every file in the package, and the screen recomputes each hash
+# from the checkout before it registers the candidate. `-text` keeps the bytes the author wrote, so a
+# Windows checkout with `core.autocrlf=true` reproduces the manifest instead of failing all 16 sums
+# on line endings. Scoped to this folder, which the registration commit introduces.
+backtester/packages/** -text
+docs/research/usd-session/h1/** -text
 docs/research/handoff/** -text
 docs/research/topics/** -text
 docs/research/factors/** -text

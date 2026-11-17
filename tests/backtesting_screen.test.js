@@ -33,16 +33,24 @@ test("the payload carries the two models, the session, the range and four tests 
   }
 });
 
-test("the requested H1 package is present and verified, with its own identity rather than a legacy substitute", () => {
+test("the requested H1 package is registered, verified byte for byte and reproducible from its own runner", () => {
   const pkg = screen.package_identity;
   assert.equal(pkg.requested, "USD-L1-25F-H1-v0.1.0");
   assert.equal(pkg.status, "PRESENT");
-  assert.equal(screen.h1.package.status, "VERIFIED");
-  assert.equal(screen.h1.package.archive.sha256, "1c82e9048a3cf2237ffea6873b8099389d09fccefa083cd38ccb87517e3672e0");
-  assert.equal(screen.h1.package.internal_checksums.verified, screen.h1.package.internal_checksums.declared);
-  assert.equal(screen.h1.package.contents.rows, 25);
+  const h1 = screen.h1.package;
+  assert.equal(h1.status, "VERIFIED");
+  assert.equal(h1.package.root, "backtester/packages/USD-L1-25F-H1-v0.1.0");
+  assert.equal(h1.package.commit, "60e695bccabd9a370cc2688a1f791d07dd94720d");
+  assert.equal(h1.internal_checksums.verified, h1.internal_checksums.declared);
+  assert.equal(h1.internal_checksums.declared, 16);
+  assert.deepEqual(h1.internal_checksums.mismatches, []);
+  assert.equal(h1.acceptance.exit_code, 0);
+  assert.equal(h1.acceptance.status, "PASS");
+  assert.equal(h1.declared_hashes.rulebook_sha256, "e2e29421a95f903123d6353c8a7f7b323f418ef7392384b21bfe8b559511c80b");
+  assert.equal(h1.archive.sha256, "1c82e9048a3cf2237ffea6873b8099389d09fccefa083cd38ccb87517e3672e0");
+  assert.equal(h1.contents.rows, 25);
   assert.ok(
-    screen.provenance.inputs.some((input) => input.path === "docs/research/usd-session/h1/v0.1.0/package/inputs.json"),
+    screen.provenance.inputs.some((input) => input.path === "backtester/packages/USD-L1-25F-H1-v0.1.0/inputs.json"),
     "the H1 input contract must be a named provenance input"
   );
   assert.ok(
@@ -53,6 +61,39 @@ test("the requested H1 package is present and verified, with its own identity ra
   assert.equal(screen.h1.fixtures.matched, 5);
   assert.equal(screen.h1.fixtures.total, 5);
   assert.equal(screen.audit && screen.decisions.length, 5);
+});
+
+test("every one of the 25 adjudications is accounted for, with the shared evidence and the findings visible", () => {
+  const review = screen.h1.review;
+  assert.equal(review.rows.length, 25);
+  assert.equal(review.summary.adjudications, 25);
+  assert.equal(review.summary.with_declared_input, 15);
+  assert.equal(review.summary.no_declared_input, 10);
+  assert.equal(review.summary.votes, 8);
+  assert.deepEqual(review.summary.votes_by_family_series, { rates: 2, momentum: 2, cross_market: 2 });
+  assert.equal(review.summary.distinct_vote_series, 6);
+  assert.equal(review.summary.gate_inputs, 2);
+  assert.equal(review.summary.required_not_voting_rows, 2);
+  assert.equal(review.accounting.all_pass, true, "the accounting checks must all pass");
+  assert.equal(review.arithmetic.matched, review.arithmetic.tokens);
+  assert.deepEqual(review.arithmetic.mismatches, []);
+  for (const row of review.rows) {
+    assert.ok(row.treatment && row.effect && row.assumption, `${row.id} must state its treatment and assumption`);
+    assert.ok(Array.isArray(row.discrepancies));
+  }
+  const vix = review.shared_evidence.find((item) => item.input === "vix");
+  assert.equal(vix.reads, 3);
+  assert.equal(vix.votes, 0);
+  assert.equal(vix.non_voting, true);
+  const spread = review.shared_evidence.find((item) => item.input === "spread");
+  assert.equal(spread.reads, 2);
+  assert.equal(spread.votes, 1);
+  const codes = review.discrepancies.map((item) => item.code);
+  assert.ok(codes.includes("zero_age_contradicts_receipt"), "the ICE zero-age contradiction must be recorded");
+  assert.ok(codes.includes("required_input_cannot_vote"));
+  for (const item of review.discrepancies) {
+    assert.ok(item.finding && item.consequence && item.rows.length && item.status);
+  }
 });
 
 test("H1 historical readiness is the measured nine-input audit, not a legacy score", () => {
@@ -79,6 +120,92 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
   }
   assert.equal(h1.coverage.mornings.length, 725);
   assert.ok(h1.coverage.mornings.every((morning) => morning.ready === false));
+  assert.equal(h1.coverage.gaps.length, 9, "each of the nine inputs must appear as a gap");
+  for (const gap of h1.coverage.gaps) {
+    assert.ok(gap.dataset.includes("·"), `${gap.input} must name its dataset and source`);
+    assert.ok(gap.factor_count > 0, `${gap.input} must name the factors it blocks`);
+    assert.ok(gap.affected.sessions === 725 && gap.affected.first && gap.affected.last);
+    assert.ok(gap.missing_evidence.length > 20, `${gap.input} must state the missing evidence`);
+    assert.ok(gap.obtain.length > 20, `${gap.input} must state what to obtain`);
+    assert.ok(gap.import.target_file.startsWith("data/usd-layer1-backtester/h1-v1/"));
+    assert.ok(gap.import.record_fields.includes("received_at_utc"));
+  }
+  const ice = h1.coverage.gaps.find((gap) => gap.input === "ice");
+  assert.equal(ice.factor_count, 1);
+  assert.equal(ice.factors[0].id, "fx.usd-session-momentum");
+});
+
+test("H1 decisions are saved once and the audit catches a missing input, a wrong version and the wrong saved decision", () => {
+  const historical = screen.h1.historical;
+  const audit = screen.h1.audit;
+  assert.equal(historical.ledger.entries, 725);
+  assert.equal(historical.ledger.model_id, "usd_l1_25f_h1");
+  assert.equal(historical.ledger.model_version, "USD-L1-25F-H1-v0.1.0");
+  assert.equal(historical.ledger.rulebook_digest, screen.h1.package.declared_hashes.rulebook_sha256);
+  assert.equal(historical.rows.length, 725);
+  const ids = new Set(historical.rows.map((row) => row.decision_id));
+  assert.equal(ids.size, 725, "every saved decision id must be unique");
+  assert.ok(historical.rows.every((row) => /^usd_l1_25f_h1@\d{4}-\d{2}-\d{2}$/.test(row.decision_id)));
+  assert.ok(
+    historical.rows.every((row) => row.outcome === "blocked" && (row.direction === null || row.direction === "NO_CALL")),
+    "a blocked H1 morning carries no direction"
+  );
+  assert.equal(audit.reconciliation.reconciled, true);
+  assert.equal(audit.reconciliation.scheduled, 725);
+  assert.equal(audit.reconciliation.saved, 725);
+  assert.equal(audit.missing_input.caught, true);
+  assert.ok(audit.missing_input.blockers.length > 0);
+  assert.equal(audit.wrong_version.caught, true);
+  assert.equal(audit.wrong_version.ledger_rejected, true);
+  assert.equal(audit.wrong_saved_decision.clean, false);
+  assert.ok(audit.wrong_saved_decision.findings.some((finding) => finding.code === "wrong_saved_decision"));
+  assert.equal(audit.own_reference_clean.clean, true);
+  assert.equal(audit.clean.clean, true);
+});
+
+test("no legacy figure can appear as an H1 result, and the unmeasured label is kept for an unmeasured audit", () => {
+  // The one place a legacy figure may appear is the note that retires it, which names what it replaced.
+  const h1 = { ...screen.h1, coverage: { ...screen.h1.coverage } };
+  const retired = h1.coverage.legacy_replacement;
+  delete h1.coverage.legacy_replacement;
+  const json = JSON.stringify(h1);
+  for (const legacy of ["515 reconstructed", "209 scored", "121 directional"]) {
+    assert.equal(json.includes(legacy), false, `the H1 subtree must not carry the legacy phrase ${legacy}`);
+  }
+  assert.match(retired.previous_label, /515 reconstructed/);
+  assert.equal(retired.retired, true);
+  assert.equal(screen.h1.coverage.unmeasured_label, "H1 historical coverage unmeasured; earliest eligible morning unknown");
+  assert.equal(screen.h1.coverage.status, "measured");
+  assert.equal(screen.h1.coverage.label.includes("0 of 725 ready"), true);
+  assert.equal(screen.h1.historical.performance, "UNSCORED");
+  assert.equal(screen.h1.historical.earliest_eligible, null);
+  assert.equal(screen.h1.historical.earliest_eligible_label.includes("none"), true);
+  const h1Section = html.slice(html.indexOf("function renderH1"), html.indexOf("let disposeMap"));
+  assert.equal(/515|209|121/.test(h1Section), false);
+});
+
+test("the evaluation contract is frozen before scoring, with eligible dates, benchmarks, execution rules and measures", () => {
+  const contract = screen.h1.scoring_contract;
+  assert.equal(contract.status, "FROZEN_BEFORE_SCORING");
+  assert.equal(contract.frozen_on, "2026-11-17");
+  assert.equal(contract.digest.length, 64);
+  assert.equal(contract.eligible_dates.h1_ready, 0);
+  assert.equal(contract.eligible_dates.scheduled, 725);
+  assert.equal(contract.eligible_dates.earliest_eligible, null);
+  assert.deepEqual(contract.benchmarks.map((item) => item.id), [
+    "dxy_direction_broker_cfd",
+    "four_markets",
+    "l2l_full_5r",
+    "l2l_half_3r",
+  ]);
+  assert.match(contract.execution_rules.entry, /five-minute close/);
+  assert.match(contract.execution_rules.sizing, /1 per cent/);
+  assert.equal(contract.success_measures.directional_target_pct, 60);
+  assert.equal(contract.success_measures.no_aggregate.length > 10, true);
+  assert.equal(contract.flat_bands.digest.length, 64);
+  assert.equal(contract.coverage_disclosure.required, true);
+  assert.ok(contract.open_discrepancies.length >= 4);
+  assert.equal(contract.pair_combination.status, "separate future test");
 });
 
 test("H1 release-type matching is exact, with only the stated FOMC equivalence", () => {
@@ -236,15 +363,30 @@ test("the page loads the payload, opens from the main navigation and keeps the m
   assert.equal(html.includes("undefined</"), false);
 });
 
-test("the four H1 tests are labelled unscored for the requested package", () => {
-  const official = screen.tests.definitions.find((def) => def.id === "dxy_direction");
-  assert.equal(official.usable_sessions, 0);
-  assert.match(official.status, /blocked/);
-  const l2l = screen.tests.definitions.find((def) => def.id === "l2l_path");
-  assert.equal(l2l.usable_sessions, 0);
-  assert.match(screen.package_identity.consequence, /Presence is not an identity check/);
-  const broker = screen.tests.definitions.find((def) => def.id === "dxy_direction_broker_cfd");
-  assert.match(broker.status, /proxy/);
+test("the four agreed tests are preserved, each with its own readiness for the requested package", () => {
+  assert.deepEqual(
+    screen.tests.definitions.map((def) => def.id),
+    ["dxy_direction_broker_cfd", "four_markets", "l2l_full_5r", "l2l_half_3r"]
+  );
+  const byId = Object.fromEntries(screen.tests.definitions.map((def) => [def.id, def]));
+  assert.match(byId.dxy_direction_broker_cfd.status, /proxy/);
+  assert.equal(byId.dxy_direction_broker_cfd.usable_sessions, 360);
+  assert.equal(byId.four_markets.usable_sessions, 685);
+  assert.equal(byId.l2l_full_5r.usable_sessions, 0);
+  assert.match(byId.l2l_full_5r.status, /blocked/);
+  assert.equal(byId.l2l_half_3r.usable_sessions, 0);
+  assert.match(byId.l2l_half_3r.status, /blocked/);
+  for (const definition of screen.tests.definitions) {
+    assert.equal(definition.h1_readiness.eligible_mornings, 0, `${definition.id} must not claim an H1 morning`);
+    assert.equal(definition.h1_readiness.scheduled_mornings, 725);
+    assert.match(definition.h1_readiness.status, /blocked/);
+    assert.equal(definition.h1_readiness.blocked_by.length, 9);
+  }
+  const supplementary = screen.tests.supplementary;
+  assert.equal(supplementary.length, 1);
+  assert.equal(supplementary[0].id, "dxy_direction");
+  assert.equal(supplementary[0].agreed_four, false);
+  assert.match(supplementary[0].status, /blocked/);
 });
 
 test("the ledger saves once per model per morning and refuses a conflicting second save", () => {

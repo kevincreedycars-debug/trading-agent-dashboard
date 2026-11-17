@@ -90,7 +90,9 @@ function renderBlockers(s){
   const h1b=el("div",null,host,"banner"+(h1&&h1.coverage.ready>0?" ok":" bad"));
   el("strong",h1?h1.coverage.label:"H1 historical coverage unavailable",h1b);
   if(h1){
-    el("p","Bound to "+h1.model.id+" · "+h1.model.version+" · "+h1.coverage.binding.gate+" · package "+h1.package.requested+" "+h1.package.status.toLowerCase()+" · fixtures "+h1.fixtures.label+".",h1b);
+    el("p","Bound to "+h1.model.id+" · "+h1.model.version+" · "+h1.coverage.binding.gate+" · fixtures "+h1.fixtures.label+".",h1b);
+    el("p","Package "+h1.package.requested+" · "+h1.package.status+" · commit "+h1.package.package.commit.slice(0,12)+"… · "+h1.package.internal_checksums.verified+"/"+h1.package.internal_checksums.declared+" declared sums · its own verify.js "+h1.package.acceptance.status+" · archive "+h1.package.archive.sha256.slice(0,12)+"…",h1b);
+    el("p","Review: "+h1.review.summary.votes+" votes from "+h1.review.summary.adjudications+" adjudications; "+h1.review.summary.discrepancy_count+" findings, "+h1.review.discrepancies.filter(d=>d.status==="recorded_not_applied").length+" recorded for v0.1.1. Audit: "+h1.audit.reconciliation.blocked+" blocked mornings saved once, reconciled "+(h1.audit.reconciliation.reconciled?"yes":"no")+".",h1b);
     el("p","Legacy counts below describe the control and the legacy implemented book. They are not H1 counts and are never presented as H1 coverage.",h1b);
   }else{
     el("p","The H1 coverage audit is missing from this payload. No legacy count is substituted for it.",h1b);
@@ -110,8 +112,10 @@ function renderSummary(s){
   if(s.summary.h1){
     const h=s.summary.h1;
     const c=card(host,"H1 candidate",h.ready+" / "+h.scheduled+" ready",h.label);
-    el("small","model: "+h.model_id+" · version: "+h.model_version,c);
-    el("small","fixtures: "+h.fixture_label+" · earliest eligible: "+(h.earliest_eligible||"none"),c);
+    el("small","model: "+h.model_id+" · version: "+h.model_version+" · package "+h.package.commit.slice(0,12)+"… ("+h.package.sums+" sums, verify.js "+h.package.acceptance+")",c);
+    el("small","fixtures: "+h.fixture_label+" · earliest eligible: "+(h.earliest_eligible||"none established"),c);
+    el("small","review: "+h.review.votes+" votes from "+h.review.adjudications+" adjudications · "+h.review.open+" open findings · audit "+h.audit.saved_decisions+" saved decisions, reconciled "+(h.audit.reconciled?"yes":"no"),c);
+    el("small","scoring contract "+h.scoring_contract.status+" on "+h.scoring_contract.frozen_on+" · target "+h.scoring_contract.directional_target_pct+"%",c);
     el("small",h.legacy_replacement.note,c);
   }
   card(host,"Session",s.summary.session,s.summary.first_date+" → "+s.summary.last_date+" · "+s.summary.sessions+" scheduled mornings");
@@ -315,10 +319,87 @@ function renderH1(v,s){
   el("h3","Package identity",v);
   const pkg=el("div",null,v,"grid");
   card(pkg,"Requested",h.package.requested,h.package.status+" · verified "+h.package.verified_on);
-  card(pkg,"Archive SHA-256",h.package.archive.sha256.slice(0,16)+"…",h.package.archive.path+" · "+h.package.archive.bytes+" bytes");
-  card(pkg,"Internal checksums",h.package.internal_checksums.verified+" / "+h.package.internal_checksums.declared,"mismatches "+h.package.internal_checksums.mismatches.length+" · manifest "+h.package.internal_checksums.manifest_sha256.slice(0,16)+"…");
+  card(pkg,"Package commit",h.package.package.commit.slice(0,12)+"…",h.package.package.root+" · "+h.package.package.byte_policy);
+  card(pkg,"Declared sums",h.package.internal_checksums.verified+" / "+h.package.internal_checksums.declared,"mismatches "+h.package.internal_checksums.mismatches.length);
+  card(pkg,"Own verify.js",h.package.acceptance.status,h.package.acceptance.command+" · exit "+h.package.acceptance.exit_code+" · run "+h.package.acceptance.ran_on);
+  card(pkg,"Rulebook sha256",h.package.declared_hashes.rulebook_sha256.slice(0,16)+"…","models "+h.package.declared_hashes.models_sha256.slice(0,12)+"… · inputs "+h.package.declared_hashes.inputs_sha256.slice(0,12)+"…");
+  card(pkg,"Archive receipt",h.package.archive.sha256.slice(0,16)+"…",h.package.archive.role+" · "+h.package.archive.bytes+" bytes");
   card(pkg,"Frozen contents",h.package.contents.rows+" rows",h.package.contents.inputs+" inputs · "+h.package.contents.fixtures.length+" fixtures · "+h.package.contents.rows_status);
+  el("p",h.package.consequence,v,"caption");
   el("p","Binding: "+c.binding.model_id+" · "+c.binding.model_version+" · run "+c.binding.run_id+" ("+c.binding.run_version+") · gate "+c.binding.gate+". Legacy replacement: "+c.legacy_replacement.replacement_label+".",v,"caption");
+
+  const review=h.review;
+  el("h3","Independent review of the 25 adjudications",v);
+  el("p",review.verdict,v);
+  const reviewGrid=el("div",null,v,"grid");
+  card(reviewGrid,"Adjudications",String(review.summary.adjudications),review.summary.with_declared_input+" read an input · "+review.summary.no_declared_input+" excluded");
+  card(reviewGrid,"Votes",String(review.summary.votes),Object.entries(review.summary.votes_by_family_series).map(([k,v2])=>k+" "+v2).join(" · "));
+  card(reviewGrid,"Gate inputs",String(review.summary.gate_inputs),"required rows that cannot vote: "+review.summary.required_not_voting_rows);
+  card(reviewGrid,"Findings",String(review.summary.discrepancy_count),review.discrepancies.filter(d=>d.status==="recorded_not_applied").length+" recorded for v0.1.1 · "+review.summary.assumptions+" assumptions");
+  card(reviewGrid,"Accounting",review.accounting.all_pass?"all checks pass":"check failed",review.accounting.checks.filter(x=>!x.pass).map(x=>x.check).join(", ")||"every row accounted for");
+  card(reviewGrid,"Arithmetic check",review.arithmetic.matched+" / "+review.arithmetic.tokens,review.arithmetic.verdict);
+  const reviewRows=[];
+  for(const row of review.rows){
+    const detail=el("details");
+    el("summary",row.vote,detail);
+    el("p",row.effect,detail);
+    el("p","assumption: "+row.assumption,detail,"caption");
+    if(row.discrepancies.length)el("p","findings: "+row.discrepancies.join(", "),detail);
+    reviewRows.push([row.id,row.name,row.source_key||"—",row.treatment,row.family||"—",detail]);
+  }
+  table(v,["Adjudication","Name","Input","Treatment","Vote family","Effect and assumption"],reviewRows);
+  el("h4","Shared evidence",v,"");
+  const sharedRows=review.shared_evidence.map(item=>[item.input,String(item.reads),String(item.votes),item.rows.join(", ")]);
+  table(v,["Input","Rows reading it","Votes it casts","Rows"],sharedRows);
+  el("h4","Recorded findings",v,"");
+  for(const item of review.discrepancies){
+    const d=el("details",null,v);
+    el("summary",item.id+" · "+item.severity+" · "+item.code+(item.status==="accepted"?" (accepted)":" (recorded, not applied)"),d);
+    el("p",item.finding,d);
+    el("p","Consequence: "+item.consequence,d);
+    el("p","Rows: "+item.rows.join(", "),d,"caption");
+    if(item.proposed_change)el("p","Proposed change: "+item.proposed_change,d);
+  }
+
+  el("h3","Saved H1 decisions and the fairness audit",v);
+  el("p",h.historical.ledger.snapshot_rule,v,"caption");
+  const ledgerGrid=el("div",null,v,"grid");
+  card(ledgerGrid,"Saved decisions",String(h.historical.ledger.entries),h.historical.ledger.model_id+" · "+h.historical.ledger.model_version);
+  card(ledgerGrid,"Rulebook digest",(h.historical.ledger.rulebook_digest||"—").slice(0,16)+"…",h.historical.ledger.rulebook_version);
+  card(ledgerGrid,"Reconciled",h.audit.reconciliation.reconciled?"yes":"no",h.audit.reconciliation.blocked+" blocked · "+h.audit.reconciliation.abstained+" abstained · "+h.audit.reconciliation.directional+" directional of "+h.audit.reconciliation.scheduled);
+  const auditGrid=el("div",null,v,"grid");
+  card(auditGrid,"Missing required data",h.audit.missing_input&&h.audit.missing_input.caught?"caught":"not caught",h.audit.missing_input?h.audit.missing_input.date+" · "+h.audit.missing_input.blockers.length+" blockers":"—");
+  card(auditGrid,"Wrong model version",h.audit.wrong_version&&h.audit.wrong_version.caught?"caught":"not caught",h.audit.wrong_version?h.audit.wrong_version.expected+" vs "+h.audit.wrong_version.found:"—");
+  card(auditGrid,"Wrong saved decision",h.audit.wrong_saved_decision&&!h.audit.wrong_saved_decision.clean?"caught":"not caught",h.audit.wrong_saved_decision?h.audit.wrong_saved_decision.findings.map(f=>f.code).join(", "):"—");
+  card(auditGrid,"Clean reference",h.audit.own_reference_clean&&h.audit.own_reference_clean.clean?"passes":"fails",h.audit.clean&&h.audit.clean.clean?"a saved record audits clean":"—");
+  el("p",h.audit.note,v,"caption");
+  const savedRows=h.historical.rows.slice(0,5).map(r=>[r.date,r.decision_id,r.outcome,r.direction||"none",String(r.band),String(r.trade_eligible),r.snapshot_sha256.slice(0,12)+"…",r.first_blocker||"—"]);
+  table(v,["Morning","Decision id","Outcome","Direction","Band","Trade","Snapshot","First blocker"],savedRows);
+
+  el("h3","Missing-data register",v);
+  const gapRows=[];
+  for(const gap of c.gaps){
+    const d=el("details");
+    el("summary",gap.code,d);
+    el("p","Missing evidence: "+gap.missing_evidence,d);
+    el("p","Obtain: "+gap.obtain,d);
+    el("p","Import to "+gap.import.target_file+"; each record carries "+gap.import.record_fields.join(", ")+".",d);
+    el("p",gap.import.check,d,"caption");
+    gapRows.push([gap.label,gap.dataset,gap.factor_count+" ("+gap.factors.map(f=>f.id).join(", ")+")",gap.affected.sessions+" · "+gap.affected.first+" → "+gap.affected.last,d]);
+  }
+  table(v,["Required dataset","Source and instrument","Factors affected","Affected mornings","Missing evidence, what to obtain, how to import"],gapRows);
+
+  const sc=h.scoring_contract;
+  el("h3","Evaluation contract, frozen before scoring",v);
+  const scGrid=el("div",null,v,"grid");
+  card(scGrid,"Status",sc.status,"frozen "+sc.frozen_on+" · digest "+sc.digest.slice(0,16)+"…");
+  card(scGrid,"Eligible dates",String(sc.eligible_dates.h1_ready)+" / "+sc.eligible_dates.scheduled,"earliest eligible: "+(sc.eligible_dates.earliest_eligible||"none established"));
+  card(scGrid,"Target",sc.success_measures.directional_target_pct+"%","directional accuracy, with a lower bound and coverage beside every figure");
+  card(scGrid,"Execution",sc.execution_rules.entry,sc.execution_rules.sizing+" · "+sc.execution_rules.costs);
+  const benchRows=sc.benchmarks.map(b=>[String(b.test),b.id,b.benchmark]);
+  table(v,["Test","Id","Benchmark"],benchRows);
+  el("p",sc.success_measures.comparison,v,"caption");
+  el("p","Open findings carried into the contract: "+(sc.open_discrepancies.map(d=>d.id).join(", ")||"none")+".",v,"caption");
 }
 
 let disposeMap=null,mapApi=null;
@@ -383,10 +464,10 @@ function drawArchitectureMap(canvas,nodes,edges,onSelect){
   const camera=new T.PerspectiveCamera(45,1,0.1,100);camera.position.set(1,0,17);camera.lookAt(1,0,0);
   const group=new T.Group();scene.add(group);
   const positions={
-    research:[-4.6,0,0],rulebook:[-3.0,0.6,0],adjudications:[-1.3,0.9,0],
+    research:[-4.6,0,0],rulebook:[-3.0,0.6,0],candidate_package:[-1.9,1.5,0],adjudications:[-1.3,0.9,0],
     factor_combination:[0.4,0.3,0],datasets:[2.0,-0.4,0],
     supabase:[3.4,1.1,-0.6],n8n:[3.4,-1.1,-0.6],validation:[4.9,0,0],
-    test_dxy_official:[6.4,1.3,0],test_dxy_broker:[6.4,0.45,0],test_four_markets:[6.4,-0.4,0],test_l2l:[6.4,-1.25,0]
+    test_dxy_broker:[6.4,1.6,0],test_four_markets:[6.4,0.8,0],test_l2l_5r:[6.4,0,0],test_l2l_3r:[6.4,-0.8,0],test_dxy_official_series:[6.4,-1.6,0]
   };
   const colour={verified:0x7fd6b0,verified_with_gap:0xe3c36b,partial:0xe3a35c,unverified:0xd68b8b,blocked:0xc96f6f,scored_legacy:0x8fb7d6};
   const meshes=[];

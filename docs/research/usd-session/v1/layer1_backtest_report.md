@@ -174,9 +174,9 @@ The official-index test has never been scored because the official series is not
 
 Numbers:
 
-- official_usable_sessions: 0
+- official_usable_sessions: —
 - layer2_usable_sessions: 0
-- layer2_demonstration_fills: 32
+- layer2_demonstration_fills: 16
 
 Evidence:
 
@@ -290,37 +290,16 @@ on nearly all of them.
 
 | # | Test | Type | Status | Usable | Available |
 | --- | --- | --- | --- | --- | --- |
-| 1 | USD direction against the official ICE dollar index | historical_coverage | blocked: no usable denominator | 0 | 725 |
-| 2 | USD direction against the broker DXY.cash series (proxy) | historical_coverage | scored on a broker proxy series, not on the official index | 360 | 725 |
-| 3 | Cross-market confirmation in four markets | historical_coverage | scored market by market; no cross-market aggregate is published or reported | 685 | 725 |
-| 4 | Layer 2 path participation (5R primary, 3R sensitivity) | historical_coverage | blocked on history: the only evidence is a worked demonstration | 0 | 725 |
+| 1 | USD direction on the broker DXY.cash series | historical_coverage | scored on a broker proxy series, not on the official index | 360 | 725 |
+| 2 | USD-only opposite-direction mapping in four markets | historical_coverage | scored market by market; no cross-market aggregate is published or reported | 685 | 725 |
+| 3 | Original Layer 2 levels with the frozen 5R rules | historical_coverage | blocked on history: the only evidence is a worked demonstration | 0 | 725 |
+| 4 | Original levels plus midpoints with the frozen 3R rules | historical_coverage | blocked on history: the only evidence is a worked demonstration | 0 | 725 |
 
-### 1. USD direction against the official ICE dollar index
-
-Type: historical_coverage. Outcome source: ICE DXY official daily close. Status: blocked: no usable denominator.
-
-Question: On mornings where the model made a directional call, did the official ICE dollar index close the 05:00-to-05:00 window in that direction?
-
-Usable sessions: 0 of 725.
-
-| Model | Denominator | Scored | Exclusions |
-| --- | --- | --- | --- |
-| control | mornings with a directional call, a readable outcome and a move outside the flat band | 0 | flat window inside the flat band: 0; the model made no call: 0; no readable outcome: 0 |
-| candidate | mornings with a directional call, a readable outcome and a move outside the flat band | 0 | flat window inside the flat band: 0; the model made no call: 0; no readable outcome: 0 |
-
-| Model | Scored | Hits | Misses | Flat | Accuracy | Lower bound |
-| --- | --- | --- | --- | --- | --- | --- |
-| control | 0 | 0 | 0 | 0 | — | — |
-| candidate | 0 | 0 | 0 | 0 | — | — |
-
-- The official series is not in this checkout, so the denominator is empty: this test has never been scored.
-- A proxy series is not substituted here; the broker proxy is scored as its own test, with its own label.
-
-### 2. USD direction against the broker DXY.cash series (proxy)
+### 1. USD direction on the broker DXY.cash series
 
 Type: historical_coverage. Outcome source: broker DXY.cash one-hour candles. Status: scored on a broker proxy series, not on the official index.
 
-Question: On the same mornings, did the broker's DXY.cash series close the window in the called direction, using one candle per 05:00 boundary?
+Question: On mornings where the model made a directional call, did the broker's DXY.cash series close the 05:00-to-05:00 window in that direction, using one candle per 05:00 boundary?
 
 Usable sessions: 360 of 725.
 
@@ -334,10 +313,10 @@ Usable sessions: 360 of 725.
 | control | 284 | 141 | 143 | 70 | 49.65% | 43.88% |
 | candidate | 209 | 91 | 118 | 47 | 43.54% | 37% |
 
-- This is a proxy for the official index, and it is labelled as a proxy everywhere it appears.
-- A flat window (a move inside the flat band) is excluded from the accuracy denominator and counted separately.
+- This is the agreed test 1. The broker series is a proxy for the official index and is labelled as a proxy everywhere it appears.
+- A flat window inside the flat band is excluded from the accuracy denominator and counted separately.
 
-### 3. Cross-market confirmation in four markets
+### 2. USD-only opposite-direction mapping in four markets
 
 Type: historical_coverage. Outcome source: OANDA one-hour closes per market. Status: scored market by market; no cross-market aggregate is published or reported.
 
@@ -373,14 +352,14 @@ Market NAS100:
 | control | 454 | 240 | 214 | 52.86% | 48.27% | flat window inside the flat band: 104; the model made no call: 11; no readable outcome: 156 |
 | candidate | 331 | 172 | 159 | 51.96% | 46.59% | flat window inside the flat band: 80; the model made no call: 210; no readable outcome: 104 |
 
-- This is a USD-only test: one model call, four market outcomes. It is not a pair-combination measure.
+- This is the agreed test 2: one model call against four market outcomes, not a pair-combination measure.
 - Each market carries its own denominator; an aggregate across markets is not reported.
 
-### 4. Layer 2 path participation (5R primary, 3R sensitivity)
+### 3. Original Layer 2 levels with the frozen 5R rules
 
-Type: historical_coverage. Outcome source: one-hour closes with the layer-2 grid. Status: blocked on history: the only evidence is a worked demonstration.
+Type: historical_coverage. Outcome source: one-hour closes with the original layer-2 level grid and 5R management. Status: blocked on history: the only evidence is a worked demonstration.
 
-Question: When a Layer 1 call was handed to the Layer 2 selector, did the 5R path reach its target before its stop, and does the 3R path agree?
+Question: When a Layer 1 call was handed to the original Layer 2 levels, did the frozen 5R path reach its target before its stop?
 
 Usable sessions: 0 of 725.
 
@@ -392,11 +371,29 @@ The path test needs a 5-minute tape and a level ladder archived before the setup
 | --- | --- | --- | --- | --- | --- | --- |
 | l2l_full_5r | Current / full 5R | control | 6 | 2 | 3 | 7 |
 | l2l_full_5r | Current / half 3R | control | 10 | 4 | 4 | 8 |
+
+- This is the agreed test 3. It needs a trade-qualified call, contemporaneous levels and an actionable bid/ask M5 replay.
+- The grid does not yet exist for these markets, so the test is blocked on history, not scored at zero.
+
+### 4. Original levels plus midpoints with the frozen 3R rules
+
+Type: historical_coverage. Outcome source: one-hour closes with the levels-plus-midpoints grid and 3R management. Status: blocked on history: the only evidence is a worked demonstration.
+
+Question: With midpoints added to the original levels, did the frozen 3R path reach its target before its stop?
+
+Usable sessions: 0 of 725.
+
+Demonstration only, window 2026-11-05 to 2026-11-06:
+
+The path test needs a 5-minute tape and a level ladder archived before the setup; neither exists for these dates, and nothing is estimated in place of a tape.
+
+| Variant | Account | Model | Fills | Wins | Losses | Total R |
+| --- | --- | --- | --- | --- | --- | --- |
 | l2l_half_3r | Current / full 5R | control | 6 | 2 | 3 | 7 |
 | l2l_half_3r | Current / half 3R | control | 10 | 4 | 4 | 8 |
 
-- Both variants are blocked: the selector needs a level grid the replay does not yet produce for these markets.
-- The 3R variant is a sensitivity check on the 5R result, not a second test.
+- This is the agreed test 4, a separately frozen geometry and management rule, not a sensitivity check on test 3.
+- It needs the same tape and ladder evidence as test 3 plus the midpoint geometry.
 
 ### Pair combination: `definition_recorded_not_scored`
 
@@ -423,7 +420,7 @@ Owner decision: OD-1.
 | --- | --- | --- | --- |
 | B1 | No verified 05:00 receipt on any morning | The clock rung passes on 0 of 725 mornings because no receipt archive exists, so the strict gate cannot open and no candidate result can be called valid. | candidate readiness is 0/725; every candidate figure is provisional |
 | B2 | The intended 25-factor model has no single defined rule | The identity block reads CONFIG_BLOCKED: the rulebook has 25 rows but no agreed sign, weighting or tie policy, so the implemented book stands in for it. | the candidate cannot be scored as intended; only the implemented book is measured |
-| B3 | The official ICE dollar index series is absent | The official test has 0 usable sessions; the only scored directional test uses a broker proxy. | the headline accuracy number is a proxy result and is labelled as one |
+| B3 | The official ICE dollar index series is absent | The official test has null usable sessions; the only scored directional test uses a broker proxy. | the headline accuracy number is a proxy result and is labelled as one |
 | B4 | No 5-minute tape or archived level ladder for the layer-2 path test | All four markets report the same two blockers, so no line-to-line trade can be replayed; the ledger is a two-day demonstration. | the path test is unscored on history |
 | B5 | Nine of the required inputs are missing from the saved as-of frame | The archive carries nine saved inputs and the requirement table names the rest, so most blocked mornings are an absence of data rather than a model judgement. | 108 of 725 mornings are data exclusions on the control's own gate |
 | B6 | No file named Handover.md exists in the checkout | The USD handover is present as docs/research/handoff/usd/v1/START_HERE.md with USD_SYSTEM_CONTEXT.md and HANDOFF_MANIFEST.json; reading order and scope come from those. | none on the numbers; the report cites the handover it actually found |
@@ -514,7 +511,7 @@ Does not license: It does not license treating reconstructed calls as valid call
 | `config/usd_l1_factor_rulebook_v1.json` | 38964 | `31d78a6898c1e30aba4158f04deb29bfe2f50502d784b8a511210cbdbfe7e8e7` |
 | `config/usd_l1_decision_rules_v1.json` | 10481 | `f0f7cb753cdb770e7bb715d71e5475655beaee4a7a9bff596b62b080de30769b` |
 
-Report digest: `ecd35dd275e87864327b9e9845c40b59e5824cfb84e884c5ff31084108db61e4`.
+Report digest: `538b1d088df5ed7a9b0899e14e8ae0e1ebfc46300344f5ae878c26abd1ff00df`.
 
 The digest is taken over the body before this block; rebuilding the report from the same artefacts reproduces it.
 

@@ -20,9 +20,17 @@ const { buildReadiness } = require("../lib/layer1_backtesting/readiness");
 const { buildScreen } = require("../lib/layer1_backtesting/screen");
 const { proposedFlatBands } = require("../lib/layer1_backtesting/flat_bands");
 const { verifyRequestedPackage, reviewAdjudications } = require("../lib/layer1_backtesting/package_identity");
-const { loadPackage, verifyPackage } = require("../lib/layer1_backtesting/h1_package");
+const { loadPackage, verifyPackage, PACKAGE_ROOT } = require("../lib/layer1_backtesting/h1_package");
 const { buildH1Coverage } = require("../lib/layer1_backtesting/h1_coverage");
-const { buildH1Model, buildFixtureControl, runH1Fixtures, decideH1Historical } = require("../lib/layer1_backtesting/h1_candidate");
+const {
+  buildH1Model,
+  buildFixtureControl,
+  runH1Fixtures,
+  decideH1Historical,
+  auditH1,
+} = require("../lib/layer1_backtesting/h1_candidate");
+const { buildH1Review } = require("../lib/layer1_backtesting/h1_review");
+const { h1ScoringContract } = require("../lib/layer1_backtesting/scoring_contract");
 const { sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
 
 const ROOT = path.resolve(__dirname, "..");
@@ -53,9 +61,27 @@ function build() {
     packageInputs: h1Package.inputs,
     calendar: readJson("data/usd-layer1-backtester/event-calendar-v1.json"),
     packageInfo: h1PackageInfo,
+    rows: h1Package.rows,
   });
   const h1Fixtures = runH1Fixtures({ root: ROOT, models: { h1: h1Model, fixtureControl: h1Control } });
-  const h1Historical = decideH1Historical({ run, coverage: h1Coverage, model: h1Model });
+  const h1Historical = decideH1Historical({
+    run,
+    coverage: h1Coverage,
+    model: h1Model,
+    rulebookDigest: h1PackageInfo.declared_hashes.rulebook_sha256,
+  });
+  const h1Audit = auditH1({
+    records: h1Historical.records,
+    ledger: h1Historical.ledger,
+    coverage: h1Coverage,
+    model: h1Model,
+    sessions: (run.sessions || []).length,
+  });
+  const h1Review = buildH1Review({
+    packageRoot: path.join(ROOT, PACKAGE_ROOT),
+    rows: h1Package.rows,
+    inputs: h1Package.inputs,
+  });
   const models = createModels({ run, engine, h1: h1Model });
   const generatedAt = (run.run && run.run.generated_at) || run.generated_at || engine.source_generated_at || null;
   const sources = [
@@ -65,11 +91,12 @@ function build() {
     "config/usd_l1_decision_rules_v1.json",
     "data/research-library/catalog.json",
     "data/usd-layer1-backtester/event-calendar-v1.json",
-    "docs/research/usd-session/h1/v0.1.0/package/inputs.json",
-    "docs/research/usd-session/h1/v0.1.0/package/expected.json",
-    "docs/research/usd-session/h1/v0.1.0/package/models.js",
-    "docs/research/usd-session/h1/v0.1.0/package/rows.json",
-    "docs/research/usd-session/h1/v0.1.0/package/SHA256SUMS",
+    `${PACKAGE_ROOT}/RULEBOOK.md`,
+    `${PACKAGE_ROOT}/inputs.json`,
+    `${PACKAGE_ROOT}/expected.json`,
+    `${PACKAGE_ROOT}/models.js`,
+    `${PACKAGE_ROOT}/rows.json`,
+    `${PACKAGE_ROOT}/SHA256SUMS`,
   ]
     .filter((relative) => fs.existsSync(path.join(ROOT, relative)))
     .map(sourceEntry);
@@ -107,21 +134,30 @@ function build() {
       status: h1PackageInfo.status,
       verification: h1PackageInfo.verification,
       verified_on: h1PackageInfo.verified_on,
+      package: h1PackageInfo.package,
       archive: h1PackageInfo.archive,
+      declared_hashes: h1PackageInfo.declared_hashes,
       internal_checksums: {
         manifest: h1PackageInfo.internal_checksums.manifest,
-        manifest_sha256: h1PackageInfo.internal_checksums.manifest_sha256,
         declared: h1PackageInfo.internal_checksums.declared,
         verified: h1PackageInfo.internal_checksums.verified,
         mismatches: h1PackageInfo.internal_checksums.mismatches,
       },
+      acceptance: h1PackageInfo.acceptance,
       contents: h1PackageInfo.contents,
       consequence: h1PackageInfo.consequence,
       source: h1PackageInfo.source,
     },
     fixtures: h1Fixtures,
+    review: h1Review,
     coverage: h1Coverage,
-    historical: h1Historical.summary,
+    historical: {
+      ...h1Historical.summary,
+      rows: h1Historical.rows,
+      ledger: h1Historical.ledger_view,
+    },
+    audit: h1Audit,
+    scoring_contract: h1ScoringContract({ h1Review, h1Coverage, flatBands, h1PackageInfo }),
   };
 
   const body = buildScreen({
