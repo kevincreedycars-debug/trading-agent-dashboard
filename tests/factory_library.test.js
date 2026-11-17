@@ -109,6 +109,19 @@ test("the USD chamber exposes four tests, matching the run artefact's own sectio
     assert.match(testCase.resultNote, /blocked|blocker/i);
   }
   assert.equal(usd.tests.find(item => item.id === "four_markets").status, "scored");
+  const t2 = usd.tests.find(item => item.id === "four_markets");
+  assert.ok(t2.historical, "T2 carries the historical rows it renders");
+  assert.equal(t2.historical.generatedAt, run.generated_at, "the historical date is the artefact's own timestamp");
+  assert.equal(t2.historical.artefactPath, "data/usd-layer1-backtester/run-v1.json");
+  assert.match(run.run.current_model_version, /agent_usd_direction\.md/, "the model note names the baseline the artefact records");
+  const currentMarkets = Object.values(run.tests.four_markets.models.current.markets);
+  assert.equal(t2.historical.rows.length, 4, "T2 renders all four markets");
+  for (const row of t2.historical.rows) {
+    const market = currentMarkets.find(item => item.label === row.market);
+    assert.ok(market, `${row.market} is a market in tests.four_markets.models.current`);
+    assert.equal(row.scored, market.overall.scored, `${row.market} scored-session count matches the artefact`);
+    assert.equal(row.accuracyPct, market.overall.accuracy_pct, `${row.market} accuracy matches the artefact`);
+  }
 });
 
 test("the library separates what the replay reads from related research", () => {

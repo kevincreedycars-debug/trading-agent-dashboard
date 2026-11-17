@@ -20,6 +20,7 @@ const { chromium } = require("playwright");
 const repoRoot = path.resolve(__dirname, "..");
 const factoryScript = fs.readFileSync(path.join(repoRoot, "lib", "system-factory.js"), "utf8");
 const mapScript = fs.readFileSync(path.join(repoRoot, "lib", "system-map.js"), "utf8");
+const usdRun = JSON.parse(fs.readFileSync(path.join(repoRoot, "data", "usd-layer1-backtester", "run-v1.json"), "utf8"));
 
 const QUESTIONS = [
   "1. What does this station do?",
@@ -331,7 +332,9 @@ test("the lower floor names its evidence and never promotes a planned path to li
       };
     });
     assert.match(relay.badge, /Not evidenced/);
-    assert.match(relay.text, /installed, connected, authorised and actively copying are four different states/i);
+    assert.match(relay.text, /FTMO 1 is the intended source: design intent, not a configured source/i);
+    assert.match(relay.text, /Configured source: Not evidenced/);
+    assert.match(relay.text, /Observed copying: Not evidenced/);
     assert.match(relay.text, /Connection Not evidenced/);
 
     // A station carries a way down to what it stands on, and the way back returns to that station.
@@ -1021,6 +1024,31 @@ test("the USD chamber opens its library beneath the camera, and one test reaches
     assert.equal(tests.href, "data/usd-layer1-backtester/run-v1.json");
     assert.equal((await statusesOf(page, [tests.href]))[tests.href], 200);
 
+    // T2 finishes the inspector: the historical four-market rows are visible, labelled and linked back to the artefact.
+    await page.click('[data-factory-library-test="four_markets"]');
+    const t2 = await page.evaluate(() => {
+      const detail = document.querySelector('[data-factory-library-test-detail="four_markets"]');
+      const results = detail.querySelector('[data-factory-test-results="historical"]');
+      return {
+        note: results.querySelector(".factory-test-results-note").textContent.replace(/\s+/g, " ").trim(),
+        headers: [...results.querySelectorAll("thead th")].map(el => el.textContent.trim()),
+        rows: [...results.querySelectorAll("tbody tr")].map(row => [...row.children].map(el => el.textContent.trim())),
+        href: results.querySelector("a[data-evidence-path]").getAttribute("href")
+      };
+    });
+    assert.match(t2.note, /Historical, not live/);
+    assert.match(t2.note, /generated 14 Nov 2026/);
+    assert.deepEqual(t2.headers, ["Model", "Market", "Accuracy", "Scored sessions"]);
+    const expectedRows = Object.values(usdRun.tests.four_markets.models.current.markets).map(market => [
+      "Current model",
+      market.label,
+      `${market.overall.accuracy_pct.toFixed(2)}%`,
+      String(market.overall.scored)
+    ]);
+    assert.deepEqual(t2.rows, expectedRows, "the rendered T2 rows match the committed artefact");
+    assert.equal(t2.href, "data/usd-layer1-backtester/run-v1.json");
+    assert.equal((await statusesOf(page, [t2.href]))[t2.href], 200);
+
     // Keyboard: a group button is a real button, so Enter changes the group.
     await page.focus('[data-factory-library-group="model"]');
     await page.keyboard.press("Enter");
@@ -1247,17 +1275,20 @@ test("the VPS floor journey reaches three traders, the blind path and the cTrade
     assert.match(blind.text, /Nothing from Layer 1 or Layer 2 reaches it/);
     assert.match(blind.text, /No payout route is drawn from this lane/);
 
-    // The cTrader component is drawn apart, and its four states are written out.
+    // The cTrader component is drawn apart. Its source states are written out: an intended source, then what is
+    // actually configured and observed.
     assert.equal(relay.status, "relay");
     assert.equal(relay.scene.hosting, 2, "hosting links are drawn as their own kind of link");
     assert.ok(relay.scene.hosting < relay.scene.connections, "hosting is not counted as data flow");
-    assert.equal(relay.states.length, 4);
+    assert.equal(relay.states.length, 6);
     assert.match(relay.states[0], /^Installation/);
     assert.match(relay.states[1], /^Account connection/);
     assert.match(relay.states[2], /^Trading authorisation Pending/);
-    assert.match(relay.states[3], /^Active copying None documented/);
+    assert.match(relay.states[3], /^Relay design intent FTMO 1/);
+    assert.match(relay.states[4], /^Configured source Not evidenced/);
+    assert.match(relay.states[5], /^Observed copying Not evidenced/);
     assert.match(relay.text, /independent line-to-line robot/);
-    assert.match(relay.text, /No order-copying relay is described anywhere in this checkout/);
+    assert.match(relay.text, /No relay implementation, configuration, source binding, copy log or copied-order count is committed/);
     assert.match(relay.text, /not a copy of another lane/);
     assert.equal(relay.scene.conditional, 3, "the payout links stay the only conditional ones");
   } finally {
@@ -1412,6 +1443,179 @@ test("the phone layout keeps the scene, the panel and the station index usable",
       return panel.scrollWidth - panel.clientWidth;
     });
     assert.ok(flowOverflow <= 1, `the flow panel must not scroll sideways, saw ${flowOverflow}`);
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+test("the VPS stop names all three FTMO lanes on desktop and phone", async () => {
+  const server = await startServer();
+  const browser = await chromium.launch({ headless: true });
+  try {
+    for (const viewport of [
+      { width: 1440, height: 1000, isMobile: false, hasTouch: false },
+      { width: 390, height: 844, isMobile: true, hasTouch: true }
+    ]) {
+      const context = await browser.newContext({
+        viewport,
+        reducedMotion: "reduce",
+        isMobile: viewport.isMobile,
+        hasTouch: viewport.hasTouch
+      });
+      try {
+        const page = await openFactory(context, server.origin);
+        await page.click('[data-factory-station="vps"]');
+        await page.waitForSelector('[data-inspector-for="vps"]');
+        const labels = await page.evaluate(() => {
+          const root = document.querySelector("[data-system-map]");
+          const stage = root.querySelector("[data-factory-stage]").getBoundingClientRect();
+          const read = id => {
+            const el = root.querySelector(`[data-factory-label="${id}"]`);
+            const box = el.getBoundingClientRect();
+            return {
+              id,
+              hidden: el.classList.contains("is-hidden"),
+              text: el.textContent.replace(/\s+/g, " ").trim(),
+              inside: box.left >= stage.left - 1 && box.right <= stage.right + 1
+                && box.top >= stage.top - 1 && box.bottom <= stage.bottom + 1,
+              box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom }
+            };
+          };
+          return {
+            vps: read("vps"),
+            lanes: ["lane.full", "lane.half", "lane.blind"].map(read)
+          };
+        });
+
+        assert.equal(labels.vps.hidden, false, `the VPS terminal keeps its name at ${viewport.width}px`);
+        for (const lane of labels.lanes) {
+          assert.equal(lane.hidden, false, `${lane.id} is readable at ${viewport.width}px`);
+          assert.match(lane.text, /FTMO/, `${lane.id} keeps its FTMO name`);
+          assert.equal(lane.inside, true, `${lane.id} stays inside the stage at ${viewport.width}px`);
+        }
+        const boxes = [labels.vps, ...labels.lanes];
+        for (let i = 0; i < boxes.length; i += 1) {
+          for (let j = i + 1; j < boxes.length; j += 1) {
+            const a = boxes[i].box;
+            const b = boxes[j].box;
+            const overlaps = !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+            assert.equal(overlaps, false, `${boxes[i].id} and ${boxes[j].id} do not overlap at ${viewport.width}px`);
+          }
+        }
+        assert.ok(
+          labels.lanes[2].box.top >= labels.lanes[1].box.bottom,
+          `the blind lane keeps its own lower row at ${viewport.width}px`
+        );
+      } finally {
+        await context.close();
+      }
+    }
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+
+test("the phone camera controls stay clear of the fixed trader lamps and each control acts", async () => {
+  const server = await startServer();
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+      reducedMotion: "reduce"
+    });
+    const page = await openFactory(context, server.origin);
+
+    // The fixed trader lamps sit at the bottom right on a phone. Put the stage bottom on the viewport bottom:
+    // this is the scroll position where the old bottom-anchored HUD was intercepted by the lamps.
+    await page.evaluate(() => {
+      const stage = document.querySelector("[data-factory-stage]").getBoundingClientRect();
+      window.scrollTo(0, window.scrollY + stage.bottom - window.innerHeight);
+    });
+    await page.waitForTimeout(100);
+
+    const hitTest = await page.evaluate(() => {
+      const root = document.querySelector("[data-system-map]");
+      const controls = [...root.querySelectorAll("[data-factory-reset], [data-factory-zoom], [data-factory-pause]")].map(el => {
+        const box = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+        return {
+          text: el.textContent.trim(),
+          covered: !(hit && (el === hit || el.contains(hit))),
+          box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom }
+        };
+      });
+      const strips = [...document.querySelectorAll(".trader-status-strips .live-trader-status")]
+        .filter(el => getComputedStyle(el).display !== "none")
+        .map(el => {
+          const box = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+          return {
+            available: Boolean(box.width && box.height) && Boolean(hit && (el === hit || el.contains(hit))),
+            box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom }
+          };
+        });
+      return { controls, strips };
+    });
+    assert.equal(hitTest.controls.length, 4, "all four camera controls are present");
+    for (const control of hitTest.controls) {
+      assert.equal(control.covered, false, `${control.text} is tappable at the stage bottom`);
+    }
+    assert.ok(hitTest.strips.length >= 1, "the fixed trader lamps remain available");
+    for (const strip of hitTest.strips) {
+      assert.equal(strip.available, true, "a fixed trader lamp is visible and on top");
+      for (const control of hitTest.controls) {
+        const a = strip.box;
+        const b = control.box;
+        const overlaps = !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+        assert.equal(overlaps, false, "the fixed lamps never cover a camera control");
+      }
+    }
+
+    const initial = await page.evaluate(() => document.querySelector("[data-system-map]").systemFactory.state());
+    await page.tap('[data-factory-zoom="in"]');
+    const zoomedIn = await page.evaluate(() => document.querySelector("[data-system-map]").systemFactory.state());
+    assert.ok(zoomedIn.view.distance < initial.view.distance, "Zoom in shortens the camera distance");
+
+    await page.tap('[data-factory-zoom="out"]');
+    const zoomedOut = await page.evaluate(() => document.querySelector("[data-system-map]").systemFactory.state());
+    assert.ok(zoomedOut.view.distance > zoomedIn.view.distance, "Zoom out lengthens the camera distance");
+
+    await page.tap('[data-factory-zoom="in"]');
+    await page.tap("[data-factory-reset]");
+    const reset = await page.evaluate(() => document.querySelector("[data-system-map]").systemFactory.state());
+    assert.ok(Math.abs(reset.view.distance - reset.overviewDistance) < 0.5, "Reset view returns to the overview");
+
+    await page.tap("[data-factory-pause]");
+    const paused = await page.evaluate(() => document.querySelector("[data-system-map]").systemFactory.state());
+    assert.equal(paused.paused, true, "Pause flow pauses the scene");
+    assert.equal(
+      await page.evaluate(() => document.querySelector("[data-factory-pause]").getAttribute("aria-pressed")),
+      "true"
+    );
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+
+test("the relay evidence separates design intent from configuration and observation", async () => {
+  const server = await startServer();
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
+    const page = await openFactory(context, server.origin);
+    await page.click('[data-factory-station="relay.ctrader"]');
+    await page.waitForSelector('[data-inspector-for="relay.ctrader"]');
+    const text = await page.evaluate(() =>
+      document.querySelector('[data-inspector-for="relay.ctrader"]').textContent.replace(/\s+/g, " ").trim()
+    );
+    assert.match(text, /Relay design intent FTMO 1/, "the intended source is named as design intent");
+    assert.match(text, /Configured source Not evidenced/, "a configured source is not claimed");
+    assert.match(text, /Observed copying Not evidenced/, "observed copying is not claimed");
+    assert.match(text, /'Inactive' and 'zero copied orders' are not claimed/, "the absent evidence is not turned into a state");
   } finally {
     await browser.close();
     await server.close();

@@ -46,23 +46,26 @@ trade is labelled a connection test and excluded from the lane's figures, and no
 ## The cTrader component: what is and is not evidenced
 
 The repository commits **one** cTrader artefact: the independent line-to-line robot at `ctrader/Ftmo3L2L`. It is
-drawn as its own object after the lanes - violet, ringed, distinct from the three MT5 traders - and its four states
-are written out in the inspector:
+drawn as its own object after the lanes - violet, ringed, distinct from the three MT5 traders - and its states are
+written out in the inspector:
 
 - **Installation** - source and build project committed; installation on the VPS not evidenced.
 - **Account connection** - one instance per mapped symbol on the third account; verification still needs the target
   cTrader environment.
 - **Trading authorisation** - **pending**: orders default to disabled until a simulated fill verifies entry, stop and
   target.
-- **Active copying** - **none documented**.
+- **Relay design intent** - **FTMO 1**, named as the intended source in the sanitised strategy brief. This is design
+  intent, not a configured source.
+- **Configured source** - **not evidenced**: no relay configuration or bound source is recorded in this checkout.
+- **Observed copying** - **not evidenced**: no dated copy record or copied-order count is committed. The map does not
+  claim "inactive" or "zero copied orders".
 
-**There is no order-copying relay in this checkout.** A repository-wide search for `cTrader`, `relay`, `copier` and
-copy-trading language finds only the FTMO 3 robot and one question in the external-review brief about FTMO's own
-terms. The brief this lane worked from described a relay that mirrors a source lane's accepted orders into cTrader,
-with authorisation possibly pending. That component does not exist in the repository, so the map does not draw it:
-the station states the absence in its own words rather than inventing a fifth component or reusing the blind robot as
-if it were the relay. If the relay is documented later, it becomes a station of its own and the four labels above are
-the shape it should take.
+**There is no order-copying relay implementation in this checkout.** The repository-wide evidence still holds: the
+only committed cTrader artefact is the independent FTMO 3 robot. The sanitised strategy record describes a relay
+whose intended source was FTMO 1, but it records no configuration, no running state and no observed copied order. The
+map therefore separates the three claims - intent, configuration and observation - instead of turning intent into a
+live component or reusing the blind robot as if it were the relay. If the relay is implemented and evidenced later,
+it becomes a station of its own with the same distinction.
 
 The two dotted grey links from the VPS to FTMO 3 and to the cTrader component mean only *hosted on the same host*.
 They are a third link style, they are never counted as data flow, and the state API reports them separately

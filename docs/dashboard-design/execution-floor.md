@@ -48,15 +48,18 @@ in four labelled rows:
 - **Trading authorisation** - **pending**: orders default to disabled and stay disabled until a simulated fill
   verifies the accepted entry, the absolute stop and the target. The robot refuses off-tick marks, and a preview run
   logs its signals without publishing any dashboard heartbeat.
-- **Active copying** - **none documented**. The repository records no relay that mirrors another lane's accepted
-  orders into cTrader. What is committed places only its own line-to-line orders.
+- **Relay design intent** - **FTMO 1**, named as the intended source in the sanitised strategy brief. This is design
+  intent, not a configured source.
+- **Configured source** - **not evidenced**: no relay configuration or bound source is recorded in this checkout.
+- **Observed copying** - **not evidenced**: no dated copy record or copied-order count is committed. The map does not
+  claim "inactive" or "zero copied orders".
 
 ## What the map does not claim
 
 No report figure is shown for any of the three traders, and the map never reads an account, a balance or an order.
 The dotted grey links on the floor mean only that a component runs on the same host: they are not data paths. Two
 trailing statements on the execution terminal say the same thing in place: this page is not connected to the VPS, and
-no order-copying relay is documented in this checkout.
+no relay implementation, configuration, source binding, copy log or copied-order count is committed.
 
 ## Sources
 

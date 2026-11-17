@@ -718,3 +718,47 @@ and made one decision: the live-trading lane owns the performance calculations f
   is the last evidenced state, not a recent connection time.
 
 
+
+## 2026-11-17 - review fixes: phone controls, VPS names, T2 rows, relay states
+
+### Checkpoint and scope
+- Reviewed factory and handover committed locally as `735e8dc1` on `design/architecture-factory-multilevel`. The commit
+  holds the factory source, shell, stylesheet, cache-busters, both browser guards and this notes file; the three other
+  untracked design documents were left out. No push, no publication, no data-file change.
+- Final review-fix commit follows this entry. Publication remains pending the user's review.
+
+### What changed
+- Phone camera controls: below 720 px the HUD sits at `top: 48px` instead of the stage bottom, and the illustrative
+  note moves to `top: 92px`. The fixed trader lamps stay at the bottom right. No control label, scene action or lamp
+  changed.
+- VPS names: the shared-station focus for `vps` is now 0.72 of overview distance, inside the named-label band. The
+  collision box now matches the text CSS actually draws (code at far, name at mid, name plus sub at near). FTMO 1
+  carries a `-62px` screen-space label offset; FTMO 3 carries `+20px`; FTMO 2 stays in the middle. The opened station
+  is named before the rest of the active route. The blind M5 chain remains on its own lower row, separate from the two
+  directional lanes and the violet cTrader object.
+- T2: the USD test library now carries a static historical block copied from
+  `data/usd-layer1-backtester/run-v1.json` (generated 2026-11-14). The inspector and the flat fallback show Model,
+  Market, Accuracy and Scored sessions for EUR/USD 49.43% / 439, XAU/USD 55.68% / 458, BTC/USD 50.00% / 536 and
+  NAS100 52.86% / 454, headed "Historical results" with a note that the view reads no live data. The evidence link
+  points at the committed artefact.
+- cTrader relay wording: the intended source is FTMO 1, sourced from the sanitised strategy record. Configured source
+  is "Not evidenced"; observed copying is "Not evidenced". The page does not claim "inactive" or "zero copied orders".
+  Installation, connection and authorisation retain their earlier states.
+
+### Verification
+- Desktop 1440x1000, VPS selected: VPS label and all three FTMO lane names visible, no pairwise overlap, all inside
+  the stage. Phone 390x844, same check passes; FTMO 3 sits below the directional pair.
+- Phone 390x844, stage bottom at viewport bottom: Reset view, +, - and Pause flow all hit-test to their own buttons;
+  none intersects a fixed trader lamp. Each control was tapped and checked: zoom in shortens distance, zoom out
+  lengthens it, Reset returns to overview, Pause sets `paused` and `aria-pressed`.
+- T2 at both widths: four rendered rows match the artefact exactly; the panel reports zero sideways overflow.
+- `node --test --test-concurrency=1 --test-reporter=spec tests/system_factory.browser.test.js`: 15 tests, 15 pass,
+  0 fail (71.0 s). `tests/system_map.browser.test.js`: 2 tests, 2 pass, 0 fail (8.0 s).
+  `tests/factory_library.test.js`: 7 tests, 7 pass, 0 fail.
+- Screenshots in `tmp/factory-review-20261117/`: `final-vps-labels-1440.png`, `final-vps-labels-390.png`,
+  `final-t2-results-1440.png`, `final-t2-results-390.png`, `final-phone-controls-390.png`.
+
+### Remaining
+- No cTrader runtime status, configured source, copy log or dated copied-order count is committed. `Not evidenced`
+  remains the correct state for configuration and observation; FTMO 1 is design intent only.
+

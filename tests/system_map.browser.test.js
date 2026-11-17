@@ -91,9 +91,10 @@ test("the overview link opens an embedded map that asks for nothing outside this
   // Static half of the same rule: the module and its stylesheet carry no request of their own.
   assert.doesNotMatch(mapScript, /\bfetch\s*\(|XMLHttpRequest|sendBeacon/, "the map must not call the network");
   assert.doesNotMatch(mapStyles, /@import|url\s*\(/, "the map stylesheet must not load a font, image or frame");
-  assert.match(indexPage, /system-map\.css\?v=20261117-factory-lower-floor/, "the page must request the current map stylesheet");
-  assert.match(hostScript, /lib\/system-map\.js\?v=20261117-factory-lower-floor/, "the host must request the current map script");
-    assert.match(mapScript, /lib\/system-factory\.js\?v=20261117-factory-lower-floor/, "the map must request the current factory script");
+  assert.match(indexPage, /system-map\.css\?v=20261117-factory-review-fixes/, "the page must request the current map stylesheet");
+  assert.match(hostScript, /lib\/system-map\.js\?v=20261117-factory-review-fixes/, "the host must request the current map script");
+  assert.match(mapScript, /lib\/system-factory\.js\?v=20261117-factory-review-fixes/, "the map must request the current factory script");
+  assert.match(indexPage, /lib\/factory-library\.js\?v=20261117-factory-review-fixes/, "the page must request the current factory library");
   assert.match(mapScript, /lib\/vendor\/three\.min\.js/, "the factory loads the vendored three.js bundle, not a CDN");
   assert.match(mapScript, /registered 25 factors/, "the map must record that the programme registered 25 factors");
   assert.doesNotMatch(mapScript, /25-factor challenger/, "no label may call the implemented challenger a 25-factor model");
