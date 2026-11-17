@@ -47,6 +47,8 @@ ul{margin:6px 0 12px;padding-left:20px}
 li{margin:3px 0;color:#c3d4d8}
 .caption{margin-top:8px}
 .hash{word-break:break-all}
+select{font:inherit;color:#dce8e9;background:#162530;border:1px solid #3d515c;border-radius:6px;padding:7px 10px;max-width:100%}
+pre{white-space:pre-wrap;word-break:break-word;background:#0d1922;border:1px solid #2c4049;border-radius:6px;padding:8px;font-size:12px;max-height:280px;overflow:auto}
 </style></head><body>
 <header><b>Trading Agent Dashboard</b><span><a href="index.html">Dashboard</a> · <a href="data/usd-layer1-backtester/backtesting-screen-v1.json">Screen payload</a></span></header>
 <main>
@@ -62,7 +64,7 @@ li{margin:3px 0;color:#c3d4d8}
 <script>
 "use strict";
 const payloadUrl="data/usd-layer1-backtester/backtesting-screen-v1.json";
-const tabs={overview:"Overview",architecture:"Architecture",tests:"Tests",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions"};
+const tabs={overview:"Overview",architecture:"Architecture",tests:"Tests",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
 const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all"};
 function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=text;if(cls)n.className=cls;if(parent)parent.append(n);return n}
 function pill(status,parent){return el("span",status,parent,"pill "+status)}
@@ -84,11 +86,15 @@ function renderBlockers(s){
   if(pkg.blockers&&pkg.blockers.length){const ul=el("ul",null,b);for(const line of pkg.blockers)el("li",line,ul)}
   const d=el("details",null,b);el("summary","Search record ("+pkg.searched.length+" files read on "+pkg.checked_at+")",d);
   const ul2=el("ul",null,d);for(const line of pkg.searched.slice(0,40))el("li",line,ul2,"mono");if(pkg.searched.length>40)el("li","… "+(pkg.searched.length-40)+" more",ul2,"mono");
-  const h1=el("div",null,host,"banner bad");
-  el("strong","H1 test status: 0 of 4 scored",h1);
-  el("p","All four H1 tests stay unscored until the requested package's 25 adjudications map to executable rules and a strict-gate morning exists. The tables below describe the legacy experiment and are labelled that way.",h1);
-  const earliest=s.summary.readiness.strict_ready_candidate;
-  el("p",earliest===0?"Earliest evidence-backed H1 morning: none. The strict gate accepts "+earliest+" of "+s.summary.sessions+" mornings.":"Earliest evidence-backed H1 morning: "+earliest+" strict-gate mornings are available.",h1);
+  const h1=s.h1;
+  const h1b=el("div",null,host,"banner"+(h1&&h1.coverage.ready>0?" ok":" bad"));
+  el("strong",h1?h1.coverage.label:"H1 historical coverage unavailable",h1b);
+  if(h1){
+    el("p","Bound to "+h1.model.id+" · "+h1.model.version+" · "+h1.coverage.binding.gate+" · package "+h1.package.requested+" "+h1.package.status.toLowerCase()+" · fixtures "+h1.fixtures.label+".",h1b);
+    el("p","Legacy counts below describe the control and the legacy implemented book. They are not H1 counts and are never presented as H1 coverage.",h1b);
+  }else{
+    el("p","The H1 coverage audit is missing from this payload. No legacy count is substituted for it.",h1b);
+  }
 }
 function renderSummary(s){
   const host=document.querySelector("#summary");host.replaceChildren();
@@ -100,6 +106,13 @@ function renderSummary(s){
     if(model.identity){const p=el("p",null,c);pill(model.identity.status,p);el("small",model.identity.note||"",c)}
     const d=el("details",null,c);el("summary","Executable entry points",d);
     const ul=el("ul",null,d);for(const path of model.executable_entry_points)el("li",path,ul,"mono");
+  }
+  if(s.summary.h1){
+    const h=s.summary.h1;
+    const c=card(host,"H1 candidate",h.ready+" / "+h.scheduled+" ready",h.label);
+    el("small","model: "+h.model_id+" · version: "+h.model_version,c);
+    el("small","fixtures: "+h.fixture_label+" · earliest eligible: "+(h.earliest_eligible||"none"),c);
+    el("small",h.legacy_replacement.note,c);
   }
   card(host,"Session",s.summary.session,s.summary.first_date+" → "+s.summary.last_date+" · "+s.summary.sessions+" scheduled mornings");
   const r=s.summary.readiness;
@@ -121,7 +134,7 @@ function table(parent,headers,rows){
 function renderOverview(v,s){
   const pkg=s.package_identity;
   el("h2","What this run covers",v);
-  el("p","Two models, one 05:00 London session contract and four tests. The candidate is the legacy implemented book, not the requested H1 package: the package is "+pkg.status.toLowerCase().replaceAll("_"," ")+".",v);
+  el("p","Two legacy models and the supplied H1 candidate share one 05:00 London session contract. The rows below remain the legacy experiment; the H1 candidate has its own nine-input coverage audit under the H1 candidate tab and no legacy count is substituted for H1.",v);
   el("h3","Five counts, printed separately (OD-5)",v);
   const t=table(v,["Model","Scheduled","Reconstructed","Valid (strict)","Directional (engine)","Scored","Overlap / exclusions"],[]);
   const body=t.querySelector("tbody");
@@ -162,6 +175,152 @@ function renderOverview(v,s){
   }
   el("p","Sealed live replay: not run. No sealed replay artefact exists in this checkout, so no live figure is reported here.",v,"caption");
 }
+function renderH1(v,s){
+  const h=s.h1;
+  el("h2","H1 candidate · nine-input coverage audit",v);
+  if(!h){el("p","No H1 payload is present in this build. No legacy count is substituted for H1 coverage.",v);return}
+  const c=h.coverage;
+  const banner=el("div",null,v,"banner"+(c.ready>0?" ok":" bad"));
+  el("strong",c.label,banner);
+  el("p",h.model.label+" · "+h.model.id+" · "+h.model.version+" · rulebook "+h.model.rulebook_version+" · gate "+c.binding.gate+".",banner);
+  el("p",h.package.consequence,banner);
+  if(c.status==="blocked"||c.ready===0)el("p","This is a coverage audit, not a performance result. Fixtures prove engine admission only; they are not historical evidence.",banner);
+
+  const grid=el("div",null,v,"grid");
+  card(grid,"Scheduled mornings",String(c.scheduled),c.binding.run_id+" · "+c.binding.run_first_session+" → "+c.binding.run_last_session);
+  card(grid,"H1 ready",String(c.ready),"eligible under all nine input contracts");
+  card(grid,"H1 blocked",String(c.blocked),"earliest eligible: "+(c.earliest_eligible||"none"));
+  card(grid,"Fixtures",h.fixtures.status,h.fixtures.label);
+  card(grid,"Package",h.package.status,h.package.requested+" · "+h.package.verification);
+  card(grid,"Receipts",String(c.receipts.recorded)+" recorded",c.receipts.note);
+
+  el("h3","Input contract and measured coverage",v);
+  el("p",c.basis+". Present is not eligible: a value must also retain its original observation, five-interval lookback, freshness, observation/publication/receipt clocks and identity.",v,"caption");
+  const rows=[];
+  for(const input of c.inputs){
+    const contract=el("div");
+    el("strong",input.label,contract);
+    el("small",input.source+" · "+input.instrument,contract);
+    el("small",input.transform,contract);
+    const field=el("div");
+    el("code",input.legacy_field,field);
+    el("small","identity: "+input.identity_state,field);
+    const present=el("div");
+    el("strong",input.present+" / "+c.scheduled,present);
+    el("small","named aliases "+input.named+" · original "+input.original,present);
+    const missing=el("div");
+    el("strong",String(input.missing),missing);
+    if(input.incomplete)el("small","schedule incomplete "+input.incomplete,missing);
+    if(input.missing_dates&&input.missing_dates.length)el("small","first missing: "+input.missing_dates.slice(0,5).join(", ")+(input.missing_dates.length>5?" …":""),missing);
+    const lookback=el("div");
+    el("strong",String(input.lookback),lookback);
+    el("small","eligible rung "+input.eligible,lookback);
+    const clocks=el("div");
+    el("strong",input.clocked+" clocked",clocks);
+    el("small","receipt "+input.receipt+" · "+input.clock_sample,clocks);
+    const blocker=el("details");
+    el("summary",input.code,blocker);
+    el("p",input.blocker_text,blocker);
+    el("p",input.acquisition,blocker,"caption");
+    rows.push([contract,field,present,missing,lookback,clocks,blocker]);
+  }
+  table(v,["Declared input contract","Archived field","Present / scheduled","Missing / incomplete","Five-interval lookback","05:00 clocks","First blocker and what to acquire"],rows);
+
+  el("h3","Why the archive cannot satisfy H1",v);
+  const gaps=el("ul",null,v);
+  for(const input of c.inputs)el("li",input.label+": "+input.availability+" Acquisition: "+input.acquisition,gaps);
+
+  el("h3","Blocked-morning inspector",v);
+  el("p","Every scheduled morning is listed. Choose a date to inspect the exact first blocker and failed rungs; the profile table below links the repeated signatures.",v);
+  const picker=el("div",null,v,"chips");
+  el("label","Morning ",picker);
+  const select=el("select",null,picker);
+  select.setAttribute("aria-label","H1 morning to inspect");
+  for(const m of c.mornings){
+    const o=el("option",m.date+" · "+(m.ready?"ready":"blocked"),select);
+    o.value=m.date;
+  }
+  const detail=el("div",null,v,"card");
+  const renderMorning=date=>{
+    const m=c.mornings.find(x=>x.date===date);
+    detail.replaceChildren();
+    if(!m){el("p","No morning matches "+date+".",detail);return}
+    const p=c.profiles[m.signature];
+    const head=el("h3",m.date+" · "+(m.ready?"H1 ready":"H1 blocked"),detail);
+    pill(m.ready?"eligible":"blocked",head);
+    el("p","scheduled releases: "+m.calendar_count+" · profile: "+(p?p.dates.length:0)+" morning(s) share this signature.",detail);
+    if(p){
+      const rows=[];
+      for(const b of p.blockers){
+        const first=el("div");
+        el("code",b.code,first);
+        el("small","failed: "+b.failed_rungs.join(", "),first);
+        const value=el("div");
+        el("code",JSON.stringify(m.values[b.input]),value);
+        el("small","identity: "+b.identity_state,value);
+        const clock=el("div");
+        el("small","observed "+(b.clock.observed||"—")+" · published "+(b.clock.published||"—")+" · received "+(b.clock.received||"—"),clock);
+        el("small",b.clock.note,clock);
+        const action=el("div");el("small",b.text,action);
+        rows.push([b.label,value,clock,first,action]);
+      }
+      table(detail,["Input","Archived value","Clocks","First blocker","Why it fails"],rows);
+      el("p","Profile signature: "+m.signature,detail,"caption");
+    }
+    const trace=el("details",null,detail);
+    el("summary","Rung trace for this morning",trace);
+    el("pre",JSON.stringify(m.rungs,null,2),trace);
+  };
+  select.onchange=()=>renderMorning(select.value);
+  renderMorning(select.value);
+
+  el("h3","Coverage profiles",v);
+  const profileRows=[];
+  for(const p of Object.values(c.profiles).sort((a,b)=>b.dates.length-a.dates.length)){
+    const inspect=el("button","Inspect",el("div"));
+    inspect.onclick=()=>{select.value=p.dates[0];renderMorning(p.dates[0]);select.scrollIntoView({block:"center"})};
+    profileRows.push([String(p.dates.length),p.dates[0],p.dates[p.dates.length-1],p.blockers.map(b=>b.code).join(", "),inspect]);
+  }
+  table(v,["Mornings","First date","Last date","Blockers","Open"],profileRows);
+  el("h3","Event calendar",v);
+  const calgrid=el("div",null,v,"grid");
+  card(calgrid,"Calendar status",c.event_calendar.status,c.event_calendar.version+" · "+c.event_calendar.events+" staged events");
+  card(calgrid,"Sessions with a staged event",String(c.event_calendar.sessions_with_staged_event),"a zero count under a partial calendar proves no omission");
+  card(calgrid,"Required types",String(c.event_calendar.required_types.length),c.event_calendar.required_types.join(", "));
+  card(calgrid,"Missing types",String(c.event_calendar.missing_types.length),c.event_calendar.missing_types.join(", "));
+  el("p",c.event_calendar.note,v,"caption");
+
+  el("h3","Receipts and contracts",v);
+  const contract=el("div",null,v,"grid");
+  card(contract,"Observed / published / received",c.receipts.recorded+" receipts",c.receipts.reconstructed+" reconstructed · "+c.receipts.receipt_reconstructable_inputs+" of "+c.inputs.length+" inputs reconstructable");
+  card(contract,"Contract check",c.contract_check.checked?"checked":"not checked",c.contract_check.inputs+" inputs · "+c.contract_check.mismatches.length+" mismatches · package "+c.contract_check.package_version);
+  el("p",c.receipts.note,v,"caption");
+
+  el("h3","Supplied fixture replay",v);
+  el("p","Fixture reproduction is an engine-admission control. It is not historical evidence and does not move H1 coverage.",v);
+  const fixtureRows=[];
+  for(const item of h.fixtures.cases){
+    const d=el("details");
+    el("summary",item.match?"trace equal":"diff",d);
+    el("p","expected",d);
+    el("pre",JSON.stringify(item.expected,null,2),d);
+    el("p","actual",d);
+    el("pre",JSON.stringify(item.actual,null,2),d);
+    if(item.diff)el("pre",JSON.stringify(item.diff,null,2),d);
+    fixtureRows.push([item.id,item.model_id+" "+item.model_version,item.date,item.match?"MATCH":"DIFF",item.scope||item.label,d]);
+  }
+  table(v,["Case","Model","Date","Result","Scope","Trace"],fixtureRows);
+  el("p",h.fixtures.label+" · controls "+h.fixtures.control+" · counts binding: "+(h.fixtures.counts_binding||"none")+".",v,"caption");
+
+  el("h3","Package identity",v);
+  const pkg=el("div",null,v,"grid");
+  card(pkg,"Requested",h.package.requested,h.package.status+" · verified "+h.package.verified_on);
+  card(pkg,"Archive SHA-256",h.package.archive.sha256.slice(0,16)+"…",h.package.archive.path+" · "+h.package.archive.bytes+" bytes");
+  card(pkg,"Internal checksums",h.package.internal_checksums.verified+" / "+h.package.internal_checksums.declared,"mismatches "+h.package.internal_checksums.mismatches.length+" · manifest "+h.package.internal_checksums.manifest_sha256.slice(0,16)+"…");
+  card(pkg,"Frozen contents",h.package.contents.rows+" rows",h.package.contents.inputs+" inputs · "+h.package.contents.fixtures.length+" fixtures · "+h.package.contents.rows_status);
+  el("p","Binding: "+c.binding.model_id+" · "+c.binding.model_version+" · run "+c.binding.run_id+" ("+c.binding.run_version+") · gate "+c.binding.gate+". Legacy replacement: "+c.legacy_replacement.replacement_label+".",v,"caption");
+}
+
 let disposeMap=null,mapApi=null;
 function evidenceTable(parent,node){
   const rows=(node.evidence||[]).map(item=>[item.path,item.date||"undated",item.sha256?item.sha256.slice(0,16)+"…":"—",item.note||""]);
@@ -449,6 +608,7 @@ function render(){
   else if(keyName==="ledger")renderLedger(host,s);
   else if(keyName==="audit")renderAudit(host,s);
   else if(keyName==="decisions")renderDecisions(host,s);
+  else if(keyName==="h1")renderH1(host,s);
 }
 function renderProvenance(s){
   const host=document.querySelector("#provenance-body");host.replaceChildren();

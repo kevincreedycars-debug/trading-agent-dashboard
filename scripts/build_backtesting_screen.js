@@ -20,6 +20,9 @@ const { buildReadiness } = require("../lib/layer1_backtesting/readiness");
 const { buildScreen } = require("../lib/layer1_backtesting/screen");
 const { proposedFlatBands } = require("../lib/layer1_backtesting/flat_bands");
 const { verifyRequestedPackage, reviewAdjudications } = require("../lib/layer1_backtesting/package_identity");
+const { loadPackage, verifyPackage } = require("../lib/layer1_backtesting/h1_package");
+const { buildH1Coverage } = require("../lib/layer1_backtesting/h1_coverage");
+const { buildH1Model, buildFixtureControl, runH1Fixtures, decideH1Historical } = require("../lib/layer1_backtesting/h1_candidate");
 const { sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
 
 const ROOT = path.resolve(__dirname, "..");
@@ -41,9 +44,33 @@ function build() {
   const engine = readJson(ENGINE_PATH);
   const book = readJson("config/usd_l1_factor_rulebook_v1.json");
   const rules = readJson("config/usd_l1_decision_rules_v1.json");
-  const models = createModels({ run, engine });
+  const h1Package = loadPackage({ root: ROOT });
+  const h1PackageInfo = verifyPackage({ root: ROOT });
+  const h1Model = buildH1Model({ packageModel: h1Package.models });
+  const h1Control = buildFixtureControl({ packageModel: h1Package.models });
+  const h1Coverage = buildH1Coverage({
+    run,
+    packageInputs: h1Package.inputs,
+    calendar: readJson("data/usd-layer1-backtester/event-calendar-v1.json"),
+    packageInfo: h1PackageInfo,
+  });
+  const h1Fixtures = runH1Fixtures({ root: ROOT, models: { h1: h1Model, fixtureControl: h1Control } });
+  const h1Historical = decideH1Historical({ run, coverage: h1Coverage, model: h1Model });
+  const models = createModels({ run, engine, h1: h1Model });
   const generatedAt = (run.run && run.run.generated_at) || run.generated_at || engine.source_generated_at || null;
-  const sources = [RUN_PATH, ENGINE_PATH, "config/usd_l1_factor_rulebook_v1.json", "config/usd_l1_decision_rules_v1.json", "data/research-library/catalog.json"]
+  const sources = [
+    RUN_PATH,
+    ENGINE_PATH,
+    "config/usd_l1_factor_rulebook_v1.json",
+    "config/usd_l1_decision_rules_v1.json",
+    "data/research-library/catalog.json",
+    "data/usd-layer1-backtester/event-calendar-v1.json",
+    "docs/research/usd-session/h1/v0.1.0/package/inputs.json",
+    "docs/research/usd-session/h1/v0.1.0/package/expected.json",
+    "docs/research/usd-session/h1/v0.1.0/package/models.js",
+    "docs/research/usd-session/h1/v0.1.0/package/rows.json",
+    "docs/research/usd-session/h1/v0.1.0/package/SHA256SUMS",
+  ]
     .filter((relative) => fs.existsSync(path.join(ROOT, relative)))
     .map(sourceEntry);
 
@@ -58,6 +85,44 @@ function build() {
     requirementTable: (run.validity_gate && run.validity_gate.requirement_table) || [],
     coverage: run.coverage && run.coverage.by_model,
   });
+  const h1 = {
+    model: {
+      id: h1Model.id,
+      label: h1Model.label,
+      role: h1Model.role,
+      version: h1Model.version,
+      rulebook_version: h1Model.rulebook_version,
+      session: h1Model.session,
+      identity: h1Model.identity(),
+      input_spec: h1Model.input_spec,
+      evidence: h1Model.evidence,
+      executable_entry_points: [
+        "lib/layer1_backtesting/engine.js#decide",
+        "lib/layer1_backtesting/h1_candidate.js#buildH1Model",
+        "lib/layer1_backtesting/h1_coverage.js#buildH1Coverage",
+      ],
+    },
+    package: {
+      requested: h1PackageInfo.requested,
+      status: h1PackageInfo.status,
+      verification: h1PackageInfo.verification,
+      verified_on: h1PackageInfo.verified_on,
+      archive: h1PackageInfo.archive,
+      internal_checksums: {
+        manifest: h1PackageInfo.internal_checksums.manifest,
+        manifest_sha256: h1PackageInfo.internal_checksums.manifest_sha256,
+        declared: h1PackageInfo.internal_checksums.declared,
+        verified: h1PackageInfo.internal_checksums.verified,
+        mismatches: h1PackageInfo.internal_checksums.mismatches,
+      },
+      contents: h1PackageInfo.contents,
+      consequence: h1PackageInfo.consequence,
+      source: h1PackageInfo.source,
+    },
+    fixtures: h1Fixtures,
+    coverage: h1Coverage,
+    historical: h1Historical.summary,
+  };
 
   const body = buildScreen({
     report,
@@ -71,6 +136,7 @@ function build() {
     flatBands,
     packageInfo,
     mapping,
+    h1,
     root: ROOT,
   });
   const digest = sha256(stableStringify(body));
@@ -96,6 +162,9 @@ function summary(screen) {
     `book: allowed ${screen.summary.readiness.book_allowed_candidate} · abstained ${screen.summary.readiness.book_abstained_candidate} · blocked ${screen.summary.readiness.book_blocked_candidate}`
   );
   lines.push(`package: ${screen.package_identity.requested} ${screen.package_identity.status}`);
+  if (screen.h1) {
+    lines.push(`h1: ${screen.h1.model.version} · coverage ready ${screen.h1.coverage.ready}/${screen.h1.coverage.scheduled} · fixtures ${screen.h1.fixtures.status}`);
+  }
   lines.push(`mapping: ${screen.mapping_review.verdict}`);
   lines.push(
     `gap: ${screen.summary.biggest_gap ? `${screen.summary.biggest_gap.field} ${screen.summary.biggest_gap.mornings}/${screen.summary.biggest_gap.sessions}` : "none"}`

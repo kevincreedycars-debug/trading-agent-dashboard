@@ -7,6 +7,7 @@ const path = require("node:path");
 
 const { build, OUT_PATH } = require("../scripts/build_backtesting_screen");
 const { createLedger, saveDecision } = require("../lib/layer1_backtesting/ledger");
+const { REQUIRED_TYPES, matchEventTypes } = require("../lib/layer1_backtesting/h1_coverage");
 
 const ROOT = path.resolve(__dirname, "..");
 const screen = build();
@@ -32,15 +33,75 @@ test("the payload carries the two models, the session, the range and four tests 
   }
 });
 
-test("the requested H1 package is verified as absent, with a search record rather than an assertion", () => {
+test("the requested H1 package is present and verified, with its own identity rather than a legacy substitute", () => {
   const pkg = screen.package_identity;
   assert.equal(pkg.requested, "USD-L1-25F-H1-v0.1.0");
-  assert.equal(pkg.status, "NOT_PRESENT_IN_CHECKOUT");
-  assert.equal(pkg.hits.length, 0, "the verifier must not match its own source file");
-  assert.ok(pkg.searched.length > 40);
-  assert.ok(pkg.blockers.length >= 2);
-  assert.match(pkg.consequence, /legacy implemented book/);
+  assert.equal(pkg.status, "PRESENT");
+  assert.equal(screen.h1.package.status, "VERIFIED");
+  assert.equal(screen.h1.package.archive.sha256, "1c82e9048a3cf2237ffea6873b8099389d09fccefa083cd38ccb87517e3672e0");
+  assert.equal(screen.h1.package.internal_checksums.verified, screen.h1.package.internal_checksums.declared);
+  assert.equal(screen.h1.package.contents.rows, 25);
+  assert.ok(
+    screen.provenance.inputs.some((input) => input.path === "docs/research/usd-session/h1/v0.1.0/package/inputs.json"),
+    "the H1 input contract must be a named provenance input"
+  );
+  assert.ok(
+    screen.provenance.inputs.some((input) => input.path === "data/usd-layer1-backtester/event-calendar-v1.json"),
+    "the staged event calendar must be a named provenance input"
+  );
+  assert.equal(screen.h1.fixtures.status, "ALL_MATCH");
+  assert.equal(screen.h1.fixtures.matched, 5);
+  assert.equal(screen.h1.fixtures.total, 5);
   assert.equal(screen.audit && screen.decisions.length, 5);
+});
+
+test("H1 historical readiness is the measured nine-input audit, not a legacy score", () => {
+  const h1 = screen.h1;
+  assert.equal(h1.model.id, "usd_l1_25f_h1");
+  assert.equal(h1.model.version, "USD-L1-25F-H1-v0.1.0");
+  assert.equal(h1.coverage.inputs.length, 9);
+  assert.equal(h1.coverage.scheduled, 725);
+  assert.equal(h1.coverage.ready, 0);
+  assert.equal(h1.coverage.blocked, 725);
+  assert.equal(h1.coverage.earliest_eligible, null);
+  assert.equal(h1.historical.eligible, h1.coverage.ready);
+  assert.equal(h1.historical.blocked, h1.coverage.blocked);
+  assert.equal(h1.historical.performance, "UNSCORED");
+  assert.equal(h1.coverage.event_calendar.complete, false);
+  assert.equal(h1.coverage.receipts.recorded, 0);
+  assert.equal(h1.coverage.binding.model_version, h1.model.version);
+  assert.equal(h1.coverage.binding.run_id, "run-v1");
+  assert.equal(h1.coverage.legacy_replacement.retired, true);
+  for (const input of h1.coverage.inputs) {
+    assert.equal(input.eligible, 0, `${input.key} must not claim H1 eligibility`);
+    assert.ok(input.blocker_text, `${input.key} must name its first blocker`);
+    assert.ok(input.acquisition, `${input.key} must name the acquisition`);
+  }
+  assert.equal(h1.coverage.mornings.length, 725);
+  assert.ok(h1.coverage.mornings.every((morning) => morning.ready === false));
+});
+
+test("H1 release-type matching is exact, with only the stated FOMC equivalence", () => {
+  const matched = matchEventTypes(REQUIRED_TYPES, ["fomc_statement"]);
+  assert.deepEqual(matched.matched, ["FOMC policy decision"]);
+  assert.deepEqual(matched.missing, ["CPI", "Employment Situation", "advance GDP", "Personal Income and Outlays"]);
+  assert.deepEqual(matchEventTypes(["CPI"], ["core_cpi_adjacent"]).missing, ["CPI"]);
+  assert.deepEqual(matchEventTypes(["Employment Situation"], ["employment situation"]).matched, ["Employment Situation"]);
+  assert.deepEqual(screen.h1.coverage.event_calendar.missing_types, matched.missing);
+  assert.deepEqual(screen.h1.coverage.event_calendar.matched_types, matched.matched);
+});
+
+test("the H1 view cannot render the legacy counts under the H1 selector", () => {
+  const start = html.indexOf("function renderH1");
+  const end = html.indexOf("let disposeMap", start);
+  assert.ok(start > 0 && end > start, "the H1 renderer must exist as its own function");
+  const section = html.slice(start, end);
+  assert.equal(/515|209|121|coverage_trace/.test(section), false, "legacy counts and the legacy trace must not appear in H1");
+  assert.equal(section.includes("c.ready"), true);
+  assert.equal(section.includes("c.blocked"), true);
+  assert.equal(section.includes("legacy_replacement"), true);
+  assert.equal(screen.summary.h1.legacy_replacement.previous_label.includes("0/725"), true);
+  assert.equal(screen.summary.h1.label.includes("0 of 725 ready"), true);
 });
 
 test("all 25 adjudications are reviewed against the executable rules, with every hypothesis visible", () => {
@@ -162,9 +223,11 @@ test("the committed payload reproduces byte for byte from the stored artefacts",
 test("the page loads the payload, opens from the main navigation and keeps the map and abstention status on screen", () => {
   assert.equal(index.includes('href="backtesting.html"'), true, "the main navigation must link the screen");
   assert.equal(html.includes('data/usd-layer1-backtester/backtesting-screen-v1.json'), true);
-  for (const id of ["overview", "architecture", "tests", "ledger", "audit", "decisions"]) {
+  for (const id of ["overview", "architecture", "tests", "ledger", "audit", "decisions", "h1"]) {
     assert.equal(html.includes(`${id}:"`), true, `the ${id} view must exist`);
   }
+  assert.equal(html.includes("H1 candidate"), true);
+  assert.equal(html.includes("renderH1"), true);
   assert.equal(html.includes('id="map"'), true);
   assert.equal(html.includes("valid_abstention"), true);
   assert.equal(html.includes("05:00"), true);
@@ -179,7 +242,7 @@ test("the four H1 tests are labelled unscored for the requested package", () => 
   assert.match(official.status, /blocked/);
   const l2l = screen.tests.definitions.find((def) => def.id === "l2l_path");
   assert.equal(l2l.usable_sessions, 0);
-  assert.match(screen.package_identity.consequence, /not the requested H1 package/);
+  assert.match(screen.package_identity.consequence, /Presence is not an identity check/);
   const broker = screen.tests.definitions.find((def) => def.id === "dxy_direction_broker_cfd");
   assert.match(broker.status, /proxy/);
 });
