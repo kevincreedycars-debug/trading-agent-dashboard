@@ -61,6 +61,10 @@ test("the requested H1 package is registered, verified byte for byte and reprodu
   assert.equal(screen.h1.fixtures.matched, 5);
   assert.equal(screen.h1.fixtures.total, 5);
   assert.equal(screen.audit && screen.decisions.length, 5);
+  assert.equal(screen.morning_run.date, "2024-03-26");
+  assert.equal(screen.morning_run.strict_evidence.ready, false);
+  assert.equal(screen.morning_run.models.current.direction, "BEARISH");
+  assert.equal(screen.morning_run.models.h1.outcome, "blocked");
 });
 
 test("every one of the 25 adjudications is accounted for, with the shared evidence and the findings visible", () => {
@@ -347,14 +351,41 @@ test("the committed payload reproduces byte for byte from the stored artefacts",
   assert.equal(/\\bundefined\\b/.test(JSON.stringify(fresh)), false);
 });
 
+test("the morning-run payload keeps H1 blocked and the legacy 0/725 attached to its original audit", () => {
+  const morning = screen.morning_run;
+  assert.equal(morning.models.current.outcome, "allowed");
+  assert.equal(morning.models.current.trade_eligible, true);
+  assert.equal(morning.models.h1.outcome, "blocked");
+  assert.equal(morning.models.h1.direction, "NO_CALL");
+  assert.equal(morning.models.h1.conviction, null);
+  assert.equal(morning.models.h1.trade_eligible, false);
+  assert.equal(morning.h1_blockers.length, 9);
+  assert.equal(morning.inputs.current.length, 12);
+  assert.equal(morning.inputs.h1.length, 9);
+  assert.equal(morning.sample_reconciliation.h1.blocked, 725);
+  assert.equal(morning.sample_reconciliation.h1.directional, 0);
+  assert.equal(morning.legacy_input_clock_audit.sessions.clocked, 0);
+  assert.equal(morning.legacy_input_clock_audit.sessions.total, 725);
+  assert.match(morning.legacy_input_clock_audit.source, /validity_gate\.ladder/);
+  assert.equal(morning.reach_benchmark.layer1.hits, 2418);
+  assert.equal(morning.reach_benchmark.layer1.denominator, 2493);
+  assert.equal(morning.reach_benchmark.layer2.hits, 1549);
+  assert.equal(morning.reach_benchmark.layer2.denominator, 1592);
+  assert.equal(JSON.stringify(morning).includes("515 reconstructed"), false);
+  assert.equal(JSON.stringify(morning).includes("209 scored"), false);
+});
+
+
 test("the page loads the payload, opens from the main navigation and keeps the map and abstention status on screen", () => {
   assert.equal(index.includes('href="backtesting.html"'), true, "the main navigation must link the screen");
   assert.equal(html.includes('data/usd-layer1-backtester/backtesting-screen-v1.json'), true);
-  for (const id of ["overview", "architecture", "tests", "ledger", "audit", "decisions", "h1"]) {
+  for (const id of ["overview", "architecture", "tests", "morning", "ledger", "audit", "decisions", "h1"]) {
     assert.equal(html.includes(`${id}:"`), true, `the ${id} view must exist`);
   }
   assert.equal(html.includes("H1 candidate"), true);
   assert.equal(html.includes("renderH1"), true);
+  assert.equal(html.includes("renderMorningRun"), true);
+  assert.equal(html.includes("One historical morning"), true);
   assert.equal(html.includes('id="map"'), true);
   assert.equal(html.includes("valid_abstention"), true);
   assert.equal(html.includes("05:00"), true);

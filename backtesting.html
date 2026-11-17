@@ -64,7 +64,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0d1922;border:1px sol
 <script>
 "use strict";
 const payloadUrl="data/usd-layer1-backtester/backtesting-screen-v1.json";
-const tabs={overview:"Overview",architecture:"Architecture",tests:"Tests",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
+const tabs={overview:"Overview",architecture:"Architecture",tests:"Tests",morning:"Morning run",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
 const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all"};
 function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=text;if(cls)n.className=cls;if(parent)parent.append(n);return n}
 function pill(status,parent){return el("span",status,parent,"pill "+status)}
@@ -674,6 +674,95 @@ function renderDecisions(v,s){
   table(hd,["Id","Hypothesis","Evidence","Status"],m.hypotheses.map(h=>[h.id,h.text,h.evidence,h.status]));
 }
 
+function renderMorningRun(v,s){
+  const m=s.morning_run;
+  el("h2","One historical morning · "+(m?m.date:"not published"),v);
+  if(!m){el("p","No morning-run report is present in this build. No legacy count is substituted for it.",v);return}
+  const banner=el("div",null,v,"banner "+(m.strict_evidence.ready?"ok":"bad"));
+  el("strong",m.strict_evidence.ready?"Strict 05:00 evidence ready":"No strict 05:00 morning",banner);
+  el("p",m.strict_evidence.reason,banner);
+  el("p","Session: "+m.session.cutoff_at_utc+" → "+m.session.endpoint_at_utc+" · "+m.session.window_hours+" hours.",banner);
+
+  const grid=el("div",null,v,"grid");
+  for(const [key,label] of [["current","Current USD model"],["legacy_candidate","Legacy 25-row book"],["h1","H1 candidate"]]){
+    const model=m.models[key];
+    const c=card(grid,label,model.outcome+" · "+model.direction,(model.conviction===null?"conviction —":("conviction "+model.conviction))+" · trade "+(model.trade_eligible?"yes":"no"));
+    el("small","gate: "+model.gate.code+" · "+model.id+" · "+model.version,c);
+  }
+
+  el("h3","Decisions and explanations",v);
+  const decisionRows=[];
+  for(const [key,label] of [["current","Current USD model"],["legacy_candidate","Legacy 25-row book"],["h1","H1 candidate"]]){
+    const model=m.models[key];
+    const reasons=el("div");
+    for(const reason of model.reasons||[])el("small",reason.code+": "+reason.text,reasons);
+    decisionRows.push([label,model.outcome,model.direction,model.conviction===null?"—":model.conviction,model.trade_eligible?"yes":"no",reasons]);
+  }
+  table(v,["Model","Outcome","Direction","Conviction","Trade","Reasons"],decisionRows);
+  el("p","The current adapter is allowed only under its narrow presence/freshness gate; that is not a 05:00 receipt and is never an H1 result.",v,"caption");
+
+  el("h3","Current-model required inputs",v);
+  const currentRows=m.inputs.current.map(row=>{
+    const clock=el("div");
+    el("small",(row.availability.stamp||"missing")+" · "+(row.availability.note||"no clock"),clock);
+    const rule=el("div");
+    el("code",row.applied_rule.factor_ids.join(", ")||"not read",rule);
+    const contribution=el("div");
+    if(!row.contribution.length)el("small","no published current factor reads it",contribution);
+    for(const item of row.contribution)el("small",item.factor_id+" "+item.signal+" "+item.signed_weight,contribution);
+    return [row.key,row.value,row.source,clock,row.freshness.status,rule,contribution];
+  });
+  table(v,["Field","Value","Source","Availability / clock","Freshness","Applied rule","Factor contribution"],currentRows);
+
+
+  el("h3","H1 required inputs",v);
+  const h1Rows=m.inputs.h1.map(row=>{
+    const clock=el("div");
+    el("small",(row.availability&&row.availability.stamp||"—")+" · "+(row.availability&&row.availability.note||"no clock"),clock);
+    const rule=el("div");
+    el("code",row.applied_rule.applied?row.applied_rule.factor_ids.join(", "):"not applied (gate closed)",rule);
+    const blocker=el("div");
+    if(row.gate){el("code",row.gate.code,blocker);el("small",row.gate.failed_rungs.join(", "),blocker)}
+    return [row.label,row.required.source+" / "+row.required.instrument,row.value===null?"—":row.value,clock,row.freshness.status,rule,"—",blocker];
+  });
+  table(v,["Input","Required source / instrument","Value","Availability","Freshness","Applied rule","Contribution","First blocker"],h1Rows);
+
+  el("h3","Current-model factor arithmetic",v);
+  const factorRows=m.factors.current.rows.map(row=>[row.factor_id,row.signal,row.weight,row.signed_weight]);
+  table(v,["Factor","Signal","Weight","Signed contribution"],factorRows);
+  el("p","Signed sum "+m.factors.current.net_signed_weight+" · published conviction "+(m.factors.current.published_conviction??"—")+". Weights are model weights, not measured edge.",v,"caption");
+
+  el("h3","Full sample reconciled before scoring",v);
+  const sampleRows=[];
+  for(const [key,label] of [["control","Current model (narrow gate)"],["candidate","Legacy 25-row book"],["h1","H1 candidate"]]){
+    const row=m.sample_reconciliation[key];
+    sampleRows.push([label,row.scheduled,row.blocked,row.abstained,row.directional,row.trade_eligible,row.performance.status+" ("+row.performance.scored+"/"+row.performance.denominator+")"]);
+  }
+  table(v,["Model","Scheduled","Blocked","Valid abstentions","Directional","Trades","Performance"],sampleRows);
+  el("p",m.sample_reconciliation.classification,v,"caption");
+
+  el("h3","The two figures that travel",v);
+  const audit=el("div",null,v,"card");
+  el("strong","0 of 725 — legacy input-clock audit, not H1",audit);
+  el("p","present "+m.legacy_input_clock_audit.sessions.present+" · fresh "+m.legacy_input_clock_audit.sessions.fresh+" · clocked "+m.legacy_input_clock_audit.sessions.clocked+" · identified "+m.legacy_input_clock_audit.sessions.identified+" of "+m.legacy_input_clock_audit.sessions.total+".",audit);
+  el("small","Source: "+m.legacy_input_clock_audit.source+" · "+m.legacy_input_clock_audit.path+" §"+m.legacy_input_clock_audit.section,audit);
+  if(m.reach_benchmark){
+    const reach=el("div",null,v,"card");
+    el("strong","97% — half-distance reach, not accuracy",reach);
+    el("p","Layer 1: "+m.reach_benchmark.layer1.hits+" of "+m.reach_benchmark.layer1.denominator+" ("+m.reach_benchmark.layer1.rate_pct+"%). Layer 2: "+m.reach_benchmark.layer2.hits+" of "+m.reach_benchmark.layer2.denominator+" ("+m.reach_benchmark.layer2.rate_pct+"%).",reach);
+    el("small",m.reach_benchmark.not+" · source "+m.reach_benchmark.source,reach);
+  }
+
+  el("h3","H1 missing evidence and recoverable gaps",v);
+  const gapRows=m.h1_missing_evidence.map(row=>[row.input,row.required.source,row.issue,row.action]);
+  table(v,["Input","Required source","Why it blocks","What to acquire"],gapRows);
+
+  el("h3","Remaining work towards all four backtests",v);
+  table(v,["Test","State","Input still needed","Blocker"],m.remaining_work.map(row=>[row.label,row.state,row.need,row.blocker]));
+  el("p","Report digest: "+m.provenance.artifact_sha256,v,"caption mono");
+}
+
+
 function render(){
   const host=document.querySelector("#view");host.replaceChildren();
   if(disposeMap){disposeMap();mapApi=null}
@@ -686,6 +775,7 @@ function render(){
   if(keyName==="overview")renderOverview(host,s);
   else if(keyName==="architecture")renderArchitecture(host,s);
   else if(keyName==="tests")renderTests(host,s);
+  else if(keyName==="morning")renderMorningRun(host,s);
   else if(keyName==="ledger")renderLedger(host,s);
   else if(keyName==="audit")renderAudit(host,s);
   else if(keyName==="decisions")renderDecisions(host,s);

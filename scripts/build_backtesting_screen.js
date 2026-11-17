@@ -31,6 +31,7 @@ const {
 } = require("../lib/layer1_backtesting/h1_candidate");
 const { buildH1Review } = require("../lib/layer1_backtesting/h1_review");
 const { h1ScoringContract } = require("../lib/layer1_backtesting/scoring_contract");
+const { buildMorningRun, REACH_SUMMARY_PATH } = require("../lib/layer1_backtesting/morning_run");
 const { sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
 
 const ROOT = path.resolve(__dirname, "..");
@@ -82,6 +83,7 @@ function build() {
     rows: h1Package.rows,
     inputs: h1Package.inputs,
   });
+  const morningRun = buildMorningRun({ root: ROOT, run, engine, coverage: h1Coverage });
   const models = createModels({ run, engine, h1: h1Model });
   const generatedAt = (run.run && run.run.generated_at) || run.generated_at || engine.source_generated_at || null;
   const sources = [
@@ -91,6 +93,7 @@ function build() {
     "config/usd_l1_decision_rules_v1.json",
     "data/research-library/catalog.json",
     "data/usd-layer1-backtester/event-calendar-v1.json",
+    REACH_SUMMARY_PATH,
     `${PACKAGE_ROOT}/RULEBOOK.md`,
     `${PACKAGE_ROOT}/inputs.json`,
     `${PACKAGE_ROOT}/expected.json`,
@@ -173,6 +176,7 @@ function build() {
     packageInfo,
     mapping,
     h1,
+    morningRun,
     root: ROOT,
   });
   const digest = sha256(stableStringify(body));
@@ -200,6 +204,12 @@ function summary(screen) {
   lines.push(`package: ${screen.package_identity.requested} ${screen.package_identity.status}`);
   if (screen.h1) {
     lines.push(`h1: ${screen.h1.model.version} · coverage ready ${screen.h1.coverage.ready}/${screen.h1.coverage.scheduled} · fixtures ${screen.h1.fixtures.status}`);
+  }
+  if (screen.morning_run) {
+    const morning = screen.morning_run;
+    lines.push(
+      `morning ${morning.date}: strict ${morning.strict_evidence.ready ? "ready" : "blocked"} | current ${morning.models.current.direction} ${morning.models.current.conviction} | H1 ${morning.models.h1.outcome}`
+    );
   }
   lines.push(`mapping: ${screen.mapping_review.verdict}`);
   lines.push(

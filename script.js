@@ -25,7 +25,7 @@ const checkerDataUrls = {
   BTC: `${checkerDataBase}/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard`
 };
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
-const halfL2lReachResearchUrl = "./data/half-l2l-reach-research.json?v=20260809-half-l2l-reach-v2";
+const halfL2lReachResearchUrl = "./data/half-l2l-reach-summary.json?v=20261117-half-l2l-reach-summary-v1";
 const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-review-summary";
 const phase2ShadowBacktestUrl = "./data/phase-2-shadow-backtest.json?v=20260707-phase2-shadow-v1";
 const confidenceCalibrationUrl = "./data/confidence-calibration.json?v=20260728-confidence-calibration-v1";
@@ -12519,7 +12519,7 @@ function renderHalfL2lComparisonTable(title, subtitle, rows = [], options = {}) 
       render: row => renderAdrCompactTextCell(options.entityRenderer ? options.entityRenderer(row) : (row.assetLabel || row.pairLabel || row.label || displayDash()), options.entitySecondaryRenderer ? options.entitySecondaryRenderer(row) : "", { className: "adr-table-tight-cell" })
     },
     { label: "100% Standard", className: "adr-col-rate", render: row => formatHalfL2lRate(row.fullStandard) },
-    { label: "50% Of Standard", className: "adr-col-rate", render: row => formatHalfL2lRate(row.halfOfStandard) },
+    { label: "Half-distance reach", className: "adr-col-rate", render: row => formatHalfL2lRate(row.halfOfStandard) },
     { label: "Delta / Median", className: "adr-col-metric", render: row => formatHalfL2lDelta(row) },
     { label: "Coverage", className: "adr-col-metric", render: row => formatHalfL2lCoverage(row) }
   ], {
@@ -12550,8 +12550,8 @@ function renderResearchHalfL2lReach(data = {}) {
     return `
       <div class="backtest-report">
         <article class="detail-panel wide-panel research-secondary-panel">
-          <h3>50% L2L Reach unavailable</h3>
-          <div class="empty-state matrix-evidence-empty">The downstream 50% L2L Reach artifact could not be loaded.</div>
+          <h3>L2L half-distance reach summary unavailable</h3>
+          <div class="empty-state matrix-evidence-empty">The slim half-distance reach summary could not be loaded. The full per-call archive is <code>data/half-l2l-reach-research.json</code>, which is intentionally not published.</div>
         </article>
       </div>
     `;
@@ -12566,7 +12566,7 @@ function renderResearchHalfL2lReach(data = {}) {
             <div class="panel-head compact-panel-head adr-howto-head">
               <div>
                 <p class="eyebrow">Research Only</p>
-                <h3>50% L2L Reach</h3>
+                <h3>L2L Half-Distance Reach</h3>
               </div>
               <span class="adr-howto-icon" aria-hidden="true">50%</span>
             </div>
@@ -12579,7 +12579,7 @@ function renderResearchHalfL2lReach(data = {}) {
               <p>Reach rate is not trade profitability. The current contract has no entry, spread, stop, slippage, or target-before-stop sequence rule, so these results are research-only evidence for a later confidence redesign.</p>
             </section>
           </div>
-          <aside class="overview-briefing-chips adr-howto-comparison" aria-label="50% L2L research comparison">
+          <aside class="overview-briefing-chips adr-howto-comparison" aria-label="L2L half-distance reach comparison">
             <div class="overview-briefing-chip adr-howto-compare-card">
               <span>Current Baseline</span>
               <div class="adr-howto-compare-block">
@@ -12989,8 +12989,8 @@ function renderDirectionalAccuracyHistoryTable(rows = []) {
                 <th>Call</th>
                 <th>Distances</th>
                 <th>Window</th>
-                <th>Half L2L</th>
-                <th>Full L2L</th>
+                <th>Half-distance reach</th>
+                <th>Full-distance reach</th>
                 <th>Evidence</th>
                 <th>Source / Reason</th>
               </tr>
@@ -13157,8 +13157,8 @@ function renderResearchL2lDirectionalAccuracy(data = {}) {
     return `
       <div class="backtest-report">
         <article class="detail-panel wide-panel research-secondary-panel">
-          <h3>L2L Directional Accuracy unavailable</h3>
-          <div class="empty-state matrix-evidence-empty">The downstream L2L Directional Accuracy artifact could not be loaded.</div>
+          <h3>L2L half-distance reach summary unavailable</h3>
+          <div class="empty-state matrix-evidence-empty">The slim half-distance reach summary could not be loaded. The full per-call archive is <code>data/half-l2l-reach-research.json</code>, which is intentionally not published.</div>
         </article>
       </div>
     `;
@@ -13173,28 +13173,28 @@ function renderResearchL2lDirectionalAccuracy(data = {}) {
             <div class="panel-head compact-panel-head adr-howto-head">
               <div>
                 <p class="eyebrow">Research Only</p>
-                <h3>L2L Directional Accuracy</h3>
+                <h3>L2L Half-Distance Reach</h3>
               </div>
               <span class="adr-howto-icon" aria-hidden="true">L2L</span>
             </div>
             <section class="overview-briefing-block">
               <h3>Definition</h3>
-              <p>Did the trading day provide a chronological opportunity to cover the required distance in the direction of the morning call? This view tests exactly <code>0.25 x ADR20</code> and <code>0.50 x ADR20</code>.</p>
+              <p>Did the trading day provide a chronological opportunity to cover the required distance in the direction of the morning call? Half distance is <code>0.25 x ADR20</code> against the standard <code>0.50 x ADR20</code>. The 97% figure is a <strong>reach rate</strong>, not directional accuracy and not a win rate; its denominators are the eligible calls shown on each card.</p>
             </section>
             <section class="overview-briefing-block">
               <h3>Warnings</h3>
-              <p>Research only - not a live trading signal. Accuracy here means that the required chronological directional opportunity occurred during the evaluated session. It does not mean a trade entered at an arbitrary price would have made a profit.</p>
+              <p>Research only - not a live trading signal. Reach here means that the required chronological distance was touched during the evaluated session. There is no entry, stop, adverse-boundary sequence or cost, so it does not mean a trade would have made a profit.</p>
             </section>
             <section class="overview-briefing-block">
               <h3>Timing contract</h3>
               <p>The established contract is date-based and UTC-keyed. Each row maps to the source 1H session attached to <code>evaluation_inputs.close_date</code>. Exact session start and end timestamps are shown in the explorer and manual sample below. Because exact morning publication times are unavailable, some source sessions may include pre-call candles.</p>
             </section>
           </div>
-          <aside class="overview-briefing-chips adr-howto-comparison" aria-label="L2L directional accuracy contract">
+          <aside class="overview-briefing-chips adr-howto-comparison" aria-label="L2L half-distance reach contract">
             <div class="overview-briefing-chip adr-howto-compare-card">
               <span>Current contract</span>
               <div class="adr-howto-compare-block">
-                <strong>Half L2L</strong>
+                <strong>Half-distance reach</strong>
                 <small>${escapeHtml(artifact?.meta?.half_target_definition || "ADR20 x 0.25")}</small>
               </div>
               <div class="adr-howto-compare-block">
@@ -13210,10 +13210,10 @@ function renderResearchL2lDirectionalAccuracy(data = {}) {
         </div>
       </section>
       <section class="backtest-metric-grid research-progress-grid">
-        ${renderDirectionalAccuracyOverviewCard("Layer 1 Half L2L", comparisons.overall?.layer1?.halfOfStandard, artifact?.meta?.evaluated_date_ranges?.layer1)}
-        ${renderDirectionalAccuracyOverviewCard("Layer 1 Full L2L", comparisons.overall?.layer1?.fullStandard, artifact?.meta?.evaluated_date_ranges?.layer1)}
-        ${renderDirectionalAccuracyOverviewCard("Layer 2 Half L2L", comparisons.overall?.layer2?.halfOfStandard, artifact?.meta?.evaluated_date_ranges?.layer2)}
-        ${renderDirectionalAccuracyOverviewCard("Layer 2 Full L2L", comparisons.overall?.layer2?.fullStandard, artifact?.meta?.evaluated_date_ranges?.layer2)}
+        ${renderDirectionalAccuracyOverviewCard("Layer 1 half-distance reach", comparisons.overall?.layer1?.halfOfStandard, artifact?.meta?.evaluated_date_ranges?.layer1)}
+        ${renderDirectionalAccuracyOverviewCard("Layer 1 full-distance reach", comparisons.overall?.layer1?.fullStandard, artifact?.meta?.evaluated_date_ranges?.layer1)}
+        ${renderDirectionalAccuracyOverviewCard("Layer 2 half-distance reach", comparisons.overall?.layer2?.halfOfStandard, artifact?.meta?.evaluated_date_ranges?.layer2)}
+        ${renderDirectionalAccuracyOverviewCard("Layer 2 full-distance reach", comparisons.overall?.layer2?.fullStandard, artifact?.meta?.evaluated_date_ranges?.layer2)}
       </section>
       <section class="research-section">
         <div class="research-section-head">
@@ -13292,7 +13292,9 @@ function renderResearchL2lDirectionalAccuracy(data = {}) {
           scrollClass: "adr-summary-scroll"
         })}
       </section>
-      ${renderDirectionalAccuracyHistoryTable(allRows)}
+      ${allRows.length
+        ? renderDirectionalAccuracyHistoryTable(allRows)
+        : `<section class="research-section" data-half-l2l-history="true"><div class="research-section-head"><div><h3>Historical Record Explorer</h3></div><p class="research-panel-copy">The slim summary omits the 23.4 MB per-call <code>row_level</code> block. The complete record explorer is available from the full archived <code>data/half-l2l-reach-research.json</code>; no empty table is shown here.</p></div></section>`}
       ${renderDirectionalAccuracyManualVerification(data)}
     </div>
   `;
@@ -22153,7 +22155,7 @@ function setupBacktestEvidenceControls() {
 
     const resetReviewButton = event.target.closest("[data-half-l2l-reset-review]");
     if (resetReviewButton) {
-      if (window.confirm("Reset all local manual review state for L2L Directional Accuracy?")) {
+      if (window.confirm("Reset all local manual review state for L2L Half-Distance Reach?")) {
         saveDirectionalAccuracyReviewStore({
           artifactSignature: getDirectionalAccuracyReviewSignature(getDirectionalAccuracyArtifact(backtestData || {})),
           staleArtifactSignature: null,

@@ -74,7 +74,7 @@ Totals: fields_compared: 4350; match: 3966; engine_stricter: 384; mismatch: 0; n
 - `engine_stricter` is expected: the engine refuses to publish a direction, a band or a trade flag on a blocked morning, and the published artefacts keep whatever the book computed before it blocked.
 - A `mismatch` is not expected and is listed in full; there is no tolerance on a mismatch and none is applied here.
 
-Worked blocked morning (2024-01-02): outcome `blocked`, reasons E2 (check), E4 (check), E5 (check), E6 (check).
+Worked blocked morning (2024-01-02): outcome `blocked`, reasons E2 (check), E4 (check), E5 (check).
 
 Worked abstention (2024-02-06): outcome `abstained`, direction BULLISH, band 2, reasons E6 (check), trade_rule_not_met (policy).
 
@@ -511,7 +511,7 @@ Does not license: It does not license treating reconstructed calls as valid call
 | `config/usd_l1_factor_rulebook_v1.json` | 38964 | `31d78a6898c1e30aba4158f04deb29bfe2f50502d784b8a511210cbdbfe7e8e7` |
 | `config/usd_l1_decision_rules_v1.json` | 10481 | `f0f7cb753cdb770e7bb715d71e5475655beaee4a7a9bff596b62b080de30769b` |
 
-Report digest: `538b1d088df5ed7a9b0899e14e8ae0e1ebfc46300344f5ae878c26abd1ff00df`.
+Report digest: `94c205c52b749e4f0665461f5fe305a4074e63accf0d664526e98f8160be34d3`.
 
 The digest is taken over the body before this block; rebuilding the report from the same artefacts reproduces it.
 

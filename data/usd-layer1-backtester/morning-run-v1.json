@@ -1,0 +1,2218 @@
+{
+  "schema_version": "layer1-morning-run.v1",
+  "research_only": true,
+  "built_on": "2026-11-17",
+  "date": "2024-03-26",
+  "session": {
+    "contract": "05:00 Europe/London to 05:00 the next local day (24 hours, DST-following)",
+    "cutoff_at_utc": "2024-03-26T05:00:00.000Z",
+    "endpoint_at_utc": "2024-03-27T05:00:00.000Z",
+    "window_hours": 24
+  },
+  "strict_evidence": {
+    "ready": false,
+    "criterion": "present + fresh + verified 05:00 observation/publication/receipt + named instrument, for every required input",
+    "reason": "No morning in the archive carries a verified 05:00 receipt for every required input. The current adapter's allowed outcome is a narrow presence/freshness replay, not strict evidence; H1 is blocked by its nine-input contract.",
+    "current_model_evidence_grade": "narrow_presence_and_freshness_only",
+    "clocks_verified": false,
+    "h1_ready": false
+  },
+  "models": {
+    "current": {
+      "id": "usd_control_v1",
+      "label": "Current USD model (production baseline, replayed)",
+      "role": "control",
+      "version": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+      "rulebook_version": "agent_usd_direction.md",
+      "identity": {
+        "status": "PROVISIONAL_BASELINE",
+        "note": "published provisionally: presence and freshness only, no verified 05:00 receipt",
+        "unresolved": []
+      },
+      "decision_id": "USD|usd_control_v1|agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)|2024-03-26",
+      "snapshot_sha256": "ee2be857c0b7c93a6d60be0d3c33cc66dc1eb47523f058265b9a443965f37735",
+      "outcome": "allowed",
+      "direction": "BEARISH",
+      "conviction": 3,
+      "band": 3,
+      "trade_eligible": true,
+      "eligibility": {
+        "eligible": true,
+        "min_conviction": 3,
+        "rule": "production conviction band 3 or higher, with a directional call",
+        "note": "a production band, not a validated edge"
+      },
+      "gate": {
+        "basis": "presence and freshness (declared narrow gate)",
+        "code": "data_present_and_fresh",
+        "ready": true,
+        "data_gate": "valid_directional",
+        "rungs": {
+          "present": true,
+          "fresh": true,
+          "clocked": "not_required",
+          "identified": "not_required"
+        },
+        "missing": [],
+        "stale": [],
+        "unclocked": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps"
+        ],
+        "wrong_instrument": [
+          "gold_d5_pct",
+          "nasdaq100_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ],
+        "reasons": []
+      },
+      "checks": [
+        {
+          "id": "C1",
+          "name": "session contract: a 24-hour window that closes at the next 05:00 London",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "window is 24 hours",
+          "offenders": [],
+          "rule_ids": []
+        },
+        {
+          "id": "C2",
+          "name": "snapshot: at least one model input was present at the cutoff",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "7 live factors, 12 finite inputs on the saved snapshot",
+          "offenders": [],
+          "rule_ids": []
+        },
+        {
+          "id": "C3",
+          "name": "no future print: every input was printed at or before the cutoff",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "no print is stamped after the cutoff",
+          "offenders": [],
+          "rule_ids": []
+        },
+        {
+          "id": "C4",
+          "name": "version stamped: the decision names the model and rulebook it came from",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "stamped agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+          "offenders": [],
+          "rule_ids": []
+        }
+      ],
+      "reasons": [],
+      "policy_trace": null
+    },
+    "legacy_candidate": {
+      "id": "usd_candidate_25f_v1",
+      "label": "USD 25-factor candidate (frozen book v1.0.0)",
+      "role": "candidate",
+      "version": "usd-l1-factor-rulebook-v1.0.0 / usd-l1-decision-rules-v1.0.0",
+      "rulebook_version": "usd-l1-factor-rulebook-v1.0.0",
+      "identity": {
+        "status": "CONFIG_BLOCKED",
+        "note": "the intended 25-factor agent has no single defined rule set; every morning is scored by the implemented book and none of those scores is a valid call for the intended model",
+        "unresolved": [
+          "the sign of every factor: no direction survives the adjudication as established",
+          "the weight of every factor, and therefore any combined score",
+          "every threshold, including the regime boundaries the implemented book inherits from v0",
+          "the fallback for each input, and which inputs are optional rather than critical",
+          "the conditional and abstention gates, including the release-window logic",
+          "a registered sample, holdout, multiplicity and pass/fail plan"
+        ]
+      },
+      "decision_id": "USD|usd_candidate_25f_v1|usd-l1-factor-rulebook-v1.0.0 / usd-l1-decision-rules-v1.0.0|2024-03-26",
+      "snapshot_sha256": "ee2be857c0b7c93a6d60be0d3c33cc66dc1eb47523f058265b9a443965f37735",
+      "outcome": "allowed",
+      "direction": "BEARISH",
+      "conviction": 3,
+      "band": 3,
+      "trade_eligible": true,
+      "eligibility": {
+        "eligible": true,
+        "min_band": 3,
+        "requires": [
+          "RG-4 gate open",
+          "event family readable",
+          "all twelve signals usable",
+          "band 3 or higher"
+        ],
+        "note": "provisional and research-only; no sizing, entry, stop or live execution is defined"
+      },
+      "gate": {
+        "basis": "the book's own six checks (E1-E4 block, E5-E6 abstain)",
+        "code": "book_checks",
+        "ready": true,
+        "data_gate": "insufficient_data",
+        "intended": "undefined_rule",
+        "rungs": {
+          "present": true,
+          "fresh": true,
+          "clocked": "not_recorded",
+          "identified": false
+        },
+        "missing": [],
+        "stale": [],
+        "unclocked": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps"
+        ],
+        "wrong_instrument": [
+          "gold_d5_pct",
+          "nasdaq100_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ],
+        "reasons": []
+      },
+      "checks": [
+        {
+          "id": "E1",
+          "name": "cutoff: the session is the 05:00-London window and no reading is stamped after its cutoff",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "the check passed",
+          "offenders": [],
+          "rule_ids": []
+        },
+        {
+          "id": "E2",
+          "name": "gate: the RG-4 volatility gate is defined and open at the cutoff",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "the check passed",
+          "offenders": [],
+          "rule_ids": []
+        },
+        {
+          "id": "E3",
+          "name": "provenance: every vote belongs to exactly one direction row that may vote this morning",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "the check passed",
+          "offenders": [],
+          "rule_ids": []
+        },
+        {
+          "id": "E4",
+          "name": "coverage: enough of the book is readable for the decision file's eligibility rule",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "the check passed",
+          "offenders": [],
+          "rule_ids": []
+        },
+        {
+          "id": "E5",
+          "name": "call: the family vote leaves the 0.20 deadband and nets away from zero",
+          "on_fail": "abstain",
+          "passed": true,
+          "detail": "the check passed",
+          "offenders": [],
+          "rule_ids": []
+        },
+        {
+          "id": "E6",
+          "name": "trade: the provisional trade rule is met (event family readable, all twelve signals usable)",
+          "on_fail": "abstain",
+          "passed": true,
+          "detail": "the check passed",
+          "offenders": [],
+          "rule_ids": []
+        }
+      ],
+      "reasons": [],
+      "policy_trace": null
+    },
+    "h1": {
+      "id": "usd_l1_25f_h1",
+      "label": "USD Layer 1 H1 candidate (25-row hypothesis book)",
+      "role": "candidate",
+      "version": "USD-L1-25F-H1-v0.1.0",
+      "rulebook_version": "H1.1 nine-feature evidence contract (supplied RULEBOOK.md)",
+      "identity": {
+        "status": "FROZEN_H1_HYPOTHESIS",
+        "note": "The supplied H1 book is frozen for acceptance. A fixture match is not evidence of historical or live value.",
+        "unresolved": [
+          "historical coverage is unmeasured by the supplied package",
+          "sealed live replay has not been observed",
+          "control parity on the nine-feature contract is open"
+        ]
+      },
+      "decision_id": "USD|usd_l1_25f_h1|USD-L1-25F-H1-v0.1.0|2024-03-26",
+      "snapshot_sha256": "4780344dd3051948f8e1a97a8bf823677ab5cc3264a5a98a3fab3896089c71c2",
+      "outcome": "blocked",
+      "direction": "NO_CALL",
+      "conviction": null,
+      "band": null,
+      "trade_eligible": false,
+      "eligibility": {
+        "eligible": false,
+        "note": "no policy was run"
+      },
+      "gate": {
+        "basis": "H1.1 historical evidence contract (instrument, lookback, freshness, 05:00 clocks)",
+        "code": "h1_historical_evidence_blocked",
+        "ready": false,
+        "data_gate": "insufficient_data",
+        "rungs": {
+          "present": 8,
+          "original": 0,
+          "lookback": 1,
+          "fresh": 0,
+          "clocked": 0,
+          "receipt": 0,
+          "identity": 0,
+          "schedule_complete": 8,
+          "eligible": 0
+        },
+        "missing": [
+          "vix",
+          "front",
+          "spread",
+          "real",
+          "broad",
+          "ice",
+          "gold",
+          "qqq",
+          "calendar"
+        ],
+        "stale": [],
+        "unclocked": [
+          "vix"
+        ],
+        "wrong_instrument": [
+          "gold",
+          "qqq"
+        ],
+        "issues": [
+          "vix: unclocked",
+          "front: derived_only",
+          "spread: derived_only",
+          "real: derived_only",
+          "broad: derived_only",
+          "ice: missing_value",
+          "gold: identity_mismatch",
+          "qqq: identity_mismatch",
+          "calendar: incomplete_calendar"
+        ],
+        "reasons": [
+          "VIX close: FRED VIXCLS is an alias for the Cboe VIX close, but the archive stores neither the Cboe record nor a receipt clock. The 05:00 availability is unproven.",
+          "DGS2 5d: Only the five-interval change is stored. The five DGS2 observations, their vintages and clocks are absent, so the change cannot be reconciled to H1's declared transform.",
+          "US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks.",
+          "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified.",
+          "DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified.",
+          "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute.",
+          "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
+          "QQQ close 5d: The legacy return is the Nasdaq-100 index, not the QQQ ETF's official close. The instrument identity fails, and the five closes and split adjustment are absent.",
+          "Release calendar: Only the FOMC statement archive is staged. CPI, Employment Situation, advance GDP, Personal Income and Outlays schedules are absent, so the event window cannot be answered for the complete declared calendar."
+        ],
+        "trace": [
+          "vix: unclocked",
+          "front: derived_only",
+          "spread: derived_only",
+          "real: derived_only",
+          "broad: derived_only",
+          "ice: missing_value",
+          "gold: identity_mismatch",
+          "qqq: identity_mismatch",
+          "calendar: incomplete_calendar"
+        ]
+      },
+      "checks": [
+        {
+          "id": "C1",
+          "name": "session contract: a positive 24-hour window from the date's 05:00 London cutoff",
+          "on_fail": "block",
+          "passed": true,
+          "detail": "24 hour window ending at the next local 05:00",
+          "offenders": [],
+          "rule_ids": [
+            "H1.1"
+          ]
+        },
+        {
+          "id": "H1.2",
+          "name": "VIX regime gate: VIX at or above 30 abstains",
+          "on_fail": "abstain",
+          "passed": null,
+          "detail": "not evaluated: evidence gate is closed",
+          "offenders": [],
+          "rule_ids": [
+            "H1.2"
+          ]
+        },
+        {
+          "id": "H1.3",
+          "name": "deadband: the family score is outside +/-0.20 before a call is published",
+          "on_fail": "abstain",
+          "passed": null,
+          "detail": "not evaluated: evidence gate is closed",
+          "offenders": [],
+          "rule_ids": [
+            "H1.3"
+          ]
+        }
+      ],
+      "reasons": [
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "VIX close: FRED VIXCLS is an alias for the Cboe VIX close, but the archive stores neither the Cboe record nor a receipt clock. The 05:00 availability is unproven."
+        },
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "DGS2 5d: Only the five-interval change is stored. The five DGS2 observations, their vintages and clocks are absent, so the change cannot be reconciled to H1's declared transform."
+        },
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks."
+        },
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified."
+        },
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified."
+        },
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute."
+        },
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered."
+        },
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "QQQ close 5d: The legacy return is the Nasdaq-100 index, not the QQQ ETF's official close. The instrument identity fails, and the five closes and split adjustment are absent."
+        },
+        {
+          "source": "gate",
+          "code": "h1_historical_evidence_blocked",
+          "text": "Release calendar: Only the FOMC statement archive is staged. CPI, Employment Situation, advance GDP, Personal Income and Outlays schedules are absent, so the event window cannot be answered for the complete declared calendar."
+        }
+      ],
+      "policy_trace": null
+    }
+  },
+  "factors": {
+    "current": {
+      "net_signed_weight": -26,
+      "published_conviction": 3,
+      "rows": [
+        {
+          "factor_id": "live.f1-vix-level",
+          "label": "F1 VIX",
+          "signal": "BEARISH",
+          "weight": 10,
+          "signed_weight": -10,
+          "applied": true,
+          "rule": "directional factor live.f1-vix-level; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f2-us-2y-delta",
+          "label": "F2 US 2Y Yield Delta",
+          "signal": "BEARISH",
+          "weight": 14,
+          "signed_weight": -14,
+          "applied": true,
+          "rule": "directional factor live.f2-us-2y-delta; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f3-us-de-2y-spread-delta",
+          "label": "F3 US-DE 2Y Spread Delta",
+          "signal": "NEUTRAL",
+          "weight": 10,
+          "signed_weight": 0,
+          "applied": false,
+          "rule": "directional factor live.f3-us-de-2y-spread-delta; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f4-real-yield-delta",
+          "label": "F4 US 10Y Real Yield Delta",
+          "signal": "BEARISH",
+          "weight": 10,
+          "signed_weight": -10,
+          "applied": true,
+          "rule": "directional factor live.f4-real-yield-delta; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f5-dxy-delta",
+          "label": "F5 DXY Delta",
+          "signal": "BULLISH",
+          "weight": 14,
+          "signed_weight": 14,
+          "applied": true,
+          "rule": "directional factor live.f5-dxy-delta; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f6-gold-delta",
+          "label": "F6 Gold Delta",
+          "signal": "BEARISH",
+          "weight": 4,
+          "signed_weight": -4,
+          "applied": true,
+          "rule": "directional factor live.f6-gold-delta; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f7-economic-surprise",
+          "label": "F7 US Economic Surprise",
+          "signal": "NEUTRAL",
+          "weight": 24,
+          "signed_weight": 0,
+          "applied": false,
+          "rule": "directional factor live.f7-economic-surprise; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f8-fed-bias",
+          "label": "F8 Fed Bias",
+          "signal": "NEUTRAL",
+          "weight": 12,
+          "signed_weight": 0,
+          "applied": false,
+          "rule": "directional factor live.f8-fed-bias; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f9-dollar-smile",
+          "label": "F9 Dollar Smile",
+          "signal": "BEARISH",
+          "weight": 1,
+          "signed_weight": -1,
+          "applied": true,
+          "rule": "directional factor live.f9-dollar-smile; signed weight is the contribution shown by the published replay"
+        },
+        {
+          "factor_id": "live.f10-equity-versus-usd",
+          "label": "F10 Equity Regime",
+          "signal": "BEARISH",
+          "weight": 1,
+          "signed_weight": -1,
+          "applied": true,
+          "rule": "directional factor live.f10-equity-versus-usd; signed weight is the contribution shown by the published replay"
+        }
+      ],
+      "note": "The signed weights sum to the published net weight. Weights are model weights, not measured edge."
+    },
+    "h1": {
+      "rows": [],
+      "note": "No H1 contribution exists on this morning: the evidence gate is closed, so the engine does not call H1 policy arithmetic."
+    }
+  },
+  "inputs": {
+    "current": [
+      {
+        "key": "vix_level",
+        "value": 13.19,
+        "source": "fred VIXCLS",
+        "factor_ids": [
+          "live.f1-vix-level",
+          "risk.vix-level-and-change-at-cutoff",
+          "live.f9-dollar-smile",
+          "risk.risk-on-off-cross-asset-state",
+          "data.quality-gate-for-abstention"
+        ],
+        "factor_labels": [
+          "F1 VIX level and risk regime",
+          "VIX level and change at the cutoff",
+          "F9 Dollar Smile regime",
+          "Risk-on and risk-off cross-asset state",
+          "Data quality gate for abstention"
+        ],
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed_at_utc": null,
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": null,
+          "revision": 1,
+          "lag_business_days": 1,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 1,
+          "lag_business_days": 1,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f1-vix-level",
+            "live.f9-dollar-smile"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f1-vix-level",
+            "signal": "BEARISH",
+            "weight": 10,
+            "signed_weight": -10
+          },
+          {
+            "factor_id": "live.f9-dollar-smile",
+            "signal": "BEARISH",
+            "weight": 1,
+            "signed_weight": -1
+          }
+        ]
+      },
+      {
+        "key": "vix_d5_chg",
+        "value": -1.14,
+        "source": "fred VIXCLS",
+        "factor_ids": [
+          "live.f1-vix-level",
+          "risk.vix-level-and-change-at-cutoff",
+          "live.f9-dollar-smile"
+        ],
+        "factor_labels": [
+          "F1 VIX level and risk regime",
+          "VIX level and change at the cutoff",
+          "F9 Dollar Smile regime"
+        ],
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed_at_utc": null,
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": null,
+          "revision": 1,
+          "lag_business_days": 1,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 1,
+          "lag_business_days": 1,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f1-vix-level",
+            "live.f9-dollar-smile"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f1-vix-level",
+            "signal": "BEARISH",
+            "weight": 10,
+            "signed_weight": -10
+          },
+          {
+            "factor_id": "live.f9-dollar-smile",
+            "signal": "BEARISH",
+            "weight": 1,
+            "signed_weight": -1
+          }
+        ]
+      },
+      {
+        "key": "us_2y_d5_bps",
+        "value": -19,
+        "source": "fred DGS2",
+        "factor_ids": [
+          "live.f2-us-2y-delta"
+        ],
+        "factor_labels": [
+          "F2 US 2Y yield delta"
+        ],
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed_at_utc": null,
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": null,
+          "revision": 1,
+          "lag_business_days": 1,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 1,
+          "lag_business_days": 1,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f2-us-2y-delta"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f2-us-2y-delta",
+            "signal": "BEARISH",
+            "weight": 14,
+            "signed_weight": -14
+          }
+        ]
+      },
+      {
+        "key": "us_10y_real_d5_bps",
+        "value": -11,
+        "source": "fred DFII10",
+        "factor_ids": [
+          "live.f4-real-yield-delta",
+          "rates.real-yield-delta"
+        ],
+        "factor_labels": [
+          "F4 US 10Y real yield delta",
+          "Real yield delta"
+        ],
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed_at_utc": null,
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": null,
+          "revision": 1,
+          "lag_business_days": 1,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 1,
+          "lag_business_days": 1,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f4-real-yield-delta"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f4-real-yield-delta",
+            "signal": "BEARISH",
+            "weight": 10,
+            "signed_weight": -10
+          }
+        ]
+      },
+      {
+        "key": "broad_dollar_d5_pct",
+        "value": 0.6511,
+        "source": "fred DTWEXBGS",
+        "factor_ids": [
+          "live.f5-dxy-delta"
+        ],
+        "factor_labels": [
+          "F5 DXY delta"
+        ],
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed_at_utc": null,
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": null,
+          "revision": 2,
+          "lag_business_days": 1,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 6,
+          "lag_business_days": 1,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f5-dxy-delta"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f5-dxy-delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "signed_weight": 14
+          }
+        ]
+      },
+      {
+        "key": "gold_d5_pct",
+        "value": 0.7103,
+        "source": "cached one-hour provider series XAU/USD H1",
+        "factor_ids": [
+          "live.f6-gold-delta"
+        ],
+        "factor_labels": [
+          "F6 Gold delta"
+        ],
+        "availability": {
+          "stamp": "2024-03-26T05:00:00.000Z",
+          "precision": "timestamp",
+          "observed_at_utc": "2024-03-26T05:00:00.000Z",
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": 0,
+          "revision": 0,
+          "lag_business_days": 2,
+          "note": "legacy snapshot timestamp 2024-03-26T05:00:00.000Z; it is a collector snapshot, not the original publication or a recipient receipt"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 0,
+          "lag_business_days": 2,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f6-gold-delta"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f6-gold-delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "signed_weight": -4
+          }
+        ]
+      },
+      {
+        "key": "nasdaq100_d5_pct",
+        "value": 2.01,
+        "source": "cached one-hour provider series NAS100 H1",
+        "factor_ids": [
+          "live.f10-equity-versus-usd"
+        ],
+        "factor_labels": [
+          "F10 Equity versus USD"
+        ],
+        "availability": {
+          "stamp": "2024-03-26T05:00:00.000Z",
+          "precision": "timestamp",
+          "observed_at_utc": "2024-03-26T05:00:00.000Z",
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": 0,
+          "revision": 0,
+          "lag_business_days": 3,
+          "note": "legacy snapshot timestamp 2024-03-26T05:00:00.000Z; it is a collector snapshot, not the original publication or a recipient receipt"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 0,
+          "lag_business_days": 3,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f10-equity-versus-usd"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f10-equity-versus-usd",
+            "signal": "BEARISH",
+            "weight": 1,
+            "signed_weight": -1
+          }
+        ]
+      },
+      {
+        "key": "eurusd_d5_pct",
+        "value": -0.6521,
+        "source": "fred DEXUSEU; fred DEXJPUS; cached one-hour provider series EUR/USD H1",
+        "factor_ids": [
+          "fx.usd-session-momentum"
+        ],
+        "factor_labels": [
+          "USD session momentum"
+        ],
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed_at_utc": null,
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": null,
+          "revision": 2,
+          "lag_business_days": 1,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 6,
+          "lag_business_days": 1,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": false,
+          "factor_ids": [],
+          "note": "present in the snapshot but not read by a published current-model factor"
+        },
+        "contribution": []
+      },
+      {
+        "key": "usdjpy_d5_pct",
+        "value": 1.4818,
+        "source": "fred DEXUSEU; fred DEXJPUS; cached one-hour provider series EUR/USD H1",
+        "factor_ids": [
+          "fx.usd-session-momentum"
+        ],
+        "factor_labels": [
+          "USD session momentum"
+        ],
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed_at_utc": null,
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": null,
+          "revision": 2,
+          "lag_business_days": 1,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 6,
+          "lag_business_days": 1,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": false,
+          "factor_ids": [],
+          "note": "present in the snapshot but not read by a published current-model factor"
+        },
+        "contribution": []
+      },
+      {
+        "key": "gold_price",
+        "value": 2172.995,
+        "source": "cached one-hour provider series XAU/USD H1",
+        "factor_ids": [
+          "live.f6-gold-delta",
+          "risk.risk-on-off-cross-asset-state",
+          "data.quality-gate-for-abstention"
+        ],
+        "factor_labels": [
+          "F6 Gold delta",
+          "Risk-on and risk-off cross-asset state",
+          "Data quality gate for abstention"
+        ],
+        "availability": {
+          "stamp": "2024-03-26T05:00:00.000Z",
+          "precision": "timestamp",
+          "observed_at_utc": "2024-03-26T05:00:00.000Z",
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": 0,
+          "revision": 0,
+          "lag_business_days": 2,
+          "note": "legacy snapshot timestamp 2024-03-26T05:00:00.000Z; it is a collector snapshot, not the original publication or a recipient receipt"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 0,
+          "lag_business_days": 2,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f6-gold-delta"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f6-gold-delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "signed_weight": -4
+          }
+        ]
+      },
+      {
+        "key": "nasdaq100_price",
+        "value": 18346.5,
+        "source": "cached one-hour provider series NAS100 H1",
+        "factor_ids": [
+          "live.f10-equity-versus-usd",
+          "risk.risk-on-off-cross-asset-state",
+          "data.quality-gate-for-abstention"
+        ],
+        "factor_labels": [
+          "F10 Equity versus USD",
+          "Risk-on and risk-off cross-asset state",
+          "Data quality gate for abstention"
+        ],
+        "availability": {
+          "stamp": "2024-03-26T05:00:00.000Z",
+          "precision": "timestamp",
+          "observed_at_utc": "2024-03-26T05:00:00.000Z",
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": 0,
+          "revision": 0,
+          "lag_business_days": 3,
+          "note": "legacy snapshot timestamp 2024-03-26T05:00:00.000Z; it is a collector snapshot, not the original publication or a recipient receipt"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 0,
+          "lag_business_days": 3,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": true,
+          "factor_ids": [
+            "live.f10-equity-versus-usd"
+          ],
+          "note": "read by the published current-model factor trace"
+        },
+        "contribution": [
+          {
+            "factor_id": "live.f10-equity-versus-usd",
+            "signal": "BEARISH",
+            "weight": 1,
+            "signed_weight": -1
+          }
+        ]
+      },
+      {
+        "key": "eurusd",
+        "value": 1.0817,
+        "source": "fred DEXUSEU; fred DEXJPUS; cached one-hour provider series EUR/USD H1",
+        "factor_ids": [
+          "fx.usd-session-momentum"
+        ],
+        "factor_labels": [
+          "USD session momentum"
+        ],
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed_at_utc": null,
+          "published_at_utc": null,
+          "received_at_utc": null,
+          "age_hours": null,
+          "revision": 2,
+          "lag_business_days": 1,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "status": "fresh",
+          "max_business_days": 6,
+          "lag_business_days": 1,
+          "basis": "run-v1 validity_gate.days[].stale; the narrow legacy gate checks presence and freshness, not a receipt clock"
+        },
+        "applied_rule": {
+          "model": "usd_control_v1",
+          "applied": false,
+          "factor_ids": [],
+          "note": "present in the snapshot but not read by a published current-model factor"
+        },
+        "contribution": []
+      }
+    ],
+    "h1": [
+      {
+        "key": "vix",
+        "label": "VIX close",
+        "required": {
+          "source": "Cboe",
+          "instrument": "VIX spot close",
+          "transform": "index points, latest completed close",
+          "max_age_hours": 96
+        },
+        "legacy_field": "inputs.vix_level",
+        "value": 13.19,
+        "source": "Cboe",
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed": null,
+          "published": null,
+          "received": null,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "max_age_hours": 96,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "live.f1-vix-level",
+            "risk.vix-level-and-change-at-cutoff",
+            "risk.risk-on-off-cross-asset-state"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: regime gate",
+            "HYPOTHESIS: shared F1",
+            "HYPOTHESIS: shared F1"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "unclocked",
+          "failed_rungs": [
+            "original",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity"
+          ],
+          "identity_state": "named_alias",
+          "text": "VIX close: FRED VIXCLS is an alias for the Cboe VIX close, but the archive stores neither the Cboe record nor a receipt clock. The 05:00 availability is unproven."
+        },
+        "recoverable": "Cboe daily close history and release calendar can reconstruct the publication timestamp; recipient receipt cannot be reconstructed.",
+        "acquisition": "Acquire the Cboe VIX official close history and the collector receipt at 05:00 London. Retain the exact close used and its observed/published/received clocks for every session."
+      },
+      {
+        "key": "front",
+        "label": "DGS2 5d",
+        "required": {
+          "source": "Federal Reserve H.15",
+          "instrument": "DGS2",
+          "transform": "5 completed observation intervals, bp",
+          "max_age_hours": 96
+        },
+        "legacy_field": "inputs.us_2y_d5_bps",
+        "value": -19,
+        "source": "Federal Reserve H.15",
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed": null,
+          "published": null,
+          "received": null,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "max_age_hours": 96,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "live.f2-us-2y-delta",
+            "rates.us-front-end-delta"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: decomposition only, DGS2 is counted inside F19",
+            "HYPOTHESIS: shared F2"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "derived_only",
+          "failed_rungs": [
+            "original",
+            "lookback",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity"
+          ],
+          "identity_state": "named_alias",
+          "text": "DGS2 5d: Only the five-interval change is stored. The five DGS2 observations, their vintages and clocks are absent, so the change cannot be reconciled to H1's declared transform."
+        },
+        "recoverable": "FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed from the archive.",
+        "acquisition": "Acquire the H.15 DGS2 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and collector receipt clocks."
+      },
+      {
+        "key": "spread",
+        "label": "US-DE 2Y spread 5d",
+        "required": {
+          "source": "H.15 + Bundesbank BBSIS",
+          "instrument": "DGS2 minus DE sovereign Svensson 2.0-year zero-coupon spot",
+          "transform": "5 common observation intervals, change of spread in bp",
+          "max_age_hours": 96
+        },
+        "legacy_field": "inputs.us_de_2y_spread_d5_bps (absent from run-v1 inputs; only a same-day level appears in saved_inputs)",
+        "value": -9,
+        "source": "H.15 + Bundesbank BBSIS",
+        "availability": {
+          "stamp": null,
+          "precision": "missing",
+          "observed": null,
+          "published": null,
+          "received": null,
+          "note": "no observation, publication or receipt metadata is stored"
+        },
+        "freshness": {
+          "max_age_hours": 96,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "live.f3-us-de-2y-spread-delta",
+            "rates.relative-front-end-delta"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: shared F19",
+            "HYPOTHESIS: rates vote"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "derived_only",
+          "failed_rungs": [
+            "original",
+            "lookback",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity"
+          ],
+          "identity_state": "derived_alias",
+          "text": "US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks."
+        },
+        "recoverable": "Both publication series are public and can reconstruct the spread and publication times; no receipt clock is archived.",
+        "acquisition": "Acquire H.15 DGS2 and Bundesbank BBSIS 2.0-year Svensson zero-coupon spot histories. Compute the spread only on common observation dates and retain all five operands, publication times and collector receipts."
+      },
+      {
+        "key": "real",
+        "label": "DFII10 5d",
+        "required": {
+          "source": "Federal Reserve H.15",
+          "instrument": "DFII10",
+          "transform": "5 completed observation intervals, bp",
+          "max_age_hours": 96
+        },
+        "legacy_field": "inputs.us_10y_real_d5_bps",
+        "value": -11,
+        "source": "Federal Reserve H.15",
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed": null,
+          "published": null,
+          "received": null,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "max_age_hours": 96,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "live.f4-real-yield-delta",
+            "rates.real-yield-delta"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: rates vote",
+            "HYPOTHESIS: shared F4"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "derived_only",
+          "failed_rungs": [
+            "original",
+            "lookback",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity"
+          ],
+          "identity_state": "named_alias",
+          "text": "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified."
+        },
+        "recoverable": "FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed.",
+        "acquisition": "Acquire the H.15 DFII10 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and receipt clocks."
+      },
+      {
+        "key": "broad",
+        "label": "DTWEXBGS 5d",
+        "required": {
+          "source": "Federal Reserve H.10",
+          "instrument": "DTWEXBGS",
+          "transform": "5 observation intervals, simple return in percent",
+          "max_age_hours": 192
+        },
+        "legacy_field": "inputs.broad_dollar_d5_pct",
+        "value": 0.6511,
+        "source": "Federal Reserve H.10",
+        "availability": {
+          "stamp": "2024-03-26",
+          "precision": "date",
+          "observed": null,
+          "published": null,
+          "received": null,
+          "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+        },
+        "freshness": {
+          "max_age_hours": 192,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "live.f5-dxy-delta"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: USD momentum vote"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "derived_only",
+          "failed_rungs": [
+            "original",
+            "lookback",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity"
+          ],
+          "identity_state": "named_alias",
+          "text": "DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified."
+        },
+        "recoverable": "FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed.",
+        "acquisition": "Acquire the H.10 DTWEXBGS daily series with ALFRED vintages and the five raw observations behind each return. Record publication and receipt clocks."
+      },
+      {
+        "key": "ice",
+        "label": "ICE DXY 05:00 fixing",
+        "required": {
+          "source": "ICE",
+          "instrument": "US Dollar Index spot",
+          "transform": "previous eligible London 05:00 fixing to current 05:00, simple return in percent",
+          "max_age_hours": 0
+        },
+        "legacy_field": "none (run-v1 stores no ICE DXY fixing)",
+        "value": null,
+        "source": "ICE",
+        "availability": {
+          "stamp": null,
+          "precision": "missing",
+          "observed": null,
+          "published": null,
+          "received": null,
+          "note": "no observation, publication or receipt metadata is stored"
+        },
+        "freshness": {
+          "max_age_hours": 0,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "fx.usd-session-momentum"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: USD momentum vote"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "missing_value",
+          "failed_rungs": [
+            "present",
+            "original",
+            "lookback",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity"
+          ],
+          "identity_state": "missing",
+          "text": "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute."
+        },
+        "recoverable": "The licensed ICE fixing history and release timestamp can reconstruct publication; the collector receipt cannot be reconstructed.",
+        "acquisition": "Acquire licensed ICE US Dollar Index spot 05:00 London fixing history and the previous eligible fixing. Record the exact fixing, publication timestamp and collector receipt."
+      },
+      {
+        "key": "gold",
+        "label": "LBMA gold PM 5d",
+        "required": {
+          "source": "LBMA",
+          "instrument": "LBMA Gold Price PM USD",
+          "transform": "5 completed fixing intervals, simple return in percent",
+          "max_age_hours": 96
+        },
+        "legacy_field": "inputs.gold_d5_pct (derived from gold_price, an OANDA XAU/USD quote)",
+        "value": 0.7103,
+        "source": "LBMA",
+        "availability": {
+          "stamp": "2024-03-26T05:00:00.000Z",
+          "precision": "timestamp",
+          "observed": "2024-03-26T05:00:00.000Z",
+          "published": null,
+          "received": null,
+          "note": "legacy snapshot timestamp 2024-03-26T05:00:00.000Z; it is a collector snapshot, not the original publication or a recipient receipt"
+        },
+        "freshness": {
+          "max_age_hours": 96,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "live.f6-gold-delta"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: cross-market vote"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "identity_mismatch",
+          "failed_rungs": [
+            "original",
+            "lookback",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity"
+          ],
+          "identity_state": "identity_mismatch",
+          "text": "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered."
+        },
+        "recoverable": "LBMA auction records reconstruct the PM publication time; the archive contains neither the auction records nor a receipt.",
+        "acquisition": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts."
+      },
+      {
+        "key": "qqq",
+        "label": "QQQ close 5d",
+        "required": {
+          "source": "Nasdaq",
+          "instrument": "QQQ official close",
+          "transform": "5 completed close intervals, split-adjusted as known at cutoff, simple return in percent",
+          "max_age_hours": 96
+        },
+        "legacy_field": "inputs.nasdaq100_d5_pct (derived from nasdaq100_price, the Nasdaq-100 index)",
+        "value": 2.01,
+        "source": "Nasdaq",
+        "availability": {
+          "stamp": "2024-03-26T05:00:00.000Z",
+          "precision": "timestamp",
+          "observed": "2024-03-26T05:00:00.000Z",
+          "published": null,
+          "received": null,
+          "note": "legacy snapshot timestamp 2024-03-26T05:00:00.000Z; it is a collector snapshot, not the original publication or a recipient receipt"
+        },
+        "freshness": {
+          "max_age_hours": 96,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "live.f10-equity-versus-usd"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: cross-market vote"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "identity_mismatch",
+          "failed_rungs": [
+            "original",
+            "lookback",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity"
+          ],
+          "identity_state": "identity_mismatch",
+          "text": "QQQ close 5d: The legacy return is the Nasdaq-100 index, not the QQQ ETF's official close. The instrument identity fails, and the five closes and split adjustment are absent."
+        },
+        "recoverable": "Nasdaq official close history reconstructs the publication time; the archive contains neither the official closes nor a receipt.",
+        "acquisition": "Acquire Nasdaq official QQQ closing prices (not the Nasdaq-100 index) and five completed closes, split-adjusted as known at each cutoff. Record publication and receipt clocks."
+      },
+      {
+        "key": "calendar",
+        "label": "Release calendar",
+        "required": {
+          "source": "BLS + BEA + Federal Reserve",
+          "instrument": "CPI, Employment Situation, advance GDP, Personal Income and Outlays, FOMC policy decisions",
+          "transform": "scheduled release count in [cutoff,endpoint), complete archived schedules required",
+          "max_age_hours": 24
+        },
+        "legacy_field": "data/usd-layer1-backtester/event-calendar-v1.json (FOMC statements only)",
+        "value": 0,
+        "source": "BLS + BEA + Federal Reserve",
+        "availability": {
+          "stamp": null,
+          "precision": "missing",
+          "observed": null,
+          "published": null,
+          "received": null,
+          "note": "no observation, publication or receipt metadata is stored"
+        },
+        "freshness": {
+          "max_age_hours": 24,
+          "status": "not_demonstrated",
+          "basis": "H1 requires a 05:00 receipt; the archive stores no observed/published/received triple for this input"
+        },
+        "applied_rule": {
+          "model": "usd_l1_25f_h1",
+          "applied": false,
+          "factor_ids": [
+            "calendar.known-releases-between-cutoff-and-endpoint",
+            "calendar.days-since-and-until-high-impact-events"
+          ],
+          "factor_roles": [
+            "HYPOTHESIS: event gate",
+            "HYPOTHESIS: shared F23"
+          ],
+          "note": "not applied: the H1.1 evidence gate is closed, so no H1 arithmetic is allowed to run"
+        },
+        "contribution": null,
+        "gate": {
+          "code": "incomplete_calendar",
+          "failed_rungs": [
+            "original",
+            "lookback",
+            "fresh",
+            "clocked",
+            "receipt",
+            "identity",
+            "schedule_complete"
+          ],
+          "identity_state": "incomplete",
+          "text": "Release calendar: Only the FOMC statement archive is staged. CPI, Employment Situation, advance GDP, Personal Income and Outlays schedules are absent, so the event window cannot be answered for the complete declared calendar."
+        },
+        "recoverable": "Official schedules and release timestamps reconstruct the published release times; collector receipt times are not archived.",
+        "acquisition": "Acquire complete archived BLS, BEA and Federal Reserve schedules for CPI, Employment Situation, advance GDP, Personal Income and Outlays and FOMC decisions. Record each release timestamp and collector receipt."
+      }
+    ]
+  },
+  "h1_blockers": [
+    {
+      "input": "vix",
+      "label": "VIX close",
+      "code": "unclocked",
+      "failed_rungs": [
+        "original",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity"
+      ],
+      "identity_state": "named_alias",
+      "clock": {
+        "stamp": "2024-03-26",
+        "precision": "date",
+        "observed": null,
+        "published": null,
+        "received": null,
+        "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+      },
+      "reason": "VIX close: FRED VIXCLS is an alias for the Cboe VIX close, but the archive stores neither the Cboe record nor a receipt clock. The 05:00 availability is unproven."
+    },
+    {
+      "input": "front",
+      "label": "DGS2 5d",
+      "code": "derived_only",
+      "failed_rungs": [
+        "original",
+        "lookback",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity"
+      ],
+      "identity_state": "named_alias",
+      "clock": {
+        "stamp": "2024-03-26",
+        "precision": "date",
+        "observed": null,
+        "published": null,
+        "received": null,
+        "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+      },
+      "reason": "DGS2 5d: Only the five-interval change is stored. The five DGS2 observations, their vintages and clocks are absent, so the change cannot be reconciled to H1's declared transform."
+    },
+    {
+      "input": "spread",
+      "label": "US-DE 2Y spread 5d",
+      "code": "derived_only",
+      "failed_rungs": [
+        "original",
+        "lookback",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity"
+      ],
+      "identity_state": "derived_alias",
+      "clock": {
+        "stamp": null,
+        "precision": "missing",
+        "observed": null,
+        "published": null,
+        "received": null,
+        "note": "no observation, publication or receipt metadata is stored"
+      },
+      "reason": "US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks."
+    },
+    {
+      "input": "real",
+      "label": "DFII10 5d",
+      "code": "derived_only",
+      "failed_rungs": [
+        "original",
+        "lookback",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity"
+      ],
+      "identity_state": "named_alias",
+      "clock": {
+        "stamp": "2024-03-26",
+        "precision": "date",
+        "observed": null,
+        "published": null,
+        "received": null,
+        "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+      },
+      "reason": "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified."
+    },
+    {
+      "input": "broad",
+      "label": "DTWEXBGS 5d",
+      "code": "derived_only",
+      "failed_rungs": [
+        "original",
+        "lookback",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity"
+      ],
+      "identity_state": "named_alias",
+      "clock": {
+        "stamp": "2024-03-26",
+        "precision": "date",
+        "observed": null,
+        "published": null,
+        "received": null,
+        "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
+      },
+      "reason": "DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified."
+    },
+    {
+      "input": "ice",
+      "label": "ICE DXY 05:00 fixing",
+      "code": "missing_value",
+      "failed_rungs": [
+        "present",
+        "original",
+        "lookback",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity"
+      ],
+      "identity_state": "missing",
+      "clock": {
+        "stamp": null,
+        "precision": "missing",
+        "observed": null,
+        "published": null,
+        "received": null,
+        "note": "no observation, publication or receipt metadata is stored"
+      },
+      "reason": "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute."
+    },
+    {
+      "input": "gold",
+      "label": "LBMA gold PM 5d",
+      "code": "identity_mismatch",
+      "failed_rungs": [
+        "original",
+        "lookback",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity"
+      ],
+      "identity_state": "identity_mismatch",
+      "clock": {
+        "stamp": "2024-03-26T05:00:00.000Z",
+        "precision": "timestamp",
+        "observed": "2024-03-26T05:00:00.000Z",
+        "published": null,
+        "received": null,
+        "note": "legacy snapshot timestamp 2024-03-26T05:00:00.000Z; it is a collector snapshot, not the original publication or a recipient receipt"
+      },
+      "reason": "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered."
+    },
+    {
+      "input": "qqq",
+      "label": "QQQ close 5d",
+      "code": "identity_mismatch",
+      "failed_rungs": [
+        "original",
+        "lookback",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity"
+      ],
+      "identity_state": "identity_mismatch",
+      "clock": {
+        "stamp": "2024-03-26T05:00:00.000Z",
+        "precision": "timestamp",
+        "observed": "2024-03-26T05:00:00.000Z",
+        "published": null,
+        "received": null,
+        "note": "legacy snapshot timestamp 2024-03-26T05:00:00.000Z; it is a collector snapshot, not the original publication or a recipient receipt"
+      },
+      "reason": "QQQ close 5d: The legacy return is the Nasdaq-100 index, not the QQQ ETF's official close. The instrument identity fails, and the five closes and split adjustment are absent."
+    },
+    {
+      "input": "calendar",
+      "label": "Release calendar",
+      "code": "incomplete_calendar",
+      "failed_rungs": [
+        "original",
+        "lookback",
+        "fresh",
+        "clocked",
+        "receipt",
+        "identity",
+        "schedule_complete"
+      ],
+      "identity_state": "incomplete",
+      "clock": {
+        "stamp": null,
+        "precision": "missing",
+        "observed": null,
+        "published": null,
+        "received": null,
+        "note": "no observation, publication or receipt metadata is stored"
+      },
+      "reason": "Release calendar: Only the FOMC statement archive is staged. CPI, Employment Situation, advance GDP, Personal Income and Outlays schedules are absent, so the event window cannot be answered for the complete declared calendar."
+    }
+  ],
+  "h1_missing_evidence": [
+    {
+      "input": "vix",
+      "required": {
+        "source": "Cboe",
+        "instrument": "VIX spot close",
+        "transform": "index points, latest completed close",
+        "max_age_hours": 96
+      },
+      "issue": "VIX close: FRED VIXCLS is an alias for the Cboe VIX close, but the archive stores neither the Cboe record nor a receipt clock. The 05:00 availability is unproven.",
+      "action": "Acquire the Cboe VIX official close history and the collector receipt at 05:00 London. Retain the exact close used and its observed/published/received clocks for every session."
+    },
+    {
+      "input": "front",
+      "required": {
+        "source": "Federal Reserve H.15",
+        "instrument": "DGS2",
+        "transform": "5 completed observation intervals, bp",
+        "max_age_hours": 96
+      },
+      "issue": "DGS2 5d: Only the five-interval change is stored. The five DGS2 observations, their vintages and clocks are absent, so the change cannot be reconciled to H1's declared transform.",
+      "action": "Acquire the H.15 DGS2 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and collector receipt clocks."
+    },
+    {
+      "input": "spread",
+      "required": {
+        "source": "H.15 + Bundesbank BBSIS",
+        "instrument": "DGS2 minus DE sovereign Svensson 2.0-year zero-coupon spot",
+        "transform": "5 common observation intervals, change of spread in bp",
+        "max_age_hours": 96
+      },
+      "issue": "US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks.",
+      "action": "Acquire H.15 DGS2 and Bundesbank BBSIS 2.0-year Svensson zero-coupon spot histories. Compute the spread only on common observation dates and retain all five operands, publication times and collector receipts."
+    },
+    {
+      "input": "real",
+      "required": {
+        "source": "Federal Reserve H.15",
+        "instrument": "DFII10",
+        "transform": "5 completed observation intervals, bp",
+        "max_age_hours": 96
+      },
+      "issue": "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified.",
+      "action": "Acquire the H.15 DFII10 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and receipt clocks."
+    },
+    {
+      "input": "broad",
+      "required": {
+        "source": "Federal Reserve H.10",
+        "instrument": "DTWEXBGS",
+        "transform": "5 observation intervals, simple return in percent",
+        "max_age_hours": 192
+      },
+      "issue": "DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified.",
+      "action": "Acquire the H.10 DTWEXBGS daily series with ALFRED vintages and the five raw observations behind each return. Record publication and receipt clocks."
+    },
+    {
+      "input": "ice",
+      "required": {
+        "source": "ICE",
+        "instrument": "US Dollar Index spot",
+        "transform": "previous eligible London 05:00 fixing to current 05:00, simple return in percent",
+        "max_age_hours": 0
+      },
+      "issue": "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute.",
+      "action": "Acquire licensed ICE US Dollar Index spot 05:00 London fixing history and the previous eligible fixing. Record the exact fixing, publication timestamp and collector receipt."
+    },
+    {
+      "input": "gold",
+      "required": {
+        "source": "LBMA",
+        "instrument": "LBMA Gold Price PM USD",
+        "transform": "5 completed fixing intervals, simple return in percent",
+        "max_age_hours": 96
+      },
+      "issue": "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
+      "action": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts."
+    },
+    {
+      "input": "qqq",
+      "required": {
+        "source": "Nasdaq",
+        "instrument": "QQQ official close",
+        "transform": "5 completed close intervals, split-adjusted as known at cutoff, simple return in percent",
+        "max_age_hours": 96
+      },
+      "issue": "QQQ close 5d: The legacy return is the Nasdaq-100 index, not the QQQ ETF's official close. The instrument identity fails, and the five closes and split adjustment are absent.",
+      "action": "Acquire Nasdaq official QQQ closing prices (not the Nasdaq-100 index) and five completed closes, split-adjusted as known at each cutoff. Record publication and receipt clocks."
+    },
+    {
+      "input": "calendar",
+      "required": {
+        "source": "BLS + BEA + Federal Reserve",
+        "instrument": "CPI, Employment Situation, advance GDP, Personal Income and Outlays, FOMC policy decisions",
+        "transform": "scheduled release count in [cutoff,endpoint), complete archived schedules required",
+        "max_age_hours": 24
+      },
+      "issue": "Release calendar: Only the FOMC statement archive is staged. CPI, Employment Situation, advance GDP, Personal Income and Outlays schedules are absent, so the event window cannot be answered for the complete declared calendar.",
+      "action": "Acquire complete archived BLS, BEA and Federal Reserve schedules for CPI, Employment Situation, advance GDP, Personal Income and Outlays and FOMC decisions. Record each release timestamp and collector receipt."
+    }
+  ],
+  "recoverable_gaps": [
+    {
+      "input": "vix",
+      "label": "VIX close",
+      "value": 13.19,
+      "recoverable": "Cboe daily close history and release calendar can reconstruct the publication timestamp; recipient receipt cannot be reconstructed.",
+      "acquisition": "Acquire the Cboe VIX official close history and the collector receipt at 05:00 London. Retain the exact close used and its observed/published/received clocks for every session."
+    },
+    {
+      "input": "front",
+      "label": "DGS2 5d",
+      "value": -19,
+      "recoverable": "FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed from the archive.",
+      "acquisition": "Acquire the H.15 DGS2 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and collector receipt clocks."
+    },
+    {
+      "input": "spread",
+      "label": "US-DE 2Y spread 5d",
+      "value": -9,
+      "recoverable": "Both publication series are public and can reconstruct the spread and publication times; no receipt clock is archived.",
+      "acquisition": "Acquire H.15 DGS2 and Bundesbank BBSIS 2.0-year Svensson zero-coupon spot histories. Compute the spread only on common observation dates and retain all five operands, publication times and collector receipts."
+    },
+    {
+      "input": "real",
+      "label": "DFII10 5d",
+      "value": -11,
+      "recoverable": "FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed.",
+      "acquisition": "Acquire the H.15 DFII10 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and receipt clocks."
+    },
+    {
+      "input": "broad",
+      "label": "DTWEXBGS 5d",
+      "value": 0.6511,
+      "recoverable": "FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed.",
+      "acquisition": "Acquire the H.10 DTWEXBGS daily series with ALFRED vintages and the five raw observations behind each return. Record publication and receipt clocks."
+    },
+    {
+      "input": "ice",
+      "label": "ICE DXY 05:00 fixing",
+      "value": null,
+      "recoverable": "The licensed ICE fixing history and release timestamp can reconstruct publication; the collector receipt cannot be reconstructed.",
+      "acquisition": "Acquire licensed ICE US Dollar Index spot 05:00 London fixing history and the previous eligible fixing. Record the exact fixing, publication timestamp and collector receipt."
+    },
+    {
+      "input": "gold",
+      "label": "LBMA gold PM 5d",
+      "value": 0.7103,
+      "recoverable": "LBMA auction records reconstruct the PM publication time; the archive contains neither the auction records nor a receipt.",
+      "acquisition": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts."
+    },
+    {
+      "input": "qqq",
+      "label": "QQQ close 5d",
+      "value": 2.01,
+      "recoverable": "Nasdaq official close history reconstructs the publication time; the archive contains neither the official closes nor a receipt.",
+      "acquisition": "Acquire Nasdaq official QQQ closing prices (not the Nasdaq-100 index) and five completed closes, split-adjusted as known at each cutoff. Record publication and receipt clocks."
+    },
+    {
+      "input": "calendar",
+      "label": "Release calendar",
+      "value": 0,
+      "recoverable": "Official schedules and release timestamps reconstruct the published release times; collector receipt times are not archived.",
+      "acquisition": "Acquire complete archived BLS, BEA and Federal Reserve schedules for CPI, Employment Situation, advance GDP, Personal Income and Outlays and FOMC decisions. Record each release timestamp and collector receipt."
+    }
+  ],
+  "event_calendar": {
+    "status": "partial_staged",
+    "staged_types": [
+      "fomc_statement"
+    ],
+    "required_types": [
+      "CPI",
+      "Employment Situation",
+      "advance GDP",
+      "Personal Income and Outlays",
+      "FOMC policy decision"
+    ],
+    "matched_types": [
+      "FOMC policy decision"
+    ],
+    "missing_types": [
+      "CPI",
+      "Employment Situation",
+      "advance GDP",
+      "Personal Income and Outlays"
+    ],
+    "events": 23,
+    "sessions_with_staged_event": 22,
+    "calendar_count_for_morning": 0,
+    "note": "The staged archive carries fomc_statement; 4 of 5 required release types are absent. A zero event count under this partial calendar cannot establish that no omitted release occurred."
+  },
+  "sample_reconciliation": {
+    "control": {
+      "scheduled": 725,
+      "blocked": 108,
+      "abstained": 0,
+      "allowed": 617,
+      "directional": 609,
+      "no_call_allowed": 8,
+      "trade_eligible": 194,
+      "directions": {
+        "BULLISH": 241,
+        "BEARISH": 368,
+        "NO_CALL": 116
+      },
+      "performance": {
+        "status": "UNSCORED",
+        "scored": 0,
+        "denominator": 0,
+        "note": "No outcome is attached to these decision records. A blocked morning does not enter a denominator, and no directional call has been scored by this run."
+      }
+    },
+    "candidate": {
+      "scheduled": 725,
+      "blocked": 541,
+      "abstained": 143,
+      "allowed": 41,
+      "directional": 41,
+      "no_call_allowed": 0,
+      "trade_eligible": 41,
+      "directions": {
+        "BULLISH": 54,
+        "BEARISH": 67,
+        "NO_CALL": 604
+      },
+      "performance": {
+        "status": "UNSCORED",
+        "scored": 0,
+        "denominator": 0,
+        "note": "No outcome is attached to these decision records. A blocked morning does not enter a denominator, and no directional call has been scored by this run."
+      }
+    },
+    "h1": {
+      "scheduled": 725,
+      "blocked": 725,
+      "abstained": 0,
+      "allowed": 0,
+      "directional": 0,
+      "no_call_allowed": 0,
+      "trade_eligible": 0,
+      "directions": {
+        "BULLISH": 0,
+        "BEARISH": 0,
+        "NO_CALL": 725
+      },
+      "performance": {
+        "status": "NO_DENOMINATOR",
+        "scored": 0,
+        "denominator": 0,
+        "note": "No outcome is attached to these decision records. A blocked morning does not enter a denominator, and no directional call has been scored by this run."
+      }
+    },
+    "classification": "blocked = evidence failed at a blocking check; abstained = every blocking check passed and the model declined; directional = allowed with BULLISH or BEARISH; no_call_allowed = allowed with NO_CALL. Performance is not scored until a directional denominator survives the gate."
+  },
+  "legacy_input_clock_audit": {
+    "path": "docs/research/usd-session/v1/layer1_backtest_report.md",
+    "section": "5. Readiness",
+    "source": "data/usd-layer1-backtester/run-v1.json validity_gate.ladder",
+    "label": "legacy run-v1 input-clock gate",
+    "note": "The 0 of 725 clocked/identified result belongs to the original run-v1 validity gate. It is not H1 coverage and is not a statement about the H1 candidate.",
+    "ladder": [
+      {
+        "rung": "present",
+        "scope": "sessions",
+        "sessions_passing": 618,
+        "sessions": 725
+      },
+      {
+        "rung": "fresh",
+        "scope": "sessions",
+        "sessions_passing": 617,
+        "sessions": 725
+      },
+      {
+        "rung": "clocked",
+        "scope": "sessions",
+        "sessions_passing": 0,
+        "sessions": 725
+      },
+      {
+        "rung": "identified",
+        "scope": "sessions",
+        "sessions_passing": 0,
+        "sessions": 725
+      },
+      {
+        "rung": "present",
+        "scope": "directional_calls",
+        "sessions_passing": 451,
+        "sessions": 515
+      },
+      {
+        "rung": "fresh",
+        "scope": "directional_calls",
+        "sessions_passing": 450,
+        "sessions": 515
+      },
+      {
+        "rung": "clocked",
+        "scope": "directional_calls",
+        "sessions_passing": 0,
+        "sessions": 515
+      },
+      {
+        "rung": "identified",
+        "scope": "directional_calls",
+        "sessions_passing": 0,
+        "sessions": 515
+      }
+    ],
+    "sessions": {
+      "present": 618,
+      "fresh": 617,
+      "clocked": 0,
+      "identified": 0,
+      "total": 725
+    }
+  },
+  "reach_benchmark": {
+    "metric": "half-distance reach rate",
+    "not": "not directional accuracy, not a win rate, not an executable result",
+    "layer1": {
+      "hits": 2418,
+      "denominator": 2493,
+      "rate_pct": 97,
+      "wilson95": [
+        96.25,
+        97.59
+      ],
+      "definition": "Half target distance is 0.5 * current standard, which equals ADR20 * 0.25."
+    },
+    "layer2": {
+      "hits": 1549,
+      "denominator": 1592,
+      "rate_pct": 97.3,
+      "wilson95": [
+        96.38,
+        97.99
+      ],
+      "definition": "Half target distance is 0.5 * current standard, which equals ADR20 * 0.25."
+    },
+    "source": "data/half-l2l-reach-summary.json",
+    "source_version": "half-l2l-reach-v2"
+  },
+  "external_state": {
+    "verified_on": "2026-11-17",
+    "supabase": {
+      "project": "eaolqbrlywczinfordvg",
+      "reachable": true,
+      "infrastructure_status": "historical warehouse / snapshot builder / replay engine / outcome evaluation / research SQL all Complete; 604 snapshot rows; 2,416 predictions; 12,080 evaluation rows; first 2024-01-02, last 2026-04-30",
+      "public_view_rows": {
+        "research_prediction_primary_summary": 5304,
+        "research_prediction_usd_benchmark_summary": 2416,
+        "research_usd_24h_direction_accuracy": 1,
+        "research_accuracy_by_confidence_bucket": 29,
+        "research_overall_win_rate": 1,
+        "research_factor_reliability": 69,
+        "research_dashboard_infrastructure_status": 1
+      },
+      "newest_primary_snapshot": "2026-04-30",
+      "blocker": "the publishable key can read the public views only; runtime view definitions, grants and the 0-row anonymous base-table reads need a database/service-role connection"
+    },
+    "n8n": {
+      "host": "silver17.app.n8n.cloud",
+      "healthz": "HTTP 200",
+      "history_api": "HTTP 401 Unauthorized for /rest/executions and /rest/workflows",
+      "blocker": "no n8n API key, session cookie or login is present; run history and schedule state remain unverified"
+    },
+    "usd_24h_research_dataset": {
+      "schema_version": "usd-24h-research-dataset-v1",
+      "bytes": 2133936,
+      "sha256": "03ad563748a72ece6dab41e1915c1d91d37888266c16a5e65fa944afa4664442",
+      "rows": 584,
+      "evaluable_rows": 583,
+      "window": "2024-01-02 to 2026-04-30",
+      "call_time_et": "09:30:00",
+      "outcome_instrument": "DXY",
+      "found_at": [
+        "D:/trading-agent-dashboard-codex/.local/worktrees/citation-registry/data/usd-24h-research-dataset.json",
+        "D:/trading-agent-dashboard-codex.worktrees/ws-c-research/data/usd-24h-research-dataset.json"
+      ],
+      "blocker": "absent from canonical and strategy HEAD; the recovered population is a 09:30 ET DXY study, not a 05:00 London H1 input"
+    }
+  },
+  "remaining_work": [
+    {
+      "id": "dxy_official",
+      "label": "Official ICE cash DXY direction",
+      "state": "unscored",
+      "need": "licensed ICE US Dollar Index 05:00 London fixings, the previous eligible fixing, and an H1-qualified call on each matched date",
+      "blocker": "the archive has no official ICE fixing; the 49.65% figure is a broker DXY.cash proxy and is not this test"
+    },
+    {
+      "id": "four_markets",
+      "label": "Four-market confirmation",
+      "state": "legacy_proxy_only",
+      "need": "matched-date 05:00-to-05:00 endpoints for EUR/USD, XAU/USD, BTC/USD and NAS100, separately, plus H1 decisions",
+      "blocker": "the legacy 439-536 scored rows per market use reconstructed calls and are not H1 decisions"
+    },
+    {
+      "id": "l2l_full_5r",
+      "label": "Original L2L 5R geometry",
+      "state": "blocked",
+      "need": "a trade-qualified call, contemporaneous pre-setup levels, and actionable bid/ask M5 sequencing with costs and sizing",
+      "blocker": "0 usable sessions: the archive has no pre-05:00 ladder or full M5 tape"
+    },
+    {
+      "id": "l2l_half_3r",
+      "label": "Original plus midpoint 3R geometry",
+      "state": "blocked",
+      "need": "the same M5 tape, levels and frozen 3R management, with full and midpoint geometry kept separate",
+      "blocker": "0 usable sessions: same two missing inputs as the 5R test"
+    }
+  ],
+  "labels": {
+    "zero_of_725": "legacy run-v1 input-clock gate; attached to the original audit, not to H1",
+    "ninety_seven": "half-distance reach rate; not directional accuracy or a win rate",
+    "performance": "UNSCORED: no valid directional denominator exists for H1"
+  },
+  "provenance": {
+    "sources": [
+      {
+        "path": "data/usd-layer1-backtester/run-v1.json",
+        "bytes": 6584003,
+        "sha256": "20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e"
+      },
+      {
+        "path": "data/usd-layer1-backtester/engine-v1.json",
+        "bytes": 927740,
+        "sha256": "f4290bae4ff91a41727f717f0f7138dffedbf8b3e2a3dc824dcdceeb7aeab6c8"
+      },
+      {
+        "path": "data/usd-layer1-backtester/event-calendar-v1.json",
+        "bytes": 13606,
+        "sha256": "339579f057382c119aace8360a3c19ac13420b3747b07a974c6baae833117bd8"
+      },
+      {
+        "path": "backtester/packages/USD-L1-25F-H1-v0.1.0/inputs.json",
+        "bytes": 1144,
+        "sha256": "144ae500af5c9d4d1f37a7be2b34b5074f8a85c89269ff699895155f2db4a77f"
+      },
+      {
+        "path": "backtester/packages/USD-L1-25F-H1-v0.1.0/rows.json",
+        "bytes": 9442,
+        "sha256": "47aa93fc97769e45999e2420738ae1b847b62bcc62c022c1358d0a0c3a6d0215"
+      },
+      {
+        "path": "data/half-l2l-reach-summary.json",
+        "bytes": 1155705,
+        "sha256": "5d32f4ff4e9287121a75cd746549115f39e0b01afd4bdb078d03668f8c5e40fa"
+      }
+    ],
+    "artifact_sha256": "8be05a7204b01228650f9a474540c59754f9fb2fc8216420e702cd7f2d229cc9",
+    "note": "The digest is over the body before this block. The report builder reruns the same committed artefacts and must reproduce it."
+  }
+}
