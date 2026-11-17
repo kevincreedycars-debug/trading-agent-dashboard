@@ -136,7 +136,9 @@ body.system-map-page {
 .factory-journey button:focus-visible,
 .factory-choice:focus-visible,
 .factory-lane:focus-visible,
-.factory-index-chip:focus-visible {
+.factory-index-chip:focus-visible,
+.factory-floorbar button:focus-visible,
+.factory-dep-chip:focus-visible {
   outline: 2px solid var(--sm-amber);
   outline-offset: 2px;
 }
@@ -154,10 +156,11 @@ body.system-map-page {
 .map-factory {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 372px;
-  grid-template-rows: clamp(400px, 56vh, 620px) auto;
+  grid-template-rows: clamp(400px, 56vh, 620px) auto auto;
   grid-template-areas:
     "stage side"
-    "index index";
+    "index index"
+    "dep dep";
   gap: 14px;
   margin: 14px 0 10px;
 }
@@ -1672,8 +1675,75 @@ body.system-map-page {
   opacity: 0.32;
 }
 
+/* The lower floor names its evidence on the label itself. The colour is a marker of where the claim comes from,
+   never a health signal: runtime and replay are both evidence, and research and planned are both not yet live. */
+.factory-label.is-dependency {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 5px;
+  align-items: baseline;
+  padding-left: 9px;
+  border-left: 2px solid rgba(95, 228, 255, 0.55);
+  font-size: 10px;
+}
+
+.factory-label.is-dependency .factory-label-code {
+  display: inline;
+  grid-column: 1;
+  grid-row: 1;
+  color: var(--sm-faint);
+}
+
+.factory-label.is-dependency .factory-label-name {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+[data-detail="far"] .factory-label.is-dependency .factory-label-name {
+  display: inline;
+}
+
+.factory-label.is-dependency .factory-label-sub {
+  display: block;
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.factory-label.is-dependency.is-runtime {
+  border-left-color: #5fe4ff;
+}
+
+.factory-label.is-dependency.is-replay {
+  border-left-color: #b79cff;
+}
+
+.factory-label.is-dependency.is-documented {
+  border-left-color: #8fa8b8;
+}
+
+.factory-label.is-dependency.is-research {
+  border-left-color: #f0c98a;
+}
+
+.factory-label.is-dependency.is-planned {
+  border-left-style: dashed;
+  border-left-color: #7d8b96;
+}
+
+.factory-label.is-dependency.is-active {
+  border-left-color: #1a1206;
+}
+
+.factory-label.is-dependency.is-active .factory-label-code {
+  color: rgba(26, 18, 6, 0.72);
+}
+
 .factory-label.is-compact .factory-label-sub {
   display: none;
+}
+
+.factory-label.is-dependency.is-compact .factory-label-sub {
+  display: block;
 }
 
 .factory-label.is-hidden,
@@ -1695,6 +1765,54 @@ body.system-map-page {
 
 .factory-zone.is-dim {
   opacity: 0.5;
+}
+
+.factory-floorbar {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(95, 228, 255, 0.18);
+  background: rgba(5, 14, 24, 0.82);
+  pointer-events: auto;
+}
+
+.factory-floorbar-label {
+  padding: 0 6px;
+  color: var(--sm-faint);
+  font-family: var(--sm-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.factory-floorbar button {
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--sm-muted);
+  font-family: var(--sm-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.factory-floorbar button:hover {
+  background: rgba(95, 228, 255, 0.12);
+  color: var(--sm-cyan-bright);
+}
+
+.factory-floorbar button[aria-pressed="true"] {
+  background: rgba(95, 228, 255, 0.16);
+  color: var(--sm-cyan-bright);
+  box-shadow: inset 0 0 0 1px rgba(95, 228, 255, 0.35);
 }
 
 .factory-hud {
@@ -1954,6 +2072,49 @@ body.system-map-page {
   margin: 0;
   color: var(--sm-faint);
   font-size: 11.5px;
+}
+
+/* The evidence badge says where a lower-floor claim comes from. It is a provenance stamp, not a status light. */
+.factory-evidence-badge {
+  margin: 8px 0 0;
+  padding: 5px 9px;
+  border-radius: 7px;
+  border-left: 3px solid rgba(95, 228, 255, 0.55);
+  background: rgba(5, 14, 24, 0.7);
+  color: var(--sm-muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.factory-evidence-badge span {
+  display: inline-block;
+  margin-right: 4px;
+  color: var(--sm-text);
+  font-family: var(--sm-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.factory-evidence-badge.is-runtime {
+  border-left-color: #5fe4ff;
+}
+
+.factory-evidence-badge.is-replay {
+  border-left-color: #b79cff;
+}
+
+.factory-evidence-badge.is-documented {
+  border-left-color: #8fa8b8;
+}
+
+.factory-evidence-badge.is-research {
+  border-left-color: #f0c98a;
+}
+
+.factory-evidence-badge.is-planned {
+  border-left-style: dashed;
+  border-left-color: #7d8b96;
 }
 
 .factory-answers {
@@ -2327,16 +2488,107 @@ body.system-map-page {
   color: var(--sm-cyan-bright);
 }
 
+/* ---------- Factory: lower-floor dependency index ---------- */
+
+.factory-dep-index {
+  grid-area: dep;
+}
+
+.factory-dep-index-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 0;
+}
+
+.factory-dep-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 0 14px 0 0;
+  margin-right: 14px;
+  border-right: 1px solid rgba(95, 228, 255, 0.12);
+}
+
+.factory-dep-group:last-child {
+  padding-right: 0;
+  margin-right: 0;
+  border-right: 0;
+}
+
+.factory-dep-group-label {
+  margin: 0 2px 0 0;
+  color: var(--sm-faint);
+  font-family: var(--sm-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.factory-dep-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px 4px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(95, 228, 255, 0.16);
+  background: rgba(6, 18, 29, 0.8);
+  color: var(--sm-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.factory-dep-chip::before {
+  content: "";
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: rgba(95, 228, 255, 0.55);
+}
+
+.factory-dep-chip.is-runtime::before {
+  background: #5fe4ff;
+}
+
+.factory-dep-chip.is-replay::before {
+  background: #b79cff;
+}
+
+.factory-dep-chip.is-documented::before {
+  background: #8fa8b8;
+}
+
+.factory-dep-chip.is-research::before {
+  background: #f0c98a;
+}
+
+.factory-dep-chip.is-planned::before {
+  background: rgba(125, 139, 150, 0.6);
+}
+
+.factory-dep-chip:hover {
+  color: var(--sm-cyan-bright);
+  border-color: rgba(95, 228, 255, 0.4);
+}
+
+.factory-dep-chip[aria-pressed="true"] {
+  border-color: rgba(255, 184, 77, 0.6);
+  background: rgba(255, 184, 77, 0.16);
+  color: var(--sm-amber-bright);
+}
+
 /* ---------- Factory: narrow layouts ---------- */
 
 @media (max-width: 1080px) {
   .map-factory {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: clamp(360px, 52vh, 540px) auto auto;
+    grid-template-rows: clamp(360px, 52vh, 540px) auto auto auto;
     grid-template-areas:
       "stage"
       "side"
-      "index";
+      "index"
+      "dep";
   }
 
   .factory-side {
@@ -2360,13 +2612,38 @@ body.system-map-page {
     bottom: 8px;
   }
 
+  .factory-floorbar {
+    left: 8px;
+    top: 8px;
+    padding: 3px;
+  }
+
+  .factory-floorbar-label {
+    display: none;
+  }
+
+  .factory-floorbar button {
+    min-height: 26px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .factory-dep-group {
+    flex-basis: 100%;
+    padding: 0;
+    margin: 0;
+    border-right: 0;
+  }
+
   .factory-hud-detail {
     display: none;
   }
 
   .factory-illustrative {
-    right: 8px;
-    top: 8px;
+    left: 8px;
+    right: auto;
+    top: 46px;
+    max-width: calc(100% - 16px);
     font-size: 8.5px;
     letter-spacing: 0.06em;
   }

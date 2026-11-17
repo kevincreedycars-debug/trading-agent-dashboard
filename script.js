@@ -21056,7 +21056,7 @@ function ensureSystemMap() {
   if (systemMapLoad) return systemMapLoad;
   systemMapLoad = new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "lib/system-map.js?v=20261115-factory-drilldowns";
+    script.src = "lib/system-map.js?v=20261117-factory-lower-floor";
     script.async = true;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("System map script failed to load"));

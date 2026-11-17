@@ -142,7 +142,7 @@ test("the factory mounts at the entry point and every station answers the five q
     assert.equal(shape.state, "ready");
     assert.equal(shape.canvases, 1, "one canvas: the scene, and no hologram in the embedded map");
     assert.equal(shape.stations, 50, "eight lanes of four stations, seven pair sockets, the shared stations and the floor");
-    assert.equal(shape.labels, 50);
+    assert.equal(shape.labels, 50 + shape.scene.dependencies, "every upper station and every lower dependency node carries a label");
     assert.deepEqual(shape.legend, ["Incoming feeds", "Research", "Replay", "Gate", "L1 cores", "L2 join", "Execution", "Payout"]);
     assert.match(shape.illustrative, /Illustrative flow · no live data/, "the flow is labelled as illustrative");
     assert.deepEqual(shape.hud, ["Reset view", "+", "−", "Pause flow"]);
@@ -233,7 +233,142 @@ test("the factory mounts at the entry point and every station answers the five q
   }
 });
 
+test("the lower floor names its evidence and never promotes a planned path to live", async () => {
+  const server = await startServer();
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const page = await openFactory(context, server.origin);
+
+    const shell = await page.evaluate(() => {
+      const root = document.querySelector("[data-system-map]");
+      const floorbar = root.querySelector(".factory-floorbar");
+      return {
+        floorButtons: [...floorbar.querySelectorAll("[data-factory-floor]")].map(button => button.textContent.trim()),
+        pressed: [...floorbar.querySelectorAll("[data-factory-floor]")].map(button => button.getAttribute("aria-pressed")),
+        groups: [...root.querySelectorAll(".factory-dep-group-label")].map(label => label.textContent.trim()),
+        chips: root.querySelectorAll("[data-factory-dependency]").length,
+        state: root.systemFactory.state(),
+        depIndexLabel: root.querySelector(".factory-dep-index .factory-index-label").textContent.replace(/\s+/g, " ").trim()
+      };
+    });
+
+    assert.deepEqual(shell.floorButtons, ["Both", "Upper", "Lower"], "the floor switch offers both floors and each one alone");
+    assert.deepEqual(shell.pressed, ["true", "false", "false"], "the composed view is the opening state");
+    assert.equal(shell.chips, shell.state.dependencies, "every lower-floor node is reachable from the index");
+    assert.equal(shell.groups.length, 6, "the index groups the lower floor by what a node supplies");
+    assert.match(shell.depIndexLabel, /Lower floor · inputs, rules, replays and workflows/, "the lower index says what it holds");
+    assert.equal(shell.state.floor, "whole", "the factory opens with both floors in view");
+
+    await page.click('[data-factory-floor="lower"]');
+    await page.waitForFunction(() => {
+      const labels = [...document.querySelectorAll(".factory-label.is-dependency")];
+      return labels.some(label => getComputedStyle(label).display !== "none");
+    });
+    const lower = await page.evaluate(() => {
+      const root = document.querySelector("[data-system-map]");
+      const stage = root.querySelector(".factory-stage").getBoundingClientRect();
+      const dependencyLabels = [...root.querySelectorAll(".factory-label.is-dependency")]
+        .filter(label => getComputedStyle(label).display !== "none");
+      return {
+        state: root.systemFactory.state(),
+        pressed: [...root.querySelectorAll(".factory-floorbar [data-factory-floor]")].map(button => button.getAttribute("aria-pressed")),
+        visibleStations: [...root.querySelectorAll(".factory-label:not(.is-dependency)")]
+          .filter(label => getComputedStyle(label).display !== "none").length,
+        visibleDependencies: dependencyLabels.length,
+        clipped: dependencyLabels
+          .filter(label => {
+            const box = label.getBoundingClientRect();
+            return box.left < stage.left || box.right > stage.right || box.top < stage.top || box.bottom > stage.bottom;
+          })
+          .map(label => label.innerText.replace(/\s+/g, " ").trim()),
+        dependencyText: dependencyLabels.map(label => label.innerText.replace(/\s+/g, " ").trim())
+      };
+    });
+    assert.equal(lower.state.floor, "lower");
+    assert.deepEqual(lower.pressed, ["false", "false", "true"]);
+    assert.equal(lower.visibleStations, 0, "the upper station labels leave the lower-floor view");
+    assert.ok(lower.visibleDependencies > 0, "the lower floor names its own nodes");
+    assert.deepEqual(lower.clipped, [], "no lower-floor label is cut by the stage edge");
+    assert.ok(
+      lower.dependencyText.some(text => /(Runs today|Replay|Documented|Research|Planned)$/i.test(text)),
+      "a lower-floor label carries its evidence in words, not only in colour"
+    );
+    assert.ok(
+      lower.dependencyText.some(text => /^[A-Z]{3}\s/i.test(text)),
+      "a lower-floor label names the asset it belongs to"
+    );
+
+    // A direct dependency opens on the lower floor and carries its evidence stamp.
+    await page.click('[data-factory-dependency="dep.usd.tests"]');
+    await page.waitForSelector('[data-inspector-for="dep.usd.tests"]');
+    const tests = await page.evaluate(() => {
+      const card = document.querySelector('[data-inspector-for="dep.usd.tests"]');
+      return {
+        state: document.querySelector("[data-system-map]").systemFactory.state(),
+        badge: card.querySelector(".factory-evidence-badge").textContent.replace(/\s+/g, " ").trim(),
+        badgeClass: card.querySelector(".factory-evidence-badge").className,
+        facts: card.textContent.replace(/\s+/g, " "),
+        heading: card.querySelector("h3").textContent.trim()
+      };
+    });
+    assert.equal(tests.state.selection.type, "dependency");
+    assert.equal(tests.heading, "Four USD tests");
+    assert.match(tests.badge, /Replay method/);
+    assert.match(tests.badgeClass, /is-replay/);
+    assert.match(tests.facts, /4 separate/, "the four USD tests stay four, never blended into one score");
+    assert.match(tests.facts, /DXY direction/, "the tests are named as tests, not a verdict");
+
+
+    // A planned path is not a live one: the cTrader relay says so in the card itself.
+    await page.click('[data-factory-dependency="dep.shared.relay"]');
+    await page.waitForSelector('[data-inspector-for="dep.shared.relay"]');
+    const relay = await page.evaluate(() => {
+      const card = document.querySelector('[data-inspector-for="dep.shared.relay"]');
+      return {
+        badge: card.querySelector(".factory-evidence-badge").textContent.replace(/\s+/g, " ").trim(),
+        text: card.textContent.replace(/\s+/g, " ")
+      };
+    });
+    assert.match(relay.badge, /Not evidenced/);
+    assert.match(relay.text, /installed, connected, authorised and actively copying are four different states/i);
+    assert.match(relay.text, /Connection Not evidenced/);
+
+    // A station carries a way down to what it stands on, and the way back returns to that station.
+    await page.click('[data-factory-floor="upper"]');
+    await page.click('[data-factory-station="usd.core"]');
+    await page.waitForSelector('[data-factory-dependencies-open="usd.core"]');
+    await page.click('[data-factory-dependencies-open="usd.core"]');
+    await page.waitForSelector("[data-factory-dependency-return]");
+    const entered = await page.evaluate(() => document.querySelector("[data-system-map]").systemFactory.state());
+    assert.equal(entered.floor, "lower");
+    assert.equal(entered.dependencyOrigin, "usd.core");
+    assert.equal(entered.selection.type, "dependency");
+    await page.click("[data-factory-dependency-return]");
+    const returned = await page.evaluate(() => document.querySelector("[data-system-map]").systemFactory.state());
+    assert.equal(returned.floor, "upper");
+    assert.equal(returned.selection.id, "usd.core", "the way back lands on the station that sent you down");
+    assert.equal(returned.dependencyOrigin, null);
+
+    // Keyboard focus follows the lower floor while it is the active floor.
+    await page.click('[data-factory-floor="lower"]');
+    await page.evaluate(() => document.querySelector("[data-factory-scene]").focus());
+    await page.keyboard.press("ArrowRight");
+    const active = await page.evaluate(() => document.querySelector("[data-factory-scene]").getAttribute("aria-activedescendant"));
+    assert.match(active, /^factory-dependency-/, "arrow keys point at lower-floor chips, not upper stations");
+    await page.keyboard.press("Enter");
+    assert.equal(
+      await page.evaluate(() => document.querySelector("[data-system-map]").systemFactory.state().selection.type),
+      "dependency"
+    );
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+
 test("the USD journey reaches the factor register, one documented factor and the four replay tests", async () => {
+
   const server = await startServer();
   const browser = await chromium.launch({ headless: true });
   try {
@@ -1205,6 +1340,41 @@ test("the phone layout keeps the scene, the panel and the station index usable",
     for (const height of layout.hudTargets) {
       assert.ok(height >= 28, "camera controls stay tappable");
     }
+
+    // The lower floor is a phone view too: its labels fit the scene and the floor switch fits the stage.
+    await page.click('.factory-floorbar [data-factory-floor="lower"]');
+    await page.waitForFunction(() => {
+      const labels = [...document.querySelectorAll(".factory-label.is-dependency")];
+      return labels.some(label => getComputedStyle(label).display !== "none");
+    });
+    const phoneLower = await page.evaluate(() => {
+      const root = document.querySelector("[data-system-map]");
+      const stage = root.querySelector("[data-factory-stage]").getBoundingClientRect();
+      const floorbar = root.querySelector(".factory-floorbar").getBoundingClientRect();
+      const illustrative = root.querySelector(".factory-illustrative").getBoundingClientRect();
+      const labels = [...root.querySelectorAll(".factory-label.is-dependency")]
+        .filter(label => getComputedStyle(label).display !== "none");
+      return {
+        visible: labels.length,
+        clipped: labels
+          .filter(label => {
+            const box = label.getBoundingClientRect();
+            return box.left < stage.left || box.right > stage.right || box.top < stage.top || box.bottom > stage.bottom;
+          })
+          .map(label => label.innerText.replace(/\s+/g, " ").trim()),
+        floorbarInside: floorbar.left >= stage.left && floorbar.right <= stage.right
+          && floorbar.top >= stage.top && floorbar.bottom <= stage.bottom,
+        bannerOverlapsFloorbar: illustrative.left < floorbar.right && illustrative.right > floorbar.left
+          && illustrative.top < floorbar.bottom && illustrative.bottom > floorbar.top,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      };
+    });
+    assert.ok(phoneLower.visible > 0, "the lower floor names nodes on a phone");
+    assert.deepEqual(phoneLower.clipped, [], "no lower-floor label is cut by the phone stage edge");
+    assert.equal(phoneLower.floorbarInside, true, "the floor switch stays inside the scene on a phone");
+    assert.equal(phoneLower.bannerOverlapsFloorbar, false, "the illustrative-flow note never covers the floor switch");
+    assert.equal(phoneLower.overflow, 0, "the lower floor does not push the page sideways");
+    await page.click('.factory-floorbar [data-factory-floor="upper"]');
 
     await page.click('[data-factory-station="eur.core"]');
     await page.waitForSelector('[data-inspector-for="eur.core"]');
