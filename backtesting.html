@@ -1,54 +1,480 @@
 <!doctype html>
-<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Backtesting | Trading Agent Dashboard</title>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backtesting | Trading Agent Dashboard</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0b141c;color:#ecf3f4;font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif}main,header{max-width:990px;margin:auto;padding:20px clamp(16px,4vw,48px)}header{border-bottom:1px solid #30424e;display:flex;justify-content:space-between}a{color:#96dbd1;text-underline-offset:3px}h1{font-size:clamp(30px,6vw,52px);line-height:1.05;letter-spacing:-.045em;margin:24px 0 12px}h2{font-size:21px;margin:0 0 8px}p{margin:7px 0 15px;color:#b9cbd1}nav{display:flex;flex-wrap:wrap;gap:6px;margin:26px 0}nav a,button{font:inherit;color:#dce8e9;background:#162530;border:1px solid #3d515c;border-radius:6px;padding:7px 12px;text-decoration:none;cursor:pointer}nav a[aria-current],button[aria-pressed=true]{background:#a9e5d8;color:#102a28;border-color:#a9e5d8}section,details{padding:18px 0;border-top:1px solid #34454e}summary{cursor:pointer;font-weight:650}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #f4cb79;outline-offset:3px}.list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px}.card{display:block;background:#142530;border:1px solid #344c58;padding:15px;border-radius:7px;color:#edf7f4;text-decoration:none}.card:hover{border-color:#90cabc}.card small{display:block;color:#abc6cb}.active{color:#e5c781;font-size:13px}.path{display:flex;flex-wrap:wrap;gap:6px}.path button{font-size:14px}#map{width:100%;height:155px;display:block}#map[hidden]{display:none}#inspection{min-height:3em;margin-top:14px}.stat{font-size:20px;color:#f4d895}.links a{display:block;margin:8px 0}.caption{font-size:13px}main{padding-bottom:55px}
-</style></head><body><header><b>Trading Agent Dashboard</b><a href="index.html">Dashboard</a></header><main>
-<h1>Backtesting</h1><p>Inspect the evidence behind each test of the 05:00 London USD call.</p>
-<nav id="tabs" aria-label="Backtesting views"></nav><article id="view"></article>
-<section><details><summary>Infrastructure and data sources</summary><div class="links">
-<a href="https://github.com/kevincreedycars-debug/trading-agent-dashboard/blob/main/docs/ARCHITECTURE.md#L62">Supabase · market_snapshots table reference</a>
-<a href="https://github.com/kevincreedycars-debug/trading-agent-dashboard/blob/main/docs/ARCHITECTURE.md#L63">Supabase · agent_outputs table reference</a>
-<a href="https://github.com/kevincreedycars-debug/trading-agent-dashboard/blob/main/exports/master_orchestrator.json">n8n · master orchestrator workflow export</a>
-<a href="data/usd-layer1-backtester/run-v1.json">Backtester · saved session inputs and decisions</a>
-<a href="backtest-flow.html">Data flow and historical stores</a></div>
-<p class="caption">Table links open the schema references. The research collector’s hosted n8n URL, activation and first scheduled receipt are unverified here.</p></details>
-<details><summary>Fail-safes and inspection</summary><div class="links">
-<a href="config/usd_l1_decision_rules_v1.json">Frozen rule version, signal requirements and trade gate</a><a href="usd-layer1-backtester.html">Daily evidence · open Validity and select a session</a>
-<a href="data/usd-layer1-backtester/audit-v1.json">Scoring audit · endpoints, ladder timestamp and tick checks</a></div><p class="caption">A missing event feed leaves event status unknown. A verified empty calendar establishes that no event is scheduled. The frozen experiment can issue a direction with partial coverage.</p></details></section>
-</main><script src="lib/vendor/three.min.js"></script><script>
-'use strict';
-const tabs={overview:'Summary',usd:'USD direction',markets:'Four markets',full:'Original L2L',half:'Half L2L',events:'Event reviews'};
-const specs={
-usd:['Can the morning call predict the next 05:00 broker DXY.cash move?','Needs a dated USD call and two usable broker prices. Daily access to every applicable factor remains unverified.'],
-markets:['Does the USD call imply the subsequent direction of EUR/USD, gold, NAS100 and BTC/USD?','Needs the saved USD call and both session endpoints for each asset. Each market has its own scored denominator.'],
-full:['Does the original L2L strategy reach the next marked level at 5R?','Needs a trade-qualified call, original seeds recorded before the session, and bid/ask history. Inspect the entry-rule version before interpreting a replay.'],
-half:['Does adding midpoints improve L2L trade outcomes at 3R?','Both original levels and midpoints can trigger. Needs the same dated original seeds, trade qualification and bid/ask history.'],
-events:['Does a post-release review improve the remaining session decision?','Planned comparison: hold the 05:00 call, allow a pause, or permit a confirmed reversal. Needs a dated calendar, first release, pre-release consensus where relevant, review-time prices and a frozen reversal rule. Measure corrected and spoiled calls, switches back and trades affected.']};
-const docs=[['Frozen rules and worked morning','usd-l1-decision-rules-v1.html'],['Per-session evidence','usd-layer1-backtester.html'],['Machine-readable test results','data/usd-layer1-backtester/audit-v1.json'],['Research documents','index.html#research-library']];
-const other=[['Historical accuracy and L2L studies','index.html#backtest'],['Gold backtests','gold-backtesting.html'],['Gold outcomes','gold-backtest-outcomes.html'],['Backtest engine tracker','index.html#backtest-engine'],['Factor Edge Lab','index.html#factor-edge-lab'],['Shadow logic backtest','index.html#shadow-logic-backtest'],['Research proof map','index.html#research-proof-map']];
-const stages=['Sources','05:00 snapshot','25 factors','USD decision','Scoring'];
-const evidence=[['Inspect the historical feeds and available date ranges.','docs/HISTORICAL_DATA_INVENTORY.md'],['Inspect saved morning inputs and timing evidence in the Validity view.','usd-layer1-backtester.html'],['Review the factor gaps, overlapping signals and decision rules.','usd-l1-decision-rules-v1.html'],['Trace direction, conviction and trade eligibility.','data/usd-layer1-backtester/decision-rules-v1.json'],['Inspect priced outcomes and coverage for each test.','data/usd-layer1-backtester/audit-v1.json']];
-let run=null,failed=false,dispose=()=>{};
-function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null)n.textContent=text;if(cls)n.className=cls;parent.append(n);return n}
-function link(parent,title,url,cls){const a=el('a',title,parent,cls);a.href=url;return a}
-function library(parent,title,items){const box=el('details',null,parent);el('summary',title,box);const list=el('div',null,box,'links');items.forEach(([t,u])=>link(list,t,u))}
-const bar=document.querySelector('#tabs');Object.entries(tabs).forEach(([key,name])=>link(bar,name,'#'+key));
-function diagram(parent){const section=el('section',null,parent);el('h2','Inspect the test path',section);const canvas=el('canvas',null,section);canvas.id='map';canvas.setAttribute('aria-hidden','true');const row=el('div',null,section,'path'),detail=el('p',null,section);detail.id='inspection';let paint=()=>{};const buttons=stages.map((name,i)=>{const b=el('button',name,row);b.onclick=()=>select(i);return b});
-function select(i){buttons.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===i)));detail.replaceChildren();link(detail,evidence[i][0],evidence[i][1]);paint(i)}
-try{const T=window.THREE,renderer=new T.WebGLRenderer({canvas,alpha:true,antialias:true}),scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.1,100);camera.position.set(0,3,9);camera.lookAt(0,0,0);const points=stages.map((_,i)=>new T.Vector3((i-2)*2,0,0));const geo=new T.IcosahedronGeometry(.48,0);const nodes=points.map(p=>{const n=new T.Mesh(geo,new T.MeshNormalMaterial({flatShading:true}));n.position.copy(p);scene.add(n);return n});const edge=new T.Line(new T.BufferGeometry().setFromPoints(points),new T.LineBasicMaterial({color:0x6c979f}));scene.add(edge);
-function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.position.z=Math.max(5,17/camera.aspect);camera.lookAt(0,0,0);camera.updateProjectionMatrix();renderer.render(scene,camera)}
-paint=i=>{nodes.forEach((n,k)=>n.scale.setScalar(k===i?1.45:1));draw()};const obs=new ResizeObserver(draw);obs.observe(canvas);canvas.onclick=e=>{const rect=canvas.getBoundingClientRect(),ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(2*(e.clientX-rect.left)/rect.width-1,1-2*(e.clientY-rect.top)/rect.height),camera);const hit=ray.intersectObjects(nodes)[0];if(hit)select(nodes.indexOf(hit.object))};dispose=()=>{obs.disconnect();geo.dispose();nodes.forEach(n=>n.material.dispose());edge.geometry.dispose();edge.material.dispose();renderer.dispose()}}catch{canvas.hidden=true}select(0)}
-function render(){dispose();dispose=()=>{};const key=Object.hasOwn(tabs,location.hash.slice(1))?location.hash.slice(1):'overview',v=document.querySelector('#view');v.replaceChildren();[...bar.children].forEach(a=>{if(a.hash==='#'+key)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});const audit=run?.scored.current;
-if(key==='overview'){el('div','Current work',v,'active');el('h2','25-factor USD morning call',v);el('p','Can the agent review each applicable factor before 05:00 and improve on the current daily direction?',v);if(run)el('p',run.headline.sessions_replayed+' mornings replayed · '+run.headline.directional_calls+' experimental calls · '+run.headline.trade_qualified+' trade-qualified',v,'stat');el('p','Open work: verify daily factor availability, event-calendar coverage and evidence of receipt by cutoff.',v);if(run){
- const counts=run.gap_table.counts;
- el('p',run.gap_table.rows+' factors reviewed · '+counts.data+' data gaps · '+counts.code+' code gaps · '+counts.exclusion+' documented exclusions',v);
- const cards=el('div',null,v,'list');
- for(const [id,caption] of [['usd',audit.dxy.scored+' priced calls'],['markets','4 assets scored separately'],['full',audit.l2l.ladder.eligible_sessions.length+' dated level sessions · execution demo'],['half',audit.l2l.ladder.eligible_sessions.length+' dated level sessions · execution demo']]){
-  const card=link(cards,tabs[id],'#'+id,'card');
-  el('small',caption,card);
- }
-}diagram(v);library(v,'Other backtests and research tools',other);library(v,'Document library',docs)}
-else{el('div',key==='events'?'Planned experiment':'USD research programme',v,'active');el('h2',tabs[key],v);el('p',specs[key][0],v);el('p',specs[key][1],v);if(audit){if(key==='usd')el('p',audit.dxy.hits+' correct / '+audit.dxy.scored+' scored · '+audit.dxy.accuracy_pct+'% in-sample',v,'stat');if(key==='usd')el('p',audit.dxy.states.unpriced+' directional calls lack a priced outcome. The broker CFD is the price source.',v);if(key==='markets'){const cards=el('div',null,v,'list');Object.values(audit.markets).forEach(m=>{const c=el('div',m.label,cards,'card');el('small',m.hits+' correct / '+m.scored+' scored',c)})}if(key==='full'||key==='half'){const l=audit.l2l,t=l.totals[key==='full'?'full_5r':'half_3r'];el('p',l.ladder.eligible_sessions.length+' dated level sessions · '+t.fills+' execution-demo fills',v,'stat');el('p','The published replay includes a band-2 call. These fills demonstrate execution and do not establish a trade-qualified account return.',v)}}library(v,'Documents and evidence',docs)}
-if(!run)el('p',failed?'Published results unavailable. Inspect the linked source files.':'Loading published replay…',v,'caption');else el('p','Research run through '+audit.run_date_range.end+' · '+run.version,v,'caption')}
-addEventListener('hashchange',render);render();fetch('data/usd-layer1-backtester/decision-rules-v1.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>{run=j;render()}).catch(()=>{run=null;failed=true;render()});
+*{box-sizing:border-box}
+body{margin:0;background:#0b141c;color:#ecf3f4;font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+header,main{max-width:1180px;margin:auto;padding:18px clamp(14px,4vw,40px)}
+header{border-bottom:1px solid #30424e;display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+a{color:#96dbd1;text-underline-offset:3px}
+h1{font-size:clamp(28px,5vw,46px);line-height:1.05;letter-spacing:-.04em;margin:20px 0 8px}
+h2{font-size:22px;margin:0 0 10px}
+h3{font-size:17px;margin:18px 0 8px}
+p{margin:6px 0 12px;color:#b9cbd1}
+nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0}
+nav.tabs a,button{font:inherit;color:#dce8e9;background:#162530;border:1px solid #3d515c;border-radius:6px;padding:7px 12px;text-decoration:none;cursor:pointer}
+nav.tabs a[aria-current=page],button[aria-pressed=true]{background:#a9e5d8;color:#102a28;border-color:#a9e5d8}
+section{border-top:1px solid #34454e;padding:20px 0}
+details{border:1px solid #2f434e;border-radius:8px;background:#101e27;padding:10px 14px;margin:10px 0}
+summary{cursor:pointer;font-weight:650}
+:focus-visible{outline:3px solid #f4cb79;outline-offset:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+.card{background:#132430;border:1px solid #344c58;border-radius:8px;padding:14px}
+.card h3{margin-top:0}
+.card small,.caption{display:block;color:#abc6cb;font-size:13px}
+.stat{font-size:22px;color:#f4d895;display:block;margin:2px 0}
+.banner{border:1px solid #e0a35c;background:#2a2114;border-radius:8px;padding:14px;margin:16px 0}
+.banner strong{color:#f7cc86}
+.ok{border-color:#69b8a3;background:#12241f}.bad{border-color:#d68b8b;background:#2a1717}
+.pill{display:inline-block;font-size:12px;padding:1px 7px;border-radius:20px;border:1px solid #4b6470;color:#cfe3e5;margin-left:4px}
+.pill.blocked{background:#421f1f;border-color:#a96060}.pill.valid_abstention{background:#1d3a3a;border-color:#6fb1ad}
+.pill.allowed,.pill.scored{background:#1b3a2b;border-color:#6fb589}
+.pill.scored_in_legacy_aggregate{background:#3a3419;border-color:#b9a45c}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #2c4049;vertical-align:top}
+th{color:#cfe3e5;position:sticky;top:0;background:#0f1c24}
+tbody tr:hover{background:#152833}
+tbody tr[aria-selected=true]{background:#1d3440}
+.scroll{max-height:430px;overflow:auto;border:1px solid #2c4049;border-radius:8px}
+.mono,code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12.5px}
+#map{width:100%;height:320px;display:block;background:#0d1922;border:1px solid #2c4049;border-radius:8px;touch-action:none;cursor:grab}
+#map[hidden]{display:none}
+.split{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:820px){.split{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips button{font-size:13px;padding:4px 9px}
+ul{margin:6px 0 12px;padding-left:20px}
+li{margin:3px 0;color:#c3d4d8}
+.caption{margin-top:8px}
+.hash{word-break:break-all}
+</style></head><body>
+<header><b>Trading Agent Dashboard</b><span><a href="index.html">Dashboard</a> · <a href="data/usd-layer1-backtester/backtesting-screen-v1.json">Screen payload</a></span></header>
+<main>
+<h1>Backtesting</h1>
+<p id="subtitle">Loading the evidence behind the 05:00 London USD call…</p>
+<div id="blockers" aria-live="polite"></div>
+<div class="grid" id="summary" aria-label="Selected models and readiness"></div>
+<nav class="tabs" id="tabs" aria-label="Backtesting views"></nav>
+<section id="view" aria-live="polite"></section>
+<section id="provenance"><h2>Provenance</h2><div id="provenance-body" class="caption"></div></section>
+</main>
+<script src="lib/vendor/three.min.js"></script>
+<script>
+"use strict";
+const payloadUrl="data/usd-layer1-backtester/backtesting-screen-v1.json";
+const tabs={overview:"Overview",architecture:"Architecture",tests:"Tests",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions"};
+const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all"};
+function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=text;if(cls)n.className=cls;if(parent)parent.append(n);return n}
+function pill(status,parent){return el("span",status,parent,"pill "+status)}
+function pct(value){return value===null||value===undefined?"—":value+"%"}
+function key(date,test){return test+"|"+date}
+function card(parent,title,value,caption,cls){
+  const c=el("div",null,parent,"card "+(cls||""));
+  el("h3",title,c);
+  if(value!==null&&value!==undefined)el("span",value,c,"stat");
+  if(caption)el("small",caption,c);
+  return c;
+}
+function renderBlockers(s){
+  const host=document.querySelector("#blockers");host.replaceChildren();
+  const pkg=s.package_identity;
+  const b=el("div",null,host,"banner"+(pkg.status==="PRESENT"?" ok":""));
+  el("strong",pkg.status==="PRESENT"?"Requested package present":"Requested package absent: "+pkg.requested,b);
+  el("p",pkg.consequence,b);
+  if(pkg.blockers&&pkg.blockers.length){const ul=el("ul",null,b);for(const line of pkg.blockers)el("li",line,ul)}
+  const d=el("details",null,b);el("summary","Search record ("+pkg.searched.length+" files read on "+pkg.checked_at+")",d);
+  const ul2=el("ul",null,d);for(const line of pkg.searched.slice(0,40))el("li",line,ul2,"mono");if(pkg.searched.length>40)el("li","… "+(pkg.searched.length-40)+" more",ul2,"mono");
+  const h1=el("div",null,host,"banner bad");
+  el("strong","H1 test status: 0 of 4 scored",h1);
+  el("p","All four H1 tests stay unscored until the requested package's 25 adjudications map to executable rules and a strict-gate morning exists. The tables below describe the legacy experiment and are labelled that way.",h1);
+  const earliest=s.summary.readiness.strict_ready_candidate;
+  el("p",earliest===0?"Earliest evidence-backed H1 morning: none. The strict gate accepts "+earliest+" of "+s.summary.sessions+" mornings.":"Earliest evidence-backed H1 morning: "+earliest+" strict-gate mornings are available.",h1);
+}
+function renderSummary(s){
+  const host=document.querySelector("#summary");host.replaceChildren();
+  const models=s.summary.selected_models;
+  for(const model of models){
+    const c=card(host,model.role==="control"?"Control":"Candidate",model.id,model.label);
+    el("small","version: "+(model.version||"—"),c);
+    el("small","rulebook: "+(model.rulebook_version||"—")+" · gate: "+(model.gate_basis||"—"),c);
+    if(model.identity){const p=el("p",null,c);pill(model.identity.status,p);el("small",model.identity.note||"",c)}
+    const d=el("details",null,c);el("summary","Executable entry points",d);
+    const ul=el("ul",null,d);for(const path of model.executable_entry_points)el("li",path,ul,"mono");
+  }
+  card(host,"Session",s.summary.session,s.summary.first_date+" → "+s.summary.last_date+" · "+s.summary.sessions+" scheduled mornings");
+  const r=s.summary.readiness;
+  card(host,"Ready / blocked",r.strict_ready_control+" / "+(s.summary.sessions-r.strict_ready_control),"strict gate, both models · narrow control "+r.narrow_ready_control+" ready / "+r.narrow_blocked_control+" blocked");
+  card(host,"Implemented book",r.book_allowed_candidate+" allowed",r.book_abstained_candidate+" valid abstentions · "+r.book_blocked_candidate+" blocked");
+  const gap=s.summary.biggest_gap;
+  const g=card(host,"Biggest data gap",gap?gap.field:"none",gap?gap.mornings+" of "+gap.sessions+" mornings ("+gap.share_pct+"%) · "+gap.first+" → "+gap.last:"");
+  if(gap){el("small","what to obtain: "+(gap.candidate_action||gap.action||"—"),g)}
+  card(host,"Next action",gap?"Close the "+gap.field+" gap":"Review the requirements",s.summary.next_to_obtain[0]||"");
+}
+function table(parent,headers,rows){
+  const t=el("table",null,parent);
+  const thead=el("thead",null,t),hr=el("tr",null,thead);
+  for(const h of headers)el("th",h,hr);
+  const tbody=el("tbody",null,t);
+  for(const row of rows){const tr=el("tr",null,tbody);for(const cell of row){const td=el("td",null,tr);if(cell instanceof Node)td.append(cell);else td.textContent=cell===null||cell===undefined?"—":String(cell)}}
+  return t;
+}
+function renderOverview(v,s){
+  const pkg=s.package_identity;
+  el("h2","What this run covers",v);
+  el("p","Two models, one 05:00 London session contract and four tests. The candidate is the legacy implemented book, not the requested H1 package: the package is "+pkg.status.toLowerCase().replaceAll("_"," ")+".",v);
+  el("h3","Five counts, printed separately (OD-5)",v);
+  const t=table(v,["Model","Scheduled","Reconstructed","Valid (strict)","Directional (engine)","Scored","Overlap / exclusions"],[]);
+  const body=t.querySelector("tbody");
+  for(const role of ["control","candidate"]){
+    const m=s.coverage_trace.by_model[role];
+    const tr=el("tr",null,body);
+    const first=el("td",role+" ",tr);pill(role==="control"?"control":"legacy candidate",first);
+    for(const value of [m.scheduled,m.reconstructed,m.valid_strict,m.directional,m.scored])el("td",value===null?"—":String(value),tr);
+    const o=el("td",null,tr);
+    el("small","both "+m.overlap.both+" · reconstructed only "+m.overlap.reconstructed_only+" · directional only "+m.overlap.directional_only,o);
+    if(role==="candidate")el("small","scored sample: "+m.scored_basis,o);
+  }
+  el("p","Definitions: "+Object.entries(s.coverage_trace.definitions).map(([k,v])=>k+" = "+v).join("; ")+".",v,"caption");
+  el("p",s.coverage_trace.strict_rule,v,"caption");
+
+  el("h3","Control parity on spread, Fed bias, surprise and DXY",v);
+  el("p",s.summary.parity.claim,v);
+  const p=table(v,["Factor","Input","Mornings with a value","Coded / rulebook weight","Finding"],[]);
+  const pb=p.querySelector("tbody");
+  for(const f of s.summary.parity.factors){
+    const tr=el("tr",null,pb);
+    el("td",f.id+" "+f.factor,tr);
+    el("td",f.input,tr);
+    el("td",f.mornings_with_value+" / "+f.sessions,tr);
+    el("td",f.weight.coded_24h+" / "+f.weight.rulebook,tr);
+    const td=el("td",null,tr);el("small",f.finding,td);pill(f.status,td);
+  }
+  el("p","Verdict: "+s.summary.parity.verdict+". No production parity claim is made.",v,"caption");
+
+  el("h3","What to obtain next",v);
+  const ul=el("ul",null,v);for(const line of s.summary.next_to_obtain)el("li",line,ul);
+
+  el("h3","The four tests",v);
+  const grid=el("div",null,v,"grid");
+  for(const test of s.tests.definitions){
+    const c=card(grid,test.ordinal+". "+test.label,test.status,"usable "+(test.usable_sessions??0)+" of "+s.summary.sessions);
+    el("small","outcome source: "+test.outcome_source,c);
+  }
+  el("p","Sealed live replay: not run. No sealed replay artefact exists in this checkout, so no live figure is reported here.",v,"caption");
+}
+let disposeMap=null,mapApi=null;
+function evidenceTable(parent,node){
+  const rows=(node.evidence||[]).map(item=>[item.path,item.date||"undated",item.sha256?item.sha256.slice(0,16)+"…":"—",item.note||""]);
+  const t=table(parent,["Evidence","Date","sha256","Role"],rows);
+  if(!rows.length)el("p","No evidence is recorded for this node.",parent,"caption");
+  return t;
+}
+function renderNodeDetail(host,node,onSelect){
+  host.replaceChildren();
+  const head=el("h3",node.label,host);
+  pill(node.status,head);
+  el("p",node.summary,host);
+  if(node.detail&&node.detail.length){const ul=el("ul",null,host);for(const line of node.detail)el("li",line,ul)}
+  el("h4","Dated evidence",host);
+  evidenceTable(host,node);
+  if(node.links&&node.links.length){
+    el("h4","Continues to",host);
+    const chips=el("div",null,host,"chips");
+    for(const id of node.links){const b=el("button",id,chips);b.onclick=()=>onSelect(id)}
+  }
+}
+function renderArchitecture(v,s){
+  el("h2","How the architecture fits together",v);
+  el("p","Click a node to inspect it, or use the list. Every node carries the file it rests on and the date that file was frozen or generated. A connection with no dated record is marked unverified rather than assumed.",v);
+  const split=el("div",null,v,"split");
+  const left=el("div",null,split);
+  const canvas=el("canvas",null,left);canvas.id="map";canvas.setAttribute("aria-label","3D architecture map; the node list below is the accessible equivalent");
+  const chips=el("div",null,left,"chips");
+  const right=el("div",null,split);
+  const inspector=el("div",null,right,"card");
+  const nodes=s.architecture.nodes;
+  const byId=new Map(nodes.map(n=>[n.id,n]));
+  const select=id=>{
+    if(!byId.has(id))return;
+    state.node=id;
+    for(const b of chips.querySelectorAll("button"))b.setAttribute("aria-pressed",b.dataset.node===id?"true":"false");
+    renderNodeDetail(inspector,byId.get(id),select);
+    if(mapApi&&mapApi.focus)mapApi.focus(id);
+  };
+  for(const node of nodes){const b=el("button",node.label,chips);b.dataset.node=node.id;b.onclick=()=>select(node.id)}
+  el("p","Status colours: verified, verified with a gap, partial, unverified, blocked, legacy scored.",left,"caption");
+  mapApi=drawArchitectureMap(canvas,nodes,s.architecture.edges,select);
+  select(state.node||"research");
+  el("h3","Node detail",right);
+  for(const node of nodes){
+    const d=el("details",null,right);d.id="node-"+node.id;
+    el("summary",node.label+" · "+node.status,d);
+    const body=el("div",null,d);
+    el("p",node.summary,body);
+    if(node.detail){const ul=el("ul",null,body);for(const line of node.detail)el("li",line,ul)}
+    evidenceTable(body,node);
+  }
+}
+function drawArchitectureMap(canvas,nodes,edges,onSelect){
+  if(!window.THREE||!canvas)return null;
+  const T=window.THREE;
+  let renderer;
+  try{renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true})}catch{canvas.hidden=true;return null}
+  const scene=new T.Scene();
+  const camera=new T.PerspectiveCamera(45,1,0.1,100);camera.position.set(1,0,17);camera.lookAt(1,0,0);
+  const group=new T.Group();scene.add(group);
+  const positions={
+    research:[-4.6,0,0],rulebook:[-3.0,0.6,0],adjudications:[-1.3,0.9,0],
+    factor_combination:[0.4,0.3,0],datasets:[2.0,-0.4,0],
+    supabase:[3.4,1.1,-0.6],n8n:[3.4,-1.1,-0.6],validation:[4.9,0,0],
+    test_dxy_official:[6.4,1.3,0],test_dxy_broker:[6.4,0.45,0],test_four_markets:[6.4,-0.4,0],test_l2l:[6.4,-1.25,0]
+  };
+  const colour={verified:0x7fd6b0,verified_with_gap:0xe3c36b,partial:0xe3a35c,unverified:0xd68b8b,blocked:0xc96f6f,scored_legacy:0x8fb7d6};
+  const meshes=[];
+  for(const node of nodes){
+    const p=positions[node.id]||[0,0,0];
+    const size=node.kind==="test"?0.22:node.kind==="connection"?0.26:0.32;
+    const mesh=new T.Mesh(new T.IcosahedronGeometry(size,1),new T.MeshStandardMaterial({color:colour[node.status]||0x9fd6ff,roughness:.5,metalness:.15}));
+    mesh.position.set(p[0],p[1],p[2]);mesh.userData.id=node.id;group.add(mesh);meshes.push(mesh);
+  }
+  scene.add(new T.AmbientLight(0xffffff,1.1));
+  const key=new T.DirectionalLight(0xffffff,1.4);key.position.set(3,5,8);scene.add(key);
+  const lineMaterial=new T.LineBasicMaterial({color:0x4f7080,transparent:true,opacity:.7});
+  for(const [a,b] of edges){
+    const pa=positions[a],pb=positions[b];if(!pa||!pb)continue;
+    const geom=new T.BufferGeometry().setFromPoints([new T.Vector3(...pa),new T.Vector3(...pb)]);
+    group.add(new T.Line(geom,lineMaterial));
+  }
+  const draw=()=>{
+    const w=canvas.clientWidth||600,h=canvas.clientHeight||320;
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);
+  };
+  const resize=new ResizeObserver(draw);resize.observe(canvas);
+  let dragging=false,moved=0,lastX=0,lastY=0;
+  canvas.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId);canvas.style.cursor="grabbing"});
+  canvas.addEventListener("pointermove",e=>{
+    if(!dragging)return;
+    const dx=e.clientX-lastX,dy=e.clientY-lastY;moved+=Math.abs(dx)+Math.abs(dy);
+    group.rotation.y+=dx*0.006;group.rotation.x=Math.max(-0.7,Math.min(0.7,group.rotation.x+dy*0.004));
+    lastX=e.clientX;lastY=e.clientY;draw();
+  });
+  const end=e=>{
+    if(!dragging)return;dragging=false;canvas.style.cursor="grab";
+    if(moved>5)return;
+    const rect=canvas.getBoundingClientRect(),ray=new T.Raycaster();
+    ray.setFromCamera(new T.Vector2(2*(e.clientX-rect.left)/rect.width-1,1-2*(e.clientY-rect.top)/rect.height),camera);
+    const hit=ray.intersectObjects(meshes)[0];
+    if(hit)onSelect(hit.object.userData.id);
+  };
+  canvas.addEventListener("pointerup",end);
+  canvas.addEventListener("pointercancel",()=>{dragging=false;canvas.style.cursor="grab"});
+  canvas.style.cursor="grab";
+  draw();
+  disposeMap=()=>{resize.disconnect();meshes.forEach(m=>{m.geometry.dispose();m.material.dispose()});renderer.dispose();disposeMap=null};
+  return {focus:id=>{const m=meshes.find(x=>x.userData.id===id);if(m){group.rotation.y=-(m.position.x-1)*0.08;draw()}}};
+}
+function renderTests(v,s){
+  el("h2","One row per scheduled morning",v);
+  el("p","Choose a test, then a row. A blocked row opens the missing instrument or observation, the 05:00 evidence requirement, the affected dates and the action that would unblock it. A valid abstention is a separate status: the book had the evidence and chose not to call.",v);
+  const chips=el("div",null,v,"chips");
+  const detail=el("div",null,v);
+  const tableHost=el("div",null,v,"scroll");
+  const testId=state.test&&s.tests.rows[state.test]?state.test:s.tests.definitions[0].id;
+  state.test=testId;
+  for(const test of s.tests.definitions){
+    const b=el("button",test.ordinal+". "+test.label,chips);b.setAttribute("aria-pressed",test.id===testId?"true":"false");
+    b.onclick=()=>{state.test=test.id;state.filter="all";state.rowKey=null;render()};
+  }
+  const def=s.tests.definitions.find(t=>t.id===testId);
+  el("h3",def.label,v);
+  el("p",def.question,v);
+  const meta=el("p",null,v,"caption");
+  meta.textContent="Status: "+def.status+" · usable "+(def.usable_sessions??0)+" of "+s.summary.sessions+" · rows "+def.counts.rows;
+  const filters=el("div",null,v,"chips");
+  const allRows=s.tests.rows[testId];
+  const statuses=[...new Set(allRows.map(r=>r.status))];
+  for(const value of ["all",...statuses]){
+    const b=el("button",null,filters);b.textContent=value==="all"?`all ${allRows.length}`:`${value} ${allRows.filter(r=>r.status===value).length}`;
+    b.setAttribute("aria-pressed",state.filter===value?"true":"false");
+    b.onclick=()=>{state.filter=value;state.rowKey=null;render()};
+  }
+  const rows=allRows.filter(r=>state.filter==="all"||r.status===state.filter);
+  const body=table(tableHost,["Morning","Candidate","Control","Direction / band","Decision record",""],[]).querySelector("tbody");
+  for(const row of rows){
+    const tr=el("tr",null,body);tr.tabIndex=0;tr.setAttribute("aria-selected",state.rowKey===key(row.date,testId)?"true":"false");
+    const pick=()=>{state.rowKey=key(row.date,testId);render()};
+    tr.onclick=pick;tr.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick()}};
+    el("td",row.date,tr);
+    const c1=el("td",null,tr);pill(row.candidate.status,c1);
+    const c2=el("td",null,tr);pill(row.control.status,c2);
+    el("td",(row.candidate.direction||"—")+" / "+(row.candidate.band===null?"—":row.candidate.band),tr);
+    el("td",row.candidate.decision_id||"—",tr,"mono");
+    el("td",row.candidate.gaps&&row.candidate.gaps.length?"open":"",tr);
+  }
+  const selected=allRows.find(r=>key(r.date,testId)===state.rowKey);
+  if(selected)renderRowDetail(detail,selected,def,s);
+  else el("p","Select a morning to inspect it.",detail,"caption");
+}
+function renderRowDetail(host,row,def,s){
+  host.replaceChildren();
+  const head=el("h3","Morning "+row.date,host);
+  pill(row.candidate.status,head);
+  el("p",def.label+" · "+def.outcome_source,host,"caption");
+  for(const role of ["candidate","control"]){
+    const cell=row[role];
+    const panel=el("div",null,host,"card");
+    el("h3",role,panel);
+    const bits=el("p",null,panel);
+    bits.textContent="outcome "+(cell.outcome||"—")+" · direction "+(cell.direction||"—")+" · band "+(cell.band===null?"—":cell.band)+" · trade "+(cell.trade_eligible?"yes":"no");
+    el("small","decision record: "+(cell.decision_id||"none"),panel);
+    if(Array.isArray(cell.checks))el("small","checks: "+cell.checks.map(c=>c.id+"="+(c.passed===null?"n/a":c.passed)).join(" "),panel);
+    else if(cell.checks)el("small","checks: "+Object.entries(cell.checks).map(([k,v])=>k+"="+(v===null?"n/a":v)).join(" "),panel);
+    if(cell.reasons&&cell.reasons.length){const ul=el("ul",null,panel);for(const line of cell.reasons)el("li",line,ul)}
+    const gaps=cell.gaps||[];
+    if(!gaps.length&&cell.status==="blocked"){
+      el("p","Unblock: the named gate must be defined and open at the cutoff, and the snapshot must carry every required input. No proxy or later print can fill the gap.",panel);
+    }
+    for(const field of gaps){
+      const gap=s.tests.gaps[field];if(!gap)continue;
+      const box=el("div",null,panel);
+      el("h4",gap.field,box);
+      el("small","missing: "+(gap.sources.join("; ")||"—"),box);
+      el("small","05:00 requirement: "+gap.evidence_requirement,box);
+      el("small","affected: "+gap.affected.count+" mornings · "+gap.affected.first+" → "+gap.affected.last,box);
+      el("small","unblock: "+gap.action,box);
+      if(gap.candidate)el("small","candidate fix: "+gap.candidate,box);
+      const d=el("details",null,box);el("summary","Affected dates ("+gap.affected.count+")",d);
+      const list=el("p",null,d,"mono");list.textContent=gap.affected.dates.slice(0,80).join(", ")+(gap.affected.dates.length>80?" …":"");
+      if(gap.coverage_missing)el("p","Coverage table: "+gap.coverage_missing.map(e=>e.role+" "+e.count).join(" · ")+". "+gap.coverage_note,d,"caption");
+    }
+  }
+}
+function renderLedger(v,s){
+  const l=s.ledger;
+  el("h2","One decision record per model per morning",v);
+  el("p",l.rule,v);
+  const grid=el("div",null,v,"grid");
+  card(grid,"Records",String(l.entries),"model × morning, immutable");
+  card(grid,"First saves",String(l.saves),"one per record");
+  card(grid,"Test references",String(l.duplicates),"reads, never a second write");
+  card(grid,"Conflicts",String(l.conflicts),"a disagreeing save is rejected");
+  if(l.sample){
+    el("h3","A stored record",v);
+    table(v,["Field","Value"],Object.entries(l.sample).map(([k,val])=>[k,typeof val==="object"?JSON.stringify(val):String(val)]));
+  }
+  el("h3","Every test references the stored record",v);
+  const rows=[];
+  for(const [testId,roles] of Object.entries(l.references)){
+    for(const [role,ref] of Object.entries(roles)){
+      const sample=ref.sample&&ref.sample[0]?ref.sample[0].decision_id:"—";
+      rows.push([testId,role,ref.total,ref.missing,sample]);
+    }
+  }
+  table(v,["Test","Model","References","Missing","Sample decision id"],rows);
+  el("p","A missing reference is a failure, not a gap: the payload prints the count so a dangling test cannot pass silently.",v,"caption");
+}
+function renderAudit(v,s){
+  const a=s.audit;
+  el("h2","The independent run audit",v);
+  el("p",a.note,v);
+  const grid=el("div",null,v,"grid");
+  const missing=card(grid,"Missing required input",a.missing_input&&a.missing_input.caught?"caught":"not caught",a.missing_input?("morning "+a.missing_input.date+" · "+a.missing_input.source):"no published trade flag was available",a.missing_input&&a.missing_input.caught?"bad":"");
+  if(a.missing_input){
+    el("p",a.missing_input.explain,missing);
+    table(missing,["Code","Severity","Message","Fields"],a.missing_input.findings.map(f=>[f.code,f.severity,f.message,(f.fields||[]).join(", ")]));
+    el("small","record: "+a.missing_input.decision_id,missing);
+  }
+  const wrong=card(grid,"Wrong model version",a.wrong_version&&a.wrong_version.caught?"caught":"not caught",a.wrong_version?("morning "+a.wrong_version.date):"no stored record was available",a.wrong_version&&a.wrong_version.caught?"bad":"");
+  if(a.wrong_version){
+    el("p",a.wrong_version.explain,wrong);
+    el("small","registered: "+a.wrong_version.expected,wrong);
+    el("small","record: "+a.wrong_version.found,wrong);
+    el("small","ledger outcome: "+(a.wrong_version.ledger_rejected?"rejected the altered save":"accepted"),wrong);
+    table(wrong,["Code","Severity","Message"],a.wrong_version.findings.map(f=>[f.code,f.severity,f.message]));
+  }
+  const clean=card(grid,"A record that passes",a.clean&&a.clean.clean?"clean":"findings",a.clean?("morning "+a.clean.date):"",a.clean&&a.clean.clean?"ok":"");
+  if(a.clean){
+    el("p",a.clean.clean?"This blocked morning produces no finding: the audit does not fail everything it touches.":"This record still carries findings.",clean);
+    if(a.clean.findings.length)table(clean,["Code","Severity","Message"],a.clean.findings.map(f=>[f.code,f.severity,f.message]));
+  }
+  el("p","Required input set used by the audit ("+a.required_fields.length+" fields, declared by the executable rulebook rows): "+a.required_fields.join(", ")+".",v,"caption hash");
+}
+function renderDecisions(v,s){
+  el("h2","Owner decisions",v);
+  el("p","The five reserved questions are answered. The answer changes wording and labelling; it never changes a stored figure. The report and this screen render the same resolutions.",v);
+  for(const d of s.decisions){
+    const cardEl=el("div",null,v,"card");
+    const head=el("h3",d.id+" · "+d.status,cardEl);
+    el("p",d.question,cardEl);
+    el("p",d.decision,cardEl);
+    if(d.effect&&d.effect.length){const ul=el("ul",null,cardEl);for(const line of d.effect)el("li",line,ul)}
+    el("small","Does not license: "+d.does_not_license,cardEl);
+  }
+  const bands=s.flat_bands;
+  el("h2","Flat bands and tie treatment (OD-4)",v);
+  el("p",bands.note,v);
+  const rows=bands.instruments.map(b=>[b.instrument,b.band_pct+"%",String(b.sample),b.rule||"—",b.treated_as_flat,b.proxy_note||b.source]);
+  table(v,["Instrument","Band","Development sample","Rule","Flat when","Source"],rows);
+  el("p","Development "+bands.development.first+" → "+bands.development.last+" ("+bands.development.sessions+" mornings). Holdout "+bands.holdout.first+" → "+bands.holdout.last+" ("+bands.holdout.sessions+" mornings), examined for band selection: "+(bands.holdout.examined_for_band_selection?"yes":"no")+".",v,"caption");
+  const tie=el("details",null,v);el("summary","Tie treatment",tie);
+  for(const [k,val] of Object.entries(bands.tie_treatment))el("p",k+": "+val,tie,"caption");
+  el("p","Frozen digest: ",v,"caption").append(Object.assign(document.createElement("code"),{textContent:bands.digest,className:"hash"}));
+
+  el("h2","Adjudication-to-rule review",v);
+  const m=s.mapping_review;
+  el("p",m.verdict,v);
+  const summary=el("div",null,v,"grid");
+  card(summary,"Adjudications",String(m.summary.adjudications),"25 rows in the frozen book");
+  card(summary,"Executable votes",String(m.summary.mapped_and_executable),"enforced by the implemented book");
+  card(summary,"Declared, not implemented",String(m.summary.missing_implementation),"no executable rule");
+  card(summary,"Visible hypotheses",String(m.hypotheses.length),"choices the adjudications did not settle");
+  const md=el("details",null,v);el("summary","All 25 adjudications",md);
+  table(md,["Factor","Treatment","Family","Signal","Enforced","Status"],m.rows.map(r=>[r.factor_id,r.treatment,r.family||"—",r.signal_id||"—",r.enforced_by_implemented_book?"yes":"no",r.status]));
+  const hd=el("details",null,v);el("summary","Every introduced hypothesis",hd);
+  table(hd,["Id","Hypothesis","Evidence","Status"],m.hypotheses.map(h=>[h.id,h.text,h.evidence,h.status]));
+}
+
+function render(){
+  const host=document.querySelector("#view");host.replaceChildren();
+  if(disposeMap){disposeMap();mapApi=null}
+  const s=state.screen;
+  if(!s){el("p",state.error?"The screen payload could not be loaded: "+state.error:"Loading the screen payload…",host);return}
+  const keyName=Object.hasOwn(tabs,location.hash.slice(1))?location.hash.slice(1):"overview";
+  for(const a of document.querySelectorAll("#tabs a")){
+    if(a.hash==="#"+keyName)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
+  }
+  if(keyName==="overview")renderOverview(host,s);
+  else if(keyName==="architecture")renderArchitecture(host,s);
+  else if(keyName==="tests")renderTests(host,s);
+  else if(keyName==="ledger")renderLedger(host,s);
+  else if(keyName==="audit")renderAudit(host,s);
+  else if(keyName==="decisions")renderDecisions(host,s);
+}
+function renderProvenance(s){
+  const host=document.querySelector("#provenance-body");host.replaceChildren();
+  el("p","Payload digest: "+s.provenance.screen_sha256,host,"mono hash");
+  el("p","Report digest: "+(s.provenance.report_sha256||"—"),host,"mono hash");
+  const rows=s.provenance.inputs.map(i=>[i.path,String(i.bytes),i.sha256]);
+  table(host,["Input","Bytes","sha256"],rows);
+  el("p",s.provenance.note,host);
+}
+(function boot(){
+  const nav=document.querySelector("#tabs");
+  for(const [id,label] of Object.entries(tabs)){
+    const a=el("a",label,nav);a.href="#"+id;
+  }
+  addEventListener("hashchange",render);
+  fetch(payloadUrl).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(json=>{
+    state.screen=json;
+    document.querySelector("#subtitle").textContent=json.subtitle;
+    renderBlockers(json);renderSummary(json);renderProvenance(json);render();
+  }).catch(error=>{state.error=error.message;render()});
+})();
+
+
+
+
+
+
+
 </script></body></html>

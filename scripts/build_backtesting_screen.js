@@ -1,0 +1,141 @@
+#!/usr/bin/env node
+/**
+ * Build the Backtesting screen payload from the published artefacts.
+ *
+ * Usage:
+ *   node scripts/build_backtesting_screen.js           write data/usd-layer1-backtester/backtesting-screen-v1.json
+ *   node scripts/build_backtesting_screen.js --check   rebuild and compare with the committed payload
+ *   node scripts/build_backtesting_screen.js --print   print the summary only, write nothing
+ *
+ * The page renders this file and nothing else, so a figure on screen is a figure in the payload. Research only.
+ */
+"use strict";
+
+const fs = require("node:fs");
+const path = require("node:path");
+
+const { createModels } = require("../lib/layer1_backtesting/models");
+const { buildReport, runDecisions } = require("../lib/layer1_backtesting/report");
+const { buildReadiness } = require("../lib/layer1_backtesting/readiness");
+const { buildScreen } = require("../lib/layer1_backtesting/screen");
+const { proposedFlatBands } = require("../lib/layer1_backtesting/flat_bands");
+const { verifyRequestedPackage, reviewAdjudications } = require("../lib/layer1_backtesting/package_identity");
+const { sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
+
+const ROOT = path.resolve(__dirname, "..");
+const RUN_PATH = "data/usd-layer1-backtester/run-v1.json";
+const ENGINE_PATH = "data/usd-layer1-backtester/engine-v1.json";
+const OUT_PATH = "data/usd-layer1-backtester/backtesting-screen-v1.json";
+
+function readJson(relative) {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, relative), "utf8"));
+}
+
+function sourceEntry(relative) {
+  const buffer = fs.readFileSync(path.join(ROOT, relative));
+  return { path: relative, bytes: buffer.length, sha256: sha256(buffer.toString("utf8")) };
+}
+
+function build() {
+  const run = readJson(RUN_PATH);
+  const engine = readJson(ENGINE_PATH);
+  const book = readJson("config/usd_l1_factor_rulebook_v1.json");
+  const rules = readJson("config/usd_l1_decision_rules_v1.json");
+  const models = createModels({ run, engine });
+  const generatedAt = (run.run && run.run.generated_at) || run.generated_at || engine.source_generated_at || null;
+  const sources = [RUN_PATH, ENGINE_PATH, "config/usd_l1_factor_rulebook_v1.json", "config/usd_l1_decision_rules_v1.json", "data/research-library/catalog.json"]
+    .filter((relative) => fs.existsSync(path.join(ROOT, relative)))
+    .map(sourceEntry);
+
+  const report = buildReport({ run, engine, models, generated_at: generatedAt, sources });
+  const decisions = runDecisions({ run, engine, models });
+  const readiness = buildReadiness({ run, engine });
+  const flatBands = proposedFlatBands({ run, frozen_at: engine.book_detail && engine.book_detail.frozen_on });
+  const packageInfo = verifyRequestedPackage({ root: ROOT });
+  const mapping = reviewAdjudications({
+    book,
+    rules,
+    requirementTable: (run.validity_gate && run.validity_gate.requirement_table) || [],
+    coverage: run.coverage && run.coverage.by_model,
+  });
+
+  const body = buildScreen({
+    report,
+    run,
+    engine,
+    models,
+    decisions,
+    readiness,
+    tests: report.tests,
+    generatedAt,
+    flatBands,
+    packageInfo,
+    mapping,
+    root: ROOT,
+  });
+  const digest = sha256(stableStringify(body));
+  return {
+    ...body,
+    provenance: {
+      inputs: sources,
+      report_sha256: report.provenance ? report.provenance.report_sha256 : null,
+      screen_sha256: digest,
+      note: "The digest is taken over the body before this block. Rebuilding the screen from the same artefacts reproduces it.",
+    },
+  };
+}
+
+function summary(screen) {
+  const lines = [];
+  lines.push(`${screen.title} (${screen.schema_version})`);
+  lines.push(`${screen.summary.sessions} mornings · ${screen.summary.first_date} to ${screen.summary.last_date}`);
+  lines.push(
+    `strict ready: control ${screen.summary.readiness.strict_ready_control} · candidate ${screen.summary.readiness.strict_ready_candidate} · narrow control ${screen.summary.readiness.narrow_ready_control}`
+  );
+  lines.push(
+    `book: allowed ${screen.summary.readiness.book_allowed_candidate} · abstained ${screen.summary.readiness.book_abstained_candidate} · blocked ${screen.summary.readiness.book_blocked_candidate}`
+  );
+  lines.push(`package: ${screen.package_identity.requested} ${screen.package_identity.status}`);
+  lines.push(`mapping: ${screen.mapping_review.verdict}`);
+  lines.push(
+    `gap: ${screen.summary.biggest_gap ? `${screen.summary.biggest_gap.field} ${screen.summary.biggest_gap.mornings}/${screen.summary.biggest_gap.sessions}` : "none"}`
+  );
+  lines.push(`ledger: ${screen.ledger.saves} saves · ${screen.ledger.duplicates} references · ${screen.ledger.conflicts} conflicts`);
+  lines.push(`audit missing input: ${screen.audit.missing_input ? screen.audit.missing_input.caught : false}`);
+  lines.push(`audit wrong version: ${screen.audit.wrong_version ? screen.audit.wrong_version.caught : false}`);
+  return `${lines.join("\n")}\n`;
+}
+
+function main(argv) {
+  const check = argv.includes("--check");
+  const printOnly = argv.includes("--print");
+  const screen = build();
+  const text = `${JSON.stringify(screen, null, 2)}\n`;
+  const target = path.join(ROOT, OUT_PATH);
+
+  if (printOnly) {
+    process.stdout.write(summary(screen));
+    return 0;
+  }
+  if (check) {
+    if (!fs.existsSync(target)) {
+      process.stderr.write(`missing ${OUT_PATH}; run node scripts/build_backtesting_screen.js\n`);
+      return 1;
+    }
+    if (fs.readFileSync(target, "utf8") !== text) {
+      process.stderr.write(`${OUT_PATH} differs from a fresh build; rerun the builder\n`);
+      return 1;
+    }
+    process.stdout.write(`screen reproduces: ${screen.provenance.screen_sha256}\n`);
+    return 0;
+  }
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, text, "utf8");
+  process.stdout.write(summary(screen));
+  process.stdout.write(`wrote ${OUT_PATH} (${screen.provenance.screen_sha256})\n`);
+  return 0;
+}
+
+if (require.main === module) process.exit(main(process.argv.slice(2)));
+
+module.exports = { build, summary, OUT_PATH };
