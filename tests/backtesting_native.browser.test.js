@@ -222,12 +222,12 @@ test("a deep link opens the tab on the same test, market and morning, and the to
     assert.equal(await page.getAttribute("[data-bt-test='l2l_half_3r']", "aria-pressed"), "true");
     assert.equal(await page.getAttribute("[data-bt-market='NAS100']", "aria-pressed"), "true");
     assert.match(page.url(), /#backtesting\/l2l_half_3r\/NAS100\/2026-10-12/);
-    assert.equal(await page.getAttribute(".topbar-link[href='index.html#backtesting']", "href"), "index.html#backtesting");
+    assert.equal((await page.locator('[data-tab="usd-layer1-backtester"]').textContent()).trim(), "Backtesting", "the side navigation keeps the live Backtesting tab");
 
     // The standalone rules page keeps working and leads a reader into the native tab.
     const rules = await context.newPage();
     await rules.goto(`${base}/usd-l1-decision-rules-v1.html`, { waitUntil: "networkidle" });
-    const back = rules.locator('a[href="index.html#backtesting"]');
+    const back = rules.locator('main a[href="index.html#backtesting"]');
     assert.equal(await back.count(), 1, "the standalone page links into the Backtesting tab");
     await back.click();
     await rules.waitForSelector("[data-bt-map='true'] .bt-columns", { timeout: 25000 });

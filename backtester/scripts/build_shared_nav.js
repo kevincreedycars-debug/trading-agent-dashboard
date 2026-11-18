@@ -1,7 +1,7 @@
 'use strict';
 
 // Renders the shared navigation block from backtester/partials/shared_nav.html into the published pages,
-// so the thirteen copies cannot drift apart again.
+// so the fourteen copies cannot drift apart again.
 //
 //   node backtester/scripts/build_shared_nav.js --check            verify every page carries the render
 //   node backtester/scripts/build_shared_nav.js --write            place or refresh the block
@@ -16,8 +16,11 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const PARTIAL = path.join(ROOT, 'backtester', 'partials', 'shared_nav.html');
+const CLOCK = path.join(ROOT, 'backtester', 'partials', 'nav_clock.js');
 const START = '<!-- SHARED-NAV:START -->';
 const END = '<!-- SHARED-NAV:END -->';
+const CLOCK_START = '<!-- SHARED-CLOCK:START -->';
+const CLOCK_END = '<!-- SHARED-CLOCK:END -->';
 const PART = /^<!-- SHARED-NAV:PART ([a-z-]+) -->$/;
 
 // The order the parts are written into a page. The CSS comes last inside the block: it is parsed before the
@@ -27,9 +30,9 @@ const ORDER = {
   standalone: ['bar-standalone', 'rail-standalone', 'css'],
 };
 
-// The thirteen published pages. "place" says what a first placement does: index.html already carries a bar and a
+// The fourteen published pages. "place" says what a first placement does: index.html already carries a bar and a
 // rail, so its anchor is the whole span they occupy, from the line break before the bar to the line break
-// after the rail, and the block replaces it rather than joining it. The other twelve carry neither, so the
+// after the rail, and the block replaces it rather than joining it. The other thirteen carry neither, so the
 // block goes in under the body tag and nothing already on the page moves. Once a page carries the markers
 // the anchor is never consulted again.
 const PAGES = [
@@ -58,6 +61,12 @@ const PAGES = [
   // docs/analysis-engine/USD_LAYER1_LOGIC.md - and that builder keeps this block byte for byte, so regenerating
   // the dossier cannot quietly take the page back off the navigation.
   { file: 'usd-layer1-logic.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
+  // Added 2026-11-17, the fourteenth page: the standalone USD Layer 1 backtester, reached from the dashboard's
+  // Backtesting tab and from backtesting.html. It was published on 2026-11-10 with a hand-written copy of the old
+  // bar and rail, so it kept eight page links in its bar after every other page had folded them into Old
+  // documentation. It already carries the markers, and this registration refreshes that copy from the partial
+  // like the other thirteen, so it cannot drift again.
+  { file: 'usd-layer1-backtester.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
 ];
 
 function readParts() {
@@ -92,6 +101,15 @@ function renderBlock(variant, eol = '\n') {
   return eol === '\n' ? block : block.split('\n').join(eol);
 }
 
+// The clock is written outside the SHARED-NAV block: the block may not carry a script, and the clock is the
+// one behaviour every standalone page needs. It is inlined rather than fetched so gold-factor-wip.html still
+// makes no request outside itself. The dashboard gets no copy because script.js already drives its nodes.
+function renderClock(eol = '\n') {
+  const script = fs.readFileSync(CLOCK, 'utf8').replace(/\r\n/g, '\n').trim();
+  const block = `${CLOCK_START}\n<script>\n${script}\n</script>\n${CLOCK_END}\n`;
+  return eol === '\n' ? block : block.split('\n').join(eol);
+}
+
 function normalize(text) {
   return text.replace(/\r\n/g, '\n');
 }
@@ -107,41 +125,79 @@ function findRegion(source) {
   return { text: source.slice(from, to), start: from, end: to };
 }
 
-function applyPage(source, page) {
+function findClockRegion(source) {
+  if (source.split(CLOCK_START).length - 1 !== 1 || source.split(CLOCK_END).length - 1 !== 1) return null;
+  const start = source.indexOf(CLOCK_START);
+  const end = source.indexOf(CLOCK_END) + CLOCK_END.length;
+  const to = source.startsWith('\r\n', end) ? end + 2 : source[end] === '\n' ? end + 1 : end;
+  return { text: source.slice(start, to), start, end: to };
+}
+
+function applyClock(source, carry) {
   const eol = source.includes('\r\n') ? '\r\n' : '\n';
-  const block = renderBlock(page.variant, eol);
-  const region = findRegion(source);
+  const block = renderClock(eol);
+  const region = findClockRegion(source);
+  if (!carry) {
+    if (!region) return { next: source, action: 'current' };
+    return { next: source.slice(0, region.start) + source.slice(region.end), action: 'refreshed' };
+  }
   if (region) {
     return normalize(region.text) === normalize(block)
       ? { next: source, action: 'current' }
       : { next: source.slice(0, region.start) + block + source.slice(region.end), action: 'refreshed' };
   }
-  const found = source.match(page.place.pattern);
-  const hits = source.match(new RegExp(page.place.pattern.source, 'g'));
-  if (!found || !hits || hits.length !== 1) {
-    throw new Error(`${page.file}: no SHARED-NAV markers and the placement anchor matched ${hits ? hits.length : 0} times, expected 1`);
-  }
-  if (page.place.mode === 'replace') {
-    const at = source.indexOf(found[0]);
-    return { next: source.slice(0, at) + block + source.slice(at + found[0].length), action: 'placed' };
-  }
-  // The block starts on the line after the body tag and ends before whatever the page opens with, whether
-  // that tag is alone on its line or shares it with the page's first block.
-  const at = source.indexOf(found[0]) + found[0].length;
-  return { next: source.slice(0, at) + block + source.slice(at), action: 'placed' };
+  const navRegion = findRegion(source);
+  if (!navRegion) throw new Error('the shared clock needs a SHARED-NAV block to sit below');
+  return { next: source.slice(0, navRegion.end) + block + source.slice(navRegion.end), action: 'placed' };
 }
 
-// The two variants must stay one navigation, not two: same bar but for the live spans, same rail but for
-// the way an entry is driven. These checks fail loudly here rather than quietly in thirteen pages.
+function applyPage(source, page) {
+  const eol = source.includes('\r\n') ? '\r\n' : '\n';
+  const block = renderBlock(page.variant, eol);
+  const region = findRegion(source);
+  let nav;
+  if (region) {
+    nav = normalize(region.text) === normalize(block)
+      ? { next: source, action: 'current' }
+      : { next: source.slice(0, region.start) + block + source.slice(region.end), action: 'refreshed' };
+  } else {
+    const found = source.match(page.place.pattern);
+    const hits = source.match(new RegExp(page.place.pattern.source, 'g'));
+    if (!found || !hits || hits.length !== 1) {
+      throw new Error(`${page.file}: no SHARED-NAV markers and the placement anchor matched ${hits ? hits.length : 0} times, expected 1`);
+    }
+    if (page.place.mode === 'replace') {
+      const at = source.indexOf(found[0]);
+      nav = { next: source.slice(0, at) + block + source.slice(at + found[0].length), action: 'placed' };
+    } else {
+      // The block starts on the line after the body tag and ends before whatever the page opens with, whether
+      // that tag is alone on its line or shares it with the page's first block.
+      const at = source.indexOf(found[0]) + found[0].length;
+      nav = { next: source.slice(0, at) + block + source.slice(at), action: 'placed' };
+    }
+  }
+  const clock = applyClock(nav.next, page.variant === 'standalone');
+  return {
+    next: clock.next,
+    action: nav.action === 'current' ? clock.action : nav.action,
+  };
+}
+
+// The two variants must stay one navigation, not two: the same bar on every page and the same rail but for
+// the way an entry is driven. These checks fail loudly here rather than quietly in fourteen pages.
 function selfChecks() {
   const parts = readParts();
   const liveSpans = /\n? {0,6}<span id="currentDate">[\s\S]*?UK --:-- \| ET --:--<\/span>/;
-  if (!liveSpans.test(parts['bar-dashboard'])) {
-    throw new Error('bar-dashboard must carry the two live spans (currentDate and topbarClock)');
+  ['bar-dashboard', 'bar-standalone'].forEach(name => {
+    if (!liveSpans.test(parts[name])) {
+      throw new Error(`${name} must carry the two live spans (currentDate and topbarClock)`);
+    }
+  });
+  if (parts['bar-dashboard'] !== parts['bar-standalone']) {
+    throw new Error('the two bars must be identical now that both carry the date and clocks');
   }
-  const dashboardBar = parts['bar-dashboard'].replace(liveSpans, '');
-  if (dashboardBar !== parts['bar-standalone']) {
-    throw new Error('bar-dashboard must differ from bar-standalone only by the two live spans');
+  if (!renderClock().includes('<script>')) {
+    throw new Error('the standalone clock must be an inline script');
   }
   // The outbound entries are not tabs: they leave the dashboard set for a page of their own, so both variants
   // write them as links and they are held out of the entry comparison below.
@@ -149,15 +205,21 @@ function selfChecks() {
   const standaloneLinks = withoutOutbound(parts['rail-standalone']);
   const dashboardEntries = entriesOf(dashboardTabs, 'data-tab="([^"]+)"');
   const standaloneEntries = entriesOf(standaloneLinks, 'href="([^"]+)"');
+  // Two tab ids name a different address: Gold's rail entry is the gold tabs page, and the Backtesting tab's
+  // public hash is #backtesting (the deep-link form the native view has always read) rather than its state id.
   const expected = dashboardEntries.map(({ label, target }) => ({
     label,
-    target: target === 'GOLD' ? 'gold.html#direction' : `index.html#${target}`,
+    target: target === 'GOLD'
+      ? 'gold.html#direction'
+      : target === 'usd-layer1-backtester'
+        ? 'index.html#backtesting'
+        : `index.html#${target}`,
   }));
   if (JSON.stringify(standaloneEntries) !== JSON.stringify(expected)) {
     throw new Error('the two rail variants must offer the same entries in the same order');
   }
-  if (dashboardEntries.length !== 19) {
-    throw new Error(`the rail must offer the 19 dashboard tabs, found ${dashboardEntries.length}`);
+  if (dashboardEntries.length !== 20) {
+    throw new Error(`the rail must offer the 20 dashboard tabs, found ${dashboardEntries.length}`);
   }
   const dashboardOutbound = outboundOf(parts['rail-dashboard']);
   const standaloneOutbound = outboundOf(parts['rail-standalone']);
@@ -226,4 +288,7 @@ function main(argv) {
 
 if (require.main === module) main(process.argv.slice(2).filter(argument => argument !== '--'));
 
-module.exports = { ROOT, PARTIAL, START, END, PAGES, ORDER, readParts, renderBlock, findRegion, applyPage };
+module.exports = {
+  ROOT, PARTIAL, CLOCK, START, END, CLOCK_START, CLOCK_END, PAGES, ORDER,
+  readParts, renderBlock, renderClock, findRegion, findClockRegion, applyClock, applyPage,
+};
