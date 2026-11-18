@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const { SCHEMA_VERSION } = require("../lib/layer1_backtesting/report");
 const { renderMarkdown } = require("../lib/layer1_backtesting/markdown");
-const { sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
+const { hashTextFile, sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
 const { build, DOC_PATH, RUN_PATH, ENGINE_PATH } = require("../scripts/build_layer1_backtest_report");
 
 /**
@@ -149,8 +149,16 @@ test("the provenance digest is reproducible and the inputs are the files it name
   for (const required of [RUN_PATH, ENGINE_PATH]) assert.ok(paths.includes(required), `${required} must be stamped`);
   for (const input of provenance.inputs) {
     const buffer = fs.readFileSync(path.join(ROOT, input.path));
-    assert.equal(input.bytes, buffer.length, `${input.path} byte count`);
-    assert.equal(input.sha256, sha256(buffer.toString("utf8")), `${input.path} digest`);
+    const digest = hashTextFile(buffer);
+    assert.equal(input.bytes, digest.bytes, `${input.path} byte count`);
+    assert.equal(input.sha256, digest.sha256, `${input.path} digest`);
   }
+});
+
+test("source digests do not depend on the checkout's line endings", () => {
+  const lf = Buffer.from("one\ntwo\n", "utf8");
+  const crlf = Buffer.from("one\r\ntwo\r\n", "utf8");
+  assert.deepEqual(hashTextFile(lf), hashTextFile(crlf));
+  assert.equal(hashTextFile(lf).bytes, 8);
 });
 

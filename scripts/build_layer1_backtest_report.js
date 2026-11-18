@@ -19,7 +19,7 @@ const path = require("node:path");
 const { createModels } = require("../lib/layer1_backtesting/models");
 const { buildReport } = require("../lib/layer1_backtesting/report");
 const { renderMarkdown } = require("../lib/layer1_backtesting/markdown");
-const { sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
+const { hashTextFile, sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
 const { assertResearchPath } = require("../backtester/scripts/lib/research_path_guard");
 
 const ROOT = path.resolve(__dirname, "..");
@@ -36,7 +36,7 @@ function readJson(relative) {
 
 function sourceEntry(relative) {
   const buffer = fs.readFileSync(path.join(ROOT, relative));
-  return { path: relative, bytes: buffer.length, sha256: sha256(buffer.toString("utf8")) };
+  return { path: relative, ...hashTextFile(buffer) };
 }
 
 function build() {

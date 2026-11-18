@@ -10,7 +10,7 @@ path.
 | `BACKTEST_HANDOFF_FOR_COORDINATOR.md` | The handoff for the central Backtesting area: reusable assets, gaps and the blank half-level view. |
 | `backtest-index-v1.json` | The machine-readable index behind that handoff. |
 | `V0_1_1_PROPOSALS_20261118.md` | The strategy lane's six-entry v0.1.1 proposal set (`P-01`…`P-06`). |
-| `STATUS_H1_20261118.md` | The strategy lane's status snapshot at `64a96163`. |
+| `STATUS_H1_20261118.md` | The strategy lane's status snapshot at `64a96163`; its published-state section is a 10:58 UTC snapshot, superseded by the post-publication addendum at the top. |
 | `proposals/H1_ICE_TIMING_20261118.js` and `.test.js` | Executable ICE timing spec and 13 tests. |
 | `proposals/H1_V0_1_1_PROPOSALS_20261118.json` | Machine-readable mirror of the six proposals. |
 
@@ -27,7 +27,11 @@ The snapshot's statement that another worker was editing `h1_coverage.js` and ha
 `h1_evidence.js` describes the work that is now committed. The evidence-mode split it observed is
 the implemented historical-versus-sealed policy, not a half-finished edit.
 
-The snapshot remains useful for its audit trails and its measurement of the live/published
-difference. Its v0.1.1 section is superseded by
-`docs/research/usd-session/h1/v0.1.1/PROPOSAL.md`, which reconciles the earlier four edits, the
-review's three behaviour findings and the handoff's six proposals.
+The snapshot remains useful for its audit trails and its record of the intermediate live/published
+difference. The public page and payload were published later on 18 November and now return 200. The
+screen payload is also line-ending independent: `hashTextFile` canonicalises CRLF to LF before
+hashing source files, so a clean export reproduces the committed payload.
+
+Its v0.1.1 section is superseded by `docs/research/usd-session/h1/v0.1.1/PROPOSAL.md`, which
+reconciles the earlier four edits, the review's three behaviour findings and the handoff's six
+proposals.

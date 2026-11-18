@@ -32,7 +32,7 @@ const {
 const { buildH1Review } = require("../lib/layer1_backtesting/h1_review");
 const { h1ScoringContract } = require("../lib/layer1_backtesting/scoring_contract");
 const { buildMorningRun, REACH_SUMMARY_PATH } = require("../lib/layer1_backtesting/morning_run");
-const { sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
+const { hashTextFile, sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
 
 const ROOT = path.resolve(__dirname, "..");
 const RUN_PATH = "data/usd-layer1-backtester/run-v1.json";
@@ -45,7 +45,7 @@ function readJson(relative) {
 
 function sourceEntry(relative) {
   const buffer = fs.readFileSync(path.join(ROOT, relative));
-  return { path: relative, bytes: buffer.length, sha256: sha256(buffer.toString("utf8")) };
+  return { path: relative, ...hashTextFile(buffer) };
 }
 
 function build() {

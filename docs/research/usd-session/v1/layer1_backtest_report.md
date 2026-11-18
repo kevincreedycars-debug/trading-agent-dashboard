@@ -508,8 +508,8 @@ Does not license: It does not license treating reconstructed calls as valid call
 | --- | --- | --- |
 | `data/usd-layer1-backtester/run-v1.json` | 6584003 | `20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e` |
 | `data/usd-layer1-backtester/engine-v1.json` | 927740 | `f4290bae4ff91a41727f717f0f7138dffedbf8b3e2a3dc824dcdceeb7aeab6c8` |
-| `config/usd_l1_factor_rulebook_v1.json` | 38964 | `31d78a6898c1e30aba4158f04deb29bfe2f50502d784b8a511210cbdbfe7e8e7` |
-| `config/usd_l1_decision_rules_v1.json` | 10481 | `f0f7cb753cdb770e7bb715d71e5475655beaee4a7a9bff596b62b080de30769b` |
+| `config/usd_l1_factor_rulebook_v1.json` | 38281 | `1f12c64f019e38056330a8beb3ffb85314e2ff5a25c46af91c18bf078cf9f6a0` |
+| `config/usd_l1_decision_rules_v1.json` | 10240 | `015155d3092d8a6786ce5ce18c2150155bf13c01a37328cfb19336484b974cc8` |
 
 Report digest: `a458d02a409ed53480de7eb2921bf4bebcddadd1235e5bbe353af0023f157024`.
 
