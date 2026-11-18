@@ -73,6 +73,9 @@ test("the morning-run tab shows both models, every input and both preserved figu
     assert.match(text, /Current-model required inputs/);
     assert.match(text, /H1 required inputs/);
     assert.match(text, /0 of 725 — legacy input-clock audit, not H1/);
+    assert.match(text, /196 direction flags/);
+    assert.match(text, /62 trade flags/);
+    assert.match(text, /21 trade flags sit on blocked mornings/);
     assert.match(text, /97% — half-distance reach, not accuracy/);
     assert.match(text, /2418 of 2493/);
     assert.match(text, /1549 of 1592/);

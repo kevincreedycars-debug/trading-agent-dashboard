@@ -89,9 +89,33 @@ test("the full sample is reconciled before any performance is scored", () => {
       abstained: sample.candidate.abstained,
       directional: sample.candidate.directional,
       trades: sample.candidate.trade_eligible,
+      retained_directions: sample.candidate.directional_by_outcome,
     },
-    { blocked: 541, abstained: 143, directional: 41, trades: 41 }
+    {
+      blocked: 541,
+      abstained: 143,
+      directional: 41,
+      trades: 41,
+      retained_directions: { blocked: 0, abstained: 80, allowed: 41 },
+    }
   );
+  assert.deepEqual(
+    {
+      directions: sample.published_book.published_flags.directions,
+      directional_records: sample.published_book.published_flags.directional_records,
+      trade_flags: sample.published_book.published_flags.trade_flags,
+      trade_flags_by_outcome: sample.published_book.published_flags.trade_flags_by_outcome,
+      blocked_with_direction: sample.published_book.blocked_with_direction,
+    },
+    {
+      directions: { BULLISH: 87, BEARISH: 109, NO_CALL: 529 },
+      directional_records: 196,
+      trade_flags: 62,
+      trade_flags_by_outcome: { blocked: 21, abstained: 0, allowed: 41 },
+      blocked_with_direction: 75,
+    }
+  );
+  assert.match(sample.published_book.note, /never counted as a trade/);
   assert.deepEqual(
     {
       blocked: sample.h1.blocked,

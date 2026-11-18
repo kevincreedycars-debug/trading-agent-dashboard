@@ -740,6 +740,11 @@ function renderMorningRun(v,s){
   }
   table(v,["Model","Scheduled","Blocked","Valid abstentions","Directional","Trades","Performance"],sampleRows);
   el("p",m.sample_reconciliation.classification,v,"caption");
+  const publishedBook=m.sample_reconciliation.published_book;
+  if(publishedBook){
+    const flags=publishedBook.published_flags;
+    el("p","Legacy engine-v1 flags kept separately: "+flags.directional_records+" direction flags ("+flags.directions.BULLISH+" BULLISH, "+flags.directions.BEARISH+" BEARISH) and "+flags.trade_flags+" trade flags. "+publishedBook.blocked_with_direction+" directions and "+flags.trade_flags_by_outcome.blocked+" trade flags sit on blocked mornings; the shared engine withholds them, so they remain audit findings, not trades.",v,"caption");
+  }
 
   el("h3","The two figures that travel",v);
   const audit=el("div",null,v,"card");

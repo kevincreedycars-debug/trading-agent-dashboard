@@ -161,6 +161,14 @@ function renderMarkdown(report) {
   lines.push("");
   lines.push(report.sample_reconciliation.classification);
   lines.push("");
+  const published = report.sample_reconciliation.published_book;
+  if (published) {
+    const flags = published.published_flags;
+    lines.push(
+      `The legacy engine-v1 artefact's own flags are preserved separately: ${flags.directional_records} direction flags (${flags.directions.BULLISH} BULLISH, ${flags.directions.BEARISH} BEARISH) and ${flags.trade_flags} trade flags. The shared engine withholds direction and trade on blocked mornings, so ${published.blocked_with_direction} of those directions and ${flags.trade_flags_by_outcome.blocked} of those trade flags sit on blocked mornings and remain audit findings, not trades. The gated candidate row above therefore shows ${report.sample_reconciliation.candidate.directional} allowed directional calls and ${report.sample_reconciliation.candidate.trade_eligible} trades. Source: \`${published.source}\`.`
+    );
+    lines.push("");
+  }
   lines.push("## 6. Legacy input-clock audit and reach benchmark");
   lines.push("");
   lines.push(

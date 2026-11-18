@@ -76,6 +76,8 @@ Sum of signed weights: **-26**. Published conviction: **3**. The signed weights 
 
 blocked = evidence failed at a blocking check; abstained = every blocking check passed and the model declined; directional = allowed with BULLISH or BEARISH; no_call_allowed = allowed with NO_CALL. Performance is not scored until a directional denominator survives the gate.
 
+The legacy engine-v1 artefact's own flags are preserved separately: 196 direction flags (87 BULLISH, 109 BEARISH) and 62 trade flags. The shared engine withholds direction and trade on blocked mornings, so 75 of those directions and 21 of those trade flags sit on blocked mornings and remain audit findings, not trades. The gated candidate row above therefore shows 41 allowed directional calls and 41 trades. Source: `data/usd-layer1-backtester/engine-v1.json morning_states[]`.
+
 ## 6. Legacy input-clock audit and reach benchmark
 
 **0 of 725** — legacy run-v1 input-clock gate: present 618, fresh 617, clocked 0, identified 0 of 725. It belongs to `data/usd-layer1-backtester/run-v1.json validity_gate.ladder` and docs/research/usd-session/v1/layer1_backtest_report.md §5. Readiness; it is not H1 coverage.
@@ -127,7 +129,7 @@ blocked = evidence failed at a blocking check; abstained = every blocking check 
 
 ## 11. Provenance
 
-Report digest: `8be05a7204b01228650f9a474540c59754f9fb2fc8216420e702cd7f2d229cc9`
+Report digest: `1f10940c9a71835eef7da8ed49ff0f5b9e3634aa9b0e27b180b2cee8957142f4`
 
 | Input | Bytes | sha256 |
 | --- | ---: | --- |

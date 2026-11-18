@@ -66771,6 +66771,12 @@
           "BEARISH": 368,
           "NO_CALL": 116
         },
+        "directional_by_outcome": {
+          "blocked": 0,
+          "abstained": 0,
+          "allowed": 609
+        },
+        "directions_scope": "Directions retained on non-blocked engine records: allowed directional calls plus directional abstentions. A blocked record withholds its direction as NO_CALL, so these are not the raw engine-v1 flags.",
         "performance": {
           "status": "UNSCORED",
           "scored": 0,
@@ -66791,6 +66797,12 @@
           "BEARISH": 67,
           "NO_CALL": 604
         },
+        "directional_by_outcome": {
+          "blocked": 0,
+          "abstained": 80,
+          "allowed": 41
+        },
+        "directions_scope": "Directions retained on non-blocked engine records: allowed directional calls plus directional abstentions. A blocked record withholds its direction as NO_CALL, so these are not the raw engine-v1 flags.",
         "performance": {
           "status": "UNSCORED",
           "scored": 0,
@@ -66811,12 +66823,47 @@
           "BEARISH": 0,
           "NO_CALL": 725
         },
+        "directional_by_outcome": {
+          "blocked": 0,
+          "abstained": 0,
+          "allowed": 0
+        },
+        "directions_scope": "Directions retained on non-blocked engine records: allowed directional calls plus directional abstentions. A blocked record withholds its direction as NO_CALL, so these are not the raw engine-v1 flags.",
         "performance": {
           "status": "NO_DENOMINATOR",
           "scored": 0,
           "denominator": 0,
           "note": "No outcome is attached to these decision records. A blocked morning does not enter a denominator, and no directional call has been scored by this run."
         }
+      },
+      "published_book": {
+        "source": "data/usd-layer1-backtester/engine-v1.json morning_states[]",
+        "published_flags": {
+          "outcomes": {
+            "blocked": 541,
+            "abstained": 143,
+            "allowed": 41
+          },
+          "directions": {
+            "BULLISH": 87,
+            "BEARISH": 109,
+            "NO_CALL": 529
+          },
+          "directional_records": 196,
+          "trade_flags": 62,
+          "trade_flags_by_outcome": {
+            "blocked": 21,
+            "abstained": 0,
+            "allowed": 41
+          }
+        },
+        "blocked_with_direction": 75,
+        "directional_by_outcome": {
+          "blocked": 75,
+          "abstained": 80,
+          "allowed": 41
+        },
+        "note": "These are the engine-v1 artefact's published flags, not gated calls. The shared engine withholds direction and trade on blocked mornings. A published flag on a blocked or abstained morning is an audit finding; it is never counted as a trade."
       },
       "classification": "blocked = evidence failed at a blocking check; abstained = every blocking check passed and the model declined; directional = allowed with BULLISH or BEARISH; no_call_allowed = allowed with NO_CALL. Performance is not scored until a directional denominator survives the gate."
     },
@@ -67018,7 +67065,7 @@
           "sha256": "5d32f4ff4e9287121a75cd746549115f39e0b01afd4bdb078d03668f8c5e40fa"
         }
       ],
-      "artifact_sha256": "8be05a7204b01228650f9a474540c59754f9fb2fc8216420e702cd7f2d229cc9",
+      "artifact_sha256": "1f10940c9a71835eef7da8ed49ff0f5b9e3634aa9b0e27b180b2cee8957142f4",
       "note": "The digest is over the body before this block. The report builder reruns the same committed artefacts and must reproduce it."
     }
   },
@@ -469057,7 +469104,7 @@
       }
     ],
     "report_sha256": "94c205c52b749e4f0665461f5fe305a4074e63accf0d664526e98f8160be34d3",
-    "screen_sha256": "78ddf77cf42aad17b9a800fcda55fffca5a393d7315edc2e160cbc19b4439c09",
+    "screen_sha256": "b9ad651b4dc74e344bea61ecc213775bf755d7f71562c0dfa088606b4dc8179d",
     "note": "The digest is taken over the body before this block. Rebuilding the screen from the same artefacts reproduces it."
   }
 }
