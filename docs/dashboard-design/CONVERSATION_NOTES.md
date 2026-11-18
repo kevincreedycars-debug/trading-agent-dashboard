@@ -762,3 +762,23 @@ and made one decision: the live-trading lane owns the performance calculations f
 - No cTrader runtime status, configured source, copy log or dated copied-order count is committed. `Not evidenced`
   remains the correct state for configuration and observation; FTMO 1 is design intent only.
 
+
+## 2026-11-18 - release preparation and live-tip integration
+
+- Rebased the review build onto live tip `38f87d08`. The rewritten checkpoint is `a70676cf`; the rewritten final
+  review-fix commit is `08cedd55`. The live tip added the header/navigation tidy, so the stylesheet link resolved to
+  `styles.css?v=20261117-header-tidy` while the factory kept `system-map.css?v=20261117-factory-review-fixes`; both
+  sides of the header and navigation contract were preserved. The three untracked design documents were left untouched.
+- Focused checks: factory 15/15, map 2/2, library 7/7.
+- Full browser suite on the merged tree: 134 tests, 122 pass, 12 fail. A clean detached worktree at live tip
+  `1fdf59b6` produced 12 failures too (48 tests, 36 pass, 12 fail), with the same locations for 11 of them: both globe
+  checks, four shared-navigation/call-map checks, two USD dossier checks, both M5 chart gestures and the research library
+  file. The twelfth is in `refresh_progress.browser.test.js` in both runs but on a different test; that file is unchanged
+  from `1fdf59b6` and its isolated run on this tree is 26/26. No failure was introduced by this branch.
+- Local release verifier, direct `#architecture` and Overview -> Open architecture map, at 1440x1000 and 390x844:
+  50 stations, 39 dependency connections, 21 lower-floor labels on desktop and 8 on phone, nine USD n8n nodes, the four
+  T2 rows exactly matching `run-v1.json`, all three FTMO lane names readable and non-overlapping, relay wording
+  "FTMO 1 intent; configured and observed not evidenced", and four working phone camera controls clear of three fixed
+  trader lamps. Screenshots and JSON in `tmp/factory-release-20261118/`.
+- Publication remains subject to the push and public-page check in this release turn.
+
