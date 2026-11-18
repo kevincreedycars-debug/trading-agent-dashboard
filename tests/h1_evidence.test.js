@@ -3,7 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { CONTRACTS } = require("../lib/layer1_backtesting/h1_coverage");
+const { CONTRACTS, buildH1Coverage } = require("../lib/layer1_backtesting/h1_coverage");
 const {
   MODES,
   validateBundle,
@@ -135,6 +135,29 @@ test("the CSV importer keeps the operands and leaves the receipt nullable", () =
   const record = checked.records.get(SESSION.date);
   assert.equal(record.operands.length, 6);
   assert.equal(record.received_at_utc, null);
+});
+
+test("an imported record's value, not the legacy alias, is what the coverage row carries into a decision", () => {
+  const packageInputs = require("../backtester/packages/USD-L1-25F-H1-v0.1.0/inputs.json");
+  const checked = validateBundle(bundle(vixRecord({ value: 21.7 })), "vix", CONTRACTS.vix);
+  assert.equal(checked.valid, true, checked.errors.join("; "));
+  const coverage = buildH1Coverage({
+    run: {
+      sessions: [{ ...SESSION, inputs: { vix_level: 18.4 } }],
+      run: { run_version: "test" },
+      generated_at: "2024-01-02T05:00:00Z",
+    },
+    packageInputs,
+    calendar: { events: [] },
+    packageInfo: { requested: "USD-L1-25F-H1-v0.1.0" },
+    rows: { rows: [] },
+    evidence: {
+      vix: { present: true, valid: true, records: checked.records, errors: [], path: "test" },
+    },
+  });
+  assert.equal(coverage.mornings[0].values.vix, 21.7);
+  assert.equal(coverage.inputs.find((input) => input.key === "vix").eligible, 1);
+  assert.equal(coverage.ready, 0, "the other eight inputs are still blocked");
 });
 
 test("a mismatch between the declared instrument and the package contract is refused", () => {
