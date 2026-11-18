@@ -63,6 +63,7 @@ function build() {
     calendar: readJson("data/usd-layer1-backtester/event-calendar-v1.json"),
     packageInfo: h1PackageInfo,
     rows: h1Package.rows,
+    root: ROOT,
   });
   const h1Fixtures = runH1Fixtures({ root: ROOT, models: { h1: h1Model, fixtureControl: h1Control } });
   const h1Historical = decideH1Historical({

@@ -108,6 +108,11 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
   assert.equal(h1.coverage.scheduled, 725);
   assert.equal(h1.coverage.ready, 0);
   assert.equal(h1.coverage.blocked, 725);
+  assert.equal(h1.coverage.sealed_ready, 0);
+  assert.equal(h1.coverage.sealed_blocked, 725);
+  assert.equal(h1.coverage.evidence_policy.historical_reconstruction.receipt_required, false);
+  assert.equal(h1.coverage.evidence_policy.sealed_live_replay.receipt_required, true);
+  assert.equal(h1.coverage.evidence_mode, "historical_reconstruction");
   assert.equal(h1.coverage.earliest_eligible, null);
   assert.equal(h1.historical.eligible, h1.coverage.ready);
   assert.equal(h1.historical.blocked, h1.coverage.blocked);
@@ -131,12 +136,46 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
     assert.ok(gap.affected.sessions === 725 && gap.affected.first && gap.affected.last);
     assert.ok(gap.missing_evidence.length > 20, `${gap.input} must state the missing evidence`);
     assert.ok(gap.obtain.length > 20, `${gap.input} must state what to obtain`);
+    assert.ok(gap.reusable_evidence, `${gap.input} must state what legacy evidence is reusable`);
+    assert.ok(gap.remaining_requirement.length > 20, `${gap.input} must state what remains`);
+    assert.ok(gap.user_action.length > 20, `${gap.input} must state the exact user action`);
     assert.ok(gap.import.target_file.startsWith("data/usd-layer1-backtester/h1-v1/"));
     assert.ok(gap.import.record_fields.includes("received_at_utc"));
   }
   const ice = h1.coverage.gaps.find((gap) => gap.input === "ice");
   assert.equal(ice.factor_count, 1);
   assert.equal(ice.factors[0].id, "fx.usd-session-momentum");
+});
+
+test("gated blocked mornings contribute no direction, trade or scored outcome, while the legacy contradictions are preserved", () => {
+  const integrity = screen.integrity;
+  assert.equal(integrity.gated.model_id, "usd_candidate_25f_v1");
+  assert.equal(integrity.gated.blocked, 541);
+  assert.equal(integrity.gated.blocked_with_direction, 0);
+  assert.equal(integrity.gated.blocked_with_trade, 0);
+  assert.equal(integrity.gated.blocked_scored, 0);
+  assert.equal(integrity.legacy.blocked, 541);
+  assert.equal(integrity.legacy.blocked_with_direction, 75);
+  assert.equal(integrity.legacy.blocked_with_trade, 21);
+  assert.equal(integrity.legacy.preserved, true);
+  assert.ok(integrity.legacy.sample_dates.direction.length > 0);
+  assert.ok(integrity.legacy.sample_dates.trade.length > 0);
+  assert.equal(integrity.h1.scheduled, 725);
+  assert.equal(integrity.h1.directional, 0);
+  assert.equal(integrity.h1.trades, 0);
+  assert.equal(integrity.h1.scored, 0);
+  for (const test of screen.tests.definitions) {
+    for (const row of screen.tests.rows[test.id]) {
+      assert.equal(row.h1.model_version, "USD-L1-25F-H1-v0.1.0");
+      assert.equal(row.h1.status, "unscored");
+      assert.equal(row.h1.direction, "NO_CALL");
+      assert.equal(row.h1.trade_eligible, false);
+      assert.equal(row.h1.scored, false);
+    }
+  }
+  assert.match(screen.model_identity.statement, /CONFIG_BLOCKED applies to usd_candidate_25f_v1/);
+  assert.match(screen.model_identity.statement, /H1.*unscored/);
+  assert.match(screen.model_identity.statement, /broker DXY\.cash/);
 });
 
 test("H1 decisions are saved once and the audit catches a missing input, a wrong version and the wrong saved decision", () => {

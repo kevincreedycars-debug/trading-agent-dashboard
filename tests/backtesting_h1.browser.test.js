@@ -65,16 +65,22 @@ test("the H1 tab renders measured coverage and a clickable blocked morning witho
     await page.goto(`${base}/backtesting.html#h1`, { waitUntil: "networkidle", timeout: 60000 });
     await page.waitForSelector("text=Input contract and measured coverage", { timeout: 30000 });
 
-    assert.equal((await page.locator("#view h2").first().textContent()).trim(), "H1 candidate · nine-input coverage audit");
-    assert.match(await page.locator("#view .banner strong").first().textContent(), /H1 historical coverage measured: 0 of 725 ready/);
+    assert.equal((await page.locator("#view h2").first().textContent()).trim(), "USD-L1-25F-H1-v0.1.0 · nine-input coverage audit");
+    assert.match(await page.locator("#view .banner strong").first().textContent(), /H1 historical reconstruction measured: 0 of 725 ready; sealed live replay: 0 of 725 eligible/);
     assert.equal(await page.locator("#view table").first().locator("tbody tr").count(), 9);
 
     const select = page.locator("#view select").first();
     assert.equal(await select.locator("option").count(), payload.h1.coverage.scheduled);
     await select.selectOption("2024-01-02");
-    await page.waitForSelector("text=2024-01-02 · H1 blocked", { timeout: 10000 });
+    await page.waitForFunction(
+      () =>
+        [...document.querySelectorAll("#view .card h3")].some((element) =>
+          element.textContent.includes("2024-01-02 · historical blocked · sealed blocked")
+        ),
+      { timeout: 10000 }
+    );
 
-    const inspector = page.locator("#view .card").filter({ hasText: "2024-01-02 · H1 blocked" });
+    const inspector = page.locator("#view .card").filter({ hasText: "2024-01-02 · historical blocked · sealed blocked" });
     assert.equal(await inspector.locator("tbody tr").count(), 9, "every H1 input must show its blocker");
     assert.equal((await inspector.locator("tbody tr").first().textContent()).includes("missing_value"), true);
 
