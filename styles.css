@@ -7984,7 +7984,6 @@ body {
     padding: 9px 16px;
     box-sizing: border-box;
     max-width: 100%;
-    contain: paint;
     overflow-x: auto;
     overflow-y: hidden;
   }
@@ -10194,6 +10193,9 @@ body {
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   min-width: 0;
+  /* A display:block table keeps its intrinsic min-content width for ancestor scroll-width accounting even when it
+     scrolls internally; clip the page column so that accounting cannot add a phantom horizontal scrollbar. */
+  overflow-x: clip;
 }
 .usd-l1-page .section-header { align-items: start; }
 /* Every block here can shrink below its widest table, so a wide table scrolls inside its own frame instead of
@@ -10203,7 +10205,26 @@ body {
 .usd-l1-page .usd-l1-root,
 .usd-l1-page .usd-l1-root > section,
 .usd-l1-page .usd-l1-test-card,
+.usd-l1-page .usd-l1-session-block,
+.usd-l1-page .usd-l1-session-head,
+.usd-l1-page .usd-l1-session-list,
+.usd-l1-page .usd-l1-date-jump,
+.usd-l1-page .usd-l1-drilldown,
+.usd-l1-page .usd-l1-drill-head,
+.usd-l1-page .usd-l1-drill-grid,
 .usd-l1-page .usd-l1-evidence { min-width: 0; }
+.usd-l1-page .usd-l1-session-block,
+.usd-l1-page .usd-l1-drilldown,
+.usd-l1-page .usd-l1-test-body,
+.usd-l1-page .usd-l1-blocker-card,
+.usd-l1-page .usd-l1-results,
+.usd-l1-page .usd-l1-method,
+.usd-l1-page .usd-l1-worked,
+.usd-l1-page .usd-l1-evidence { grid-template-columns: minmax(0, 1fr); }
+.usd-l1-page .usd-l1-test-grid { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.usd-l1-page .usd-l1-test-grid > *,
+.usd-l1-page .usd-l1-blocker-card,
+.usd-l1-page .usd-l1-blocker-card > * { min-width: 0; }
 .usd-l1-page table.usd-l1-table { display: block; width: 100%; overflow-x: auto; }
 .usd-l1-page-stamp {
   display: flex;
@@ -10779,3 +10800,280 @@ body {
   .bt-failsafe-table td:nth-of-type(3) { grid-column: 1 / -1; }
 }
 
+
+
+/* Compact dashboard header, 2026-11-17. The bar lost its eight page links to the rail's Old documentation
+   disclosure, and the hero lost its Current focus panel, so what remains is the globe and the summary read
+   in one band. The globe is sized against the viewport rather than fixed at 290px: 15vh targets 15% of the
+   viewport height while the 20vh ceiling caps it at a fifth, and the minimum stops it collapsing on a laptop.
+   The hero keeps the three live figures - they are the reason the header exists - and drops the decorative
+   city pills at every width because the globe already carries the market centres. */
+html {
+  background: #04120d;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(40, 196, 154, 0.11), transparent 30%),
+    radial-gradient(circle at top right, rgba(212, 164, 68, 0.06), transparent 26%),
+    linear-gradient(180deg, #03100b 0, #04130e 260px, #050b08 100%);
+}
+
+.topbar {
+  min-height: 42px;
+  gap: 16px;
+  padding: 0 24px;
+}
+
+.dashboard-frame {
+  min-height: calc(100vh - 42px);
+}
+
+.topbar-brand {
+  font-size: 15px;
+}
+
+.topbar-meta {
+  gap: 6px;
+}
+
+.topbar-meta span {
+  padding: 3px 9px;
+  font-size: 10px;
+}
+
+.shell {
+  padding-top: 8px;
+}
+
+.hero {
+  display: block;
+  padding: 4px 0 14px;
+}
+
+.hero-primary {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+}
+
+.hero-primary::after {
+  background: linear-gradient(135deg, rgba(40, 196, 154, 0.07), transparent 38%, rgba(212, 164, 68, 0.04) 100%);
+}
+
+.globe-column {
+  width: clamp(80px, 15vh, 20vh);
+  height: clamp(80px, 15vh, 20vh);
+  min-height: 0;
+  border: 0;
+  border-radius: 12px;
+  background: radial-gradient(circle at center, rgba(40, 196, 154, 0.13), transparent 58%);
+}
+
+#marketGlobeCanvas {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 430px);
+  gap: 14px;
+  align-items: center;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.hero-copy {
+  min-width: 0;
+}
+
+.hero .eyebrow {
+  margin: 0 0 2px;
+  font-size: 9px;
+  letter-spacing: 0.09em;
+}
+
+.hero h1 {
+  font-size: clamp(24px, 2.8vw, 38px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.hero .subcopy {
+  margin: 3px 0 0;
+  color: rgba(237, 243, 251, 0.66);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.hero-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+.hero-stat {
+  padding: 5px 9px;
+}
+
+.hero-stat + .hero-stat {
+  border-top: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding-left: 9px;
+}
+
+.hero-stat span {
+  margin-bottom: 1px;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.hero-stat strong {
+  font-size: 14px;
+  line-height: 1.15;
+}
+
+.market-cities {
+  display: none;
+}
+
+@media (max-width: 780px) {
+  .shell {
+    padding-top: 6px;
+  }
+
+  .hero {
+    padding: 3px 0 10px;
+  }
+
+  .hero-primary {
+    gap: 10px;
+    padding: 6px 8px;
+  }
+
+  .globe-column {
+    width: clamp(64px, 15vh, 20vh);
+    height: clamp(64px, 15vh, 20vh);
+  }
+
+  .hero-content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .hero h1 {
+    font-size: clamp(22px, 5.4vw, 30px);
+  }
+
+  .hero .subcopy {
+    display: none;
+  }
+
+  .hero-stats {
+    margin-top: 3px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hero-stat {
+    padding: 4px 7px;
+  }
+
+  .hero-stat + .hero-stat {
+    padding-left: 7px;
+  }
+
+  .hero-stat span {
+    font-size: 7.5px;
+  }
+
+  .hero-stat strong {
+    font-size: 12px;
+  }
+}
+
+/* The three live-trading lanes are one rack: the same compact height, padding and radius, and the same width
+   as the longest lane name. The grid's shrink-to-fit column does the measuring, so a renamed lane widens all
+   three together instead of leaving a ragged edge. Each strip carries only the lane name and one state word;
+   the reason behind the word stays on the tooltip. */
+.trader-status-strips {
+  position: fixed;
+  right: 16px;
+  top: 52px;
+  z-index: 30;
+  display: grid;
+  grid-auto-rows: 30px;
+  justify-items: stretch;
+  gap: 5px;
+  max-width: calc(100vw - 32px);
+}
+
+.trader-status-strips .live-trader-status {
+  position: static;
+  width: 100%;
+  height: 30px;
+  max-width: none;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 0 11px;
+  border-radius: 9px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.34);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.trader-status-strips .live-trader-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trader-status-strips .live-trader-detail {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 1280px) {
+  .shell .hero-content {
+    padding-right: 250px;
+  }
+}
+
+@media (max-width: 1279px) {
+  .trader-status-strips {
+    top: auto;
+    right: 12px;
+    bottom: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .trader-status-strips {
+    right: 8px;
+    bottom: 8px;
+    grid-auto-rows: 26px;
+    gap: 4px;
+    max-width: calc(100vw - 16px);
+  }
+
+  .trader-status-strips .live-trader-status {
+    height: 26px;
+    gap: 4px;
+    padding: 0 8px;
+    font-size: 8.5px;
+  }
+}

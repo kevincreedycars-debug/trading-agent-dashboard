@@ -17145,7 +17145,7 @@ function liveTraderStatusState() {
     tone: "live",
     label: name,
     detail: `Active - ${laneId} ${result} - as of ${liveTradingTimestampLabel(heartbeat.writtenAt)}`,
-    title: `The ${laneId} loop ran${host} and reported ${result}, armed, ${heartbeat.ageAtPublishSeconds === null ? "inside the window" : `${liveTradingAgeSpan(heartbeat.ageAtPublishSeconds)} before the publisher read it, inside the ${Math.round(heartbeat.windowSeconds / 60)} minute window`}. This lamp turns amber when the record was outside that window at publish, or when the page's own copy${heartbeat.copyAgeSeconds === null ? "" : ` (${liveTradingAgeSpan(heartbeat.copyAgeSeconds)} old)`} passes ${Math.round(LIVE_TRADING_COPY_CEILING_SECONDS / 60)} minutes without a new one.`
+    title: `The ${laneId} loop ran${host} and reported ${result}, armed, as of ${liveTradingTimestampLabel(heartbeat.writtenAt)}${heartbeat.ageAtPublishSeconds === null ? "" : `, ${liveTradingAgeSpan(heartbeat.ageAtPublishSeconds)} before the publisher read it`}. This lamp turns amber when the record was outside the ${Math.round(heartbeat.windowSeconds / 60)} minute window at publish, or when the page's own copy${heartbeat.copyAgeSeconds === null ? "" : ` (${liveTradingAgeSpan(heartbeat.copyAgeSeconds)} old)`} passes ${Math.round(LIVE_TRADING_COPY_CEILING_SECONDS / 60)} minutes without a new one.`
   };
 }
 
@@ -17153,13 +17153,17 @@ function renderLiveTraderStatus() {
   const node = document.getElementById("liveTraderStatus");
   if (!node) return;
   const state = liveTraderStatusState();
+  // The corner answer is the model's name and one word. The longer sentence - the silence, the parked row, the
+  // unreadable document - is the strip's tooltip, kept there rather than wrapped across the corner. Splitting the
+  // detail on its first separator leaves the word each state already leads with: Active, Stale or Paused.
+  const word = String(state.detail || "").split(" - ")[0];
   node.className = `live-trader-status ${state.tone}`;
-  node.title = state.title;
+  node.title = `${state.detail}. ${state.title}`;
   node.innerHTML = [
     '<span class="live-trader-dot" aria-hidden="true"></span>',
     `<span class="live-trader-label">${escapeHtml(state.label)}</span>`,
     '<span class="live-trader-sep" aria-hidden="true"> · </span>',
-    `<span class="live-trader-detail">${escapeHtml(state.detail)}</span>`
+    `<span class="live-trader-detail">${escapeHtml(word)}</span>`
   ].join("");
   node.hidden = false;
 }

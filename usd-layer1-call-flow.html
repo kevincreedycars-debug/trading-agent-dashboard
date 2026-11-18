@@ -167,14 +167,14 @@ html[data-theme="paper"] .pill.bull,html[data-theme="paper"] .pill.conf{border-c
 <header class="topbar site-nav">
   <div class="topbar-brand">Asset Directional Movement Dashboard</div>
   <div class="topbar-meta">
-    <a class="topbar-link" href="dashboard-northstar.html" target="_top">North Star Brief</a>
-    <a class="topbar-link" href="standing-dashboard.html" target="_top">Standing Dashboard</a>
-    <a class="topbar-link" href="gold.html" target="_top">Gold</a>
-    <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
-    <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
-    <a class="topbar-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
-    <a class="topbar-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
-    <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
+    <span id="currentDate">Loading date...</span>
+    <span
+      id="topbarClock"
+      class="topbar-dual-clock"
+      role="status"
+      aria-live="polite"
+      title="UK time automatically switches between GMT and BST. ET automatically switches between EST and EDT."
+    >UK --:-- | ET --:--</span>
   </div>
 </header>
 <aside class="side-rail site-nav" aria-label="Primary navigation">
@@ -198,6 +198,7 @@ html[data-theme="paper"] .pill.bull,html[data-theme="paper"] .pill.conf{border-c
     <a class="tab-button" href="index.html#live-trading" target="_top">Live Trading</a>
     <span class="side-rail-group">Evidence</span>
     <a class="tab-button" href="index.html#research-library" target="_top">Research Library</a>
+    <a class="tab-button" href="index.html#backtesting" target="_top">Backtesting</a>
     <a class="tab-button" href="index.html#backtest" target="_top">Backtest / Accuracy</a>
     <a class="tab-button" href="index.html#backtest-engine" target="_top">Backtest Engine</a>
     <a class="tab-button" href="index.html#research-proof-map" target="_top">Research Proof Map</a>
@@ -206,9 +207,19 @@ html[data-theme="paper"] .pill.bull,html[data-theme="paper"] .pill.conf{border-c
     <span class="side-rail-group">System</span>
     <a class="tab-button" href="index.html#architecture" target="_top">Architecture</a>
     <a class="tab-button" href="index.html#live-trade-logic" target="_top">Live Trade Logic</a>
-    <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
-    <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
-    <a class="side-rail-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
+    <details class="side-rail-details">
+      <summary class="side-rail-link side-rail-details-summary">Old documentation</summary>
+      <div class="side-rail-details-body">
+        <a class="side-rail-link" href="dashboard-northstar.html" target="_top">North Star Brief</a>
+        <a class="side-rail-link" href="standing-dashboard.html" target="_top">Standing Dashboard</a>
+        <a class="side-rail-link" href="gold.html" target="_top">Gold</a>
+        <a class="side-rail-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
+        <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+        <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+        <a class="side-rail-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
+        <a class="side-rail-link" href="what-moves-gold.html" target="_top">What moves gold</a>
+      </div>
+    </details>
   </nav>
   <div class="side-rail-foot">
     <span class="side-rail-status-dot" aria-hidden="true"></span>
@@ -217,18 +228,17 @@ html[data-theme="paper"] .pill.bull,html[data-theme="paper"] .pill.conf{border-c
 </aside>
 <style id="shared-nav-css">
 /* Values copied from the published styles.css nav subset (.topbar*, .side-rail*, .tab-bar, .tab-button),
-   scoped to .site-nav so no page's own rules can leak in or be disturbed. The rail splits in two again
-   by structure: inside .dashboard-frame it is the grid column it already was (sticky, 58px under the bar);
-   as a direct child of <body> it is fixed to the left edge and the following blocks are shifted clear.
-   Under 901px the rail becomes the horizontal strip it already becomes on the dashboard, and the block
-   still adds nothing that needs a script. */
-.site-nav.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:22px;min-height:58px;padding:0 32px;background:rgba(5,8,13,.92);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(18px)}
-.site-nav.topbar .topbar-brand{color:#f5f8fc;font-family:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif;font-size:17px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
-.site-nav.topbar .topbar-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
-.site-nav.topbar .topbar-meta span{border:1px solid rgba(255,255,255,.08);border-radius:999px;color:#d8e4f3;background:rgba(7,11,17,.84);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;white-space:nowrap}
+   scoped to .site-nav so no page's own rules can leak in or be disturbed. The bar is the compact strip it
+   became when its page links moved into the rail's Old documentation section: brand, date and the two clocks
+   only. The rail splits in two again by structure: inside .dashboard-frame it is the grid column it already
+   was (sticky, 42px under the bar); as a direct child of <body> it is fixed to the left edge and the following
+   blocks are shifted clear. Under 901px the rail becomes the horizontal strip it already becomes on the
+   dashboard, and the block still adds nothing that needs a script. */
+.site-nav.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;padding:0 24px;background:rgba(5,8,13,.92);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(18px)}
+.site-nav.topbar .topbar-brand{color:#f5f8fc;font-family:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif;font-size:15px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.site-nav.topbar .topbar-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px}
+.site-nav.topbar .topbar-meta span{border:1px solid rgba(255,255,255,.08);border-radius:999px;color:#d8e4f3;background:rgba(7,11,17,.84);font-family:"IBM Plex Mono",Consolas,monospace;font-size:10px;padding:3px 9px;white-space:nowrap}
 .site-nav.topbar .topbar-dual-clock{font-variant-numeric:tabular-nums}
-.site-nav.topbar .topbar-link{display:inline-flex;align-items:center;border:1px solid rgba(94,161,255,.22);border-radius:999px;color:#d8e4f3;background:rgba(94,161,255,.1);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;text-decoration:none;transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease}
-.site-nav.topbar .topbar-link:hover,.site-nav.topbar .topbar-link:focus-visible{background:rgba(94,161,255,.18);border-color:rgba(94,161,255,.36);color:#fff}
 .site-nav.side-rail{display:flex;flex-direction:column;min-width:0;padding:18px 12px 16px;border-right:1px solid rgba(142,169,198,.15);background:linear-gradient(180deg,rgba(12,18,27,.98),rgba(7,12,19,.99))}
 .site-nav .side-rail-head{display:flex;align-items:center;gap:10px;min-width:0;padding:0 8px 18px;border-bottom:1px solid rgba(142,169,198,.13)}
 .site-nav .side-rail-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(236,182,85,.42);border-radius:8px;background:rgba(185,137,39,.12);color:#f2c86f;font-family:"IBM Plex Mono",Consolas,monospace;font-size:10px;font-weight:700;letter-spacing:.08em}
@@ -248,31 +258,124 @@ html[data-theme="paper"] .pill.bull,html[data-theme="paper"] .pill.conf{border-c
 .site-nav .side-rail-tabs .side-rail-link::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:rgba(94,161,255,.8)}
 .site-nav .side-rail-tabs .side-rail-link::after{content:"\2197";position:absolute;top:50%;right:11px;transform:translateY(-50%);color:#7fade8;font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;line-height:1}
 .site-nav .side-rail-tabs .side-rail-link:hover,.site-nav .side-rail-tabs .side-rail-link:focus-visible{border-color:rgba(94,161,255,.3);background:rgba(78,113,150,.18);color:#f2f7fb}
+/* Old documentation: a native details disclosure keeps the eight retired bar links one click away without
+   a script and without spending bar width. The summary takes a rail item's shape, the chevron replaces the
+   outbound arrow (nothing leaves the dashboard until a child link is chosen), and the links keep the full
+   side-rail-link treatment so they read as the same column, indented under their heading. */
+.site-nav .side-rail-details{display:block;min-width:0;margin:0}
+.site-nav .side-rail-tabs .side-rail-details-summary{list-style:none;padding-right:30px}
+.site-nav .side-rail-tabs .side-rail-details-summary::-webkit-details-marker{display:none}
+.site-nav .side-rail-tabs .side-rail-details-summary::after{content:"\25BE";font-size:10px;transition:transform 160ms ease}
+.site-nav .side-rail-details[open] > .side-rail-details-summary::after{transform:translateY(-50%) rotate(180deg)}
+.site-nav .side-rail-details-body{display:flex;flex-direction:column;gap:2px;margin:2px 0 4px;padding-left:10px}
+.site-nav .side-rail-details-body .side-rail-link{min-height:32px;padding-top:7px;padding-bottom:7px;font-size:11.5px}
+.site-nav .side-rail-details-body .side-rail-link::before{top:7px;bottom:7px;background:rgba(94,161,255,.45)}
 .site-nav .side-rail-foot{display:flex;align-items:center;gap:8px;min-width:0;padding:14px 8px 0;border-top:1px solid rgba(142,169,198,.13);color:#8095aa;font-size:9px;font-weight:600;letter-spacing:.08em;overflow-wrap:anywhere}
 .site-nav .side-rail-status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#48c69a;box-shadow:0 0 12px rgba(72,198,154,.62)}
 @media (min-width:901px){
-.site-nav.side-rail{position:sticky;top:58px;height:calc(100vh - 58px)}
-body > aside.site-nav.side-rail{position:fixed;left:0;top:58px;width:232px;height:calc(100vh - 58px);z-index:19;overflow-y:auto}
+.site-nav.side-rail{position:sticky;top:42px;height:calc(100vh - 42px)}
+body > aside.site-nav.side-rail{position:fixed;left:0;top:42px;width:232px;height:calc(100vh - 42px);z-index:19;overflow-y:auto}
 body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232px)}
 }
 @media (max-width:900px){
-.site-nav.side-rail{position:sticky;top:58px;z-index:19;display:block;width:100%;height:auto;padding:0;border-right:0;border-bottom:1px solid rgba(142,169,198,.16)}
+.site-nav.side-rail{position:sticky;top:42px;z-index:19;display:block;width:100%;height:auto;padding:0;border-right:0;border-bottom:1px solid rgba(142,169,198,.16)}
 .site-nav .side-rail-head,.site-nav .side-rail-foot,.site-nav .side-rail-group{display:none}
-.site-nav .side-rail-tabs{display:flex;flex-direction:row;gap:6px;margin:0;padding:9px 16px;box-sizing:border-box;max-width:100%;contain:paint;overflow-x:auto;overflow-y:hidden}
+.site-nav .side-rail-tabs{display:flex;flex-direction:row;gap:6px;margin:0;padding:9px 16px;box-sizing:border-box;max-width:100%;overflow-x:auto;overflow-y:hidden}
 .site-nav .side-rail-tabs .tab-button{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
 .site-nav .side-rail-tabs .tab-button::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
 .site-nav .side-rail-tabs .side-rail-link{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
 .site-nav .side-rail-tabs .side-rail-link::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
 .site-nav .side-rail-tabs .side-rail-link::after{display:none}
+/* In the strip the disclosure is one more chip. Opened, its links become a compact two-column panel over the
+   page rather than a part of the strip: fixed placement keeps all eight on screen whether the strip is
+   scrolled to its start or to its end, and the strip itself never grows into the page. */
+.site-nav .side-rail-details{flex:0 0 auto;width:auto}
+.site-nav .side-rail-tabs .side-rail-details-summary{width:auto;min-height:34px;padding:8px 12px;white-space:nowrap}
+.site-nav .side-rail-details-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px;width:min(280px,calc(100vw - 32px));margin:4px 0 0;padding:4px;border:1px solid rgba(94,161,255,.22);border-radius:9px;background:#0a1018}
+.site-nav .side-rail-details[open] > .side-rail-details-body{position:fixed;top:99px;right:12px;left:auto;z-index:24;width:min(300px,calc(100vw - 24px));max-height:calc(100vh - 111px);margin:0;overflow-y:auto;box-shadow:0 18px 36px rgba(0,0,0,.48)}
+.site-nav .side-rail-details-body .side-rail-link{min-height:32px;padding:7px 8px;font-size:11px;white-space:normal}
+.site-nav .side-rail-details-body .side-rail-link::before{top:auto;right:7px;bottom:0;left:7px;width:auto;height:2px}
 }
 @media (max-width:780px){
-.site-nav.topbar{position:static;flex-wrap:wrap;min-height:0;gap:12px;padding:14px 18px}
+.site-nav.topbar{position:static;flex-wrap:wrap;min-height:0;gap:6px;padding:8px 14px}
 .site-nav.topbar .topbar-brand,.site-nav.topbar .topbar-meta{width:100%;justify-content:flex-start}
 .site-nav.topbar .topbar-brand{white-space:normal;overflow-wrap:anywhere}
-.site-nav.topbar .topbar-link{order:-1}
+.site-nav .side-rail-details[open] > .side-rail-details-body{top:120px;right:8px;width:min(300px,calc(100vw - 16px));max-height:calc(100vh - 132px)}
 }
 </style>
 <!-- SHARED-NAV:END -->
+<!-- SHARED-CLOCK:START -->
+<script>
+// The date and dual clock carried by every standalone shared header.
+//
+// This file is not served. backtester/scripts/build_shared_nav.js inlines it immediately below the
+// SHARED-NAV block on each standalone page, so a page such as gold-factor-wip.html can keep its promise
+// to load nothing outside itself while still showing the same live date and UK/ET times as index.html.
+// The dashboard does not receive this copy: script.js already drives both nodes there.
+(() => {
+  const dateNode = document.getElementById("currentDate");
+  const clockNode = document.getElementById("topbarClock");
+  if (!dateNode && !clockNode) return;
+
+  const ukClockFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+  const etClockFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+  const ukZoneFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZoneName: "short"
+  });
+  const etZoneFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZoneName: "short"
+  });
+  const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+
+  function zoneAbbreviation(formatter, date) {
+    const parts = formatter.formatToParts(date);
+    return parts.find((part) => part.type === "timeZoneName")?.value || "";
+  }
+
+  function render() {
+    const now = new Date();
+    const ukTime = ukClockFormatter.format(now);
+    const etTime = etClockFormatter.format(now);
+    const ukZone = zoneAbbreviation(ukZoneFormatter, now);
+    const etZone = zoneAbbreviation(etZoneFormatter, now);
+
+    if (clockNode) {
+      clockNode.textContent = `UK ${ukTime} | ET ${etTime}`;
+      clockNode.setAttribute("aria-label", `UK time ${ukTime} ${ukZone}. Eastern Time ${etTime} ${etZone}.`);
+      clockNode.setAttribute("title", `UK time automatically switches between GMT and BST. ET automatically switches between EST and EDT. Currently ${ukZone} and ${etZone}.`);
+    }
+    if (dateNode) dateNode.textContent = dateFormatter.format(now);
+  }
+
+  render();
+  window.setInterval(render, 1000);
+})();
+</script>
+<!-- SHARED-CLOCK:END -->
 
 <main>
 

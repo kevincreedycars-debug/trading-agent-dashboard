@@ -132,6 +132,7 @@ async function createHarness({ lanes, laneOne = null, laneTwo = null, laneThree 
     if (pathname === "/data/live-trading.blind.json") return laneThree ? json(laneThree) : missing();
     if (pathname === "/data/live-trading-trader.ftmo-1.json") return heartbeats["ftmo-1"] ? json(heartbeats["ftmo-1"]) : missing();
     if (pathname === "/data/live-trading-trader.ftmo-2.json") return heartbeats["ftmo-2"] ? json(heartbeats["ftmo-2"]) : missing();
+    if (pathname === "/data/live-trading-trader.ftmo-3.json") return heartbeats["ftmo-3"] ? json(heartbeats["ftmo-3"]) : missing();
     const relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
     const filePath = path.resolve(repoRoot, relativePath);
     if (!filePath.startsWith(repoRoot) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) return missing();

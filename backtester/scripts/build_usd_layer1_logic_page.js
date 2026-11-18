@@ -31,11 +31,22 @@ const PLACEHOLDERS = [
 ];
 const NAV_START = '<!-- SHARED-NAV:START -->';
 const NAV_END = '<!-- SHARED-NAV:END -->';
+const CLOCK_START = '<!-- SHARED-CLOCK:START -->';
+const CLOCK_END = '<!-- SHARED-CLOCK:END -->';
 
 // The published copy of this page carries the shared navigation block between those markers, written there by
 // backtester/scripts/build_shared_nav.js. The block belongs to that script, not to this one, so this file keeps
-// it byte for byte and renders the page around it: a checkout whose page carries no block - this lane's own
-// page, and the first build anywhere - is written exactly as before, and --check still compares whole bytes.
+// it byte for byte, together with the inline clock immediately below it, and renders the page around them: a
+// checkout whose page carries no block - this lane's own page, and the first build anywhere - is written exactly
+// as before, and --check still compares whole bytes.
+function clockEnd(existing, at) {
+  if (!existing.startsWith(CLOCK_START, at)) return at;
+  const end = existing.indexOf(CLOCK_END, at);
+  if (end === -1 || existing.indexOf(CLOCK_START, at + CLOCK_START.length) !== -1) return at;
+  const after = end + CLOCK_END.length;
+  return existing.startsWith('\r\n', after) ? after + 2 : existing[after] === '\n' ? after + 1 : after;
+}
+
 function navRegion(existing) {
   if (existing === null) return null;
   if (existing.split(NAV_START).length - 1 !== 1 || existing.split(NAV_END).length - 1 !== 1) return null;
@@ -45,7 +56,7 @@ function navRegion(existing) {
   const to = existing.startsWith('\r\n', end) ? end + 2 : existing[end] === '\n' ? end + 1 : end;
   // A block that owns neither of its surrounding line breaks is half a block: refuse rather than guess.
   if (from === start || to === end) return null;
-  return existing.slice(from, to);
+  return existing.slice(from, clockEnd(existing, to));
 }
 
 // The block sits on the line after the body tag, which is where build_shared_nav.js places it.

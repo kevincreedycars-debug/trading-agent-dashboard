@@ -185,8 +185,8 @@ test("a fresh armed heartbeat reads as a live trader in the top right", async ()
     assert.match(state.className, /\blive\b/, `an armed loop with a 20 second heartbeat must read as live, saw "${state.className}"`);
     assert.match(state.text, /^Live L2L Directional/, `the lamp must lead with the model's name, saw "${state.text}"`);
     assert.match(state.text, /\bActive\b/, `the state rides beside the name as one word, saw "${state.text}"`);
-    assert.match(state.text, /ftmo-1/, "the lamp must name the lane it speaks for");
-    assert.match(state.text, /nothing to place/, "the lamp must carry the loop's last result rather than only a colour");
+    assert.match(state.title, /ftmo-1/, "the lamp must name the lane it speaks for");
+    assert.match(state.title, /nothing to place/, "the tooltip must carry the loop's last result rather than only a colour");
     assert.match(state.title, /armed/, "the tooltip must say what the colour stands for");
 
     // Top right, and only there: inside the right edge and above the fold of a 1440x1000 window.
@@ -217,7 +217,7 @@ test("an armed heartbeat that stopped writing may not read as active", async () 
     assert.doesNotMatch(state.text, /active/i, `a stale record must not wear the active word, saw "${state.text}"`);
     assert.match(state.text, /^Live L2L Directional/, `a stale lamp still reads as the model, saw "${state.text}"`);
     assert.match(state.text, /\bStale\b/, `the state rides beside the name as one word, saw "${state.text}"`);
-    assert.match(state.text, /no run for 2h/, `the lamp must say how long the silence is, saw "${state.text}"`);
+    assert.match(state.title, /2h 15m/, `the tooltip must say how long the silence is, saw "${state.title}"`);
     assert.match(state.title, /nothing here shows a loop running now/, "the tooltip must not leave the arming reading as a state");
   } finally {
     await harness.close();
@@ -236,7 +236,7 @@ test("a fresh heartbeat that is not armed says so instead of looking active", as
     assert.match(state.className, /\bwaiting\b/, `an unarmed loop must read as waiting, saw "${state.className}"`);
     assert.match(state.text, /^Live L2L Directional/, `an unarmed lamp still reads as the model, saw "${state.text}"`);
     assert.match(state.text, /\bPaused\b/, `an unarmed loop reads as Paused, saw "${state.text}"`);
-    assert.match(state.text, /not armed/, `the lamp must say the loop is not armed, saw "${state.text}"`);
+    assert.match(state.title, /not armed/, `the tooltip must say the loop is not armed, saw "${state.title}"`);
     assert.doesNotMatch(state.text, /active/i, "an unarmed loop must never read as active");
   } finally {
     await harness.close();
@@ -259,7 +259,7 @@ test("a heartbeat that was fresh when it was published stays active while the co
     assert.match(state.className, /\blive\b/, `a record fresh at publish must read as live, saw "${state.className}"`);
     assert.match(state.text, /^Live L2L Directional/, `the lamp must lead with the model's name, saw "${state.text}"`);
     assert.match(state.text, /\bActive\b/, `the state rides beside the name as one word, saw "${state.text}"`);
-    assert.match(state.text, /as of \d{2}:\d{2}Z/, `the lamp must date the record rather than imply it is current, saw "${state.text}"`);
+    assert.match(state.title, /as of \d{2}:\d{2}Z/, `the tooltip must date the record rather than imply it is current, saw "${state.title}"`);
     assert.equal(/no run for/i.test(state.text), false, "a record inside its window at publish must not read as silence");
     assert.match(state.title, /4m before the publisher read it/, `the tooltip must say the record was fresh when it was copied, saw "${state.title}"`);
   } finally {
@@ -280,7 +280,7 @@ test("a copy nobody has republished for an hour says so instead of reading as ac
 
     assert.match(state.className, /\bstale\b/, `a copy past the publish ceiling must read as stale, saw "${state.className}"`);
     assert.doesNotMatch(state.text, /active/i, `a copy nobody is refreshing must not wear the active word, saw "${state.text}"`);
-    assert.match(state.text, /no publish for 1h/, `the lamp must say the silence is in publishing, saw "${state.text}"`);
+    assert.match(state.title, /no publish for 1h/, `the tooltip must say the silence is in publishing, saw "${state.title}"`);
     assert.equal(/no run for/i.test(state.text), false, "publishing silence must not be blamed on the loop");
     assert.match(state.title, /nothing on this page says what the loop is doing now/, "the tooltip must not present the old copy as a report on now");
   } finally {
@@ -298,8 +298,9 @@ test("a lanes document that is not published yet leaves the lamp saying it does 
 
     assert.match(state.className, /\bstale\b/, `a missing lanes document must read as stale, saw "${state.className}"`);
     assert.match(state.text, /^Live L2L Directional/, `even an unknown state keeps the model's name, saw "${state.text}"`);
-    assert.match(state.text, /Stale - status unknown/, `the lamp must say it cannot tell and which of the three words it is, saw "${state.text}"`);
+    assert.match(state.text, /^Live L2L Directional · Stale$/, `the lamp must say it cannot tell and which of the three words it is, saw "${state.text}"`);
     assert.doesNotMatch(state.text, /active/i, "nothing may read as active when the lane document is missing");
+    assert.match(state.title, /status unknown/, "the tooltip must carry the reason the word is Stale");
     assert.match(state.title, /not published yet/, "the tooltip must say why the lamp cannot tell");
   } finally {
     await harness.close();
@@ -317,7 +318,7 @@ test("a parked lane is named as disabled rather than left blank", async () => {
     assert.match(state.className, /\bdisabled\b/, `a parked lane must read as disabled, saw "${state.className}"`);
     assert.match(state.text, /^Live L2L Directional/, `a parked lamp still reads as the model, saw "${state.text}"`);
     assert.match(state.text, /\bPaused\b/, `a parked lane reads as Paused, saw "${state.text}"`);
-    assert.match(state.text, /disabled/, `the lamp must name the parked lane, saw "${state.text}"`);
+    assert.match(state.title, /disabled/, `the tooltip must name the parked lane, saw "${state.title}"`);
     assert.doesNotMatch(state.text, /active/i, "a parked lane must never read as active");
   } finally {
     await harness.close();
@@ -395,6 +396,15 @@ test("the second strip reads as its own model, with the state as one of three wo
       assert.notEqual(strip.panel, "", `${title}: the longer state stays in the panel below`);
       assert.match(strip.panel, longer, `${title}: the panel carries the longer state, saw "${strip.panel}"`);
       assert.match(strip.title, longer, `${title}: the tooltip carries the longer state, saw "${strip.title}"`);
+      // The three corner strips are one rack: equal height and equal width, measured against the longest lane
+      // name so a status word cannot make one button wider than another. 30px is the compact row the header uses.
+      const rack = await page.evaluate(() => ["liveTraderStatus", "liveTraderStatusFtmo2", "liveTraderStatusFtmo3"].map(id => {
+        const box = document.getElementById(id).getBoundingClientRect();
+        return { id, width: Math.round(box.width * 10) / 10, height: Math.round(box.height * 10) / 10 };
+      }));
+      assert.equal(rack.length, 3, "all three live-trading lanes must carry a strip");
+      assert.ok(rack.every(item => item.width > 0 && item.height === 30), `${title}: every strip must be painted at the compact row height, saw ${JSON.stringify(rack)}`);
+      assert.equal(new Set(rack.map(item => item.width)).size, 1, `${title}: the three strips must share the longest label's width, saw ${JSON.stringify(rack)}`);
       await page.close();
     }
   } finally {
