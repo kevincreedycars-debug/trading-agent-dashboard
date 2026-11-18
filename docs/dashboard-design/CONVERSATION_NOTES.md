@@ -782,3 +782,20 @@ and made one decision: the live-trading lane owns the performance calculations f
   trader lamps. Screenshots and JSON in `tmp/factory-release-20261118/`.
 - Publication remains subject to the push and public-page check in this release turn.
 
+
+### Published 2026-11-18
+
+- Pushed `dcde1b8b` to `main`; the factory presentation commit is `08cedd55`, with checkpoint `a70676cf`. The GitHub
+  Pages build for `dcde1b8b` completed successfully at 11:30:07 UTC.
+- Public read at `https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html#architecture`, and through
+  Overview -> Open architecture map, at 1440x1000 and 390x844: both floors (50 stations, 39 dependency connections, 21
+  lower labels on desktop and 8 on phone), nine USD n8n nodes, all four T2 rows matching the artefact, all three FTMO
+  names readable and non-overlapping, relay intent separated from configuration and observation, and four tap-working
+  phone camera controls clear of three fixed trader lamps. Screenshots and the JSON result are under
+  `tmp/factory-release-20261118/public-*`.
+- Served `index.html` is 36,002 bytes, sha256 `0d085a92b4b5839d6ded573c1c569c686457c9cc491618dc53dff1a6c17e5939`.
+  `system-map.css` is 63,472 bytes; `lib/system-factory.js` 200,732; `lib/factory-library.js` 23,379;
+  `lib/factory-flows.js` 61,070. Full digests in `tmp/live-digests.json`.
+- The drift guards remain in `tests/system_factory.browser.test.js`: three FTMO labels, phone controls and hit-tests,
+  T2 rows against the committed artefact, relay wording, and both n8n/document-link paths. No data file was committed.
+
