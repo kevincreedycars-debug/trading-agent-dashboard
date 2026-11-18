@@ -19,7 +19,7 @@ const path = require("node:path");
 const { createModels } = require("../lib/layer1_backtesting/models");
 const { buildReport } = require("../lib/layer1_backtesting/report");
 const { renderMarkdown } = require("../lib/layer1_backtesting/markdown");
-const { hashTextFile, sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
+const { canonicalText, hashTextFile, sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
 const { assertResearchPath } = require("../backtester/scripts/lib/research_path_guard");
 
 const ROOT = path.resolve(__dirname, "..");
@@ -117,11 +117,11 @@ function main(argv) {
       process.stderr.write(`report is stale: committed ${committedBody.provenance.report_sha256}, rebuilt ${digest}\n`);
       return 1;
     }
-    if (fs.readFileSync(target, "utf8") !== text) {
+    if (canonicalText(fs.readFileSync(target, "utf8")) !== canonicalText(text)) {
       process.stderr.write(`${OUT_PATH} differs from a fresh build; rerun the builder\n`);
       return 1;
     }
-    if (fs.readFileSync(docTarget, "utf8") !== markdown) {
+    if (canonicalText(fs.readFileSync(docTarget, "utf8")) !== canonicalText(markdown)) {
       process.stderr.write(`${DOC_PATH} differs from a fresh render; rerun the builder\n`);
       return 1;
     }

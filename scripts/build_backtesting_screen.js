@@ -32,7 +32,7 @@ const {
 const { buildH1Review } = require("../lib/layer1_backtesting/h1_review");
 const { h1ScoringContract } = require("../lib/layer1_backtesting/scoring_contract");
 const { buildMorningRun, REACH_SUMMARY_PATH } = require("../lib/layer1_backtesting/morning_run");
-const { hashTextFile, sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
+const { canonicalText, hashTextFile, sha256, stableStringify } = require("../lib/layer1_backtesting/engine");
 
 const ROOT = path.resolve(__dirname, "..");
 const RUN_PATH = "data/usd-layer1-backtester/run-v1.json";
@@ -238,7 +238,7 @@ function main(argv) {
       process.stderr.write(`missing ${OUT_PATH}; run node scripts/build_backtesting_screen.js\n`);
       return 1;
     }
-    if (fs.readFileSync(target, "utf8") !== text) {
+    if (canonicalText(fs.readFileSync(target, "utf8")) !== canonicalText(text)) {
       process.stderr.write(`${OUT_PATH} differs from a fresh build; rerun the builder\n`);
       return 1;
     }

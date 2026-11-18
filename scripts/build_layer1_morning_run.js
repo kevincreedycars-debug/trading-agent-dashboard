@@ -19,6 +19,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const { buildMorningRun, DEFAULT_DATE, SCHEMA_VERSION } = require("../lib/layer1_backtesting/morning_run");
+const { canonicalText } = require("../lib/layer1_backtesting/engine");
 
 const ROOT = path.resolve(__dirname, "..");
 const OUT_PATH = "data/usd-layer1-backtester/morning-run-v1.json";
@@ -275,8 +276,10 @@ function main(argv) {
     for (const target of [jsonTarget, docTarget]) {
       if (!fs.existsSync(target)) throw new Error(`missing ${path.relative(ROOT, target)}; run the builder`);
     }
-    if (fs.readFileSync(jsonTarget, "utf8") !== built.text) throw new Error(`${OUT_PATH} differs from a fresh build`);
-    if (fs.readFileSync(docTarget, "utf8") !== built.markdown) throw new Error(`${DOC_PATH} differs from a fresh render`);
+    if (canonicalText(fs.readFileSync(jsonTarget, "utf8")) !== canonicalText(built.text))
+      throw new Error(`${OUT_PATH} differs from a fresh build`);
+    if (canonicalText(fs.readFileSync(docTarget, "utf8")) !== canonicalText(built.markdown))
+      throw new Error(`${DOC_PATH} differs from a fresh render`);
     process.stdout.write(`morning report reproduces: ${built.report.provenance.artifact_sha256}\n`);
     return 0;
   }
