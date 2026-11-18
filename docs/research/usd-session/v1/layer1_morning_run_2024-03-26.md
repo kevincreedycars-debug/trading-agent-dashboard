@@ -88,15 +88,15 @@ The legacy engine-v1 artefact's own flags are preserved separately: 196 directio
 
 | Input | Code | Failed rungs | Reason |
 | --- | --- | --- | --- |
-| VIX close | `unclocked` | original, fresh, clocked, receipt, identity | VIX close: FRED VIXCLS is an alias for the Cboe VIX close, but the archive stores neither the Cboe record nor a receipt clock. The 05:00 availability is unproven. |
-| DGS2 5d | `derived_only` | original, lookback, fresh, clocked, receipt, identity | DGS2 5d: Only the five-interval change is stored. The five DGS2 observations, their vintages and clocks are absent, so the change cannot be reconciled to H1's declared transform. |
-| US-DE 2Y spread 5d | `derived_only` | original, lookback, fresh, clocked, receipt, identity | US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks. |
-| DFII10 5d | `derived_only` | original, lookback, fresh, clocked, receipt, identity | DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified. |
-| DTWEXBGS 5d | `derived_only` | original, lookback, fresh, clocked, receipt, identity | DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified. |
-| ICE DXY 05:00 fixing | `missing_value` | present, original, lookback, fresh, clocked, receipt, identity | ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute. |
-| LBMA gold PM 5d | `identity_mismatch` | original, lookback, fresh, clocked, receipt, identity | LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered. |
-| QQQ close 5d | `identity_mismatch` | original, lookback, fresh, clocked, receipt, identity | QQQ close 5d: The legacy return is the Nasdaq-100 index, not the QQQ ETF's official close. The instrument identity fails, and the five closes and split adjustment are absent. |
-| Release calendar | `incomplete_calendar` | original, lookback, fresh, clocked, receipt, identity, schedule_complete | Release calendar: Only the FOMC statement archive is staged. CPI, Employment Situation, advance GDP, Personal Income and Outlays schedules are absent, so the event window cannot be answered for the complete declared calendar. |
+| VIX close | `unclocked` | original, fresh, clocked, identity | VIX close: FRED VIXCLS is an alias for the Cboe VIX close, but the archive stores neither the Cboe record nor a receipt clock. The 05:00 availability is unproven. |
+| DGS2 5d | `derived_only` | original, lookback, fresh, clocked, identity | DGS2 5d: Only the five-interval change is stored. The five DGS2 observations, their vintages and clocks are absent, so the change cannot be reconciled to H1's declared transform. |
+| US-DE 2Y spread 5d | `derived_only` | original, lookback, fresh, clocked, identity | US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks. |
+| DFII10 5d | `derived_only` | original, lookback, fresh, clocked, identity | DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified. |
+| DTWEXBGS 5d | `derived_only` | original, lookback, fresh, clocked, identity | DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified. |
+| ICE DXY 05:00 fixing | `missing_value` | present, original, lookback, fresh, clocked, identity | ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute. |
+| LBMA gold PM 5d | `identity_mismatch` | original, lookback, fresh, clocked, identity | LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered. |
+| QQQ close 5d | `identity_mismatch` | original, lookback, fresh, clocked, identity | QQQ close 5d: The legacy return is the Nasdaq-100 index, not the QQQ ETF's official close. The instrument identity fails, and the five closes and split adjustment are absent. |
+| Release calendar | `incomplete_calendar` | original, lookback, fresh, clocked, identity, schedule_complete | Release calendar: Only the FOMC statement archive is staged. CPI, Employment Situation, advance GDP, Personal Income and Outlays schedules are absent, so the event window cannot be answered for the complete declared calendar. |
 
 ## 8. Recoverable gaps and what to acquire
 
@@ -129,7 +129,7 @@ The legacy engine-v1 artefact's own flags are preserved separately: 196 directio
 
 ## 11. Provenance
 
-Report digest: `1f10940c9a71835eef7da8ed49ff0f5b9e3634aa9b0e27b180b2cee8957142f4`
+Report digest: `7a021a0a3b6cc7d2703ed3837c9d31d91530afa929a6ec061f309b2f5fab2794`
 
 | Input | Bytes | sha256 |
 | --- | ---: | --- |

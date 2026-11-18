@@ -1,0 +1,188 @@
+{
+  "schema_version": "h1-v0.1.1-proposals-1",
+  "written_on": "2026-11-18",
+  "status": "proposed_not_applied",
+  "author": "strategy worker, assignment strategy-advisory-20260920",
+  "reading": "docs/strategy/V0_1_1_PROPOSALS_20261118.md",
+  "model": {
+    "id": "usd_l1_25f_h1",
+    "frozen_version": "USD-L1-25F-H1-v0.1.0",
+    "proposed_version": "USD-L1-25F-H1-v0.1.1",
+    "proposed_package": "backtester/packages/USD-L1-25F-H1-v0.1.1",
+    "frozen_status": "FROZEN_H1_HYPOTHESIS",
+    "hypothesis_status": "pre-evaluation; fixture acceptance only",
+    "unscored": true
+  },
+  "preservation": {
+    "rule": "v0.1.0 is never edited in place; v0.1.1 is a new package with its own fixtures, digest and version stamp",
+    "inputs_json_sha256": "144ae500af5c9d4d1f37a7be2b34b5074f8a85c89269ff699895155f2db4a77f",
+    "rows_json_sha256": "47aa93fc97769e45999e2420738ae1b847b62bcc62c022c1358d0a0c3a6d0215",
+    "archive_sha256": "1c82e9048a3cf2237ffea6873b8099389d09fccefa083cd38ccb87517e3672e0",
+    "scoring_contract_sha256": "bff55b5127515ff4893b4e4675a9bec90e6b72f554ecc7e000139b6353c37888",
+    "scoring_contract_state": "FROZEN_BEFORE_SCORING",
+    "record_rule": "saved v0.1.0 decisions keep their version stamp and stay readable beside v0.1.1"
+  },
+  "ice_contract": {
+    "input": "ice",
+    "source": "ICE",
+    "instrument": "US Dollar Index spot",
+    "transform": "previous eligible London 05:00 fixing to latest London 05:00 fixing received at or before the cutoff, simple return in percent",
+    "refused_sources": [
+      "CFD",
+      "DXY.cash",
+      "broker"
+    ],
+    "max_age_hours": {
+      "A": 24,
+      "B": 96
+    },
+    "default_option": "B",
+    "clocks": {
+      "observed_at_utc": "the 05:00 Europe/London fixing instant of the fixing used",
+      "published_at_utc": "the publisher's recorded release stamp for that fixing, at or before the cutoff",
+      "received_at_utc": "the collector's receipt, required, at or before the cutoff"
+    },
+    "preserved_invariants": [
+      "received <= cutoff",
+      "published <= cutoff",
+      "observed <= published <= received",
+      "the observation is a 05:00 London fixing, not an intraday print",
+      "two distinct fixings are required; a repeated fixing blocks instead of scoring 0.00 per cent",
+      "no fill, carry-forward, interpolation, proxy or neighbour",
+      "the broker DXY proxy stays refused",
+      "the other eight inputs keep their own caps",
+      "readiness is not diluted: no morning becomes eligible without a licensed fixing record"
+    ]
+  },
+  "structural_finding": {
+    "sessions": 725,
+    "first_session": "2024-01-02",
+    "last_session": "2026-10-12",
+    "schedule": "145 complete Monday-to-Friday weeks; gap histogram 579 x 1 day and 145 x 3 days; no holiday gaps",
+    "mondays": 145,
+    "mondays_pct": 20,
+    "consequence": "a 24 hour maximum age excludes every Monday and every post-holiday morning, so option B (96 hours) is the default",
+    "source": "data/usd-layer1-backtester/run-v1.json, counted in tmp/gaps.js -> tmp/gaps.out.txt"
+  },
+  "proposals": [
+    {
+      "id": "P-01",
+      "finding": "H1R-03",
+      "severity": "defect",
+      "title": "ICE 05:00 timing: receive by the cutoff, not at it",
+      "status": "proposed_not_applied",
+      "current": "ice max_age_hours 0 with observed <= published <= received <= cutoff forces all three clocks onto the cutoff instant",
+      "proposed": "observed and published at the 05:00 London fixing stamp, received at or before the cutoff, latest eligible fixing no older than 96 hours (option A: 24 hours), two distinct fixings",
+      "default_if_no_reply": "option B, 96 hour cap",
+      "touches_arithmetic": false,
+      "touches_counts": false,
+      "needs_new_data": true,
+      "verification": "docs/strategy/proposals/H1_ICE_TIMING_20261118.test.js"
+    },
+    {
+      "id": "P-02",
+      "finding": "H1R-01",
+      "severity": "assumption",
+      "title": "The front-end change is a spread operand, not a ninth gate",
+      "status": "proposed_not_applied",
+      "current": "front is a standalone required input that no family reads",
+      "proposed": "eight inputs plus the named operand front; the presence test moves inside the spread row",
+      "default_if_no_reply": "accept the wording, defer the count change",
+      "touches_arithmetic": false,
+      "touches_counts": true,
+      "needs_new_data": false,
+      "verification": "contract check reports inputs 8, operands [front], same spread value"
+    },
+    {
+      "id": "P-03",
+      "finding": "H1R-02",
+      "severity": "gap",
+      "title": "The VIX row measured the level only",
+      "status": "proposed_not_applied",
+      "current": "the row names level and change; the executable reads the level",
+      "proposed": "retitle the row as level-only and record the change feature as a v0.2 candidate",
+      "default_if_no_reply": "retitle as level-only",
+      "touches_arithmetic": false,
+      "touches_counts": false,
+      "needs_new_data": false,
+      "verification": "text-only patch: outputs, fixture digests and coverage counts unchanged"
+    },
+    {
+      "id": "P-04",
+      "finding": "H1R-04",
+      "severity": "gap",
+      "title": "F23 calendar distance is declared but not implemented",
+      "status": "proposed_not_applied",
+      "current": "two calendar rows share one count; distance has no executable representation",
+      "proposed": "record F23 as unimplemented in the rulebook table, with the reason",
+      "default_if_no_reply": "declare unimplemented",
+      "touches_arithmetic": false,
+      "touches_counts": false,
+      "needs_new_data": false,
+      "verification": "shared-evidence table shows one implemented and one declared-only feature"
+    },
+    {
+      "id": "P-05",
+      "finding": "H1R-06",
+      "severity": "presentation",
+      "title": "The trace's front vote is reported-only",
+      "status": "proposed_not_applied",
+      "current": "votes.front sits in the trace while frontCounted is false",
+      "proposed": "rename it frontReportedOnly and publish the six counted votes beside the family means",
+      "default_if_no_reply": "accept",
+      "touches_arithmetic": false,
+      "touches_counts": false,
+      "needs_new_data": false,
+      "verification": "regenerated v0.1.1 fixture trace; guard test over the counted set"
+    },
+    {
+      "id": "P-06",
+      "finding": "H1R-10",
+      "severity": "gap",
+      "title": "A zero event count from an incomplete calendar is not evidence",
+      "status": "proposed_not_applied",
+      "current": "the count is the only calendar feature; four release families are unarchived",
+      "proposed": "rulebook sentence: an incomplete calendar blocks the morning instead of reporting no release",
+      "default_if_no_reply": "accept",
+      "touches_arithmetic": false,
+      "touches_counts": false,
+      "needs_new_data": true,
+      "verification": "rulebook row text; coverage keeps calendar in the blocker list"
+    }
+  ],
+  "left_out": [
+    {
+      "finding": "H1R-05",
+      "reason": "no-fallback is a declared design choice, not a defect"
+    },
+    {
+      "finding": "H1R-07",
+      "reason": "thresholds are hypotheses; calibrating them is a new model, not a patch"
+    },
+    {
+      "finding": "H1R-08",
+      "reason": "shared evidence reducing votes is an arithmetic property of the book, already reported"
+    },
+    {
+      "finding": "H1R-09",
+      "reason": "the trace reading instruction is folded into P-05's legend edit"
+    }
+  ],
+  "coverage_after_acceptance": {
+    "h1_ready_before": "0 of 725",
+    "h1_ready_after": "0 of 725",
+    "why": "the archive still holds no licensed ICE fixing, no LBMA PM auction and no complete release calendar; the proposals remove an impossibility, they do not add data",
+    "legacy_counts_status": "kept as legacy, explicitly labelled, never merged with H1",
+    "performance_status": "unscored"
+  },
+  "provenance": {
+    "review": "data/usd-layer1-backtester/backtesting-screen-v1.json -> h1.review (10 discrepancies, 25 adjudications, 11 discrepant rows)",
+    "package": "backtester/packages/USD-L1-25F-H1-v0.1.0/{inputs.json,rows.json,models.js,engine.js,verify.js,expected.json}",
+    "guards": [
+      "lib/layer1_backtesting/h1_candidate.js",
+      "lib/layer1_backtesting/h1_coverage.js"
+    ],
+    "spec": "docs/strategy/proposals/H1_ICE_TIMING_20261118.js",
+    "test": "docs/strategy/proposals/H1_ICE_TIMING_20261118.test.js"
+  }
+}

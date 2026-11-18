@@ -2,6 +2,10 @@
 
 17 November 2026 · pre-evaluation research hypothesis · research only
 
+> v0.1.1 is a separate proposal set. It is not applied to this frozen package, its fixtures or its
+> hashes. See `docs/research/usd-session/h1/v0.1.1/PROPOSAL.md` and
+> `docs/research/usd-session/h1/EVIDENCE_POLICY.md`.
+
 This note records what was checked before the candidate was accepted into the shared Layer 1 engine, and
 what remains blocked. It is the reviewer's record; the payload at
 `data/usd-layer1-backtester/backtesting-screen-v1.json` and the H1 view of `backtesting.html` carry the same

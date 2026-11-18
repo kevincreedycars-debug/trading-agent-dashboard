@@ -29,6 +29,7 @@ summary{cursor:pointer;font-weight:650}
 .pill{display:inline-block;font-size:12px;padding:1px 7px;border-radius:20px;border:1px solid #4b6470;color:#cfe3e5;margin-left:4px}
 .pill.blocked{background:#421f1f;border-color:#a96060}.pill.valid_abstention{background:#1d3a3a;border-color:#6fb1ad}
 .pill.allowed,.pill.scored{background:#1b3a2b;border-color:#6fb589}
+.pill.unscored{background:#2b2b3a;border-color:#8d8db5}
 .pill.scored_in_legacy_aggregate{background:#3a3419;border-color:#b9a45c}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #2c4049;vertical-align:top}
@@ -102,7 +103,7 @@ function renderSummary(s){
   const host=document.querySelector("#summary");host.replaceChildren();
   const models=s.summary.selected_models;
   for(const model of models){
-    const c=card(host,model.role==="control"?"Control":"Candidate",model.id,model.label);
+    const c=card(host,model.role==="control"?"Production control":model.role==="candidate"?"Legacy book (not H1)":"Model",model.id,model.label);
     el("small","version: "+(model.version||"—"),c);
     el("small","rulebook: "+(model.rulebook_version||"—")+" · gate: "+(model.gate_basis||"—"),c);
     if(model.identity){const p=el("p",null,c);pill(model.identity.status,p);el("small",model.identity.note||"",c)}
@@ -111,7 +112,7 @@ function renderSummary(s){
   }
   if(s.summary.h1){
     const h=s.summary.h1;
-    const c=card(host,"H1 candidate",h.ready+" / "+h.scheduled+" ready",h.label);
+    const c=card(host,"H1 v0.1.0 (unscored)",h.ready+" / "+h.scheduled+" historical ready",h.label);
     el("small","model: "+h.model_id+" · version: "+h.model_version+" · package "+h.package.commit.slice(0,12)+"… ("+h.package.sums+" sums, verify.js "+h.package.acceptance+")",c);
     el("small","fixtures: "+h.fixture_label+" · earliest eligible: "+(h.earliest_eligible||"none established"),c);
     el("small","review: "+h.review.votes+" votes from "+h.review.adjudications+" adjudications · "+h.review.open+" open findings · audit "+h.audit.saved_decisions+" saved decisions, reconciled "+(h.audit.reconciled?"yes":"no"),c);
@@ -120,8 +121,8 @@ function renderSummary(s){
   }
   card(host,"Session",s.summary.session,s.summary.first_date+" → "+s.summary.last_date+" · "+s.summary.sessions+" scheduled mornings");
   const r=s.summary.readiness;
-  card(host,"Ready / blocked",r.strict_ready_control+" / "+(s.summary.sessions-r.strict_ready_control),"strict gate, both models · narrow control "+r.narrow_ready_control+" ready / "+r.narrow_blocked_control+" blocked");
-  card(host,"Implemented book",r.book_allowed_candidate+" allowed",r.book_abstained_candidate+" valid abstentions · "+r.book_blocked_candidate+" blocked");
+  card(host,"Ready / blocked",r.strict_ready_control+" / "+(s.summary.sessions-r.strict_ready_control),"strict gate, production control and legacy book · narrow control "+r.narrow_ready_control+" ready / "+r.narrow_blocked_control+" blocked");
+  card(host,"Legacy book v1.0.0 (not H1)",r.book_allowed_candidate+" allowed",r.book_abstained_candidate+" valid abstentions · "+r.book_blocked_candidate+" blocked");
   const gap=s.summary.biggest_gap;
   const g=card(host,"Biggest data gap",gap?gap.field:"none",gap?gap.mornings+" of "+gap.sessions+" mornings ("+gap.share_pct+"%) · "+gap.first+" → "+gap.last:"");
   if(gap){el("small","what to obtain: "+(gap.candidate_action||gap.action||"—"),g)}
@@ -138,21 +139,46 @@ function table(parent,headers,rows){
 function renderOverview(v,s){
   const pkg=s.package_identity;
   el("h2","What this run covers",v);
-  el("p","Two legacy models and the supplied H1 candidate share one 05:00 London session contract. The rows below remain the legacy experiment; the H1 candidate has its own nine-input coverage audit under the H1 candidate tab and no legacy count is substituted for H1.",v);
+  el("p","Three model identities share one 05:00 London session contract: the production control (usd_control_v1), the legacy book (usd_candidate_25f_v1, CONFIG_BLOCKED) and USD-L1-25F-H1-v0.1.0 (unscored). The rows below remain the legacy experiment; H1 has its own nine-input coverage audit and no legacy count is substituted for H1.",v);
+  if(s.model_identity&&s.model_identity.statement)el("p",s.model_identity.statement,v,"caption");
   el("h3","Five counts, printed separately (OD-5)",v);
   const t=table(v,["Model","Scheduled","Reconstructed","Valid (strict)","Directional (engine)","Scored","Overlap / exclusions"],[]);
   const body=t.querySelector("tbody");
   for(const role of ["control","candidate"]){
     const m=s.coverage_trace.by_model[role];
     const tr=el("tr",null,body);
-    const first=el("td",role+" ",tr);pill(role==="control"?"control":"legacy candidate",first);
+    const first=el("td",role+" ",tr);pill(role==="control"?"production control":"legacy book v1.0.0",first);
     for(const value of [m.scheduled,m.reconstructed,m.valid_strict,m.directional,m.scored])el("td",value===null?"—":String(value),tr);
     const o=el("td",null,tr);
     el("small","both "+m.overlap.both+" · reconstructed only "+m.overlap.reconstructed_only+" · directional only "+m.overlap.directional_only,o);
     if(role==="candidate")el("small","scored sample: "+m.scored_basis,o);
   }
+  if(s.summary.h1){
+    const h=s.summary.h1;
+    const tr=el("tr",null,body);
+    const first=el("td","H1 ",tr);pill("unscored",first);
+    for(const value of [h.scheduled,"—","unscored",0,0])el("td",String(value),tr);
+    const o=el("td",null,tr);el("small",h.ready+" of "+h.scheduled+" historical ready; sealed live replay "+h.sealed_ready+" of "+h.scheduled,o);
+  }
   el("p","Definitions: "+Object.entries(s.coverage_trace.definitions).map(([k,v])=>k+" = "+v).join("; ")+".",v,"caption");
   el("p",s.coverage_trace.strict_rule,v,"caption");
+
+  if(s.integrity){
+    const i=s.integrity;
+    el("h3","Artefact integrity: blocked mornings cannot score",v);
+    el("p",i.assertion,v);
+    const it=table(v,["Record set","Model","Blocked","Direction on blocked","Trade on blocked","Scored on blocked","Status"],[]);
+    const ib=it.querySelector("tbody");
+    const rows=[
+      ["Gated decision records",i.gated.model_id,i.gated.blocked,i.gated.blocked_with_direction,i.gated.blocked_with_trade,i.gated.blocked_scored,"corrected"],
+      ["Legacy engine-v1 (audit evidence)",i.legacy.model_id,i.legacy.blocked,i.legacy.blocked_with_direction,i.legacy.blocked_with_trade,"not scored","contradiction preserved"],
+      ["H1 v0.1.0 (unscored)",i.h1?i.h1.model_version:"not present",i.h1?i.h1.blocked:"—",i.h1?i.h1.directional:"—",i.h1?i.h1.trades:"—",i.h1?i.h1.scored:"—","unscored"],
+    ];
+    for(const row of rows){const tr=el("tr",null,ib);for(const cell of row)el("td",cell,tr)}
+    el("p",i.gated.note+" "+i.legacy.note,v,"caption");
+    el("p","Legacy sample dates — direction: "+(i.legacy.sample_dates.direction.join(", ")||"none")+"; trade: "+(i.legacy.sample_dates.trade.join(", ")||"none")+".",v,"caption mono");
+    if(i.h1)el("p",i.h1.note,v,"caption");
+  }
 
   el("h3","Control parity on spread, Fed bias, surprise and DXY",v);
   el("p",s.summary.parity.claim,v);
@@ -181,12 +207,16 @@ function renderOverview(v,s){
 }
 function renderH1(v,s){
   const h=s.h1;
-  el("h2","H1 candidate · nine-input coverage audit",v);
+  el("h2","USD-L1-25F-H1-v0.1.0 · nine-input coverage audit",v);
   if(!h){el("p","No H1 payload is present in this build. No legacy count is substituted for H1 coverage.",v);return}
   const c=h.coverage;
   const banner=el("div",null,v,"banner"+(c.ready>0?" ok":" bad"));
   el("strong",c.label,banner);
   el("p",h.model.label+" · "+h.model.id+" · "+h.model.version+" · rulebook "+h.model.rulebook_version+" · gate "+c.binding.gate+".",banner);
+  el("p","H1 is a separate model identity: "+h.model.identity.status+", not CONFIG_BLOCKED. It is unscored; coverage is not performance.",banner);
+  const proposal=el("p",null,banner);
+  const proposalLink=el("a","v0.1.1 proposal and evidence policy (not applied)",proposal);
+  proposalLink.href="docs/research/usd-session/h1/v0.1.1/PROPOSAL.md";
   el("p",h.package.consequence,banner);
   if(c.status==="blocked"||c.ready===0)el("p","This is a coverage audit, not a performance result. Fixtures prove engine admission only; they are not historical evidence.",banner);
 
@@ -197,9 +227,13 @@ function renderH1(v,s){
   card(grid,"Fixtures",h.fixtures.status,h.fixtures.label);
   card(grid,"Package",h.package.status,h.package.requested+" · "+h.package.verification);
   card(grid,"Receipts",String(c.receipts.recorded)+" recorded",c.receipts.note);
+  if(c.evidence_policy){
+    card(grid,"Historical reconstruction",c.evidence_policy.historical_reconstruction.ready+" / "+c.scheduled+" ready","Receipt nullable. "+c.evidence_policy.historical_reconstruction.basis);
+    card(grid,"Sealed live replay",c.evidence_policy.sealed_live_replay.ready+" / "+c.scheduled+" eligible","Receipt required. "+c.evidence_policy.sealed_live_replay.basis);
+  }
 
   el("h3","Input contract and measured coverage",v);
-  el("p",c.basis+". Present is not eligible: a value must also retain its original observation, five-interval lookback, freshness, observation/publication/receipt clocks and identity.",v,"caption");
+  el("p",c.basis+". Present is not eligible: historical reconstruction requires the original observation, five-interval lookback, freshness, observation/publication clocks and identity; sealed live replay additionally requires a receipt by the cutoff.",v,"caption");
   const rows=[];
   for(const input of c.inputs){
     const contract=el("div");
@@ -230,9 +264,15 @@ function renderH1(v,s){
   }
   table(v,["Declared input contract","Archived field","Present / scheduled","Missing / incomplete","Five-interval lookback","05:00 clocks","First blocker and what to acquire"],rows);
 
-  el("h3","Why the archive cannot satisfy H1",v);
-  const gaps=el("ul",null,v);
-  for(const input of c.inputs)el("li",input.label+": "+input.availability+" Acquisition: "+input.acquisition,gaps);
+  el("h3","The nine gaps, reusable evidence and the exact next action",v);
+  el("p","Each gap is separate from a valid abstention and from a directional call. Reusable legacy evidence is named only where it exists; it is never relabelled as the H1 operand.",v,"caption");
+  table(v,["Gap","Required series","Reusable legacy evidence","Remaining requirement","Exact action"],c.gaps.map(gap=>[
+    gap.label,
+    gap.dataset+" · "+gap.transform,
+    gap.reusable_evidence,
+    gap.remaining_requirement,
+    gap.user_action,
+  ]));
 
   el("h3","Blocked-morning inspector",v);
   el("p","Every scheduled morning is listed. Choose a date to inspect the exact first blocker and failed rungs; the profile table below links the repeated signatures.",v);
@@ -241,7 +281,7 @@ function renderH1(v,s){
   const select=el("select",null,picker);
   select.setAttribute("aria-label","H1 morning to inspect");
   for(const m of c.mornings){
-    const o=el("option",m.date+" · "+(m.ready?"ready":"blocked"),select);
+    const o=el("option",m.date+" · historical "+(m.ready?"ready":"blocked")+" · sealed "+(m.sealed_ready?"eligible":"blocked"),select);
     o.value=m.date;
   }
   const detail=el("div",null,v,"card");
@@ -250,9 +290,9 @@ function renderH1(v,s){
     detail.replaceChildren();
     if(!m){el("p","No morning matches "+date+".",detail);return}
     const p=c.profiles[m.signature];
-    const head=el("h3",m.date+" · "+(m.ready?"H1 ready":"H1 blocked"),detail);
+    const head=el("h3",m.date+" · historical "+(m.ready?"ready":"blocked")+" · sealed "+(m.sealed_ready?"eligible":"blocked"),detail);
     pill(m.ready?"eligible":"blocked",head);
-    el("p","scheduled releases: "+m.calendar_count+" · profile: "+(p?p.dates.length:0)+" morning(s) share this signature.",detail);
+    el("p","scheduled releases: "+m.calendar_count+" · profile: "+(p?p.dates.length:0)+" morning(s) share this signature. H1 is unscored: neither state is a direction or a trade.",detail);
     if(p){
       const rows=[];
       for(const b of p.blockers){
@@ -530,6 +570,8 @@ function renderTests(v,s){
   el("p",def.question,v);
   const meta=el("p",null,v,"caption");
   meta.textContent="Status: "+def.status+" · usable "+(def.usable_sessions??0)+" of "+s.summary.sessions+" · rows "+def.counts.rows;
+  if(def.id==="dxy_direction_broker_cfd")el("p","Test 1 is the agreed direction test on the named broker DXY.cash series. The official ICE cash DXY series is a separate supplementary evaluation lane; it is never substituted for the broker series or required by test 1.",v,"caption");
+
   const filters=el("div",null,v,"chips");
   const allRows=s.tests.rows[testId];
   const statuses=[...new Set(allRows.map(r=>r.status))];
@@ -539,7 +581,7 @@ function renderTests(v,s){
     b.onclick=()=>{state.filter=value;state.rowKey=null;render()};
   }
   const rows=allRows.filter(r=>state.filter==="all"||r.status===state.filter);
-  const body=table(tableHost,["Morning","Candidate","Control","Direction / band","Decision record",""],[]).querySelector("tbody");
+  const body=table(tableHost,["Morning","Legacy book v1.0.0 (not H1)","Production control","H1 v0.1.0 (unscored)","Direction / band","Decision record",""],[]).querySelector("tbody");
   for(const row of rows){
     const tr=el("tr",null,body);tr.tabIndex=0;tr.setAttribute("aria-selected",state.rowKey===key(row.date,testId)?"true":"false");
     const pick=()=>{state.rowKey=key(row.date,testId);render()};
@@ -547,6 +589,8 @@ function renderTests(v,s){
     el("td",row.date,tr);
     const c1=el("td",null,tr);pill(row.candidate.status,c1);
     const c2=el("td",null,tr);pill(row.control.status,c2);
+    const c3=el("td",null,tr);pill("unscored",c3);el("small",row.h1?row.h1.coverage:"not present",c3);
+
     el("td",(row.candidate.direction||"—")+" / "+(row.candidate.band===null?"—":row.candidate.band),tr);
     el("td",row.candidate.decision_id||"—",tr,"mono");
     el("td",row.candidate.gaps&&row.candidate.gaps.length?"open":"",tr);
@@ -684,7 +728,7 @@ function renderMorningRun(v,s){
   el("p","Session: "+m.session.cutoff_at_utc+" → "+m.session.endpoint_at_utc+" · "+m.session.window_hours+" hours.",banner);
 
   const grid=el("div",null,v,"grid");
-  for(const [key,label] of [["current","Current USD model"],["legacy_candidate","Legacy 25-row book"],["h1","H1 candidate"]]){
+  for(const [key,label] of [["current","Production control"],["legacy_candidate","Legacy book v1.0.0 (not H1)"],["h1","H1 v0.1.0 (unscored)"]]){
     const model=m.models[key];
     const c=card(grid,label,model.outcome+" · "+model.direction,(model.conviction===null?"conviction —":("conviction "+model.conviction))+" · trade "+(model.trade_eligible?"yes":"no"));
     el("small","gate: "+model.gate.code+" · "+model.id+" · "+model.version,c);
@@ -692,14 +736,14 @@ function renderMorningRun(v,s){
 
   el("h3","Decisions and explanations",v);
   const decisionRows=[];
-  for(const [key,label] of [["current","Current USD model"],["legacy_candidate","Legacy 25-row book"],["h1","H1 candidate"]]){
+  for(const [key,label] of [["current","Production control"],["legacy_candidate","Legacy book v1.0.0 (not H1)"],["h1","H1 v0.1.0 (unscored)"]]){
     const model=m.models[key];
     const reasons=el("div");
     for(const reason of model.reasons||[])el("small",reason.code+": "+reason.text,reasons);
     decisionRows.push([label,model.outcome,model.direction,model.conviction===null?"—":model.conviction,model.trade_eligible?"yes":"no",reasons]);
   }
   table(v,["Model","Outcome","Direction","Conviction","Trade","Reasons"],decisionRows);
-  el("p","The current adapter is allowed only under its narrow presence/freshness gate; that is not a 05:00 receipt and is never an H1 result.",v,"caption");
+  el("p","The production control (usd_control_v1) is allowed only under its narrow presence/freshness gate; that is not a 05:00 receipt and is never an H1 result. The legacy book (usd_candidate_25f_v1) is CONFIG_BLOCKED, and H1 v0.1.0 is unscored.",v,"caption");
 
   el("h3","Current-model required inputs",v);
   const currentRows=m.inputs.current.map(row=>{

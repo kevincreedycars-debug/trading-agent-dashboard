@@ -27,8 +27,8 @@ the declarations and nothing else, so the two rows below differ only where the d
 
 | Model | Role | Version | Rulebook | Identity | Gate basis |
 | --- | --- | --- | --- | --- | --- |
-| Current USD model (production baseline, replayed) (`usd_control_v1`) | control | agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js) | agent_usd_direction.md | PROVISIONAL_BASELINE | presence and freshness (declared narrow gate) |
-| USD 25-factor candidate (frozen book v1.0.0) (`usd_candidate_25f_v1`) | candidate | usd-l1-factor-rulebook-v1.0.0 / usd-l1-decision-rules-v1.0.0 | usd-l1-factor-rulebook-v1.0.0 | CONFIG_BLOCKED | the book's own six checks (E1-E4 block, E5-E6 abstain) |
+| Production control (current USD model, replayed) (`usd_control_v1`) | control | agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js) | agent_usd_direction.md | PROVISIONAL_BASELINE | presence and freshness (declared narrow gate) |
+| Legacy USD 25-factor book v1.0.0 (usd_candidate_25f_v1, not H1) (`usd_candidate_25f_v1`) | candidate | usd-l1-factor-rulebook-v1.0.0 / usd-l1-decision-rules-v1.0.0 | usd-l1-factor-rulebook-v1.0.0 | CONFIG_BLOCKED | the book's own six checks (E1-E4 block, E5-E6 abstain) |
 
 ### control: check chain
 
@@ -511,7 +511,7 @@ Does not license: It does not license treating reconstructed calls as valid call
 | `config/usd_l1_factor_rulebook_v1.json` | 38964 | `31d78a6898c1e30aba4158f04deb29bfe2f50502d784b8a511210cbdbfe7e8e7` |
 | `config/usd_l1_decision_rules_v1.json` | 10481 | `f0f7cb753cdb770e7bb715d71e5475655beaee4a7a9bff596b62b080de30769b` |
 
-Report digest: `94c205c52b749e4f0665461f5fe305a4074e63accf0d664526e98f8160be34d3`.
+Report digest: `a458d02a409ed53480de7eb2921bf4bebcddadd1235e5bbe353af0023f157024`.
 
 The digest is taken over the body before this block; rebuilding the report from the same artefacts reproduces it.
 

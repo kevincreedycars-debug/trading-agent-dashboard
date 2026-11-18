@@ -20,7 +20,7 @@
   "models": {
     "current": {
       "id": "usd_control_v1",
-      "label": "Current USD model (production baseline, replayed)",
+      "label": "Production control (current USD model, replayed)",
       "role": "control",
       "version": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
       "rulebook_version": "agent_usd_direction.md",
@@ -112,7 +112,7 @@
     },
     "legacy_candidate": {
       "id": "usd_candidate_25f_v1",
-      "label": "USD 25-factor candidate (frozen book v1.0.0)",
+      "label": "Legacy USD 25-factor book v1.0.0 (usd_candidate_25f_v1, not H1)",
       "role": "candidate",
       "version": "usd-l1-factor-rulebook-v1.0.0 / usd-l1-decision-rules-v1.0.0",
       "rulebook_version": "usd-l1-factor-rulebook-v1.0.0",
@@ -235,7 +235,7 @@
     },
     "h1": {
       "id": "usd_l1_25f_h1",
-      "label": "USD Layer 1 H1 candidate (25-row hypothesis book)",
+      "label": "USD-L1-25F-H1-v0.1.0 (H1 candidate, unscored)",
       "role": "candidate",
       "version": "USD-L1-25F-H1-v0.1.0",
       "rulebook_version": "H1.1 nine-feature evidence contract (supplied RULEBOOK.md)",
@@ -243,7 +243,7 @@
         "status": "FROZEN_H1_HYPOTHESIS",
         "note": "The supplied H1 book is frozen for acceptance. A fixture match is not evidence of historical or live value.",
         "unresolved": [
-          "historical coverage is unmeasured by the supplied package",
+          "historical coverage is unmeasured by the supplied package; the repository audit measures it separately",
           "sealed live replay has not been observed",
           "control parity on the nine-feature contract is open"
         ]
@@ -273,7 +273,8 @@
           "receipt": 0,
           "identity": 0,
           "schedule_complete": 8,
-          "eligible": 0
+          "eligible": 0,
+          "sealed_eligible": 0
         },
         "missing": [
           "vix",
@@ -1104,7 +1105,6 @@
             "original",
             "fresh",
             "clocked",
-            "receipt",
             "identity"
           ],
           "identity_state": "named_alias",
@@ -1159,7 +1159,6 @@
             "lookback",
             "fresh",
             "clocked",
-            "receipt",
             "identity"
           ],
           "identity_state": "named_alias",
@@ -1214,7 +1213,6 @@
             "lookback",
             "fresh",
             "clocked",
-            "receipt",
             "identity"
           ],
           "identity_state": "derived_alias",
@@ -1269,7 +1267,6 @@
             "lookback",
             "fresh",
             "clocked",
-            "receipt",
             "identity"
           ],
           "identity_state": "named_alias",
@@ -1322,7 +1319,6 @@
             "lookback",
             "fresh",
             "clocked",
-            "receipt",
             "identity"
           ],
           "identity_state": "named_alias",
@@ -1376,7 +1372,6 @@
             "lookback",
             "fresh",
             "clocked",
-            "receipt",
             "identity"
           ],
           "identity_state": "missing",
@@ -1429,7 +1424,6 @@
             "lookback",
             "fresh",
             "clocked",
-            "receipt",
             "identity"
           ],
           "identity_state": "identity_mismatch",
@@ -1482,7 +1476,6 @@
             "lookback",
             "fresh",
             "clocked",
-            "receipt",
             "identity"
           ],
           "identity_state": "identity_mismatch",
@@ -1537,7 +1530,6 @@
             "lookback",
             "fresh",
             "clocked",
-            "receipt",
             "identity",
             "schedule_complete"
           ],
@@ -1558,7 +1550,6 @@
         "original",
         "fresh",
         "clocked",
-        "receipt",
         "identity"
       ],
       "identity_state": "named_alias",
@@ -1581,7 +1572,6 @@
         "lookback",
         "fresh",
         "clocked",
-        "receipt",
         "identity"
       ],
       "identity_state": "named_alias",
@@ -1604,7 +1594,6 @@
         "lookback",
         "fresh",
         "clocked",
-        "receipt",
         "identity"
       ],
       "identity_state": "derived_alias",
@@ -1627,7 +1616,6 @@
         "lookback",
         "fresh",
         "clocked",
-        "receipt",
         "identity"
       ],
       "identity_state": "named_alias",
@@ -1650,7 +1638,6 @@
         "lookback",
         "fresh",
         "clocked",
-        "receipt",
         "identity"
       ],
       "identity_state": "named_alias",
@@ -1674,7 +1661,6 @@
         "lookback",
         "fresh",
         "clocked",
-        "receipt",
         "identity"
       ],
       "identity_state": "missing",
@@ -1697,7 +1683,6 @@
         "lookback",
         "fresh",
         "clocked",
-        "receipt",
         "identity"
       ],
       "identity_state": "identity_mismatch",
@@ -1720,7 +1705,6 @@
         "lookback",
         "fresh",
         "clocked",
-        "receipt",
         "identity"
       ],
       "identity_state": "identity_mismatch",
@@ -1743,7 +1727,6 @@
         "lookback",
         "fresh",
         "clocked",
-        "receipt",
         "identity",
         "schedule_complete"
       ],
@@ -2259,7 +2242,7 @@
         "sha256": "5d32f4ff4e9287121a75cd746549115f39e0b01afd4bdb078d03668f8c5e40fa"
       }
     ],
-    "artifact_sha256": "1f10940c9a71835eef7da8ed49ff0f5b9e3634aa9b0e27b180b2cee8957142f4",
+    "artifact_sha256": "7a021a0a3b6cc7d2703ed3837c9d31d91530afa929a6ec061f309b2f5fab2794",
     "note": "The digest is over the body before this block. The report builder reruns the same committed artefacts and must reproduce it."
   }
 }
