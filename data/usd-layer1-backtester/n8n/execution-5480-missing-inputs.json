@@ -1,0 +1,354 @@
+﻿{
+    "schema_version":  "usd-l1-n8n-cloud-execution-v1",
+    "generated_at":  "2026-11-19T19:57:08.350Z",
+    "date":  "2024-01-02",
+    "validation_mode":  "structural",
+    "dataset":  {
+                    "path":  "https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/backtesting/usd-l1-screen-20261117/data/usd-layer1-backtester/run-v1.json",
+                    "schema_version":  "usd-layer1-backtester-panel-v1",
+                    "run_version":  "usd-l1-backtester-r1",
+                    "generated_at":  "2026-11-14T00:00:00.000Z",
+                    "sessions":  1
+                },
+    "models":  {
+                   "challenger":  {
+                                      "identity":  "usd-layer1-challenger-v0",
+                                      "workflow_id":  "giGJKNQw5WLh1xbX",
+                                      "workflow_name":  "USD Layer 1 - challenger v0 (Cloud adapter)",
+                                      "execution_id":  "5481",
+                                      "execution_url":  "https://silver17.app.n8n.cloud/execution/5481",
+                                      "decision":  {
+                                                       "date":  "2024-01-02",
+                                                       "model":  "challenger",
+                                                       "model_label":  "Challenger v0",
+                                                       "model_version":  "usd-layer1-challenger-v0",
+                                                       "status":  "abstained",
+                                                       "call":  {
+                                                                    "direction":  "NO_CALL",
+                                                                    "direction_label":  "NO_CALL",
+                                                                    "conviction":  null,
+                                                                    "raw_score":  0,
+                                                                    "score_basis":  "raw_score (net mechanism score)",
+                                                                    "raw_score_detail":  null,
+                                                                    "factors_live":  null,
+                                                                    "usable_mechanisms":  0,
+                                                                    "agreement":  0,
+                                                                    "participation":  0,
+                                                                    "missing_inputs":  [
+                                                                                           "vix_level",
+                                                                                           "vix_d5_chg",
+                                                                                           "us_2y_d5_bps",
+                                                                                           "us_10y_real_d5_bps",
+                                                                                           "broad_dollar_d5_pct",
+                                                                                           "gold_d5_pct",
+                                                                                           "nasdaq100_d5_pct",
+                                                                                           "eurusd_d5_pct",
+                                                                                           "usdjpy_d5_pct"
+                                                                                       ],
+                                                                    "reason":  "only 0 of 9 mechanisms had a value at this cutoff and the frozen minimum is 6, so no call is made and the missing inputs are named",
+                                                                    "model":  "usd-layer1-challenger-v0",
+                                                                    "version":  "usd-layer1-challenger-v0"
+                                                                },
+                                                       "validation":  {
+                                                                          "mode":  "structural",
+                                                                          "accepted":  true,
+                                                                          "structural_accepted":  true,
+                                                                          "reasons":  [
+
+                                                                                      ],
+                                                                          "warnings":  [
+                                                                                           {
+                                                                                               "code":  "no_consumed_inputs",
+                                                                                               "message":  "none of the 9 inputs challenger reads has a saved value"
+                                                                                           }
+                                                                                       ],
+                                                                          "cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                                                                          "contract_cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                                                                          "inputs":  {
+                                                                                         "declared":  9,
+                                                                                         "present":  0,
+                                                                                         "missing":  9,
+                                                                                         "missing_keys":  [
+                                                                                                              "vix_level",
+                                                                                                              "vix_d5_chg",
+                                                                                                              "us_2y_d5_bps",
+                                                                                                              "us_10y_real_d5_bps",
+                                                                                                              "broad_dollar_d5_pct",
+                                                                                                              "gold_d5_pct",
+                                                                                                              "nasdaq100_d5_pct",
+                                                                                                              "eurusd_d5_pct",
+                                                                                                              "usdjpy_d5_pct"
+                                                                                                          ],
+                                                                                         "stamped_before_cutoff":  0
+                                                                                     },
+                                                                          "receipted":  {
+                                                                                            "complete":  false,
+                                                                                            "complete_inputs":  0,
+                                                                                            "required_inputs":  0,
+                                                                                            "unclocked_keys":  [
+
+                                                                                                               ]
+                                                                                        }
+                                                                      },
+                                                       "results":  {
+                                                                       "EURUSD":  "no_call",
+                                                                       "XAUUSD":  "no_call",
+                                                                       "BTCUSD":  "no_call",
+                                                                       "NAS100":  "no_call"
+                                                                   },
+                                                       "outcomes":  {
+                                                                        "EURUSD":  {
+                                                                                       "direction":  "DOWN",
+                                                                                       "move_pct":  -0.7441,
+                                                                                       "flat_band_pct":  0.1,
+                                                                                       "present":  true,
+                                                                                       "reason":  null
+                                                                                   },
+                                                                        "XAUUSD":  {
+                                                                                       "direction":  "DOWN",
+                                                                                       "move_pct":  -0.5018,
+                                                                                       "flat_band_pct":  0.152,
+                                                                                       "present":  true,
+                                                                                       "reason":  null
+                                                                                   },
+                                                                        "BTCUSD":  {
+                                                                                       "direction":  "FLAT",
+                                                                                       "move_pct":  -0.0163,
+                                                                                       "flat_band_pct":  0.553,
+                                                                                       "present":  true,
+                                                                                       "reason":  null
+                                                                                   },
+                                                                        "NAS100":  {
+                                                                                       "direction":  "DOWN",
+                                                                                       "move_pct":  -1.8,
+                                                                                       "flat_band_pct":  0.21,
+                                                                                       "present":  true,
+                                                                                       "reason":  null
+                                                                                   }
+                                                                    }
+                                                   }
+                                  },
+                   "challenger_v1":  {
+                                         "identity":  "usd-layer1-challenger-v1",
+                                         "workflow_id":  "42sxXHScRvE3qSTX",
+                                         "workflow_name":  "USD Layer 1 - challenger v1 (Cloud adapter)",
+                                         "execution_id":  "5482",
+                                         "execution_url":  "https://silver17.app.n8n.cloud/execution/5482",
+                                         "decision":  {
+                                                          "date":  "2024-01-02",
+                                                          "model":  "challenger_v1",
+                                                          "model_label":  "Challenger v1",
+                                                          "model_version":  "usd-layer1-challenger-v1",
+                                                          "status":  "abstained",
+                                                          "call":  {
+                                                                       "direction":  "NO_CALL",
+                                                                       "direction_label":  "NO_CALL",
+                                                                       "conviction":  null,
+                                                                       "raw_score":  0,
+                                                                       "score_basis":  "raw_score (net mechanism score)",
+                                                                       "raw_score_detail":  null,
+                                                                       "factors_live":  null,
+                                                                       "usable_mechanisms":  0,
+                                                                       "agreement":  0,
+                                                                       "participation":  0,
+                                                                       "missing_inputs":  [
+                                                                                              "vix_level",
+                                                                                              "vix_d5_chg",
+                                                                                              "us_2y_d5_bps",
+                                                                                              "us_10y_real_d5_bps",
+                                                                                              "broad_dollar_d5_pct",
+                                                                                              "gold_d5_pct",
+                                                                                              "nasdaq100_d5_pct",
+                                                                                              "eurusd_d5_pct",
+                                                                                              "usdjpy_d5_pct"
+                                                                                          ],
+                                                                       "reason":  "only 0 of 9 mechanisms had a value at this cutoff and the frozen minimum is 6, so no call is made and the missing inputs are named",
+                                                                       "model":  "usd-layer1-challenger-v1",
+                                                                       "version":  "usd-layer1-challenger-v1"
+                                                                   },
+                                                          "validation":  {
+                                                                             "mode":  "structural",
+                                                                             "accepted":  true,
+                                                                             "structural_accepted":  true,
+                                                                             "reasons":  [
+
+                                                                                         ],
+                                                                             "warnings":  [
+                                                                                              {
+                                                                                                  "code":  "no_consumed_inputs",
+                                                                                                  "message":  "none of the 9 inputs challenger_v1 reads has a saved value"
+                                                                                              }
+                                                                                          ],
+                                                                             "cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                                                                             "contract_cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                                                                             "inputs":  {
+                                                                                            "declared":  9,
+                                                                                            "present":  0,
+                                                                                            "missing":  9,
+                                                                                            "missing_keys":  [
+                                                                                                                 "vix_level",
+                                                                                                                 "vix_d5_chg",
+                                                                                                                 "us_2y_d5_bps",
+                                                                                                                 "us_10y_real_d5_bps",
+                                                                                                                 "broad_dollar_d5_pct",
+                                                                                                                 "gold_d5_pct",
+                                                                                                                 "nasdaq100_d5_pct",
+                                                                                                                 "eurusd_d5_pct",
+                                                                                                                 "usdjpy_d5_pct"
+                                                                                                             ],
+                                                                                            "stamped_before_cutoff":  0
+                                                                                        },
+                                                                             "receipted":  {
+                                                                                               "complete":  false,
+                                                                                               "complete_inputs":  0,
+                                                                                               "required_inputs":  0,
+                                                                                               "unclocked_keys":  [
+
+                                                                                                                  ]
+                                                                                           }
+                                                                         },
+                                                          "results":  {
+                                                                          "EURUSD":  "no_call",
+                                                                          "XAUUSD":  "no_call",
+                                                                          "BTCUSD":  "no_call",
+                                                                          "NAS100":  "no_call"
+                                                                      },
+                                                          "outcomes":  {
+                                                                           "EURUSD":  {
+                                                                                          "direction":  "DOWN",
+                                                                                          "move_pct":  -0.7441,
+                                                                                          "flat_band_pct":  0.1,
+                                                                                          "present":  true,
+                                                                                          "reason":  null
+                                                                                      },
+                                                                           "XAUUSD":  {
+                                                                                          "direction":  "DOWN",
+                                                                                          "move_pct":  -0.5018,
+                                                                                          "flat_band_pct":  0.152,
+                                                                                          "present":  true,
+                                                                                          "reason":  null
+                                                                                      },
+                                                                           "BTCUSD":  {
+                                                                                          "direction":  "FLAT",
+                                                                                          "move_pct":  -0.0163,
+                                                                                          "flat_band_pct":  0.553,
+                                                                                          "present":  true,
+                                                                                          "reason":  null
+                                                                                      },
+                                                                           "NAS100":  {
+                                                                                          "direction":  "DOWN",
+                                                                                          "move_pct":  -1.8,
+                                                                                          "flat_band_pct":  0.21,
+                                                                                          "present":  true,
+                                                                                          "reason":  null
+                                                                                      }
+                                                                       }
+                                                      }
+                                     }
+               },
+    "input_availability":  {
+                               "cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                               "contract_cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                               "structural_accepted":  true,
+                               "accepted":  true,
+                               "reasons":  [
+
+                                           ],
+                               "declared_inputs":  9,
+                               "present_inputs":  0,
+                               "missing_inputs":  9,
+                               "missing_keys":  [
+                                                    "vix_level",
+                                                    "vix_d5_chg",
+                                                    "us_2y_d5_bps",
+                                                    "us_10y_real_d5_bps",
+                                                    "broad_dollar_d5_pct",
+                                                    "gold_d5_pct",
+                                                    "nasdaq100_d5_pct",
+                                                    "eurusd_d5_pct",
+                                                    "usdjpy_d5_pct"
+                                                ],
+                               "stamped_before_cutoff":  0,
+                               "receipted_complete":  false,
+                               "unclocked_keys":  [
+
+                                                  ]
+                           },
+    "input_availability_by_model":  {
+                                        "challenger":  {
+                                                           "cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                                                           "contract_cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                                                           "structural_accepted":  true,
+                                                           "accepted":  true,
+                                                           "reasons":  [
+
+                                                                       ],
+                                                           "declared_inputs":  9,
+                                                           "present_inputs":  0,
+                                                           "missing_inputs":  9,
+                                                           "missing_keys":  [
+                                                                                "vix_level",
+                                                                                "vix_d5_chg",
+                                                                                "us_2y_d5_bps",
+                                                                                "us_10y_real_d5_bps",
+                                                                                "broad_dollar_d5_pct",
+                                                                                "gold_d5_pct",
+                                                                                "nasdaq100_d5_pct",
+                                                                                "eurusd_d5_pct",
+                                                                                "usdjpy_d5_pct"
+                                                                            ],
+                                                           "stamped_before_cutoff":  0,
+                                                           "receipted_complete":  false,
+                                                           "unclocked_keys":  [
+
+                                                                              ]
+                                                       },
+                                        "challenger_v1":  {
+                                                              "cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                                                              "contract_cutoff_at_utc":  "2024-01-02T05:00:00.000Z",
+                                                              "structural_accepted":  true,
+                                                              "accepted":  true,
+                                                              "reasons":  [
+
+                                                                          ],
+                                                              "declared_inputs":  9,
+                                                              "present_inputs":  0,
+                                                              "missing_inputs":  9,
+                                                              "missing_keys":  [
+                                                                                   "vix_level",
+                                                                                   "vix_d5_chg",
+                                                                                   "us_2y_d5_bps",
+                                                                                   "us_10y_real_d5_bps",
+                                                                                   "broad_dollar_d5_pct",
+                                                                                   "gold_d5_pct",
+                                                                                   "nasdaq100_d5_pct",
+                                                                                   "eurusd_d5_pct",
+                                                                                   "usdjpy_d5_pct"
+                                                                               ],
+                                                              "stamped_before_cutoff":  0,
+                                                              "receipted_complete":  false,
+                                                              "unclocked_keys":  [
+
+                                                                                 ]
+                                                          }
+                                    },
+    "comparison":  {
+                       "same_direction":  true,
+                       "challenger":  "NO_CALL",
+                       "challenger_v1":  "NO_CALL",
+                       "challenger_conviction":  null,
+                       "challenger_v1_conviction":  null,
+                       "note":  "Version 0 and version 1 share the same scoring code but not the same frozen weighting; a same-direction result is not a performance claim."
+                   },
+    "n8n":  {
+                "execution_id":  "5480",
+                "execution_url":  "https://silver17.app.n8n.cloud/execution/5480",
+                "workflow_id":  "89uk5JnPbWPL5lGD",
+                "workflow_name":  "USD Layer 1 - paired controller (Cloud)"
+            },
+    "labels":  {
+                   "research_only":  "Research only. This is a replayed historical morning, not a live call.",
+                   "replay_not_performance":  "Agreement between the two versions or with a stored call is reproduction evidence. It is not accuracy, edge, or historical validity beyond the validation gate named here.",
+                   "h1_not_invoked":  "USD-L1-25F-H1-v0.1.0 is a separate, unscored model identity and is not one of these two children."
+               }
+}

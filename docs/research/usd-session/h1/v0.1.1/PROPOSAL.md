@@ -222,3 +222,22 @@ The six-entry set adds `P-02` (DGS2 as a spread operand) and `P-06` (incomplete-
 the earlier four. Neither is applied to the frozen package. `P-02` is listed as an owner decision;
 `P-06` is already the executable behaviour and remains a rulebook wording correction.
 
+
+## 11. Addendum · `H1-A01`, the `ice` **source** amendment (applied 2026-11-18)
+
+This proposal set is unchanged. A separate, owner-accepted amendment is now applied beside it, and the
+two must not be confused:
+
+| | `H1-A01` (applied) | `H1R-03` (still proposed) |
+|---|---|---|
+| What changes | the **source** of `ice`: licensed ICE fixing → archived `DXY.cash` hourly tape | the **age** rule: zero-age → latest eligible fixing within 24 h or 96 h |
+| Why | the owner decided no ICE licence is required, and the tape is already held and verified | a zero-age window is unreachable for an official fixing print |
+| Effect on this amendment | none: the amended observation is stamped at the cutoff by construction, so age stays exactly zero | still open; it would only matter if a future source prints after the cutoff |
+
+Applied by `lib/layer1_backtesting/h1_source_amendments.js`; documented in `AMENDMENT_ICE_SOURCE.md`;
+imported as `data/usd-layer1-backtester/h1-v1/ice.json` (455 records, 455 of 725 mornings, historical
+reconstruction lane only). `USD-L1-25F-H1-v0.1.0` is untouched and `node verify.js` still exits 0.
+
+Nothing else in this proposal is applied. `H1R-01`, `H1R-02`, `H1R-04` and `H1R-06` keep the status
+recorded above.
+

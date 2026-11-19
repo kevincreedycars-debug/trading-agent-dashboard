@@ -56,7 +56,7 @@ const liveTradingStatusUrl = (lane) => `./data/live-trading-trader.${lane}.json?
 // primary feed, which is the lane the lanes document calls ftmo-1; if that ever changes, an ask stamped with the
 // old id is refused by the loop rather than sent to the wrong account.
 const DEFAULT_LIVE_TRADING_LANE = "ftmo-1";
-const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
+const architectureManifestUrlDefault = "./data/architecture-map.json?v=20261119-architecture-mirror-v2";
 const researchLibraryUrl = "./data/research-library/catalog.json?v=20261025-research-prompt-v310";
 const researchLibraryDocumentsUrl = "./data/research-library/documents.json?v=20261013-research-library-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
@@ -419,7 +419,7 @@ const architectureViewGroups = [
   },
   {
     label: "Research",
-    viewIds: ["historical-replay-and-checker", "factor-edge-lab", "phase-2-shadow-backtest", "phase-3-validation", "adr-l2l-research"]
+    viewIds: ["historical-replay-and-checker", "factor-edge-lab", "phase-2-shadow-backtest", "phase-3-validation", "adr-l2l-research", "usd-l1-controller"]
   }
 ];
 const architectureOverviewGroups = [
@@ -581,6 +581,14 @@ const architectureWaterfallViewConfigs = {
       { id: "inputs", label: "Research Inputs", subtitle: "Checker outputs and local candles", boundaryId: "research_stack", nodeIds: ["checker_artifacts", "repo_local_candle_sources"] },
       { id: "adr", label: "ADR / L2L Module", subtitle: "Reach and sequence research", boundaryId: "research_stack", nodeIds: ["adr_l2l_research_artifact"] },
       { id: "browser", label: "Dashboard Readout", subtitle: "Research tab presentation", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer", "dashboard_browser"] }
+    ]
+  },
+  "usd-l1-controller": {
+    stages: [
+      { id: "panel", label: "Stored Panel", subtitle: "Frozen USD sessions and outcomes", boundaryId: "research_stack", nodeIds: ["usd_l1_backtester_panel"] },
+      { id: "controller", label: "Controller Core", subtitle: "Replay, validation, scoring, and CLI", boundaryId: "research_stack", nodeIds: ["usd_l1_backtest_controller", "usd_l1_controller_cli"] },
+      { id: "n8n-wrappers", label: "n8n Wrappers", subtitle: "Committed but not imported", boundaryId: "n8n_runtime", nodeIds: ["usd_l1_backtest_controller_workflow", "usd_l1_layer1_decision_workflow"] },
+      { id: "evidence", label: "Local Evidence", subtitle: "Parity and comparison artifacts", boundaryId: "research_stack", nodeIds: ["usd_l1_controller_evidence"] }
     ]
   },
   "research-flow": {

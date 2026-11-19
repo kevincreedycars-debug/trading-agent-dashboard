@@ -1,4 +1,38 @@
 # Changelog
+## 2026-11-19 - The USD Layer 1 backtest runs as two swappable n8n Cloud workflows, and the map proves it
+
+- Why: the two existing n8n wrappers use the `Execute Command` node, which n8n Cloud does not offer, so
+  neither could run on the Cloud instance. A claimed "workflow version" also could not be swapped
+  without editing the morning, the gate and the scoring.
+- What was built: a deterministic Cloud bundle of the controller library
+  (`automation/n8n/usd-l1-cloud-runtime.js`, 90,011 bytes, `bundle_sha256` pinned in
+  `automation/n8n/usd-l1-cloud-workflows.manifest.json`), one pinned child per model version
+  (`usd-l1-challenger-v0`, `usd-l1-challenger-v1`), a paired controller that binds both children by
+  workflow id and combines their answers, and a builder (`scripts/build_usd_l1_n8n_cloud_workflows.js`)
+  that rewrites the same bytes from the manifest. The parent has no schedule, no provider node and no
+  Supabase node, and its webhook is header-authenticated. `lib/backtesting_n8n_map.js` plus a new default
+  `#n8nmap` tab on `backtesting.html` render the four recorded mornings as a filterable node map with a
+  model swap that changes the selected child's rules and call without changing the morning.
+- What it says: on 2026-11-19 the parent `89uk5JnPbWPL5lGD` ran four controlled mornings in success -
+  5471 structural (both children `allowed`, BULLISH, conviction 2), 5474 receipted (both `blocked`),
+  5477 missing date (both `blocked`), 5480 missing inputs (both `abstained`) - with children 5472/5473,
+  5475/5476, 5478/5479 and 5481/5482, each carrying its own workflow id, identity, `model_version`,
+  direction and conviction. The Cloud bundle reproduced the Node controller for both challengers over
+  all 725 mornings (1,450 decisions, 0 mismatches), and local controller parity stays 2,175/2,175
+  decisions and 8,700/8,700 results. The shared gate and the per-model decisions are visibly separate;
+  H1 is drawn as `not_invoked` and is not substituted for either challenger.
+- Guards: `tests/usd_l1_n8n_cloud_workflows.test.js` 5/5 (bundle is a deterministic build of the pinned
+  sources with no host filesystem or `process` access; each child pins one model and cannot self-start;
+  the parent binds both children by id, has no schedule/provider node and is not `active`; the recorded
+  evidence is the real swap with distinct execution ids and validation parity; the map changes the model
+  without changing the morning or gate), `tests/backtesting_n8n_map.test.js` 10/10,
+  `tests/backtesting_n8n_map.browser.test.js` 1/1 (the map is visible, filterable and linked to the
+  recorded executions at 1440 and 390 pixels), `backtester/tests/usd_l1_backtest_controller.test.js`
+  17/17 and `tests/architecture_map_usd_l1_controller.test.js` 6/6. Not claimed: any edge (structural
+  accuracies are gross replays of a frozen panel), receipted validity on history (0 of 725 mornings),
+  late-print rejection (untested on history) and a full n8n batch (four controlled dates only). Nothing
+  scheduled, no order, stop, size, feed or runtime table was touched. Detail in
+  `docs/USD_L1_N8N_CLOUD_WORKFLOWS.md`.
 ## 2026-11-15 - The verified-mornings answer leads the Backtesting tab
 
 - Why: the owner asked one question of the tab - on how many of the 725 historical mornings can we prove the intended

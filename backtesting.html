@@ -4,7 +4,24 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0b141c;color:#ecf3f4;font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif}
-header,main{max-width:1180px;margin:auto;padding:18px clamp(14px,4vw,40px)}
+header.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:52px;padding:0 clamp(14px,3vw,28px);border-bottom:1px solid #30424e;background:#0a141c;position:sticky;top:0;z-index:20}
+.topbar-brand{font-weight:700;letter-spacing:.01em;color:#f4f8fb}
+.topbar-meta{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.topbar-meta span{border:1px solid #30424e;border-radius:999px;background:#101e27;padding:3px 9px;font-size:11px;color:#cfe3e5}
+.dashboard-frame{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1500px;margin:auto;min-height:calc(100vh - 52px);min-width:0}
+.dashboard-frame main{max-width:none;margin:0;padding:18px clamp(14px,3vw,34px);min-width:0;overflow-wrap:anywhere}
+.site-nav.side-rail{display:flex;flex-direction:column;min-width:0;padding:18px 12px 16px;border-right:1px solid #30424e;background:linear-gradient(180deg,#0c131b,#080e14);position:sticky;top:52px;height:calc(100vh - 52px);overflow:auto}
+.side-rail-head{display:flex;align-items:center;gap:10px;padding:0 8px 16px;border-bottom:1px solid #263945}
+.side-rail-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid #8a6b2d;border-radius:8px;background:#2a2114;color:#f2c86f;font-size:10px;font-weight:700;letter-spacing:.08em}
+.side-rail-label{color:#e9f0f8;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.side-rail-tabs{display:flex;flex:1;flex-direction:column;gap:3px;margin:0;padding:14px 0}
+.side-rail-group{display:block;margin:12px 8px 4px;color:#697f96;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.side-rail-link{display:block;padding:9px 12px 9px 16px;border:1px solid transparent;border-radius:8px;color:#a8b9ca;text-decoration:none;font-size:12px;font-weight:600;line-height:1.25}
+.side-rail-link:hover,.side-rail-link:focus-visible{border-color:#3d647f;background:#152833;color:#f2f7fb}
+.side-rail-link[aria-current=page]{border-color:#7e6128;background:#2a2114;color:#f3cf81}
+.side-rail-foot{display:flex;align-items:center;gap:8px;padding:14px 8px 0;border-top:1px solid #263945;color:#8095aa;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.side-rail-status-dot{width:7px;height:7px;border-radius:50%;background:#48c69a;box-shadow:0 0 12px rgba(72,198,154,.62)}
+@media(max-width:900px){.dashboard-frame{grid-template-columns:minmax(0,1fr)}.site-nav.side-rail{position:static;height:auto;width:100%;max-width:100%;border-right:0;border-bottom:1px solid #30424e}.side-rail-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:10px 0;width:100%;min-width:0;flex:none}.side-rail-head{padding-bottom:10px}}
 header{border-bottom:1px solid #30424e;display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
 a{color:#96dbd1;text-underline-offset:3px}
 h1{font-size:clamp(28px,5vw,46px);line-height:1.05;letter-spacing:-.04em;margin:20px 0 8px}
@@ -32,7 +49,7 @@ summary{cursor:pointer;font-weight:650}
 .pill.unscored{background:#2b2b3a;border-color:#8d8db5}
 .pill.scored_in_legacy_aggregate{background:#3a3419;border-color:#b9a45c}
 table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #2c4049;vertical-align:top}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #2c4049;vertical-align:top;overflow-wrap:anywhere}
 th{color:#cfe3e5;position:sticky;top:0;background:#0f1c24}
 tbody tr:hover{background:#152833}
 tbody tr[aria-selected=true]{background:#1d3440}
@@ -50,8 +67,66 @@ li{margin:3px 0;color:#c3d4d8}
 .hash{word-break:break-all}
 select{font:inherit;color:#dce8e9;background:#162530;border:1px solid #3d515c;border-radius:6px;padding:7px 10px;max-width:100%}
 pre{white-space:pre-wrap;word-break:break-word;background:#0d1922;border:1px solid #2c4049;border-radius:6px;padding:8px;font-size:12px;max-height:280px;overflow:auto}
+.n8n-head{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin:10px 0 14px}
+.n8n-head label{display:grid;gap:4px;font-size:12px;color:#abc6cb;font-weight:650}
+.map-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px;margin:12px 0}
+.map-stat{background:#101e27;border:1px solid #344c58;border-radius:8px;padding:10px 12px}
+.map-stat b{display:block;color:#f4d895;font-size:18px;line-height:1.15}
+.map-stat small{color:#abc6cb;font-size:11px}
+.map-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0;min-width:0}
+.map-column{display:grid;align-content:start;gap:8px;min-width:0}
+.map-column>h3{margin:0 0 2px;color:#9fb7c0;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.map-node{position:relative;background:#101e27;border:1px solid #344c58;border-left:4px solid #5f7d8d;border-radius:8px;padding:10px;min-width:0}
+.map-node[data-status=verified],.map-node[data-status=allowed],.map-node[data-status=accepted],.map-node[data-status=scored]{border-left-color:#69b8a3}
+.map-node[data-status=blocked],.map-node[data-status=missing]{border-left-color:#d68b8b}
+.map-node[data-status=abstained],.map-node[data-status=partial]{border-left-color:#e0a35c}
+.map-node[data-status=not_invoked]{border-left-color:#8d8db5;opacity:.82}
+.map-node button{display:block;width:100%;padding:0;border:0;background:transparent;color:#ecf3f4;text-align:left;font:inherit;cursor:pointer}
+.map-node button:focus-visible{outline:3px solid #f4cb79;outline-offset:3px}
+.map-node .node-label{display:block;font-weight:700;font-size:13px;line-height:1.25;overflow-wrap:anywhere}
+.map-node .node-summary{display:block;margin-top:4px;color:#abc6cb;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+.map-node .node-status{display:inline-block;margin-top:6px;border:1px solid #4b6470;border-radius:20px;padding:0 7px;color:#cfe3e5;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.map-node.selected{box-shadow:0 0 0 2px #f4cb79 inset;background:#172c37}
+.map-arrow{text-align:center;color:#5f7d8d;font-size:18px;line-height:1}
+.map-inspector{display:grid;gap:14px;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:start}
+@media(max-width:1050px){.map-board{grid-template-columns:repeat(2,minmax(0,1fr))}.map-inspector{grid-template-columns:1fr}}
+@media(max-width:620px){.map-board{grid-template-columns:1fr}}
+.map-detail{background:#101e27;border:1px solid #344c58;border-radius:8px;padding:12px}
+.map-detail h3{margin:0 0 6px}
+.map-detail .map-links{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.map-detail .map-links a{border:1px solid #3d647f;border-radius:6px;padding:4px 8px;font-size:11px;text-decoration:none}
+.map-detail ul{margin:6px 0 0}
+.map-files{color:#8fb7d6;font-size:11px;word-break:break-word}
+.n8n-warning{border:1px solid #e0a35c;background:#2a2114;border-radius:8px;padding:10px 12px;margin:12px 0;color:#f7d49a;font-size:13px}
+.n8n-excluded{border:1px dashed #8d8db5;background:#171726;border-radius:8px;padding:10px 12px;margin:12px 0;color:#c9c9e2;font-size:13px}
 </style></head><body>
-<header><b>Trading Agent Dashboard</b><span><a href="index.html">Dashboard</a> · <a href="data/usd-layer1-backtester/backtesting-screen-v1.json">Screen payload</a></span></header>
+<header class="topbar site-nav">
+  <div class="topbar-brand">Asset Directional Movement Dashboard</div>
+  <div class="topbar-meta">
+    <span>Backtesting</span>
+    <span><a href="index.html">Dashboard</a></span>
+    <span><a href="data/usd-layer1-backtester/backtesting-screen-v1.json">Screen payload</a></span>
+  </div>
+</header>
+<div class="dashboard-frame">
+<aside class="side-rail site-nav" aria-label="Backtesting navigation">
+  <div class="side-rail-head"><span class="side-rail-mark">ADM</span><span class="side-rail-label">Backtesting</span></div>
+  <nav class="tab-bar side-rail-tabs">
+    <span class="side-rail-group">Operate</span>
+    <a class="side-rail-link" href="index.html">Dashboard</a>
+    <a class="side-rail-link" href="#n8nmap" aria-current="page">Layer 1 map</a>
+    <span class="side-rail-group">Evidence</span>
+    <a class="side-rail-link" href="#overview">Overview</a>
+    <a class="side-rail-link" href="#architecture">Architecture</a>
+    <a class="side-rail-link" href="#tests">Tests</a>
+    <a class="side-rail-link" href="#morning">Morning run</a>
+    <a class="side-rail-link" href="#ledger">Decision ledger</a>
+    <a class="side-rail-link" href="#audit">Run audit</a>
+    <a class="side-rail-link" href="#decisions">Decisions</a>
+    <a class="side-rail-link" href="#h1">H1 candidate</a>
+  </nav>
+  <div class="side-rail-foot"><span class="side-rail-status-dot" aria-hidden="true"></span><span>Research only</span></div>
+</aside>
 <main>
 <h1>Backtesting</h1>
 <p id="subtitle">Loading the evidence behind the 05:00 London USD call…</p>
@@ -65,12 +140,15 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0d1922;border:1px sol
 <section id="view" aria-live="polite"></section>
 <section id="provenance"><h2>Provenance</h2><div id="provenance-body" class="caption"></div></section>
 </main>
+</div>
 <script src="lib/vendor/three.min.js"></script>
+<script src="lib/backtesting_n8n_map.js"></script>
 <script>
 "use strict";
 const payloadUrl="data/usd-layer1-backtester/backtesting-screen-v1.json";
-const tabs={overview:"Overview",architecture:"Architecture",tests:"Tests",morning:"Morning run",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
-const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all"};
+const n8nEvidenceUrl="data/usd-layer1-backtester/n8n-execution-evidence-v1.json";
+const tabs={n8nmap:"Layer 1 map",overview:"Overview",architecture:"Architecture",tests:"Tests",morning:"Morning run",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
+const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all",n8nEvidence:null,n8nError:null,n8nLoading:null,mapCase:null,mapModel:"challenger",mapNode:"child"};
 function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=text;if(cls)n.className=cls;if(parent)parent.append(n);return n}
 function pill(status,parent){return el("span",status,parent,"pill "+status)}
 function pct(value){return value===null||value===undefined?"—":value+"%"}
@@ -816,6 +894,130 @@ function renderMorningRun(v,s){
 }
 
 
+function loadN8nEvidence(){
+  if(state.n8nEvidence||state.n8nLoading)return;
+  state.n8nError=null;
+  state.n8nLoading=fetch(n8nEvidenceUrl).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(json=>{state.n8nEvidence=json}).catch(error=>{state.n8nError=error.message}).finally(()=>{state.n8nLoading=null;if(location.hash==="#n8nmap")render()});
+}
+function mapDetailRows(node,model,caseEntry,ev,api){
+  if(node.id==="validation")return api.validationRows(model);
+  if(node.id==="outcomes")return api.resultRows(model).map(row=>({label:row.market+" · "+row.direction+" "+row.move,value:row.result,status:row.status}));
+  if(node.id==="tests")return api.testRows(ev).map(row=>({label:row.ordinal+". "+row.label,value:row.status+" · usable "+(row.usable_sessions??"—"),status:row.status==="blocked"?"blocked":"accepted"}));
+  if(node.id==="decision")return [
+    {label:"Direction",value:model.call.direction||"—",status:model.status},
+    {label:"Conviction",value:String(model.call.conviction??"—"),status:model.status},
+    {label:"Raw score",value:String(model.call.raw_score??"—"),status:model.status},
+    {label:"Score basis",value:model.call.score_basis||"—",status:"accepted"},
+    {label:"Mechanisms live",value:String(model.call.usable_mechanisms??"—"),status:"accepted"},
+    {label:"Agreement",value:String(model.call.agreement??"—"),status:"accepted"},
+    {label:"Participation",value:String(model.call.participation??"—"),status:"accepted"}
+  ];
+  if(node.id==="child")return [
+    {label:"Identity",value:model.identity,status:"accepted"},
+    {label:"Version",value:model.model_version,status:"accepted"},
+    {label:"Model label",value:model.model_label||"—",status:"accepted"},
+    {label:"Source",value:node.files[0]||"—",status:"accepted"},
+    {label:"Child execution",value:model.execution_id+" · "+model.execution_status,status:model.execution_status}
+  ];
+  if(node.id==="parent")return [
+    {label:"Parent workflow",value:caseEntry.parent_execution.workflow_name,status:"accepted"},
+    {label:"Parent execution",value:caseEntry.parent_execution.id+" · "+caseEntry.parent_execution.status,status:caseEntry.parent_execution.status},
+    {label:"Trigger",value:"manual or header-authenticated webhook · no schedule",status:"accepted"}
+  ];
+  if(node.id==="execution")return [
+    {label:"Parent",value:caseEntry.parent_execution.id,status:caseEntry.parent_execution.status},
+    {label:"Child",value:model.execution_id,status:model.execution_status},
+    {label:"Raw response",value:caseEntry.raw_evidence,status:"accepted"}
+  ];
+  if(node.id==="comparison")return Object.entries(caseEntry.models).map(([key,value])=>({label:key+" · "+value.identity,value:value.status+" · "+(value.call.direction||"—"),status:value.status}));
+  if(node.id==="h1")return [
+    {label:"Identity",value:"USD-L1-25F-H1-v0.1.0",status:"not_invoked"},
+    {label:"Status",value:"unscored · separate model identity",status:"not_invoked"},
+    {label:"Rule",value:"Never substitute a challenger result for H1.",status:"not_invoked"}
+  ];
+  return [{label:"Source",value:node.files.join(", ")||"—",status:"accepted"}];
+}
+function renderN8nMap(v){
+  v.replaceChildren();
+  el("h2","USD Layer 1 n8n map",v);
+  el("p","Recorded n8n executions over the committed morning panel. Choose a model and a recorded case; click any node to inspect its evidence. This map never places an order and never publishes a live call.",v);
+  if(state.n8nError){const b=el("div",null,v,"banner bad");el("strong","The n8n evidence could not be loaded: "+state.n8nError,b);return}
+  if(!state.n8nEvidence){el("p","Loading the recorded n8n evidence…",v);loadN8nEvidence();return}
+  const api=window.BacktestingN8nMap;
+  if(!api){const b=el("div",null,v,"banner bad");el("strong","The map view model did not load.",b);return}
+  const ev=state.n8nEvidence;
+  const cases=api.caseOptions(ev);
+  const models=api.modelOptions(ev);
+  if(!cases.length){el("p","No recorded execution cases are present.",v);return}
+  if(!state.mapCase||!cases.some(c=>c.id===state.mapCase))state.mapCase=cases[0].id;
+  if(!models.some(m=>m.key===state.mapModel))state.mapModel=models[0].key;
+  const caseEntry=api.selectCase(ev,state.mapCase);
+  const model=api.selectedCaseModel(caseEntry,state.mapModel);
+  const h=api.headline(ev);
+
+  const warn=el("div",null,v,"n8n-warning");
+  el("strong","Four controlled n8n cases, not a full batch.",warn);
+  el("p","Structural validation is a gate; receipted validity requires full timestamps. Parity is reproduction only. H1 is a separate unscored identity and is not invoked here.",warn);
+  const stats=el("div",null,v,"map-stats");
+  for(const [value,label] of [[h.structural,"structural accepted"],[h.receipted,"receipted complete"],[String(h.late),"late stamps in panel"],[h.parity,"parity decisions reproduced"],[h.performance,"performance / edge"],[h.h1,"H1 candidate"]]){
+    const s=el("div",null,stats,"map-stat");el("b",value,s);el("small",label,s);
+  }
+
+  const head=el("div",null,v,"n8n-head");
+  const modelLabel=el("label",null,head);el("span","Layer 1 model",modelLabel);
+  const modelSelect=el("select",null,modelLabel);
+  for(const option of models){const o=el("option",option.label,modelSelect);o.value=option.key;o.selected=option.key===state.mapModel}
+  modelSelect.onchange=()=>{state.mapModel=modelSelect.value;state.mapNode="child";render()};
+  const caseLabel=el("label",null,head);el("span","Recorded case",caseLabel);
+  const caseSelect=el("select",null,caseLabel);
+  for(const option of cases){const o=el("option",option.label,caseSelect);o.value=option.id;o.selected=option.id===state.mapCase}
+  caseSelect.onchange=()=>{state.mapCase=caseSelect.value;state.mapNode="child";render()};
+  el("p","Selected: "+model.identity+" · "+caseEntry.date+" · "+caseEntry.label+" · execution "+caseEntry.parent_execution.id,v,"caption");
+
+  const graph=api.graph(ev,state.mapCase,state.mapModel);
+  const byId=new Map(graph.nodes.map(node=>[node.id,node]));
+  const board=el("div",null,v,"map-board");
+  const columns=[["Sources",["dataset","h1"]],["Contract and gate",["parent","validation"]],["Selected Layer 1",["child","decision"]],["Evidence",["outcomes","tests","comparison","execution"]]];
+  for(const [title,ids] of columns){
+    const col=el("div",null,board,"map-column");el("h3",title,col);
+    for(const id of ids){
+      const node=byId.get(id);if(!node)continue;
+      const card=el("div",null,col,"map-node"+(state.mapNode===id?" selected":""));
+      card.dataset.status=node.status;
+      const button=el("button",null,card);button.type="button";button.setAttribute("aria-pressed",state.mapNode===id?"true":"false");
+      button.onclick=()=>{state.mapNode=id;render()};
+      el("span",node.label,button,"node-label");el("span",node.summary,button,"node-summary");el("span",node.status,button,"node-status");
+    }
+  }
+  el("p","Connections: "+graph.edges.map(e=>e.from+" → "+e.to+" ("+e.label+")").join(" · "),v,"caption mono");
+  el("h3","Selected node",v);
+  const inspector=el("div",null,v,"map-inspector");
+  const left=el("div",null,inspector,"map-detail");
+  const selected=byId.get(state.mapNode)||byId.get("child");
+  const heading=el("h3",selected.label,left);pill(selected.status,heading);
+  el("p",selected.summary,left);
+  const rows=mapDetailRows(selected,model,caseEntry,ev,api);
+  const detailTable=table(left,["Field","Value"],[]);
+  const detailBody=detailTable.querySelector("tbody");
+  for(const row of rows){const tr=el("tr",null,detailBody);el("td",row.label,tr);const td=el("td",null,tr);el("span",row.value,td,"mono")}
+  if(selected.files&&selected.files.length){el("p","Evidence files",left,"caption");const list=el("ul",null,left);for(const file of selected.files)el("li",file,list,"map-files")}
+  if(selected.links&&selected.links.length){const links=el("div",null,left,"map-links");for(const link of selected.links){const a=el("a",link.label,links);a.href=link.href;a.target="_blank";a.rel="noopener"}}
+  const right=el("div",null,inspector,"map-detail");
+  el("h3","Input availability and decision",right);
+  el("p","Cutoff "+(model.validation.cutoff_at_utc||"—")+" · contract "+(model.validation.contract_cutoff_at_utc||"—"),right,"caption mono");
+  table(right,["Check","Value"],api.validationRows(model).map(row=>[row.label,row.value]));
+  table(right,["Market","Move","Result"],api.resultRows(model).map(row=>[row.market,row.direction+" "+row.move,row.result]));
+
+  el("h3","Model rules for "+model.identity,v);
+  table(v,["Mechanism","Input","Threshold","Rule","Weight"],api.ruleRows(ev,state.mapModel).map(rule=>[rule.label,rule.input,rule.threshold,rule.rule,String(rule.weight)]));
+  el("h3","The four backtests",v);
+  table(v,["#","Test","Status","Usable","Outcome source"],api.testRows(ev).map(row=>[String(row.ordinal),row.label,row.status,String(row.usable_sessions??"—"),row.outcome_source]));
+  el("p","Tests 3 and 4 are blocked on history; test 1 is a broker proxy. None of these rows is an edge claim.",v,"caption");
+  const excluded=el("div",null,v,"n8n-excluded");
+  el("strong","H1 is not in this map's selected models.",excluded);
+  el("p","The two children are usd-layer1-challenger-v0 and usd-layer1-challenger-v1. USD-L1-25F-H1-v0.1.0 is unscored and separate. Current is not bundled in the Cloud runtime; the local controller still runs it.",excluded);
+}
+
 function render(){
   const host=document.querySelector("#view");host.replaceChildren();
   if(disposeMap){disposeMap();mapApi=null}
@@ -825,7 +1027,8 @@ function render(){
   for(const a of document.querySelectorAll("#tabs a")){
     if(a.hash==="#"+keyName)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
   }
-  if(keyName==="overview")renderOverview(host,s);
+  if(keyName==="n8nmap")renderN8nMap(host);
+  else if(keyName==="overview")renderOverview(host,s);
   else if(keyName==="architecture")renderArchitecture(host,s);
   else if(keyName==="tests")renderTests(host,s);
   else if(keyName==="morning")renderMorningRun(host,s);

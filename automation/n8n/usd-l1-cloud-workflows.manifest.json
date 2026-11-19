@@ -1,0 +1,71 @@
+{
+  "schema_version": "usd-l1-cloud-workflows-v1",
+  "bundle_version": "usd-l1-cloud-runtime-v1",
+  "bundle_path": "automation/n8n/usd-l1-cloud-runtime.js",
+  "bundle_sha256": "e1e7ecb001e627b2ed803e910d0433e1c8cfca048ace0741ca7dce2338360e26",
+  "bundle_bytes": 90011,
+  "source_files": [
+    {
+      "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
+      "sha256": "c3d753db92ee3780355089d4cbd310f32b735715d89a6a2624075e90818dfce3",
+      "stub": false
+    },
+    {
+      "path": "backtester/lib/usd_layer1_backtester/contracts.js",
+      "sha256": "dbc8ffdf386ef593b8a28d5893576afddbe1d81a3bee0852686c96bdeb437628",
+      "stub": false
+    },
+    {
+      "path": "backtester/lib/usd_layer1_backtester/challenger.js",
+      "sha256": "5d4f91ccc3f03a5e0f03bb5369c5a3d68e2caf1d95f2f5156717764911248151",
+      "stub": false
+    },
+    {
+      "path": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+      "sha256": "269bfdf4e1649456d89863718e1bd1c25440de24296a81d190af594a1b8d154f",
+      "stub": false
+    },
+    {
+      "path": "lib/usd_l1_votes.js",
+      "sha256": "76c2eae8a2fad079ea988615d7d6d212bcdd1b285f09c3e3920c2533aa218f23",
+      "stub": false
+    },
+    {
+      "path": "backtester/lib/usd_session_engine_interface.js",
+      "sha256": "3aa41dc91adc52bdae446aec7ee89e9747652db6cb916b58b1ca882d8b408435",
+      "stub": false
+    },
+    {
+      "path": "backtester/lib/usd_layer1_backtester/current_model.js",
+      "sha256": "dad0fb69d13ac9f72b14f0d307c6584d00650653e138f841544f2a50b6c94ab4",
+      "stub": true
+    }
+  ],
+  "children": [
+    {
+      "file": "automation/n8n/usd-l1-challenger-v0.cloud.workflow.json",
+      "name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+      "model": "challenger",
+      "identity": "usd-layer1-challenger-v0",
+      "workflow_id": "giGJKNQw5WLh1xbX"
+    },
+    {
+      "file": "automation/n8n/usd-l1-challenger-v1.cloud.workflow.json",
+      "name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+      "model": "challenger_v1",
+      "identity": "usd-layer1-challenger-v1",
+      "workflow_id": "42sxXHScRvE3qSTX"
+    }
+  ],
+  "parent": {
+    "file": "automation/n8n/usd-l1-paired-controller.cloud.workflow.json",
+    "name": "USD Layer 1 - paired controller (Cloud)",
+    "webhook_path": "usd-l1-paired-controller",
+    "webhook_authentication": "headerAuth"
+  },
+  "notes": [
+    "Generated workflows contain no Execute Command node and no host command path.",
+    "The production-control adapter is deliberately not bundled because its replay core reads local files and Supabase helpers.",
+    "USD-L1-25F-H1-v0.1.0 is not one of these adapters and is never substituted for one."
+  ]
+}

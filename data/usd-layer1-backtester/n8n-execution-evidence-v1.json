@@ -1,0 +1,1888 @@
+{
+  "schema_version": "usd-l1-n8n-execution-evidence-v1",
+  "generated_at": "2026-11-19T21:33:04.680Z",
+  "research_only": true,
+  "repository": {
+    "head": "fdfc2c1d5e9b46174c50568212033af0f24cbc79",
+    "manifest": "automation/n8n/usd-l1-cloud-workflows.manifest.json"
+  },
+  "instance": {
+    "base_url": "https://silver17.app.n8n.cloud",
+    "project_url": "https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows"
+  },
+  "bundle": {
+    "schema_version": "usd-l1-cloud-workflows-v1",
+    "bundle_version": "usd-l1-cloud-runtime-v1",
+    "bundle_path": "automation/n8n/usd-l1-cloud-runtime.js",
+    "bundle_sha256": "e1e7ecb001e627b2ed803e910d0433e1c8cfca048ace0741ca7dce2338360e26",
+    "bundle_bytes": 90011,
+    "source_files": [
+      {
+        "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
+        "sha256": "c3d753db92ee3780355089d4cbd310f32b735715d89a6a2624075e90818dfce3",
+        "stub": false
+      },
+      {
+        "path": "backtester/lib/usd_layer1_backtester/contracts.js",
+        "sha256": "dbc8ffdf386ef593b8a28d5893576afddbe1d81a3bee0852686c96bdeb437628",
+        "stub": false
+      },
+      {
+        "path": "backtester/lib/usd_layer1_backtester/challenger.js",
+        "sha256": "5d4f91ccc3f03a5e0f03bb5369c5a3d68e2caf1d95f2f5156717764911248151",
+        "stub": false
+      },
+      {
+        "path": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+        "sha256": "269bfdf4e1649456d89863718e1bd1c25440de24296a81d190af594a1b8d154f",
+        "stub": false
+      },
+      {
+        "path": "lib/usd_l1_votes.js",
+        "sha256": "76c2eae8a2fad079ea988615d7d6d212bcdd1b285f09c3e3920c2533aa218f23",
+        "stub": false
+      },
+      {
+        "path": "backtester/lib/usd_session_engine_interface.js",
+        "sha256": "3aa41dc91adc52bdae446aec7ee89e9747652db6cb916b58b1ca882d8b408435",
+        "stub": false
+      },
+      {
+        "path": "backtester/lib/usd_layer1_backtester/current_model.js",
+        "sha256": "dad0fb69d13ac9f72b14f0d307c6584d00650653e138f841544f2a50b6c94ab4",
+        "stub": true
+      }
+    ],
+    "children": [
+      {
+        "file": "automation/n8n/usd-l1-challenger-v0.cloud.workflow.json",
+        "name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+        "model": "challenger",
+        "identity": "usd-layer1-challenger-v0",
+        "workflow_id": "giGJKNQw5WLh1xbX"
+      },
+      {
+        "file": "automation/n8n/usd-l1-challenger-v1.cloud.workflow.json",
+        "name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+        "model": "challenger_v1",
+        "identity": "usd-layer1-challenger-v1",
+        "workflow_id": "42sxXHScRvE3qSTX"
+      }
+    ],
+    "parent": {
+      "file": "automation/n8n/usd-l1-paired-controller.cloud.workflow.json",
+      "name": "USD Layer 1 - paired controller (Cloud)",
+      "webhook_path": "usd-l1-paired-controller",
+      "webhook_authentication": "headerAuth"
+    },
+    "notes": [
+      "Generated workflows contain no Execute Command node and no host command path.",
+      "The production-control adapter is deliberately not bundled because its replay core reads local files and Supabase helpers.",
+      "USD-L1-25F-H1-v0.1.0 is not one of these adapters and is never substituted for one."
+    ]
+  },
+  "identities": {
+    "selected": [
+      {
+        "key": "challenger",
+        "id": "usd-layer1-challenger-v0",
+        "label": "Challenger v0",
+        "source": "backtester/lib/usd_layer1_backtester/challenger.js",
+        "workflow_id": "giGJKNQw5WLh1xbX",
+        "workflow_name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+        "workflow_url": "https://silver17.app.n8n.cloud/workflow/giGJKNQw5WLh1xbX"
+      },
+      {
+        "key": "challenger_v1",
+        "id": "usd-layer1-challenger-v1",
+        "label": "Challenger v1",
+        "source": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+        "workflow_id": "42sxXHScRvE3qSTX",
+        "workflow_name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+        "workflow_url": "https://silver17.app.n8n.cloud/workflow/42sxXHScRvE3qSTX"
+      }
+    ],
+    "not_invoked": [
+      {
+        "key": "current",
+        "label": "Current USD model",
+        "id": "current",
+        "version": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+        "reason": "Not bundled in the n8n Cloud runtime: its replay core reads local files and Supabase helpers. The local controller still runs it.",
+        "source": "backtester/lib/usd_layer1_backtester/current_model.js"
+      },
+      {
+        "key": "h1",
+        "label": "USD-L1-25F-H1-v0.1.0 (H1 candidate, unscored)",
+        "id": "usd_l1_25f_h1",
+        "version": "USD-L1-25F-H1-v0.1.0",
+        "reason": "Separate model identity, unscored, and never one of the two n8n children. Its nine-input evidence contract is not met.",
+        "source": "docs/research/usd-session/h1/v0.1.1/"
+      }
+    ]
+  },
+  "workflows": {
+    "parent": {
+      "id": "89uk5JnPbWPL5lGD",
+      "name": "USD Layer 1 - paired controller (Cloud)",
+      "url": "https://silver17.app.n8n.cloud/workflow/89uk5JnPbWPL5lGD",
+      "active": false,
+      "trigger": "manual plus header-authenticated webhook; no schedule",
+      "webhook_deactivated_after_evidence": true
+    },
+    "children": [
+      {
+        "model": "challenger",
+        "identity": "usd-layer1-challenger-v0",
+        "id": "giGJKNQw5WLh1xbX",
+        "name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+        "url": "https://silver17.app.n8n.cloud/workflow/giGJKNQw5WLh1xbX",
+        "active": true,
+        "trigger": "execute-workflow trigger only; cannot self-start"
+      },
+      {
+        "model": "challenger_v1",
+        "identity": "usd-layer1-challenger-v1",
+        "id": "42sxXHScRvE3qSTX",
+        "name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+        "url": "https://silver17.app.n8n.cloud/workflow/42sxXHScRvE3qSTX",
+        "active": true,
+        "trigger": "execute-workflow trigger only; cannot self-start"
+      }
+    ]
+  },
+  "execution_cases": [
+    {
+      "id": "2024-01-10-structural",
+      "label": "structural",
+      "date": "2024-01-10",
+      "validation_mode": "structural",
+      "outcome": "allowed",
+      "parent_execution": {
+        "id": "5471",
+        "url": "https://silver17.app.n8n.cloud/execution/5471",
+        "workflow_id": "89uk5JnPbWPL5lGD",
+        "workflow_name": "USD Layer 1 - paired controller (Cloud)",
+        "status": "success",
+        "time": {
+          "startedAt": "2026-11-19T19:56:53.040Z",
+          "stoppedAt": "2026-11-19T19:56:55.164Z"
+        }
+      },
+      "input_availability": {
+        "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+        "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+        "structural_accepted": true,
+        "accepted": true,
+        "reasons": [],
+        "declared_inputs": 9,
+        "present_inputs": 9,
+        "missing_inputs": 0,
+        "missing_keys": [],
+        "stamped_before_cutoff": 2,
+        "receipted_complete": false,
+        "unclocked_keys": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps",
+          "broad_dollar_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ]
+      },
+      "input_availability_by_model": {
+        "challenger": {
+          "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "structural_accepted": true,
+          "accepted": true,
+          "reasons": [],
+          "declared_inputs": 9,
+          "present_inputs": 9,
+          "missing_inputs": 0,
+          "missing_keys": [],
+          "stamped_before_cutoff": 2,
+          "receipted_complete": false,
+          "unclocked_keys": [
+            "vix_level",
+            "vix_d5_chg",
+            "us_2y_d5_bps",
+            "us_10y_real_d5_bps",
+            "broad_dollar_d5_pct",
+            "eurusd_d5_pct",
+            "usdjpy_d5_pct"
+          ]
+        },
+        "challenger_v1": {
+          "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "structural_accepted": true,
+          "accepted": true,
+          "reasons": [],
+          "declared_inputs": 9,
+          "present_inputs": 9,
+          "missing_inputs": 0,
+          "missing_keys": [],
+          "stamped_before_cutoff": 2,
+          "receipted_complete": false,
+          "unclocked_keys": [
+            "vix_level",
+            "vix_d5_chg",
+            "us_2y_d5_bps",
+            "us_10y_real_d5_bps",
+            "broad_dollar_d5_pct",
+            "eurusd_d5_pct",
+            "usdjpy_d5_pct"
+          ]
+        }
+      },
+      "models": {
+        "challenger": {
+          "identity": "usd-layer1-challenger-v0",
+          "workflow_id": "giGJKNQw5WLh1xbX",
+          "workflow_name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+          "workflow_url": "https://silver17.app.n8n.cloud/workflow/giGJKNQw5WLh1xbX",
+          "execution_id": "5472",
+          "execution_url": "https://silver17.app.n8n.cloud/execution/5472",
+          "execution_status": "success",
+          "execution_time": {
+            "startedAt": "2026-11-19T19:56:54.831Z",
+            "stoppedAt": "2026-11-19T19:56:54.943Z"
+          },
+          "status": "allowed",
+          "model_label": "Challenger v0",
+          "model_version": "usd-layer1-challenger-v0",
+          "call": {
+            "direction": "BULLISH",
+            "direction_label": "BULLISH",
+            "conviction": 2,
+            "raw_score": 3,
+            "score_basis": "raw_score (net mechanism score)",
+            "factors_live": null,
+            "usable_mechanisms": 9,
+            "agreement": 0.3333,
+            "participation": 1,
+            "missing_inputs": [],
+            "reason": "9 of 9 mechanisms live, net +3 (33% agreement, 100% participation)"
+          },
+          "validation": {
+            "accepted": true,
+            "structural_accepted": true,
+            "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+            "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+            "reasons": [],
+            "declared_inputs": 9,
+            "present_inputs": 9,
+            "missing_inputs": 0,
+            "missing_keys": [],
+            "stamped_before_cutoff": 2,
+            "receipted_complete": false,
+            "unclocked_keys": [
+              "vix_level",
+              "vix_d5_chg",
+              "us_2y_d5_bps",
+              "us_10y_real_d5_bps",
+              "broad_dollar_d5_pct",
+              "eurusd_d5_pct",
+              "usdjpy_d5_pct"
+            ]
+          },
+          "results": {
+            "EURUSD": "miss",
+            "XAUUSD": "miss",
+            "BTCUSD": "flat",
+            "NAS100": "miss"
+          },
+          "outcomes": {
+            "EURUSD": {
+              "direction": "UP",
+              "move_pct": 0.4217,
+              "flat_band_pct": 0.1,
+              "present": true,
+              "reason": null
+            },
+            "XAUUSD": {
+              "direction": "UP",
+              "move_pct": 0.3103,
+              "flat_band_pct": 0.152,
+              "present": true,
+              "reason": null
+            },
+            "BTCUSD": {
+              "direction": "FLAT",
+              "move_pct": 0.2045,
+              "flat_band_pct": 0.553,
+              "present": true,
+              "reason": null
+            },
+            "NAS100": {
+              "direction": "UP",
+              "move_pct": 1.0377,
+              "flat_band_pct": 0.21,
+              "present": true,
+              "reason": null
+            }
+          }
+        },
+        "challenger_v1": {
+          "identity": "usd-layer1-challenger-v1",
+          "workflow_id": "42sxXHScRvE3qSTX",
+          "workflow_name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+          "workflow_url": "https://silver17.app.n8n.cloud/workflow/42sxXHScRvE3qSTX",
+          "execution_id": "5473",
+          "execution_url": "https://silver17.app.n8n.cloud/execution/5473",
+          "execution_status": "success",
+          "execution_time": {
+            "startedAt": "2026-11-19T19:56:55.048Z",
+            "stoppedAt": "2026-11-19T19:56:55.115Z"
+          },
+          "status": "allowed",
+          "model_label": "Challenger v1",
+          "model_version": "usd-layer1-challenger-v1",
+          "call": {
+            "direction": "BULLISH",
+            "direction_label": "BULLISH",
+            "conviction": 2,
+            "raw_score": 2.5,
+            "score_basis": "raw_score (net mechanism score)",
+            "factors_live": null,
+            "usable_mechanisms": 9,
+            "agreement": 0.3571,
+            "participation": 1,
+            "missing_inputs": [],
+            "reason": "9 of 9 mechanisms live, net +2.5 (36% agreement, 100% participation)"
+          },
+          "validation": {
+            "accepted": true,
+            "structural_accepted": true,
+            "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+            "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+            "reasons": [],
+            "declared_inputs": 9,
+            "present_inputs": 9,
+            "missing_inputs": 0,
+            "missing_keys": [],
+            "stamped_before_cutoff": 2,
+            "receipted_complete": false,
+            "unclocked_keys": [
+              "vix_level",
+              "vix_d5_chg",
+              "us_2y_d5_bps",
+              "us_10y_real_d5_bps",
+              "broad_dollar_d5_pct",
+              "eurusd_d5_pct",
+              "usdjpy_d5_pct"
+            ]
+          },
+          "results": {
+            "EURUSD": "miss",
+            "XAUUSD": "miss",
+            "BTCUSD": "flat",
+            "NAS100": "miss"
+          },
+          "outcomes": {
+            "EURUSD": {
+              "direction": "UP",
+              "move_pct": 0.4217,
+              "flat_band_pct": 0.1,
+              "present": true,
+              "reason": null
+            },
+            "XAUUSD": {
+              "direction": "UP",
+              "move_pct": 0.3103,
+              "flat_band_pct": 0.152,
+              "present": true,
+              "reason": null
+            },
+            "BTCUSD": {
+              "direction": "FLAT",
+              "move_pct": 0.2045,
+              "flat_band_pct": 0.553,
+              "present": true,
+              "reason": null
+            },
+            "NAS100": {
+              "direction": "UP",
+              "move_pct": 1.0377,
+              "flat_band_pct": 0.21,
+              "present": true,
+              "reason": null
+            }
+          }
+        }
+      },
+      "comparison": {
+        "same_direction": true,
+        "challenger": "BULLISH",
+        "challenger_v1": "BULLISH",
+        "challenger_conviction": 2,
+        "challenger_v1_conviction": 2,
+        "note": "Version 0 and version 1 share the same scoring code but not the same frozen weighting; a same-direction result is not a performance claim."
+      },
+      "labels": {
+        "research_only": "Research only. This is a replayed historical morning, not a live call.",
+        "replay_not_performance": "Agreement between the two versions or with a stored call is reproduction evidence. It is not accuracy, edge, or historical validity beyond the validation gate named here.",
+        "h1_not_invoked": "USD-L1-25F-H1-v0.1.0 is a separate, unscored model identity and is not one of these two children."
+      },
+      "raw_evidence": "data/usd-layer1-backtester/n8n/execution-5471-structural.json"
+    },
+    {
+      "id": "2024-01-10-receipted",
+      "label": "receipted",
+      "date": "2024-01-10",
+      "validation_mode": "receipted",
+      "outcome": "blocked",
+      "parent_execution": {
+        "id": "5474",
+        "url": "https://silver17.app.n8n.cloud/execution/5474",
+        "workflow_id": "89uk5JnPbWPL5lGD",
+        "workflow_name": "USD Layer 1 - paired controller (Cloud)",
+        "status": "success",
+        "time": {
+          "startedAt": "2026-11-19T19:57:05.546Z",
+          "stoppedAt": "2026-11-19T19:57:06.189Z"
+        }
+      },
+      "input_availability": {
+        "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+        "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+        "structural_accepted": true,
+        "accepted": false,
+        "reasons": [
+          "receipted_incomplete"
+        ],
+        "declared_inputs": 9,
+        "present_inputs": 9,
+        "missing_inputs": 0,
+        "missing_keys": [],
+        "stamped_before_cutoff": 2,
+        "receipted_complete": false,
+        "unclocked_keys": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps",
+          "broad_dollar_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ]
+      },
+      "input_availability_by_model": {
+        "challenger": {
+          "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "structural_accepted": true,
+          "accepted": false,
+          "reasons": [
+            "receipted_incomplete"
+          ],
+          "declared_inputs": 9,
+          "present_inputs": 9,
+          "missing_inputs": 0,
+          "missing_keys": [],
+          "stamped_before_cutoff": 2,
+          "receipted_complete": false,
+          "unclocked_keys": [
+            "vix_level",
+            "vix_d5_chg",
+            "us_2y_d5_bps",
+            "us_10y_real_d5_bps",
+            "broad_dollar_d5_pct",
+            "eurusd_d5_pct",
+            "usdjpy_d5_pct"
+          ]
+        },
+        "challenger_v1": {
+          "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "structural_accepted": true,
+          "accepted": false,
+          "reasons": [
+            "receipted_incomplete"
+          ],
+          "declared_inputs": 9,
+          "present_inputs": 9,
+          "missing_inputs": 0,
+          "missing_keys": [],
+          "stamped_before_cutoff": 2,
+          "receipted_complete": false,
+          "unclocked_keys": [
+            "vix_level",
+            "vix_d5_chg",
+            "us_2y_d5_bps",
+            "us_10y_real_d5_bps",
+            "broad_dollar_d5_pct",
+            "eurusd_d5_pct",
+            "usdjpy_d5_pct"
+          ]
+        }
+      },
+      "models": {
+        "challenger": {
+          "identity": "usd-layer1-challenger-v0",
+          "workflow_id": "giGJKNQw5WLh1xbX",
+          "workflow_name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+          "workflow_url": "https://silver17.app.n8n.cloud/workflow/giGJKNQw5WLh1xbX",
+          "execution_id": "5475",
+          "execution_url": "https://silver17.app.n8n.cloud/execution/5475",
+          "execution_status": "success",
+          "execution_time": {
+            "startedAt": "2026-11-19T19:57:05.892Z",
+            "stoppedAt": "2026-11-19T19:57:05.951Z"
+          },
+          "status": "blocked",
+          "model_label": "Challenger v0",
+          "model_version": "usd-layer1-challenger-v0",
+          "call": {
+            "direction": "BULLISH",
+            "direction_label": "BULLISH",
+            "conviction": 2,
+            "raw_score": 3,
+            "score_basis": "raw_score (net mechanism score)",
+            "factors_live": null,
+            "usable_mechanisms": 9,
+            "agreement": 0.3333,
+            "participation": 1,
+            "missing_inputs": [],
+            "reason": "receipted gate: not every consumed input carries a full timestamp before the cutoff"
+          },
+          "validation": {
+            "accepted": false,
+            "structural_accepted": true,
+            "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+            "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+            "reasons": [
+              "receipted_incomplete"
+            ],
+            "declared_inputs": 9,
+            "present_inputs": 9,
+            "missing_inputs": 0,
+            "missing_keys": [],
+            "stamped_before_cutoff": 2,
+            "receipted_complete": false,
+            "unclocked_keys": [
+              "vix_level",
+              "vix_d5_chg",
+              "us_2y_d5_bps",
+              "us_10y_real_d5_bps",
+              "broad_dollar_d5_pct",
+              "eurusd_d5_pct",
+              "usdjpy_d5_pct"
+            ]
+          },
+          "results": null,
+          "outcomes": {
+            "EURUSD": {
+              "direction": "UP",
+              "move_pct": 0.4217,
+              "flat_band_pct": 0.1,
+              "present": true,
+              "reason": null
+            },
+            "XAUUSD": {
+              "direction": "UP",
+              "move_pct": 0.3103,
+              "flat_band_pct": 0.152,
+              "present": true,
+              "reason": null
+            },
+            "BTCUSD": {
+              "direction": "FLAT",
+              "move_pct": 0.2045,
+              "flat_band_pct": 0.553,
+              "present": true,
+              "reason": null
+            },
+            "NAS100": {
+              "direction": "UP",
+              "move_pct": 1.0377,
+              "flat_band_pct": 0.21,
+              "present": true,
+              "reason": null
+            }
+          }
+        },
+        "challenger_v1": {
+          "identity": "usd-layer1-challenger-v1",
+          "workflow_id": "42sxXHScRvE3qSTX",
+          "workflow_name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+          "workflow_url": "https://silver17.app.n8n.cloud/workflow/42sxXHScRvE3qSTX",
+          "execution_id": "5476",
+          "execution_url": "https://silver17.app.n8n.cloud/execution/5476",
+          "execution_status": "success",
+          "execution_time": {
+            "startedAt": "2026-11-19T19:57:06.060Z",
+            "stoppedAt": "2026-11-19T19:57:06.125Z"
+          },
+          "status": "blocked",
+          "model_label": "Challenger v1",
+          "model_version": "usd-layer1-challenger-v1",
+          "call": {
+            "direction": "BULLISH",
+            "direction_label": "BULLISH",
+            "conviction": 2,
+            "raw_score": 2.5,
+            "score_basis": "raw_score (net mechanism score)",
+            "factors_live": null,
+            "usable_mechanisms": 9,
+            "agreement": 0.3571,
+            "participation": 1,
+            "missing_inputs": [],
+            "reason": "receipted gate: not every consumed input carries a full timestamp before the cutoff"
+          },
+          "validation": {
+            "accepted": false,
+            "structural_accepted": true,
+            "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+            "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+            "reasons": [
+              "receipted_incomplete"
+            ],
+            "declared_inputs": 9,
+            "present_inputs": 9,
+            "missing_inputs": 0,
+            "missing_keys": [],
+            "stamped_before_cutoff": 2,
+            "receipted_complete": false,
+            "unclocked_keys": [
+              "vix_level",
+              "vix_d5_chg",
+              "us_2y_d5_bps",
+              "us_10y_real_d5_bps",
+              "broad_dollar_d5_pct",
+              "eurusd_d5_pct",
+              "usdjpy_d5_pct"
+            ]
+          },
+          "results": null,
+          "outcomes": {
+            "EURUSD": {
+              "direction": "UP",
+              "move_pct": 0.4217,
+              "flat_band_pct": 0.1,
+              "present": true,
+              "reason": null
+            },
+            "XAUUSD": {
+              "direction": "UP",
+              "move_pct": 0.3103,
+              "flat_band_pct": 0.152,
+              "present": true,
+              "reason": null
+            },
+            "BTCUSD": {
+              "direction": "FLAT",
+              "move_pct": 0.2045,
+              "flat_band_pct": 0.553,
+              "present": true,
+              "reason": null
+            },
+            "NAS100": {
+              "direction": "UP",
+              "move_pct": 1.0377,
+              "flat_band_pct": 0.21,
+              "present": true,
+              "reason": null
+            }
+          }
+        }
+      },
+      "comparison": {
+        "same_direction": true,
+        "challenger": "BULLISH",
+        "challenger_v1": "BULLISH",
+        "challenger_conviction": 2,
+        "challenger_v1_conviction": 2,
+        "note": "Version 0 and version 1 share the same scoring code but not the same frozen weighting; a same-direction result is not a performance claim."
+      },
+      "labels": {
+        "research_only": "Research only. This is a replayed historical morning, not a live call.",
+        "replay_not_performance": "Agreement between the two versions or with a stored call is reproduction evidence. It is not accuracy, edge, or historical validity beyond the validation gate named here.",
+        "h1_not_invoked": "USD-L1-25F-H1-v0.1.0 is a separate, unscored model identity and is not one of these two children."
+      },
+      "raw_evidence": "data/usd-layer1-backtester/n8n/execution-5474-receipted.json"
+    },
+    {
+      "id": "2024-01-06-structural",
+      "label": "missing-date",
+      "date": "2024-01-06",
+      "validation_mode": "structural",
+      "outcome": "blocked",
+      "parent_execution": {
+        "id": "5477",
+        "url": "https://silver17.app.n8n.cloud/execution/5477",
+        "workflow_id": "89uk5JnPbWPL5lGD",
+        "workflow_name": "USD Layer 1 - paired controller (Cloud)",
+        "status": "success",
+        "time": {
+          "startedAt": "2026-11-19T19:57:06.562Z",
+          "stoppedAt": "2026-11-19T19:57:07.243Z"
+        }
+      },
+      "input_availability": {
+        "cutoff_at_utc": null,
+        "contract_cutoff_at_utc": null,
+        "structural_accepted": false,
+        "accepted": false,
+        "reasons": [
+          "not_in_dataset"
+        ],
+        "declared_inputs": null,
+        "present_inputs": null,
+        "missing_inputs": null,
+        "missing_keys": [],
+        "stamped_before_cutoff": null,
+        "receipted_complete": false,
+        "unclocked_keys": []
+      },
+      "input_availability_by_model": {
+        "challenger": {
+          "cutoff_at_utc": null,
+          "contract_cutoff_at_utc": null,
+          "structural_accepted": false,
+          "accepted": false,
+          "reasons": [
+            "not_in_dataset"
+          ],
+          "declared_inputs": null,
+          "present_inputs": null,
+          "missing_inputs": null,
+          "missing_keys": [],
+          "stamped_before_cutoff": null,
+          "receipted_complete": false,
+          "unclocked_keys": []
+        },
+        "challenger_v1": {
+          "cutoff_at_utc": null,
+          "contract_cutoff_at_utc": null,
+          "structural_accepted": false,
+          "accepted": false,
+          "reasons": [
+            "not_in_dataset"
+          ],
+          "declared_inputs": null,
+          "present_inputs": null,
+          "missing_inputs": null,
+          "missing_keys": [],
+          "stamped_before_cutoff": null,
+          "receipted_complete": false,
+          "unclocked_keys": []
+        }
+      },
+      "models": {
+        "challenger": {
+          "identity": "usd-layer1-challenger-v0",
+          "workflow_id": "giGJKNQw5WLh1xbX",
+          "workflow_name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+          "workflow_url": "https://silver17.app.n8n.cloud/workflow/giGJKNQw5WLh1xbX",
+          "execution_id": "5478",
+          "execution_url": "https://silver17.app.n8n.cloud/execution/5478",
+          "execution_status": "success",
+          "execution_time": {
+            "startedAt": "2026-11-19T19:57:06.938Z",
+            "stoppedAt": "2026-11-19T19:57:06.997Z"
+          },
+          "status": "blocked",
+          "model_label": "Challenger v0",
+          "model_version": "usd-layer1-challenger-v0",
+          "call": {
+            "direction": "NO_CALL",
+            "direction_label": null,
+            "conviction": null,
+            "raw_score": null,
+            "score_basis": null,
+            "factors_live": null,
+            "usable_mechanisms": null,
+            "agreement": null,
+            "participation": null,
+            "missing_inputs": [],
+            "reason": "no snapshot for 2024-01-06 in the dataset"
+          },
+          "validation": {
+            "accepted": false,
+            "structural_accepted": false,
+            "cutoff_at_utc": null,
+            "contract_cutoff_at_utc": null,
+            "reasons": [
+              "not_in_dataset"
+            ],
+            "declared_inputs": null,
+            "present_inputs": null,
+            "missing_inputs": null,
+            "missing_keys": [],
+            "stamped_before_cutoff": null,
+            "receipted_complete": false,
+            "unclocked_keys": []
+          },
+          "results": null,
+          "outcomes": null
+        },
+        "challenger_v1": {
+          "identity": "usd-layer1-challenger-v1",
+          "workflow_id": "42sxXHScRvE3qSTX",
+          "workflow_name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+          "workflow_url": "https://silver17.app.n8n.cloud/workflow/42sxXHScRvE3qSTX",
+          "execution_id": "5479",
+          "execution_url": "https://silver17.app.n8n.cloud/execution/5479",
+          "execution_status": "success",
+          "execution_time": {
+            "startedAt": "2026-11-19T19:57:07.116Z",
+            "stoppedAt": "2026-11-19T19:57:07.180Z"
+          },
+          "status": "blocked",
+          "model_label": "Challenger v1",
+          "model_version": "usd-layer1-challenger-v1",
+          "call": {
+            "direction": "NO_CALL",
+            "direction_label": null,
+            "conviction": null,
+            "raw_score": null,
+            "score_basis": null,
+            "factors_live": null,
+            "usable_mechanisms": null,
+            "agreement": null,
+            "participation": null,
+            "missing_inputs": [],
+            "reason": "no snapshot for 2024-01-06 in the dataset"
+          },
+          "validation": {
+            "accepted": false,
+            "structural_accepted": false,
+            "cutoff_at_utc": null,
+            "contract_cutoff_at_utc": null,
+            "reasons": [
+              "not_in_dataset"
+            ],
+            "declared_inputs": null,
+            "present_inputs": null,
+            "missing_inputs": null,
+            "missing_keys": [],
+            "stamped_before_cutoff": null,
+            "receipted_complete": false,
+            "unclocked_keys": []
+          },
+          "results": null,
+          "outcomes": null
+        }
+      },
+      "comparison": {
+        "same_direction": true,
+        "challenger": "NO_CALL",
+        "challenger_v1": "NO_CALL",
+        "challenger_conviction": null,
+        "challenger_v1_conviction": null,
+        "note": "Version 0 and version 1 share the same scoring code but not the same frozen weighting; a same-direction result is not a performance claim."
+      },
+      "labels": {
+        "research_only": "Research only. This is a replayed historical morning, not a live call.",
+        "replay_not_performance": "Agreement between the two versions or with a stored call is reproduction evidence. It is not accuracy, edge, or historical validity beyond the validation gate named here.",
+        "h1_not_invoked": "USD-L1-25F-H1-v0.1.0 is a separate, unscored model identity and is not one of these two children."
+      },
+      "raw_evidence": "data/usd-layer1-backtester/n8n/execution-5477-missing-date.json"
+    },
+    {
+      "id": "2024-01-02-structural",
+      "label": "missing-inputs",
+      "date": "2024-01-02",
+      "validation_mode": "structural",
+      "outcome": "abstained",
+      "parent_execution": {
+        "id": "5480",
+        "url": "https://silver17.app.n8n.cloud/execution/5480",
+        "workflow_id": "89uk5JnPbWPL5lGD",
+        "workflow_name": "USD Layer 1 - paired controller (Cloud)",
+        "status": "success",
+        "time": {
+          "startedAt": "2026-11-19T19:57:07.625Z",
+          "stoppedAt": "2026-11-19T19:57:08.353Z"
+        }
+      },
+      "input_availability": {
+        "cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+        "contract_cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+        "structural_accepted": true,
+        "accepted": true,
+        "reasons": [],
+        "declared_inputs": 9,
+        "present_inputs": 0,
+        "missing_inputs": 9,
+        "missing_keys": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps",
+          "broad_dollar_d5_pct",
+          "gold_d5_pct",
+          "nasdaq100_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ],
+        "stamped_before_cutoff": 0,
+        "receipted_complete": false,
+        "unclocked_keys": []
+      },
+      "input_availability_by_model": {
+        "challenger": {
+          "cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+          "contract_cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+          "structural_accepted": true,
+          "accepted": true,
+          "reasons": [],
+          "declared_inputs": 9,
+          "present_inputs": 0,
+          "missing_inputs": 9,
+          "missing_keys": [
+            "vix_level",
+            "vix_d5_chg",
+            "us_2y_d5_bps",
+            "us_10y_real_d5_bps",
+            "broad_dollar_d5_pct",
+            "gold_d5_pct",
+            "nasdaq100_d5_pct",
+            "eurusd_d5_pct",
+            "usdjpy_d5_pct"
+          ],
+          "stamped_before_cutoff": 0,
+          "receipted_complete": false,
+          "unclocked_keys": []
+        },
+        "challenger_v1": {
+          "cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+          "contract_cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+          "structural_accepted": true,
+          "accepted": true,
+          "reasons": [],
+          "declared_inputs": 9,
+          "present_inputs": 0,
+          "missing_inputs": 9,
+          "missing_keys": [
+            "vix_level",
+            "vix_d5_chg",
+            "us_2y_d5_bps",
+            "us_10y_real_d5_bps",
+            "broad_dollar_d5_pct",
+            "gold_d5_pct",
+            "nasdaq100_d5_pct",
+            "eurusd_d5_pct",
+            "usdjpy_d5_pct"
+          ],
+          "stamped_before_cutoff": 0,
+          "receipted_complete": false,
+          "unclocked_keys": []
+        }
+      },
+      "models": {
+        "challenger": {
+          "identity": "usd-layer1-challenger-v0",
+          "workflow_id": "giGJKNQw5WLh1xbX",
+          "workflow_name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+          "workflow_url": "https://silver17.app.n8n.cloud/workflow/giGJKNQw5WLh1xbX",
+          "execution_id": "5481",
+          "execution_url": "https://silver17.app.n8n.cloud/execution/5481",
+          "execution_status": "success",
+          "execution_time": {
+            "startedAt": "2026-11-19T19:57:08.021Z",
+            "stoppedAt": "2026-11-19T19:57:08.098Z"
+          },
+          "status": "abstained",
+          "model_label": "Challenger v0",
+          "model_version": "usd-layer1-challenger-v0",
+          "call": {
+            "direction": "NO_CALL",
+            "direction_label": "NO_CALL",
+            "conviction": null,
+            "raw_score": 0,
+            "score_basis": "raw_score (net mechanism score)",
+            "factors_live": null,
+            "usable_mechanisms": 0,
+            "agreement": 0,
+            "participation": 0,
+            "missing_inputs": [
+              "vix_level",
+              "vix_d5_chg",
+              "us_2y_d5_bps",
+              "us_10y_real_d5_bps",
+              "broad_dollar_d5_pct",
+              "gold_d5_pct",
+              "nasdaq100_d5_pct",
+              "eurusd_d5_pct",
+              "usdjpy_d5_pct"
+            ],
+            "reason": "only 0 of 9 mechanisms had a value at this cutoff and the frozen minimum is 6, so no call is made and the missing inputs are named"
+          },
+          "validation": {
+            "accepted": true,
+            "structural_accepted": true,
+            "cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+            "contract_cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+            "reasons": [],
+            "declared_inputs": 9,
+            "present_inputs": 0,
+            "missing_inputs": 9,
+            "missing_keys": [
+              "vix_level",
+              "vix_d5_chg",
+              "us_2y_d5_bps",
+              "us_10y_real_d5_bps",
+              "broad_dollar_d5_pct",
+              "gold_d5_pct",
+              "nasdaq100_d5_pct",
+              "eurusd_d5_pct",
+              "usdjpy_d5_pct"
+            ],
+            "stamped_before_cutoff": 0,
+            "receipted_complete": false,
+            "unclocked_keys": []
+          },
+          "results": {
+            "EURUSD": "no_call",
+            "XAUUSD": "no_call",
+            "BTCUSD": "no_call",
+            "NAS100": "no_call"
+          },
+          "outcomes": {
+            "EURUSD": {
+              "direction": "DOWN",
+              "move_pct": -0.7441,
+              "flat_band_pct": 0.1,
+              "present": true,
+              "reason": null
+            },
+            "XAUUSD": {
+              "direction": "DOWN",
+              "move_pct": -0.5018,
+              "flat_band_pct": 0.152,
+              "present": true,
+              "reason": null
+            },
+            "BTCUSD": {
+              "direction": "FLAT",
+              "move_pct": -0.0163,
+              "flat_band_pct": 0.553,
+              "present": true,
+              "reason": null
+            },
+            "NAS100": {
+              "direction": "DOWN",
+              "move_pct": -1.8,
+              "flat_band_pct": 0.21,
+              "present": true,
+              "reason": null
+            }
+          }
+        },
+        "challenger_v1": {
+          "identity": "usd-layer1-challenger-v1",
+          "workflow_id": "42sxXHScRvE3qSTX",
+          "workflow_name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+          "workflow_url": "https://silver17.app.n8n.cloud/workflow/42sxXHScRvE3qSTX",
+          "execution_id": "5482",
+          "execution_url": "https://silver17.app.n8n.cloud/execution/5482",
+          "execution_status": "success",
+          "execution_time": {
+            "startedAt": "2026-11-19T19:57:08.224Z",
+            "stoppedAt": "2026-11-19T19:57:08.284Z"
+          },
+          "status": "abstained",
+          "model_label": "Challenger v1",
+          "model_version": "usd-layer1-challenger-v1",
+          "call": {
+            "direction": "NO_CALL",
+            "direction_label": "NO_CALL",
+            "conviction": null,
+            "raw_score": 0,
+            "score_basis": "raw_score (net mechanism score)",
+            "factors_live": null,
+            "usable_mechanisms": 0,
+            "agreement": 0,
+            "participation": 0,
+            "missing_inputs": [
+              "vix_level",
+              "vix_d5_chg",
+              "us_2y_d5_bps",
+              "us_10y_real_d5_bps",
+              "broad_dollar_d5_pct",
+              "gold_d5_pct",
+              "nasdaq100_d5_pct",
+              "eurusd_d5_pct",
+              "usdjpy_d5_pct"
+            ],
+            "reason": "only 0 of 9 mechanisms had a value at this cutoff and the frozen minimum is 6, so no call is made and the missing inputs are named"
+          },
+          "validation": {
+            "accepted": true,
+            "structural_accepted": true,
+            "cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+            "contract_cutoff_at_utc": "2024-01-02T05:00:00.000Z",
+            "reasons": [],
+            "declared_inputs": 9,
+            "present_inputs": 0,
+            "missing_inputs": 9,
+            "missing_keys": [
+              "vix_level",
+              "vix_d5_chg",
+              "us_2y_d5_bps",
+              "us_10y_real_d5_bps",
+              "broad_dollar_d5_pct",
+              "gold_d5_pct",
+              "nasdaq100_d5_pct",
+              "eurusd_d5_pct",
+              "usdjpy_d5_pct"
+            ],
+            "stamped_before_cutoff": 0,
+            "receipted_complete": false,
+            "unclocked_keys": []
+          },
+          "results": {
+            "EURUSD": "no_call",
+            "XAUUSD": "no_call",
+            "BTCUSD": "no_call",
+            "NAS100": "no_call"
+          },
+          "outcomes": {
+            "EURUSD": {
+              "direction": "DOWN",
+              "move_pct": -0.7441,
+              "flat_band_pct": 0.1,
+              "present": true,
+              "reason": null
+            },
+            "XAUUSD": {
+              "direction": "DOWN",
+              "move_pct": -0.5018,
+              "flat_band_pct": 0.152,
+              "present": true,
+              "reason": null
+            },
+            "BTCUSD": {
+              "direction": "FLAT",
+              "move_pct": -0.0163,
+              "flat_band_pct": 0.553,
+              "present": true,
+              "reason": null
+            },
+            "NAS100": {
+              "direction": "DOWN",
+              "move_pct": -1.8,
+              "flat_band_pct": 0.21,
+              "present": true,
+              "reason": null
+            }
+          }
+        }
+      },
+      "comparison": {
+        "same_direction": true,
+        "challenger": "NO_CALL",
+        "challenger_v1": "NO_CALL",
+        "challenger_conviction": null,
+        "challenger_v1_conviction": null,
+        "note": "Version 0 and version 1 share the same scoring code but not the same frozen weighting; a same-direction result is not a performance claim."
+      },
+      "labels": {
+        "research_only": "Research only. This is a replayed historical morning, not a live call.",
+        "replay_not_performance": "Agreement between the two versions or with a stored call is reproduction evidence. It is not accuracy, edge, or historical validity beyond the validation gate named here.",
+        "h1_not_invoked": "USD-L1-25F-H1-v0.1.0 is a separate, unscored model identity and is not one of these two children."
+      },
+      "raw_evidence": "data/usd-layer1-backtester/n8n/execution-5480-missing-inputs.json"
+    }
+  ],
+  "source_dataset": {
+    "path": "data/usd-layer1-backtester/run-v1.json",
+    "schema_version": "usd-layer1-backtester-panel-v1",
+    "run_version": "usd-l1-backtester-r1",
+    "generated_at": "2026-11-14T00:00:00.000Z",
+    "sessions": 725,
+    "first": "2024-01-02",
+    "last": "2026-10-12",
+    "cutoff_contract": {
+      "cutoff_local": "05:00",
+      "cutoff_zone": "Europe/London",
+      "endpoint_day_offset": 1,
+      "nominal_hours": 24,
+      "start_weekdays": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "note": "05:00 London is midnight in New York in both GMT and BST, so the session starts on the New York calendar day boundary and each eligible session is exactly 24 hours long"
+    }
+  },
+  "historical_validity": {
+    "structural_accepted": 725,
+    "structural_blocked": 0,
+    "receipted_complete": 0,
+    "receipted_incomplete": 725,
+    "sessions_with_missing_inputs": 57,
+    "sessions_with_stamped_print_after_cutoff": 0,
+    "note": "Structural validity is internal consistency plus the declared 05:00 London cutoff. Receipted validity additionally requires a full timestamp before the cutoff for every consumed input. The committed panel has no stamped print after the cutoff, so a genuine late-print rejection is not demonstrated by history; it remains untested rather than inferred."
+  },
+  "reproduction": {
+    "parity": {
+      "controller_version": "usd-l1-backtest-controller-v1",
+      "checked": 2175,
+      "decision_matches": 2175,
+      "decision_mismatches": 0,
+      "results_checked": 8700,
+      "result_matches": 8700,
+      "result_mismatches": 0,
+      "note": "Reproduction of the stored calls only. These figures are not accuracy and not an edge claim."
+    },
+    "cloud_bundle": {
+      "bundle_sha256": "e1e7ecb001e627b2ed803e910d0433e1c8cfca048ace0741ca7dce2338360e26",
+      "checked_decisions": 1450,
+      "mismatches": 0,
+      "note": "The generated Cloud bundle reproduced the Node controller for both challengers over all 725 mornings."
+    }
+  },
+  "performance": {
+    "status": "not established as an edge",
+    "window": {
+      "from": "2024-01-02",
+      "to": "2026-10-12",
+      "requested_dates": 725
+    },
+    "validation_mode": "structural",
+    "reports": {
+      "current": {
+        "pooled": {
+          "hit": 980,
+          "miss": 907,
+          "flat": 504,
+          "no_outcome": 465,
+          "no_call": 44,
+          "scored": 1887,
+          "accuracy": 0.5193,
+          "wilson_lower_95": 0.4968
+        },
+        "statuses": {
+          "blocked": 0,
+          "allowed": 714,
+          "abstained": 11
+        },
+        "participation": 0.9848
+      },
+      "challenger": {
+        "pooled": {
+          "hit": 680,
+          "miss": 687,
+          "flat": 355,
+          "no_outcome": 310,
+          "no_call": 868,
+          "scored": 1367,
+          "accuracy": 0.4974,
+          "wilson_lower_95": 0.471
+        },
+        "statuses": {
+          "blocked": 0,
+          "allowed": 508,
+          "abstained": 217
+        },
+        "participation": 0.7007
+      },
+      "challenger_v1": {
+        "pooled": {
+          "hit": 690,
+          "miss": 692,
+          "flat": 368,
+          "no_outcome": 310,
+          "no_call": 840,
+          "scored": 1382,
+          "accuracy": 0.4993,
+          "wilson_lower_95": 0.473
+        },
+        "statuses": {
+          "blocked": 0,
+          "allowed": 515,
+          "abstained": 210
+        },
+        "participation": 0.7103
+      }
+    },
+    "deltas": {
+      "challenger": {
+        "baseline": "current",
+        "markets": {
+          "EURUSD": -0.0198,
+          "XAUUSD": -0.048,
+          "BTCUSD": -0.0078,
+          "NAS100": -0.0148
+        },
+        "pooled": -0.0219
+      },
+      "challenger_v1": {
+        "baseline": "current",
+        "markets": {
+          "EURUSD": -0.0129,
+          "XAUUSD": -0.0452,
+          "BTCUSD": -0.0143,
+          "NAS100": -0.009
+        },
+        "pooled": -0.02
+      }
+    },
+    "note": "Gross directional replay, structural validation only, no costs, no slippage, no live execution and no multiple-testing or holdout claim. Test 1 is a broker proxy; tests 3 and 4 are blocked. Report this separately from reproduction and from the validation gate."
+  },
+  "four_backtests": [
+    {
+      "id": "dxy_direction_broker_cfd",
+      "ordinal": 1,
+      "label": "USD direction on the broker DXY.cash series",
+      "question": "On mornings where the model made a directional call, did the broker's DXY.cash series close the 05:00-to-05:00 window in that direction, using one candle per 05:00 boundary?",
+      "status": "scored_proxy",
+      "usable_sessions": 360,
+      "outcome_source": "broker DXY.cash one-hour candles",
+      "counts": {
+        "rows": 725,
+        "candidate": {
+          "blocked": 541,
+          "valid_abstention": 143,
+          "scored_in_legacy_aggregate": 40,
+          "not_in_legacy_sample": 1
+        },
+        "control": {
+          "blocked": 108,
+          "scored_in_legacy_aggregate": 609,
+          "no_call": 8
+        }
+      },
+      "h1_readiness": {
+        "model_id": "usd_l1_25f_h1",
+        "model_version": "USD-L1-25F-H1-v0.1.0",
+        "eligible_mornings": 0,
+        "scheduled_mornings": 725,
+        "earliest_eligible": null,
+        "status": "blocked on the H1.1 evidence contract",
+        "blocked_by": [
+          "vix",
+          "front",
+          "spread",
+          "real",
+          "broad",
+          "ice",
+          "gold",
+          "qqq",
+          "calendar"
+        ]
+      }
+    },
+    {
+      "id": "four_markets",
+      "ordinal": 2,
+      "label": "USD-only opposite-direction mapping in four markets",
+      "question": "Did the same USD call point the right way in EUR/USD, gold, bitcoin and the NAS100 over the same window?",
+      "status": "scored",
+      "usable_sessions": 685,
+      "outcome_source": "OANDA one-hour closes per market",
+      "counts": {
+        "rows": 725,
+        "candidate": {
+          "blocked": 189,
+          "scored": 488,
+          "valid_abstention": 47,
+          "allowed": 1
+        },
+        "control": {
+          "blocked": 13,
+          "scored": 675,
+          "allowed": 29,
+          "no_call": 8
+        }
+      },
+      "h1_readiness": {
+        "model_id": "usd_l1_25f_h1",
+        "model_version": "USD-L1-25F-H1-v0.1.0",
+        "eligible_mornings": 0,
+        "scheduled_mornings": 725,
+        "earliest_eligible": null,
+        "status": "blocked on the H1.1 evidence contract",
+        "blocked_by": [
+          "vix",
+          "front",
+          "spread",
+          "real",
+          "broad",
+          "ice",
+          "gold",
+          "qqq",
+          "calendar"
+        ]
+      }
+    },
+    {
+      "id": "l2l_full_5r",
+      "ordinal": 3,
+      "label": "Original Layer 2 levels with the frozen 5R rules",
+      "question": "When a Layer 1 call was handed to the original Layer 2 levels, did the frozen 5R path reach its target before its stop?",
+      "status": "blocked",
+      "usable_sessions": 0,
+      "outcome_source": "one-hour closes with the original layer-2 level grid and 5R management",
+      "counts": {
+        "rows": 725,
+        "candidate": {
+          "blocked": 725
+        },
+        "control": {
+          "blocked": 725
+        }
+      },
+      "h1_readiness": {
+        "model_id": "usd_l1_25f_h1",
+        "model_version": "USD-L1-25F-H1-v0.1.0",
+        "eligible_mornings": 0,
+        "scheduled_mornings": 725,
+        "earliest_eligible": null,
+        "status": "blocked on the H1.1 evidence contract",
+        "blocked_by": [
+          "vix",
+          "front",
+          "spread",
+          "real",
+          "broad",
+          "ice",
+          "gold",
+          "qqq",
+          "calendar"
+        ]
+      }
+    },
+    {
+      "id": "l2l_half_3r",
+      "ordinal": 4,
+      "label": "Original levels plus midpoints with the frozen 3R rules",
+      "question": "With midpoints added to the original levels, did the frozen 3R path reach its target before its stop?",
+      "status": "blocked",
+      "usable_sessions": 0,
+      "outcome_source": "one-hour closes with the levels-plus-midpoints grid and 3R management",
+      "counts": {
+        "rows": 725,
+        "candidate": {
+          "blocked": 725
+        },
+        "control": {
+          "blocked": 725
+        }
+      },
+      "h1_readiness": {
+        "model_id": "usd_l1_25f_h1",
+        "model_version": "USD-L1-25F-H1-v0.1.0",
+        "eligible_mornings": 0,
+        "scheduled_mornings": 725,
+        "earliest_eligible": null,
+        "status": "blocked on the H1.1 evidence contract",
+        "blocked_by": [
+          "vix",
+          "front",
+          "spread",
+          "real",
+          "broad",
+          "ice",
+          "gold",
+          "qqq",
+          "calendar"
+        ]
+      }
+    }
+  ],
+  "model_rules": {
+    "challenger": [
+      {
+        "id": "vix_regime",
+        "label": "VIX level and risk regime",
+        "factor": "live.f1-vix-level",
+        "input": "vix_level",
+        "rule": "VIX above 25 is safe-haven USD demand; below 16 is risk-on pressure",
+        "threshold": "25 / 16",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 25,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": 16,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "vix_momentum",
+        "label": "VIX 5-day change",
+        "factor": "live.f1-vix-level",
+        "input": "vix_d5_chg",
+        "rule": "a 5-day VIX rise of more than one index point bids USD; a fall of the same size releases it",
+        "threshold": "1 index point",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 1,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -1,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "us_2y",
+        "label": "US 2-year yield 5-day change",
+        "factor": "live.f2-us-2y-delta",
+        "input": "us_2y_d5_bps",
+        "rule": "front-end yields up more than 5bp support USD; down more than 5bp oppose it",
+        "threshold": "5 bp",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 5,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -5,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "us_10y_real",
+        "label": "US 10-year real yield 5-day change",
+        "factor": "live.f4-real-yield-delta",
+        "input": "us_10y_real_d5_bps",
+        "rule": "real yields up more than 5bp support USD; down more than 5bp oppose it",
+        "threshold": "5 bp",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 5,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -5,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "broad_dollar_momentum",
+        "label": "Broad dollar 5-day momentum",
+        "factor": "live.f5-dxy-delta",
+        "input": "broad_dollar_d5_pct",
+        "rule": "the dollar's own 5-day move continues: a rise above 0.15% is read as USD strength and a fall as weakness; FRED DTWEXBGS stands in for ICE DXY and is labelled as such everywhere",
+        "threshold": "0.15%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.15,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -0.15,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "gold",
+        "label": "Gold 5-day change",
+        "factor": "live.f6-gold-delta",
+        "input": "gold_d5_pct",
+        "rule": "gold up more than 0.5% is a hedge bid against USD; down more than 0.5% is the reverse",
+        "threshold": "0.5%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.5,
+            "usd": -1
+          },
+          {
+            "when": "lt",
+            "value": -0.5,
+            "usd": 1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "equities",
+        "label": "NAS100 5-day change",
+        "factor": "live.f10-equity-versus-usd",
+        "input": "nasdaq100_d5_pct",
+        "rule": "equities up more than 0.5% is risk-on and reads against USD; down more than 0.5% reads for it",
+        "threshold": "0.5%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.5,
+            "usd": -1
+          },
+          {
+            "when": "lt",
+            "value": -0.5,
+            "usd": 1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "eurusd_mirror",
+        "label": "EUR/USD 5-day change",
+        "factor": "live.f3-us-de-2y-spread-delta",
+        "input": "eurusd_d5_pct",
+        "rule": "EUR/USD is USD inverted: a rise above 0.15% is read as USD weakness and a fall as USD strength; it stands in for the German 2-year leg the current model cannot reconstruct, and says so",
+        "threshold": "0.15%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.15,
+            "usd": -1
+          },
+          {
+            "when": "lt",
+            "value": -0.15,
+            "usd": 1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "usdjpy_mirror",
+        "label": "USD/JPY 5-day change",
+        "factor": "live.f9-dollar-smile",
+        "input": "usdjpy_d5_pct",
+        "rule": "USD/JPY is USD direct: a rise above 0.15% is read as USD strength and a fall as weakness",
+        "threshold": "0.15%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.15,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -0.15,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      }
+    ],
+    "challenger_v1": [
+      {
+        "id": "vix_regime",
+        "label": "VIX level and risk regime",
+        "factor": "live.f1-vix-level",
+        "input": "vix_level",
+        "rule": "VIX above 25 is safe-haven USD demand; below 16 is risk-on pressure",
+        "threshold": "25 / 16",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 25,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": 16,
+            "usd": -1
+          }
+        ],
+        "weight": 0.5
+      },
+      {
+        "id": "vix_momentum",
+        "label": "VIX 5-day change",
+        "factor": "live.f1-vix-level",
+        "input": "vix_d5_chg",
+        "rule": "a 5-day VIX rise of more than one index point bids USD; a fall of the same size releases it",
+        "threshold": "1 index point",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 1,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -1,
+            "usd": -1
+          }
+        ],
+        "weight": 0.5
+      },
+      {
+        "id": "us_2y",
+        "label": "US 2-year yield 5-day change",
+        "factor": "live.f2-us-2y-delta",
+        "input": "us_2y_d5_bps",
+        "rule": "front-end yields up more than 5bp support USD; down more than 5bp oppose it",
+        "threshold": "5 bp",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 5,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -5,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "us_10y_real",
+        "label": "US 10-year real yield 5-day change",
+        "factor": "live.f4-real-yield-delta",
+        "input": "us_10y_real_d5_bps",
+        "rule": "real yields up more than 5bp support USD; down more than 5bp oppose it",
+        "threshold": "5 bp",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 5,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -5,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "broad_dollar_momentum",
+        "label": "Broad dollar 5-day momentum",
+        "factor": "live.f5-dxy-delta",
+        "input": "broad_dollar_d5_pct",
+        "rule": "the dollar's own 5-day move continues: a rise above 0.15% is read as USD strength and a fall as weakness; FRED DTWEXBGS stands in for ICE DXY and is labelled as such everywhere",
+        "threshold": "0.15%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.15,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -0.15,
+            "usd": -1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "gold",
+        "label": "Gold 5-day change",
+        "factor": "live.f6-gold-delta",
+        "input": "gold_d5_pct",
+        "rule": "gold up more than 0.5% is a hedge bid against USD; down more than 0.5% is the reverse",
+        "threshold": "0.5%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.5,
+            "usd": -1
+          },
+          {
+            "when": "lt",
+            "value": -0.5,
+            "usd": 1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "equities",
+        "label": "NAS100 5-day change",
+        "factor": "live.f10-equity-versus-usd",
+        "input": "nasdaq100_d5_pct",
+        "rule": "equities up more than 0.5% is risk-on and reads against USD; down more than 0.5% reads for it",
+        "threshold": "0.5%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.5,
+            "usd": -1
+          },
+          {
+            "when": "lt",
+            "value": -0.5,
+            "usd": 1
+          }
+        ],
+        "weight": 1
+      },
+      {
+        "id": "eurusd_mirror",
+        "label": "EUR/USD 5-day change",
+        "factor": "fx.usd-session-momentum",
+        "input": "eurusd_d5_pct",
+        "rule": "EUR/USD is USD inverted: a rise above 0.15% is read as USD weakness and a fall as USD strength; it stands in for the German 2-year leg the current model cannot reconstruct, and says so",
+        "threshold": "0.15%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.15,
+            "usd": -1
+          },
+          {
+            "when": "lt",
+            "value": -0.15,
+            "usd": 1
+          }
+        ],
+        "weight": 0.5
+      },
+      {
+        "id": "usdjpy_mirror",
+        "label": "USD/JPY 5-day change",
+        "factor": "fx.usd-session-momentum",
+        "input": "usdjpy_d5_pct",
+        "rule": "USD/JPY is USD direct: a rise above 0.15% is read as USD strength and a fall as weakness",
+        "threshold": "0.15%",
+        "vote_spec": [
+          {
+            "when": "gt",
+            "value": 0.15,
+            "usd": 1
+          },
+          {
+            "when": "lt",
+            "value": -0.15,
+            "usd": -1
+          }
+        ],
+        "weight": 0.5
+      }
+    ]
+  },
+  "limitations": [
+    "n8n Cloud does not provide Execute Command, so the original host-command workflows cannot run there; the Cloud workflows bundle the controller instead.",
+    "The production-control adapter is not in the Cloud runtime; only the two frozen challengers are.",
+    "No committed morning has a stamped print after the 05:00 cutoff, so late-print rejection is untested on history.",
+    "The receipted gate refuses every one of the 725 committed mornings because most macro prints carry a date only.",
+    "The evidence covers four controlled dates, not a full n8n batch. The local controller remains the 725-morning batch path.",
+    "H1 is unscored and is not one of the two n8n children."
+  ],
+  "next_actions": [
+    "Acquire a 05:00 receipt archive with full timestamps for the inputs the challengers consume, then rerun the receipted gate.",
+    "Record a late-print fixture separately and label it synthetic; do not add it to historical validity.",
+    "If the production-control adapter must run in n8n Cloud, package its replay dependencies explicitly instead of assuming filesystem access."
+  ]
+}
