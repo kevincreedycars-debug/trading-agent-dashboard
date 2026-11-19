@@ -19,8 +19,12 @@ $pollAction = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ctrad
 $dashboardAction = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ctrader-relay\copier\copier-dashboard.ps1"'
 
 function Register-One([string] $name, [string] $arguments, [int] $everyMinutes) {
-  $action = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument ("/c " + $arguments + " >> C:\ProgramData\ctrader-relay\copier\task.out.txt 2>&1") -WorkingDirectory 'C:\ctrader-relay\copier'
-  $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes $everyMinutes) -RepetitionDuration ([TimeSpan]::MaxValue)
+  # Each task appends to its own file: two tasks sharing one redirect can collide on the handle at the moment
+  # both fire, and the loser exits before it has run anything (which is what the dashboard task did on 21:47).
+  $action = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument ("/c " + $arguments + " >> C:\ProgramData\ctrader-relay\copier\$name.task.out.txt 2>&1") -WorkingDirectory 'C:\ctrader-relay\copier'
+  # A repetition with no duration repeats indefinitely; TimeSpan::MaxValue writes a duration Task Scheduler
+  # rejects as out of range (P99999999DT23H59M59S).
+  $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes $everyMinutes)
   $settings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
   $principal = New-ScheduledTaskPrincipal -UserId $TaskUser -LogonType $LogonType -RunLevel Highest
   Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null

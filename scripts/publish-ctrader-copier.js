@@ -13,6 +13,7 @@
 // room for that one, and the tab states the cadence it is reading.
 "use strict";
 
+const fs = require("node:fs");
 const feedPublisher = require("./publish-live-trading-feed.js");
 const { validateLiveCtraderCopier } = require("./validate_live_ctrader_copier.js");
 
@@ -69,6 +70,15 @@ function parseArgs(argv) {
 
 function publish(options, deps = {}) {
   if (!options.feed) throw Object.assign(new Error("--feed is required"), { code: "feed_missing" });
+  // The commit subject names this document rather than the lane feed: a reader of the history should not have to
+  // open the commit to learn that it carried the copier's read.
+  let subject = null;
+  try {
+    const document = JSON.parse(fs.readFileSync(options.feed, "utf8"));
+    subject = `live-trading: publish the cTrader copier read for ${document.generated_at_utc || "<unknown>"}, data file only`;
+  } catch (error) {
+    subject = null;
+  }
   return feedPublisher.publishFeed(
     {
       feed: options.feed,
@@ -82,6 +92,7 @@ function publish(options, deps = {}) {
       lock: options.lock,
       force: options.force === true,
       dryRun: options.dryRun === true,
+      commitSubject: subject,
       json: true,
       help: false
     },

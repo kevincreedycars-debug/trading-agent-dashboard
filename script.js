@@ -22529,7 +22529,7 @@ function renderLiveCtraderCopier(passedData) {
       ? "stale"
       : freshness.tone;
   const bannerLabel = `${freshness.label} \u00b7 COPIER ${heartbeat.label || "UNKNOWN"}`;
-  const bannerDetail = `${freshness.detail} ${heartbeat.detail || ""}`.trim();
+  const bannerDetail = `${freshness.detail}${heartbeat.detail ? ` ${heartbeat.detail}.` : ""}`;
 
   if (updated) {
     updated.textContent = `${freshness.label} \u00b7 copier ${heartbeat.label || "unknown"} \u00b7 read ${data.generated_at_utc || "unknown"}`;

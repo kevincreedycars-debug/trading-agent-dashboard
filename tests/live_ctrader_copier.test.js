@@ -302,6 +302,18 @@ test("the verification matrix separates what the broker answered from what only 
     snapshot: snapshotFixture()
   });
   assert.equal(closed.find((row) => row.behaviour === "Full close after a source exit").state, "broker_observed");
+
+  // A close is also proved by the account's own deals once the mapping has moved to history: the health file only
+  // covers the poll that did it, and the next poll overwrites it.
+  const fromDeals = lib.verification({
+    health: healthFixture({ closes: [] }),
+    mappings: [{ source_ticket: "309101669", target_position_id: "62272218", symbol: "XAUUSD", status: "closed", volume_lots: 0.01 }],
+    snapshot: snapshotFixture(),
+    closedTrades: [{ position_id: "62272218", symbol: "XAUUSD", copy_kind: "copy", price_close: 3661.05, net_profit: 5.98, closed: { time_utc: "2026-11-19T21:42:34.000Z" } }]
+  });
+  const fullClose = fromDeals.find((row) => row.behaviour === "Full close after a source exit");
+  assert.equal(fullClose.state, "broker_observed");
+  assert.match(fullClose.detail, /#62272218 XAUUSD closed at 3661\.05 on 2026-11-19T21:42:34\.000Z, net 5\.98/);
 });
 
 test("the heartbeat is one word the file can defend", () => {

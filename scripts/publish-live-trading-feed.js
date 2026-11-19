@@ -359,9 +359,13 @@ function decidePublish({
 
 // The published commit says what it carries and what it is not. The body is the part a later reader needs:
 // why no cache-buster moved, and which read-only facts the bytes hold.
-function buildCommitMessage(feed, { publishedAtUtc, targets = [FEED_RELATIVE], extras = [] }) {
+function buildCommitMessage(feed, { publishedAtUtc, targets = [FEED_RELATIVE], extras = [], subject = null }) {
   const generatedAt = feed?.generated_at_utc ?? "<unknown>";
-  const subject = `live-trading: publish the M5/H1/H4 snapshot for ${generatedAt}, data file only`;
+  // A caller that publishes a different document states its own subject; without one the live feed's wording is
+  // kept exactly, so every existing lane commit reads as it did.
+  const finalSubject = typeof subject === "string" && subject.trim()
+    ? subject.trim()
+    : `live-trading: publish the M5/H1/H4 snapshot for ${generatedAt}, data file only`;
   const body = [
     `The cadence on the machine holding the terminal last wrote data/live-trading.json at ${generatedAt}; ` +
       `this commit carries that validated snapshot and nothing else, published ${publishedAtUtc}.`,
@@ -385,7 +389,7 @@ function buildCommitMessage(feed, { publishedAtUtc, targets = [FEED_RELATIVE], e
         "alive behind each account it draws."
     );
   }
-  return `${subject}\n\n${body.join("\n")}\n`;
+  return `${finalSubject}\n\n${body.join("\n")}\n`;
 }
 function readState(statePath) {
   try {
@@ -660,7 +664,8 @@ function publishFeed(options, deps = {}) {
   const commitMessage = buildCommitMessage(feed, {
     publishedAtUtc: result.at_utc,
     targets: artifacts.map((artifact) => artifact.target),
-    extras: extras.map((extra) => extra.target)
+    extras: extras.map((extra) => extra.target),
+    subject: options.commitSubject || null
   });
   result.commit_message_subject = commitMessage.split("\n")[0];
   if (options.dryRun === true) {

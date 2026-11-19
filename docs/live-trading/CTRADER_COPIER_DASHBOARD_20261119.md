@@ -48,6 +48,14 @@ current as of the publish that carried it.
   empty.
 - The scheduled script run by hand at 21:05:46Z read 2 source positions, sent nothing (both already copied), wrote
   `status=ok`, `source.rows=2`, and released its lock.
+- Scheduled mode, observed: `ctrader-copier-poll` ran every minute from 21:43 to 21:48 with exit 0, health
+  `status=ok`, one source position, and no lock left behind. `ctrader-copier-dashboard` ran at 21:50:18 with result
+  0: snapshot, build and a publish correctly held back by the 20-minute cadence ("too_soon ... inside the 1200s
+  cadence"). Its first run at 21:47 failed before doing anything because both tasks shared one redirect file; each
+  task now appends to its own `*.task.out.txt`.
+- The first natural source exit: XAUUSD `309101669` gone at ~21:39Z; the copier closed `62272218` at 3626.39 on
+  2026-11-19T21:42:26.546Z, net +40.77 USD, and the mapping moved to history. Published to main as
+  `bb0e839a`; the live page shows "Full close after a source exit — Broker observed".
 - The FX-volume close regression was run through the deployed adapter with the real contracts:
   `EURUSD 0.01 lot -> 100,000 protocol units`, `XAUUSD 0.01 -> 100`, `BTCUSD 0.01 -> 1`,
   `US100.cash 0.01 -> 1`. All accepted; exit 0.
@@ -63,15 +71,20 @@ current as of the publish that carried it.
 ## What the verification matrix says, and what it does not
 
 The matrix separates `broker_observed` (the broker answered), `tested` (exercised through the adapter on
-fixtures), `not_sent` (no such path by design) and `awaiting_live_proof`. Copying, size conversion and the stop at
-entry are broker-observed. Amendments, cancellation of a resting source order and partial closes are `not_sent`:
-the copier does not amend, does not mirror resting orders and does not close partially; a source partial close
-leaves the destination at its copied size and that difference stays visible rather than being papered over.
+fixtures), `not_sent` (no such path by design) and `awaiting_live_proof`. Copying, size conversion, the stop at
+entry and — since 21:42:26Z — the full close after a source exit are broker-observed. Amendments, cancellation of
+a resting source order and partial closes are `not_sent`: the copier does not amend, does not mirror resting
+orders and does not close partially; a source partial close leaves the destination at its copied size and that
+difference stays visible rather than being papered over.
 
-**The full close after a natural source exit remains unproved.** The close path is tested through the adapter
-(symbol-aware volume scale, from the regression above), but no copier close has yet been observed on the broker.
-It is kept `awaiting_live_proof` until a natural source exit produces a broker-confirmed close; no trade is forced
-to produce one.
+**The full close is now proved live, not just on fixtures.** The XAUUSD source ticket `309101669` exited
+naturally at about 21:39Z; the copier closed cTrader `62272218` at `3626.39` on `2026-11-19T21:42:26.546Z` for a
+net `+40.77 USD`, moved the mapping to the store's history, and the next broker read showed one open copy
+(EURUSD) and no orphaned mapping. That first natural exit also found a real defect: the copier asked the adapter
+to close without a volume, the transport refused an undefined size, and the copy stayed open for three polls. The
+copier now states the size it opened, and the adapter treats a close with no volume as "all of it" by reading the
+position's own volume; a position whose volume cannot be read is refused rather than sent. Both paths have tests.
+
 
 ## Files
 
