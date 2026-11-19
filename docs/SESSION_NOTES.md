@@ -1,5 +1,30 @@
 # Session Notes
 
+2026-11-19, USD Layer 1 lane (branch `backtesting/usd-l1-screen-20261117`) - the backtest now exists as
+versioned n8n Cloud workflows, and the four recorded mornings are drawn as a model-swap map on the Backtesting
+tab. n8n Cloud has no `Execute Command`, so the two existing wrappers could not run there; the new lane bundles
+the controller library into a Code node (`automation/n8n/usd-l1-cloud-runtime.js`, 90,011 bytes, source-set hash
+`e1e7ecb0...` in `automation/n8n/usd-l1-cloud-workflows.manifest.json`), pins one model per child
+(`usd-l1-challenger-v0` `giGJKNQw5WLh1xbX`, `usd-l1-challenger-v1` `42sxXHScRvE3qSTX`) and binds both from a
+parent (`89uk5JnPbWPL5lGD`) whose webhook is header-authenticated and deactivated after the runs. Executions on
+2026-11-19: 5471 structural (children 5472/5473, both `allowed` BULLISH conviction 2), 5474 receipted (5475/5476,
+both `blocked`), 5477 missing date (5478/5479, both `blocked`) and 5480 missing inputs (5481/5482, both
+`abstained`); every parent returned success and both children always carried the same validation verdict with
+different decisions, which is the point of the swap. The bundle reproduced the Node controller for both challengers
+over all 725 stored mornings (1,450 decisions, 0 mismatches). Guards re-run in this session: `test:usd-l1-n8n`
+15/15 (Cloud 5/5 including real child ids and the header-auth credential, map 10/10), browser map 1/1 at 1440 and
+390 pixels, controller 17/17, architecture map 6/6, and `node scripts/validate_architecture_map.js` clean. Two
+build fixes: the builder now keeps the imported child ids and webhook credential already in the manifest and parent
+file, so `npm run build:usd-l1-n8n` rewrites identical bytes instead of placeholders, and the earlier removal of
+`test:usd-layer1-engine`, `backtest:usd-l1-engine`, `check:usd-l1-engine`, `shadow:usd-l1` plus the two H1 files in
+`test:usd-session` was reverted - every one of those files exists and passes (engine 32/32, `test:usd-session`
+90/90). Full local bucket: 1,076 tests, 1,059 pass, 13 fail, 4 skipped; the same 11 failures exist at `origin/main`
+`5ab099a3` in a clean worktree (globe 2, layer-1 call map 2, M5 pan and zoom 2, research library 1, USD call map 2,
+USD logic dossier 2) and the other 2 are the clock-dependent `refresh_progress` cases, which also failed at `main`
+on a different test in the same rerun and passed 26/26 locally on the next. Not published: the live
+`backtesting.html` is 58,292 bytes with no `n8nmap` and the evidence file 404s on `main`, so the classification is
+built, imported, executed - not published. Nothing scheduled, no order, stop, size, feed or runtime table touched.
+
 2026-11-15 late evening, second lane (factory drill-downs, branch `design/architecture-factory-drilldowns` off
 `origin/main` `fb059c17`) - the Architecture factory gained its two second levels and a corrected execution floor.
 Each replay chamber now offers **Explore test library**: the camera drops below the floor, the chamber keeps its

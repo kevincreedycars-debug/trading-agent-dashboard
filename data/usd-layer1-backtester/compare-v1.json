@@ -1,0 +1,323 @@
+{
+  "controller_version": "usd-l1-backtest-controller-v1",
+  "dataset": {
+    "path": "data/usd-layer1-backtester/run-v1.json",
+    "schema_version": "usd-layer1-backtester-panel-v1",
+    "run_version": "usd-l1-backtester-r1",
+    "generated_at": "2026-11-14T00:00:00.000Z",
+    "sessions": 725
+  },
+  "models": [
+    "current",
+    "challenger",
+    "challenger_v1"
+  ],
+  "baseline": "current",
+  "validation_mode": "structural",
+  "window": {
+    "from": "2024-01-02",
+    "to": "2026-10-12",
+    "requested_dates": 725
+  },
+  "reports": {
+    "current": {
+      "controller_version": "usd-l1-backtest-controller-v1",
+      "dataset": {
+        "path": "data/usd-layer1-backtester/run-v1.json",
+        "schema_version": "usd-layer1-backtester-panel-v1",
+        "run_version": "usd-l1-backtester-r1",
+        "generated_at": "2026-11-14T00:00:00.000Z",
+        "sessions": 725
+      },
+      "layer1": {
+        "id": "current",
+        "label": "Current USD model",
+        "version": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+        "source": "backtester/lib/usd_layer1_backtester/current_model.js",
+        "minimum_inputs": 1
+      },
+      "validation_mode": "structural",
+      "window": {
+        "from": "2024-01-02",
+        "to": "2026-10-12",
+        "requested_dates": 725
+      },
+      "summary": {
+        "sessions": 725,
+        "statuses": {
+          "blocked": 0,
+          "allowed": 714,
+          "abstained": 11
+        },
+        "validation": {
+          "structural_accepted": 725,
+          "structural_blocked": 0,
+          "receipted_complete": 0,
+          "receipted_incomplete": 725
+        },
+        "blocked_reasons": {},
+        "markets": {
+          "EURUSD": {
+            "hit": 217,
+            "miss": 222,
+            "flat": 122,
+            "no_outcome": 153,
+            "no_call": 11,
+            "scored": 439,
+            "accuracy": 0.4943,
+            "wilson_lower_95": 0.4478
+          },
+          "XAUUSD": {
+            "hit": 255,
+            "miss": 203,
+            "flat": 100,
+            "no_outcome": 156,
+            "no_call": 11,
+            "scored": 458,
+            "accuracy": 0.5568,
+            "wilson_lower_95": 0.511
+          },
+          "BTCUSD": {
+            "hit": 268,
+            "miss": 268,
+            "flat": 178,
+            "no_outcome": 0,
+            "no_call": 11,
+            "scored": 536,
+            "accuracy": 0.5,
+            "wilson_lower_95": 0.4578
+          },
+          "NAS100": {
+            "hit": 240,
+            "miss": 214,
+            "flat": 104,
+            "no_outcome": 156,
+            "no_call": 11,
+            "scored": 454,
+            "accuracy": 0.5286,
+            "wilson_lower_95": 0.4827
+          }
+        },
+        "pooled": {
+          "hit": 980,
+          "miss": 907,
+          "flat": 504,
+          "no_outcome": 465,
+          "no_call": 44,
+          "scored": 1887,
+          "accuracy": 0.5193,
+          "wilson_lower_95": 0.4968
+        },
+        "participation": 0.9848
+      }
+    },
+    "challenger": {
+      "controller_version": "usd-l1-backtest-controller-v1",
+      "dataset": {
+        "path": "data/usd-layer1-backtester/run-v1.json",
+        "schema_version": "usd-layer1-backtester-panel-v1",
+        "run_version": "usd-l1-backtester-r1",
+        "generated_at": "2026-11-14T00:00:00.000Z",
+        "sessions": 725
+      },
+      "layer1": {
+        "id": "challenger",
+        "label": "Challenger v0",
+        "version": "usd-layer1-challenger-v0",
+        "source": "backtester/lib/usd_layer1_backtester/challenger.js",
+        "minimum_inputs": 6
+      },
+      "validation_mode": "structural",
+      "window": {
+        "from": "2024-01-02",
+        "to": "2026-10-12",
+        "requested_dates": 725
+      },
+      "summary": {
+        "sessions": 725,
+        "statuses": {
+          "blocked": 0,
+          "allowed": 508,
+          "abstained": 217
+        },
+        "validation": {
+          "structural_accepted": 725,
+          "structural_blocked": 0,
+          "receipted_complete": 0,
+          "receipted_incomplete": 725
+        },
+        "blocked_reasons": {},
+        "markets": {
+          "EURUSD": {
+            "hit": 149,
+            "miss": 165,
+            "flat": 92,
+            "no_outcome": 102,
+            "no_call": 217,
+            "scored": 314,
+            "accuracy": 0.4745,
+            "wilson_lower_95": 0.4199
+          },
+          "XAUUSD": {
+            "hit": 173,
+            "miss": 167,
+            "flat": 64,
+            "no_outcome": 104,
+            "no_call": 217,
+            "scored": 340,
+            "accuracy": 0.5088,
+            "wilson_lower_95": 0.4559
+          },
+          "BTCUSD": {
+            "hit": 190,
+            "miss": 196,
+            "flat": 122,
+            "no_outcome": 0,
+            "no_call": 217,
+            "scored": 386,
+            "accuracy": 0.4922,
+            "wilson_lower_95": 0.4427
+          },
+          "NAS100": {
+            "hit": 168,
+            "miss": 159,
+            "flat": 77,
+            "no_outcome": 104,
+            "no_call": 217,
+            "scored": 327,
+            "accuracy": 0.5138,
+            "wilson_lower_95": 0.4597
+          }
+        },
+        "pooled": {
+          "hit": 680,
+          "miss": 687,
+          "flat": 355,
+          "no_outcome": 310,
+          "no_call": 868,
+          "scored": 1367,
+          "accuracy": 0.4974,
+          "wilson_lower_95": 0.471
+        },
+        "participation": 0.7007
+      }
+    },
+    "challenger_v1": {
+      "controller_version": "usd-l1-backtest-controller-v1",
+      "dataset": {
+        "path": "data/usd-layer1-backtester/run-v1.json",
+        "schema_version": "usd-layer1-backtester-panel-v1",
+        "run_version": "usd-l1-backtester-r1",
+        "generated_at": "2026-11-14T00:00:00.000Z",
+        "sessions": 725
+      },
+      "layer1": {
+        "id": "challenger_v1",
+        "label": "Challenger v1",
+        "version": "usd-layer1-challenger-v1",
+        "source": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+        "minimum_inputs": 6
+      },
+      "validation_mode": "structural",
+      "window": {
+        "from": "2024-01-02",
+        "to": "2026-10-12",
+        "requested_dates": 725
+      },
+      "summary": {
+        "sessions": 725,
+        "statuses": {
+          "blocked": 0,
+          "allowed": 515,
+          "abstained": 210
+        },
+        "validation": {
+          "structural_accepted": 725,
+          "structural_blocked": 0,
+          "receipted_complete": 0,
+          "receipted_incomplete": 725
+        },
+        "blocked_reasons": {},
+        "markets": {
+          "EURUSD": {
+            "hit": 155,
+            "miss": 167,
+            "flat": 91,
+            "no_outcome": 102,
+            "no_call": 210,
+            "scored": 322,
+            "accuracy": 0.4814,
+            "wilson_lower_95": 0.4273
+          },
+          "XAUUSD": {
+            "hit": 176,
+            "miss": 168,
+            "flat": 67,
+            "no_outcome": 104,
+            "no_call": 210,
+            "scored": 344,
+            "accuracy": 0.5116,
+            "wilson_lower_95": 0.459
+          },
+          "BTCUSD": {
+            "hit": 187,
+            "miss": 198,
+            "flat": 130,
+            "no_outcome": 0,
+            "no_call": 210,
+            "scored": 385,
+            "accuracy": 0.4857,
+            "wilson_lower_95": 0.4362
+          },
+          "NAS100": {
+            "hit": 172,
+            "miss": 159,
+            "flat": 80,
+            "no_outcome": 104,
+            "no_call": 210,
+            "scored": 331,
+            "accuracy": 0.5196,
+            "wilson_lower_95": 0.4659
+          }
+        },
+        "pooled": {
+          "hit": 690,
+          "miss": 692,
+          "flat": 368,
+          "no_outcome": 310,
+          "no_call": 840,
+          "scored": 1382,
+          "accuracy": 0.4993,
+          "wilson_lower_95": 0.473
+        },
+        "participation": 0.7103
+      }
+    }
+  },
+  "deltas": {
+    "challenger": {
+      "baseline": "current",
+      "markets": {
+        "EURUSD": -0.0198,
+        "XAUUSD": -0.048,
+        "BTCUSD": -0.0078,
+        "NAS100": -0.0148
+      },
+      "pooled": -0.0219
+    },
+    "challenger_v1": {
+      "baseline": "current",
+      "markets": {
+        "EURUSD": -0.0129,
+        "XAUUSD": -0.0452,
+        "BTCUSD": -0.0143,
+        "NAS100": -0.009
+      },
+      "pooled": -0.02
+    }
+  },
+  "labels": {
+    "research_only": "Research only. Accuracy is gross of costs and is not an edge claim.",
+    "comparison": "A delta is candidate accuracy minus baseline accuracy over the same scored mornings; a null delta has no common denominator."
+  }
+}

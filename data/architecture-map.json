@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Trading Agent Dashboard Architecture Mirror",
-    "version": "2026-07-21-architecture-mirror-v1",
+    "version": "2026-11-19-architecture-mirror-v2",
     "generated_from": [
       "HANDOFF_BRIEF.md",
       "README.md",
@@ -12,12 +12,27 @@
       "script.js",
       "index.html",
       "playwright-dashboard-smoke.js",
-      "data/workflow-status.json"
+      "data/workflow-status.json",
+      "docs/USD_L1_BACKTEST_CONTROLLER_V1.md",
+      "backtester/lib/usd_layer1_backtester/backtest_controller.js",
+      "backtester/scripts/run_usd_l1_backtest_controller.js",
+      "automation/n8n/usd-l1-backtest-controller.workflow.json",
+      "automation/n8n/usd-l1-layer1-decision.workflow.json",
+      "data/usd-layer1-backtester/run-v1.json",
+      "data/usd-layer1-backtester/parity-v1.json",
+      "data/usd-layer1-backtester/compare-v1.json",
+      "tests/architecture_map_usd_l1_controller.test.js",
+      "docs/USD_L1_N8N_CLOUD_WORKFLOWS.md",
+      "automation/n8n/usd-l1-cloud-workflows.manifest.json",
+      "data/usd-layer1-backtester/n8n-execution-evidence-v1.json"
     ],
-    "last_verified_at": "2026-07-21",
+    "last_verified_at": "2026-11-19",
     "notes": [
       "This manifest documents architecture only. It must not change production logic, research logic, workflow execution, or artifact semantics.",
-      "Explicitly uncertain relationships remain marked unverified instead of being inferred into verified flow."
+      "Explicitly uncertain relationships remain marked unverified instead of being inferred into verified flow.",
+      "last_verified_at records this manifest revision. Component-level verification dates and execution state live in each node's verification block.",
+      "The USD Layer 1 controller evidence was regenerated locally on 2026-11-19. The host-command n8n wrappers remain built but not imported, so their execution status stays partially verified.",
+      "A separate Cloud pair was imported and ran four recorded mornings on 2026-11-19 - usd-l1-paired-controller with the two frozen challenger children. Its executions and transcripts are read by the Backtesting tab's Layer 1 map from data/usd-layer1-backtester/n8n-execution-evidence-v1.json."
     ]
   },
   "boundaries": [
@@ -768,6 +783,122 @@
           "Complete column-level Supabase research lineage remains explicitly unverified."
         ]
       }
+    },
+    {
+      "id": "usd_l1_backtester_panel",
+      "label": "USD L1 Backtester Panel",
+      "short_label": "Run Panel",
+      "kind": "Research Artifact",
+      "summary": "Committed 725-session USD Layer 1 panel of stored snapshots, decisions, and market outcomes.",
+      "details": "The controller replays this frozen panel. Its dates define the only mornings that can be evaluated; it is research evidence, not a live market feed.",
+      "files": [
+        "data/usd-layer1-backtester/run-v1.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "run-v1.json declares 725 sessions, and the controller parity run replayed every stored decision and result from it.",
+        "notes": [
+          "Panel is frozen at usd-l1-backtester-r1. A controller result is not a live-run result."
+        ]
+      }
+    },
+    {
+      "id": "usd_l1_backtest_controller",
+      "label": "USD L1 Backtest Controller",
+      "short_label": "L1 Controller",
+      "kind": "Research Module",
+      "summary": "Validation-gated, decision-only controller that replays a model over stored USD sessions and scores the calls.",
+      "details": "The library owns adapters, structural and receipted validation, blocked-morning reasons, contrarian scoring, Wilson lower bounds, and model comparison. It reads no provider and writes no runtime table.",
+      "files": [
+        "backtester/lib/usd_layer1_backtester/backtest_controller.js",
+        "backtester/tests/usd_l1_backtest_controller.test.js",
+        "docs/USD_L1_BACKTEST_CONTROLLER_V1.md",
+        "data/usd-layer1-backtester/parity-v1.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "17 controller tests pass; --parity reports 2,175/2,175 decision matches and 8,700/8,700 result matches with exit code 0.",
+        "notes": [
+          "Parity proves replay of this frozen panel only. Accuracy is gross of costs and is not an edge claim."
+        ]
+      }
+    },
+    {
+      "id": "usd_l1_controller_cli",
+      "label": "USD L1 Controller CLI",
+      "short_label": "Controller CLI",
+      "kind": "Research CLI",
+      "summary": "Node entry point for list-dates, one-morning decisions, parity, and multi-model comparison.",
+      "details": "The CLI is the only seam n8n uses. It prints one JSON document per invocation and exits non-zero on malformed arguments or a parity mismatch.",
+      "files": [
+        "backtester/scripts/run_usd_l1_backtest_controller.js",
+        "package.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Controller tests cover --list-dates, --date, an unknown model, a blocked missing date, and the parity exit path; package scripts expose the same commands.",
+        "notes": []
+      }
+    },
+    {
+      "id": "usd_l1_layer1_decision_workflow",
+      "label": "USD Layer 1 Decision Sub-workflow",
+      "short_label": "L1 Decision",
+      "kind": "n8n Research Workflow",
+      "summary": "Committed child workflow that evaluates exactly one stored morning through the controller CLI.",
+      "details": "The child accepts date, model, dataset, and validation, validates all four before building a shell command, parses the CLI JSON, and raises on a controller refusal.",
+      "files": [
+        "automation/n8n/usd-l1-layer1-decision.workflow.json",
+        "backtester/tests/usd_l1_backtest_controller.test.js"
+      ],
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "The five executable nodes, guard code, and CLI command are committed and asserted by tests, but no n8n import or execution receipt exists in this repository.",
+        "notes": [
+          "Lifecycle: built, not running. Import into n8n and record the real workflow id before claiming live execution.",
+          "No n8n API credential is present in the repository, so import and manual-run evidence remain outstanding."
+        ]
+      }
+    },
+    {
+      "id": "usd_l1_backtest_controller_workflow",
+      "label": "USD L1 Backtest Controller Workflow",
+      "short_label": "Controller Workflow",
+      "kind": "n8n Research Workflow",
+      "summary": "Manual-trigger parent workflow that lists dates, fans out one child call per morning, and summarises statuses.",
+      "details": "The nine executable nodes validate the run window, call --list-dates, execute the child once per date with mode=each and waitForSubWorkflow, then mirror the library status tally in the final report.",
+      "files": [
+        "automation/n8n/usd-l1-backtest-controller.workflow.json",
+        "docs/USD_L1_BACKTEST_CONTROLLER_V1.md",
+        "backtester/tests/usd_l1_backtest_controller.test.js"
+      ],
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "Graph integrity, fan-out, and summary parity are asserted locally; the child workflow id is still REPLACE_WITH_LAYER1_SUBWORKFLOW_ID and no n8n execution exists.",
+        "notes": [
+          "Lifecycle: built, blocked on import and child-id replacement. Do not activate until the placeholder is replaced.",
+          "Live n8n execution remains unverified; this node must not be read as a running production job."
+        ]
+      }
+    },
+    {
+      "id": "usd_l1_controller_evidence",
+      "label": "Controller Parity and Comparison Evidence",
+      "short_label": "Parity Evidence",
+      "kind": "Research Artifact",
+      "summary": "Checked-in parity and three-model comparison outputs for the USD Layer 1 controller.",
+      "details": "parity-v1 records full replay agreement. compare-v1 records the 725-morning window from 2024-01-02 to 2026-10-12 and candidate-minus-baseline accuracy deltas.",
+      "files": [
+        "data/usd-layer1-backtester/parity-v1.json",
+        "data/usd-layer1-backtester/compare-v1.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Both artifacts were regenerated locally with exit code 0: parity 2,175/2,175 and 8,700/8,700; compare reports pooled deltas of -0.0219 for challenger and -0.0200 for challenger_v1.",
+        "notes": [
+          "Deltas are accuracy differences on the same scored mornings, not expected returns."
+        ]
+      }
     }
   ],
   "edges": [
@@ -1486,6 +1617,83 @@
         "evidence": "Current importer scripts, docs, and artifact behavior all enforce this requirement.",
         "notes": []
       }
+    },
+    {
+      "id": "e_panel_read_by_controller",
+      "source": "usd_l1_backtester_panel",
+      "target": "usd_l1_backtest_controller",
+      "label": "Reads frozen session panel",
+      "details": "The controller resolves each morning from the committed panel and never reaches a market provider.",
+      "verification": {
+        "status": "verified",
+        "evidence": "The parity run read data/usd-layer1-backtester/run-v1.json and reproduced every stored decision and result.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_controller_exposed_by_cli",
+      "source": "usd_l1_backtest_controller",
+      "target": "usd_l1_controller_cli",
+      "label": "Exposed by CLI",
+      "details": "The library is invoked through one CLI with explicit dataset, model, date, and validation arguments.",
+      "verification": {
+        "status": "verified",
+        "evidence": "backtester/scripts/run_usd_l1_backtest_controller.js requires the controller module and the controller tests drive every CLI mode.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_cli_runs_one_morning_in_child",
+      "source": "usd_l1_controller_cli",
+      "target": "usd_l1_layer1_decision_workflow",
+      "label": "Evaluates one morning",
+      "details": "The child executes the CLI with --date and --decisions after its input guards pass.",
+      "verification": {
+        "status": "verified",
+        "evidence": "The committed child node contains the CLI command and the controller test asserts its flags and guards.",
+        "notes": [
+          "The command is verified as a committed artifact, not as a live n8n execution."
+        ]
+      }
+    },
+    {
+      "id": "e_outer_lists_dates_via_cli",
+      "source": "usd_l1_backtest_controller_workflow",
+      "target": "usd_l1_controller_cli",
+      "label": "Lists session dates",
+      "details": "The parent derives one item per date from --list-dates before any model is called.",
+      "verification": {
+        "status": "verified",
+        "evidence": "The committed parent node calls --list-dates, and the controller test covers the same CLI mode.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_outer_runs_child_per_date",
+      "source": "usd_l1_backtest_controller_workflow",
+      "target": "usd_l1_layer1_decision_workflow",
+      "label": "Executes child once per date",
+      "details": "The parent uses mode=each and waitForSubWorkflow so every listed morning returns a decision or a visible block.",
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "The fan-out settings are asserted locally, but the child id is still a placeholder and no n8n execution has been recorded.",
+        "notes": [
+          "Replace REPLACE_WITH_LAYER1_SUBWORKFLOW_ID with the imported child id before running.",
+          "Do not activate the parent while the placeholder is present."
+        ]
+      }
+    },
+    {
+      "id": "e_controller_produces_evidence",
+      "source": "usd_l1_backtest_controller",
+      "target": "usd_l1_controller_evidence",
+      "label": "Produces parity and comparison evidence",
+      "details": "Parity and compare modes write reproducible research artifacts rather than publishing a dashboard call.",
+      "verification": {
+        "status": "verified",
+        "evidence": "parity-v1.json and compare-v1.json were regenerated with exit code 0 and carry the controller version and dataset identity.",
+        "notes": []
+      }
     }
   ],
   "views": [
@@ -2183,6 +2391,47 @@
           "browser_surface": { "x": 730, "y": 45, "width": 320, "height": 150 },
           "n8n_runtime": { "x": 50, "y": 175, "width": 610, "height": 300 },
           "github_publication": { "x": 650, "y": 180, "width": 160, "height": 140 }
+        }
+      }
+    },
+    {
+      "id": "usd-l1-controller",
+      "label": "USD L1 Controller",
+      "description": "USD Layer 1 controller library, CLI seam, committed n8n wrappers, and their local evidence state.",
+      "node_ids": [
+        "usd_l1_backtester_panel",
+        "usd_l1_backtest_controller",
+        "usd_l1_controller_cli",
+        "usd_l1_backtest_controller_workflow",
+        "usd_l1_layer1_decision_workflow",
+        "usd_l1_controller_evidence"
+      ],
+      "edge_ids": [
+        "e_panel_read_by_controller",
+        "e_controller_exposed_by_cli",
+        "e_cli_runs_one_morning_in_child",
+        "e_outer_lists_dates_via_cli",
+        "e_outer_runs_child_per_date",
+        "e_controller_produces_evidence"
+      ],
+      "boundary_ids": [
+        "research_stack",
+        "n8n_runtime"
+      ],
+      "layout": {
+        "width": 1200,
+        "height": 760,
+        "nodes": {
+          "usd_l1_backtester_panel": { "x": 120, "y": 120 },
+          "usd_l1_backtest_controller": { "x": 320, "y": 120 },
+          "usd_l1_controller_cli": { "x": 540, "y": 120 },
+          "usd_l1_controller_evidence": { "x": 860, "y": 120 },
+          "usd_l1_backtest_controller_workflow": { "x": 320, "y": 440 },
+          "usd_l1_layer1_decision_workflow": { "x": 560, "y": 440 }
+        },
+        "boundaries": {
+          "research_stack": { "x": 45, "y": 45, "width": 1000, "height": 250 },
+          "n8n_runtime": { "x": 200, "y": 350, "width": 520, "height": 230 }
         }
       }
     }

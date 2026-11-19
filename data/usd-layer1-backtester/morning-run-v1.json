@@ -312,7 +312,7 @@
           "US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks.",
           "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified.",
           "DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified.",
-          "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute.",
+          "DXY.cash 05:00 return: no value in the archive; The archive holds the completed-hour DXY.cash tape from 2024-12-10 (10052 bars). The 05:00 London value is the bar that closes at the cutoff, so it needs no lookahead; but the broker prints no bar on a weekend or holiday boundary, and the export carries no publication receipt. A morning without its own 05:00 bar is blocked, never filled from a neighbouring hour.",
           "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
           "QQQ close 5d: The legacy return is the Nasdaq-100 index, not the QQQ ETF's official close. The instrument identity fails, and the five closes and split adjustment are absent.",
           "Release calendar: Only the FOMC statement archive is staged. CPI, Employment Situation, advance GDP, Personal Income and Outlays schedules are absent, so the event window cannot be answered for the complete declared calendar."
@@ -393,7 +393,7 @@
         {
           "source": "gate",
           "code": "h1_historical_evidence_blocked",
-          "text": "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute."
+          "text": "DXY.cash 05:00 return: no value in the archive; The archive holds the completed-hour DXY.cash tape from 2024-12-10 (10052 bars). The 05:00 London value is the bar that closes at the cutoff, so it needs no lookahead; but the broker prints no bar on a weekend or holiday boundary, and the export carries no publication receipt. A morning without its own 05:00 bar is blocked, never filled from a neighbouring hour."
         },
         {
           "source": "gate",
@@ -1329,16 +1329,16 @@
       },
       {
         "key": "ice",
-        "label": "ICE DXY 05:00 fixing",
+        "label": "DXY.cash 05:00 return",
         "required": {
-          "source": "ICE",
-          "instrument": "US Dollar Index spot",
-          "transform": "previous eligible London 05:00 fixing to current 05:00, simple return in percent",
+          "source": "FTMO Global Markets Ltd",
+          "instrument": "DXY.cash (spot CFD on the dollar index basket)",
+          "transform": "previous eligible London 05:00 price to current 05:00, simple return in percent",
           "max_age_hours": 0
         },
         "legacy_field": "none (run-v1 stores no ICE DXY fixing)",
         "value": null,
-        "source": "ICE",
+        "source": "FTMO Global Markets Ltd",
         "availability": {
           "stamp": null,
           "precision": "missing",
@@ -1374,11 +1374,11 @@
             "clocked",
             "identity"
           ],
-          "identity_state": "missing",
-          "text": "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute."
+          "identity_state": "amended_source",
+          "text": "DXY.cash 05:00 return: no value in the archive; The archive holds the completed-hour DXY.cash tape from 2024-12-10 (10052 bars). The 05:00 London value is the bar that closes at the cutoff, so it needs no lookahead; but the broker prints no bar on a weekend or holiday boundary, and the export carries no publication receipt. A morning without its own 05:00 bar is blocked, never filled from a neighbouring hour."
         },
-        "recoverable": "The licensed ICE fixing history and release timestamp can reconstruct publication; the collector receipt cannot be reconstructed.",
-        "acquisition": "Acquire licensed ICE US Dollar Index spot 05:00 London fixing history and the previous eligible fixing. Record the exact fixing, publication timestamp and collector receipt."
+        "recoverable": "Publication at the cutoff is proven by the completed bar itself. A recipient receipt cannot be reconstructed from a retrospective export, so sealed live replay stays blocked for this input.",
+        "acquisition": "Collect the DXY.cash 05:00 bar close live at the cutoff and record a genuine receipt, so this input can also enter the sealed lane. No ICE licence is required and none is requested."
       },
       {
         "key": "gold",
@@ -1653,7 +1653,7 @@
     },
     {
       "input": "ice",
-      "label": "ICE DXY 05:00 fixing",
+      "label": "DXY.cash 05:00 return",
       "code": "missing_value",
       "failed_rungs": [
         "present",
@@ -1663,7 +1663,7 @@
         "clocked",
         "identity"
       ],
-      "identity_state": "missing",
+      "identity_state": "amended_source",
       "clock": {
         "stamp": null,
         "precision": "missing",
@@ -1672,7 +1672,7 @@
         "received": null,
         "note": "no observation, publication or receipt metadata is stored"
       },
-      "reason": "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute."
+      "reason": "DXY.cash 05:00 return: no value in the archive; The archive holds the completed-hour DXY.cash tape from 2024-12-10 (10052 bars). The 05:00 London value is the bar that closes at the cutoff, so it needs no lookahead; but the broker prints no bar on a weekend or holiday boundary, and the export carries no publication receipt. A morning without its own 05:00 bar is blocked, never filled from a neighbouring hour."
     },
     {
       "input": "gold",
@@ -1801,13 +1801,13 @@
     {
       "input": "ice",
       "required": {
-        "source": "ICE",
-        "instrument": "US Dollar Index spot",
-        "transform": "previous eligible London 05:00 fixing to current 05:00, simple return in percent",
+        "source": "FTMO Global Markets Ltd",
+        "instrument": "DXY.cash (spot CFD on the dollar index basket)",
+        "transform": "previous eligible London 05:00 price to current 05:00, simple return in percent",
         "max_age_hours": 0
       },
-      "issue": "ICE DXY 05:00 fixing: no value in the archive; There is no ICE US Dollar Index spot fixing in the archive. A broker DXY proxy is not the declared instrument and cannot substitute.",
-      "action": "Acquire licensed ICE US Dollar Index spot 05:00 London fixing history and the previous eligible fixing. Record the exact fixing, publication timestamp and collector receipt."
+      "issue": "DXY.cash 05:00 return: no value in the archive; The archive holds the completed-hour DXY.cash tape from 2024-12-10 (10052 bars). The 05:00 London value is the bar that closes at the cutoff, so it needs no lookahead; but the broker prints no bar on a weekend or holiday boundary, and the export carries no publication receipt. A morning without its own 05:00 bar is blocked, never filled from a neighbouring hour.",
+      "action": "Collect the DXY.cash 05:00 bar close live at the cutoff and record a genuine receipt, so this input can also enter the sealed lane. No ICE licence is required and none is requested."
     },
     {
       "input": "gold",
@@ -1881,10 +1881,10 @@
     },
     {
       "input": "ice",
-      "label": "ICE DXY 05:00 fixing",
+      "label": "DXY.cash 05:00 return",
       "value": null,
-      "recoverable": "The licensed ICE fixing history and release timestamp can reconstruct publication; the collector receipt cannot be reconstructed.",
-      "acquisition": "Acquire licensed ICE US Dollar Index spot 05:00 London fixing history and the previous eligible fixing. Record the exact fixing, publication timestamp and collector receipt."
+      "recoverable": "Publication at the cutoff is proven by the completed bar itself. A recipient receipt cannot be reconstructed from a retrospective export, so sealed live replay stays blocked for this input.",
+      "acquisition": "Collect the DXY.cash 05:00 bar close live at the cutoff and record a genuine receipt, so this input can also enter the sealed lane. No ICE licence is required and none is requested."
     },
     {
       "input": "gold",
@@ -2177,10 +2177,10 @@
   "remaining_work": [
     {
       "id": "dxy_official",
-      "label": "Official ICE cash DXY direction",
+      "label": "Official dollar index direction",
       "state": "unscored",
-      "need": "licensed ICE US Dollar Index 05:00 London fixings, the previous eligible fixing, and an H1-qualified call on each matched date",
-      "blocker": "the archive has no official ICE fixing; the 49.65% figure is a broker DXY.cash proxy and is not this test"
+      "need": "an official dollar index 05:00 London fix to score test 1 against; the H1 `ice` input no longer waits for one, because amendment H1-A01 takes the archived DXY.cash tape as its source",
+      "blocker": "no official index series is held, so 0 of 725 mornings are scored in this lane; the 49.65% figure is the labelled DXY.cash broker control and is not this test"
     },
     {
       "id": "four_markets",
@@ -2242,7 +2242,7 @@
         "sha256": "5d32f4ff4e9287121a75cd746549115f39e0b01afd4bdb078d03668f8c5e40fa"
       }
     ],
-    "artifact_sha256": "7a021a0a3b6cc7d2703ed3837c9d31d91530afa929a6ec061f309b2f5fab2794",
+    "artifact_sha256": "c376affc95b9c38672229df7e07c3bf6d282e7c07602b232922e71a01f4d6110",
     "note": "The digest is over the body before this block. The report builder reruns the same committed artefacts and must reproduce it."
   }
 }

@@ -123,9 +123,21 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
   assert.equal(h1.coverage.binding.run_id, "run-v1");
   assert.equal(h1.coverage.legacy_replacement.retired, true);
   for (const input of h1.coverage.inputs) {
-    assert.equal(input.eligible, 0, `${input.key} must not claim H1 eligibility`);
     assert.ok(input.blocker_text, `${input.key} must name its first blocker`);
     assert.ok(input.acquisition, `${input.key} must name the acquisition`);
+  }
+  // No morning is ready: eight inputs block all 725 and the amended ice input reaches 455 of them.
+  assert.equal(h1.coverage.mornings.every((morning) => morning.ready === false), true);
+  const amended = h1.coverage.inputs.filter((input) => input.amended);
+  assert.deepEqual(amended.map((input) => input.key), ["ice"], "only the ice input carries an amendment");
+  assert.equal(amended[0].eligible, 455);
+  assert.equal(amended[0].blocked, 270);
+  assert.equal(amended[0].supplied_contract.source, "ICE", "the v0.1.0 row is published beside the amendment");
+  assert.equal(amended[0].is_official_cash_dxy, false);
+  assert.equal(amended[0].code, "partial_evidence");
+  for (const input of h1.coverage.inputs.filter((row) => !row.amended)) {
+    assert.equal(input.eligible, 0, `${input.key} must not claim H1 eligibility`);
+    assert.equal(input.source.length > 0, true);
   }
   assert.equal(h1.coverage.mornings.length, 725);
   assert.ok(h1.coverage.mornings.every((morning) => morning.ready === false));
@@ -133,7 +145,7 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
   for (const gap of h1.coverage.gaps) {
     assert.ok(gap.dataset.includes("·"), `${gap.input} must name its dataset and source`);
     assert.ok(gap.factor_count > 0, `${gap.input} must name the factors it blocks`);
-    assert.ok(gap.affected.sessions === 725 && gap.affected.first && gap.affected.last);
+    assert.ok(gap.affected.sessions > 0 && gap.affected.first && gap.affected.last);
     assert.ok(gap.missing_evidence.length > 20, `${gap.input} must state the missing evidence`);
     assert.ok(gap.obtain.length > 20, `${gap.input} must state what to obtain`);
     assert.ok(gap.reusable_evidence, `${gap.input} must state what legacy evidence is reusable`);
@@ -145,6 +157,10 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
   const ice = h1.coverage.gaps.find((gap) => gap.input === "ice");
   assert.equal(ice.factor_count, 1);
   assert.equal(ice.factors[0].id, "fx.usd-session-momentum");
+  // The amended input still owes 270 mornings: 246 before the tape's first usable 05:00 bar and 24
+  // inside it (exchange holidays plus the archive's 2025-06 hole).
+  assert.equal(ice.affected.sessions, 270);
+  assert.equal(ice.code, "partial_evidence");
 });
 
 test("gated blocked mornings contribute no direction, trade or scored outcome, while the legacy contradictions are preserved", () => {

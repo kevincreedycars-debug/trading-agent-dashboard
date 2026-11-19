@@ -1,0 +1,131 @@
+{
+  "name": "USD Layer 1 - decision (sub-workflow, controller adapter)",
+  "active": false,
+  "settings": {
+    "timezone": "Europe/London",
+    "executionTimeout": 120
+  },
+  "nodes": [
+    {
+      "name": "When called by a controller",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -460,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "notes": "Expects { date, model, dataset, validation }. The controller workflow calls this once per session date; the same trigger can be called by any future runner."
+    },
+    {
+      "name": "Normalise call",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst date = input.date || \"\";\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) {\n  throw new Error(\"date must be YYYY-MM-DD; the Layer 1 sub-workflow refuses an unlabelled morning\");\n}\nconst model = input.model || \"current\";\nif (!/^[a-z0-9_]+$/.test(model)) {\n  throw new Error(\"model must be a lowercase adapter id\");\n}\nconst dataset = input.dataset || \"data/usd-layer1-backtester/run-v1.json\";\nif (!/^[A-Za-z0-9._/-]+$/.test(dataset) || dataset.includes(\"..\")) {\n  throw new Error(\"dataset must be a repository-relative path\");\n}\nconst validation = input.validation || \"structural\";\nif (validation !== \"structural\" && validation !== \"receipted\") {\n  throw new Error(\"validation must be structural or receipted\");\n}\nreturn [{ json: { date, model, dataset, validation } }];"
+      },
+      "notes": "Refuses a missing or malformed date, a non-lowercase adapter id, a path outside the repository and an unknown validation label before a shell command is built."
+    },
+    {
+      "name": "Evaluate one morning",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "command": "cd /opt/trading-agent-dashboard-codex && node backtester/scripts/run_usd_l1_backtest_controller.js --dataset \"{{ $json.dataset }}\" --model \"{{ $json.model }}\" --date \"{{ $json.date }}\" --validation \"{{ $json.validation }}\" --decisions"
+      },
+      "notes": "The controller validates the snapshot, calls the selected Layer 1 adapter and scores the call against the stored outcome. It prints one JSON document and exits non-zero on a malformed argument."
+    },
+    {
+      "name": "Parse decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nlet payload;\ntry {\n  payload = JSON.parse(result.stdout);\n} catch (error) {\n  throw new Error(\"the controller did not print JSON: \" + error.message);\n}\nif (payload.error) {\n  throw new Error(\"the controller refused the morning: \" + payload.error);\n}\nconst decision = Array.isArray(payload.decisions) ? payload.decisions[0] : null;\nif (!decision) {\n  throw new Error(\"the controller returned no decision for the requested date\");\n}\nreturn [{\n  json: Object.assign({}, decision, {\n    controller_version: payload.controller_version,\n    validation_mode: payload.validation_mode,\n    dataset: payload.dataset,\n    summary: payload.summary\n  })\n}];"
+      },
+      "notes": "Turns stdout into one decision item. A refusal becomes an error instead of an empty call, so a blocked morning stays visible."
+    },
+    {
+      "name": "Return decision",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {},
+      "notes": "The caller receives status, call, validation, results and outcomes for this one morning."
+    },
+    {
+      "name": "Research only",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        220
+      ],
+      "parameters": {
+        "content": "Research only. This sub-workflow evaluates a saved morning from a committed research artefact. It reads no provider, writes no warehouse row, places no order and publishes no dashboard call. A green run is not evidence of live deployment, causal feature timing or trading edge."
+      }
+    }
+  ],
+  "connections": {
+    "When called by a controller": {
+      "main": [
+        [
+          {
+            "node": "Normalise call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalise call": {
+      "main": [
+        [
+          {
+            "node": "Evaluate one morning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate one morning": {
+      "main": [
+        [
+          {
+            "node": "Parse decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse decision": {
+      "main": [
+        [
+          {
+            "node": "Return decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

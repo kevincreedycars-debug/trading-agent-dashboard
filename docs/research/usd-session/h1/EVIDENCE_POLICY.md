@@ -57,3 +57,19 @@ about the model's accuracy. H1 remains unscored in both lanes.
 - A missing input is filled forward, interpolated or replaced by a proxy.
 - A blocked morning contributes a direction, trade or scored outcome.
 - A coverage count is presented as a performance result.
+
+## 5. Accepted source amendments are not proxy substitutions
+
+An amendment is the opposite of a substitution by the audit. It is a versioned, dated change to the
+declared contract itself, accepted by the owner before any value is imported, and it publishes the supplied
+declaration beside the amended one so the change is visible rather than absorbed:
+
+- the frozen package is preserved byte for byte and its `verify.js` still passes;
+- the amendment names the exact supplied row it replaces and the audit refuses to run if that row drifts;
+- the amended instrument is named on every record, every input row and every document;
+- the amendment is additive only: no freshness window, lookback cap, threshold, sign or weight may be
+  relaxed to fit the new source, and a morning the source cannot cover is blocked, never bridged.
+
+`H1-A01` (18 November 2026) is the first such amendment: the H1 `ice` input is supplied by the archived
+`DXY.cash` hourly tape instead of a licensed ICE fixing. ICE is no longer required or requested for that
+input. The instrument is not the official index and is never described as it.

@@ -1,0 +1,242 @@
+{
+  "name": "USD Layer 1 - backtest controller",
+  "active": false,
+  "settings": {
+    "timezone": "Europe/London",
+    "executionTimeout": 3600
+  },
+  "nodes": [
+    {
+      "name": "Manual run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        0
+      ],
+      "parameters": {},
+      "notes": "A controller run is requested, not scheduled. The committed panel is research evidence, not a live feed."
+    },
+    {
+      "name": "Run configuration",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst config = {\n  dataset: input.dataset || \"data/usd-layer1-backtester/run-v1.json\",\n  model: input.model || \"challenger\",\n  from: input.from || \"2024-01-02\",\n  to: input.to || \"2024-01-31\",\n  validation: input.validation || \"structural\"\n};\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(config.from) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(config.to)) {\n  throw new Error(\"from and to must be YYYY-MM-DD\");\n}\nif (config.from > config.to) {\n  throw new Error(\"from must not be after to\");\n}\nreturn [{ json: config }];"
+      },
+      "notes": "Defaults to the challenger over January 2024. Change model to current, challenger or challenger_v1; change from/to to widen the window. The local CLI remains the batch path for the full 725 mornings."
+    },
+    {
+      "name": "List session dates",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        0
+      ],
+      "parameters": {
+        "command": "cd /opt/trading-agent-dashboard-codex && node backtester/scripts/run_usd_l1_backtest_controller.js --list-dates --dataset \"{{ $json.dataset }}\" --from \"{{ $json.from }}\" --to \"{{ $json.to }}\""
+      },
+      "notes": "The dataset decides which mornings exist. A weekend is therefore never requested, and an empty window fails before any model is called."
+    },
+    {
+      "name": "One item per date",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const listed = JSON.parse($input.first().json.stdout);\nconst config = $(\"Run configuration\").first().json;\nif (!Array.isArray(listed.dates)) {\n  throw new Error(\"the date list did not return a dates array\");\n}\nif (listed.dates.length === 0) {\n  throw new Error(\"no USD sessions exist in the requested window\");\n}\nreturn listed.dates.map((date) => ({\n  json: {\n    date,\n    model: config.model,\n    dataset: config.dataset,\n    validation: config.validation\n  }\n}));"
+      },
+      "notes": "Each item is handed to the Layer 1 sub-workflow. The configuration fields are copied explicitly so the child never inherits an implicit run state."
+    },
+    {
+      "name": "Evaluate Layer 1 for each date",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        0
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_LAYER1_SUBWORKFLOW_ID",
+          "cachedResultName": "USD Layer 1 - decision (sub-workflow, controller adapter)"
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "notes": "Calls \"USD Layer 1 - decision (sub-workflow, controller adapter)\" once per date. Replace REPLACE_WITH_LAYER1_SUBWORKFLOW_ID with the imported child workflow id; the placeholder deliberately fails instead of silently calling another workflow."
+    },
+    {
+      "name": "Summarise decisions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const decisions = $input.all()\n  .map((item) => item.json)\n  .filter((decision) => decision && decision.date);\nconst MARKETS = [\"EURUSD\", \"XAUUSD\", \"BTCUSD\", \"NAS100\"];\nconst round = (value, decimals = 4) => {\n  const factor = Math.pow(10, decimals);\n  const rounded = Math.round(value * factor) / factor;\n  return Object.is(rounded, -0) ? 0 : rounded;\n};\nconst wilsonLowerBound = (hits, scored, z = 1.96) => {\n  if (scored === 0) return null;\n  const p = hits / scored;\n  const denominator = 1 + (z * z) / scored;\n  const centre = p + (z * z) / (2 * scored);\n  const margin = z * Math.sqrt((p * (1 - p)) / scored + (z * z) / (4 * scored * scored));\n  return round((centre - margin) / denominator, 4);\n};\nconst emptyTally = () => ({ hit: 0, miss: 0, flat: 0, no_outcome: 0, no_call: 0, scored: 0, accuracy: null, wilson_lower_95: null });\nconst addResult = (tally, result) => {\n  if (Object.prototype.hasOwnProperty.call(tally, result)) tally[result] += 1;\n  else tally.no_outcome += 1;\n};\nconst finishTally = (tally) => {\n  tally.scored = tally.hit + tally.miss;\n  tally.accuracy = tally.scored > 0 ? round(tally.hit / tally.scored, 4) : null;\n  tally.wilson_lower_95 = wilsonLowerBound(tally.hit, tally.scored);\n  return tally;\n};\nconst statuses = { blocked: 0, allowed: 0, abstained: 0 };\nconst validation = { structural_accepted: 0, structural_blocked: 0, receipted_complete: 0, receipted_incomplete: 0 };\nconst markets = {};\nfor (const market of MARKETS) markets[market] = emptyTally();\nconst pooled = emptyTally();\nconst blocked_reasons = {};\nfor (const decision of decisions) {\n  if (Object.prototype.hasOwnProperty.call(statuses, decision.status)) statuses[decision.status] += 1;\n  const structural = decision.validation\n    ? (decision.validation.structural_accepted === undefined ? decision.validation.accepted : decision.validation.structural_accepted)\n    : false;\n  if (structural) validation.structural_accepted += 1;\n  else validation.structural_blocked += 1;\n  if (decision.validation && decision.validation.receipted && decision.validation.receipted.complete) validation.receipted_complete += 1;\n  else validation.receipted_incomplete += 1;\n  for (const reason of (decision.validation && decision.validation.reasons) || []) {\n    blocked_reasons[reason.code] = (blocked_reasons[reason.code] || 0) + 1;\n  }\n  if (!decision.results) continue;\n  for (const market of MARKETS) {\n    const result = decision.results[market] || \"no_outcome\";\n    addResult(markets[market], result);\n    addResult(pooled, result);\n  }\n}\nfor (const market of MARKETS) finishTally(markets[market]);\nfinishTally(pooled);\nconst dates = decisions.map((decision) => decision.date).filter(Boolean).sort();\nconst config = $(\"Run configuration\").first().json;\nreturn [{\n  json: {\n    controller_version: \"usd-l1-backtest-controller-v1\",\n    source: \"n8n:usd-l1-backtest-controller\",\n    dataset: { path: config.dataset },\n    validation_mode: config.validation,\n    layer1: { id: config.model },\n    window: {\n      from: dates.length ? dates[0] : null,\n      to: dates.length ? dates[dates.length - 1] : null,\n      requested_dates: decisions.length\n    },\n    summary: {\n      sessions: decisions.length,\n      statuses,\n      validation,\n      blocked_reasons,\n      markets,\n      pooled,\n      participation: round(statuses.allowed / Math.max(1, statuses.allowed + statuses.abstained), 4)\n    },\n    decisions: decisions\n  }\n}];"
+      },
+      "notes": "Aggregates the child decisions with the same hit/miss/flat/no_outcome/no_call tally and Wilson lower bound as backtester/lib/usd_layer1_backtester/backtest_controller.js. A test compares this code with controller.summarise on the real decisions so the two cannot drift."
+    },
+    {
+      "name": "Any blocked mornings?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        620,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.summary.statuses.blocked }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Report blocked mornings",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        860,
+        -140
+      ],
+      "parameters": {},
+      "notes": "Wire to the alert channel. The summary names a block count and the reason codes; no call was invented for a refused morning."
+    },
+    {
+      "name": "Report complete",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        860,
+        140
+      ],
+      "parameters": {},
+      "notes": "Wire to the research log. Accuracy is gross of costs and is not an edge claim; the receipted count beside it says how many mornings carried a full clock."
+    },
+    {
+      "name": "Research only",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        240
+      ],
+      "parameters": {
+        "content": "Research controller only. It fans out over stored sessions, calls one Layer 1 adapter per morning and publishes an aggregate for inspection. It writes no warehouse row and places no order. The child is model-agnostic: swapping model changes the adapter, not the scoring code."
+      }
+    }
+  ],
+  "connections": {
+    "Manual run": {
+      "main": [
+        [
+          {
+            "node": "Run configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run configuration": {
+      "main": [
+        [
+          {
+            "node": "List session dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List session dates": {
+      "main": [
+        [
+          {
+            "node": "One item per date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per date": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Layer 1 for each date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Layer 1 for each date": {
+      "main": [
+        [
+          {
+            "node": "Summarise decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarise decisions": {
+      "main": [
+        [
+          {
+            "node": "Any blocked mornings?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any blocked mornings?": {
+      "main": [
+        [
+          {
+            "node": "Report blocked mornings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
