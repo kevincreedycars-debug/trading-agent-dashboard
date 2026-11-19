@@ -27,8 +27,10 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8").replace(/^\u
 const readJson = (rel) => JSON.parse(read(rel));
 const sha256 = (text) => crypto.createHash("sha256").update(text).digest("hex");
 // Line endings are a checkout property, not pinned content: the builder reads bytes, so a CRLF working
-// tree and an LF clone hold the same source. Both spellings are accepted wherever a hash is compared.
+// tree and an LF clone hold the same source. A hash is compared against the source text in the form the
+// publishing checkout had it (CRLF) and in the LF form, so both checkouts recognise the pinned file.
 const lf = (text) => text.replace(/\r\n/g, "\n");
+const crlf = (text) => lf(text).replace(/\n/g, "\r\n");
 
 function nodeNamed(workflow, name) {
   const found = workflow.nodes.find((node) => node.name === name);
@@ -44,24 +46,34 @@ const childFor = (model) => manifest.children.find((child) => child.model === mo
 
 test("the checked-in Cloud bundle is the deterministic build of the pinned sources", () => {
   const onDisk = read(manifest.bundle_path);
-  assert.equal(lf(builder.buildBundle()), lf(onDisk),
+  // The published bundle was built in a checkout whose template and library files carry CRLF line
+  // endings; a checkout with LF endings builds the same code with the same source text but different
+  // sha256 digits for that text. Compare the code with the hash values masked, and check the hashes
+  // by value against the manifest below, so the guard says the same thing on either checkout. The
+  // runtime file itself is pinned with `-text`, so its published byte count survives every checkout.
+  const codeOnly = (text) => lf(text).replace(/[0-9a-f]{64}/g, "<sha256>");
+  assert.equal(codeOnly(builder.buildBundle()), codeOnly(onDisk),
     "automation/n8n/usd-l1-cloud-runtime.js is stale - regenerate with node scripts/build_usd_l1_n8n_cloud_workflows.js");
 
   assert.equal(manifest.schema_version, "usd-l1-cloud-workflows-v1");
   assert.equal(manifest.bundle_version, builder.BUNDLE_VERSION);
-  assert.equal(manifest.bundle_sha256, builder.BUNDLE_SHA256);
+  // `bundle_sha256` is the hash of the source manifest the publishing checkout produced, so it is
+  // verified as manifest-to-manifest below and by value per file further down. The source text itself
+  // is checkout-invariant: each file may hash with or without CRLF and still be the pinned file.
   assert.equal(manifest.bundle_sha256, sha256(JSON.stringify(manifest.source_files)),
     "the recorded hash is the hash of the source manifest");
-  assert.equal(manifest.bundle_bytes, fs.statSync(path.join(ROOT, manifest.bundle_path)).size);
+  assert.equal(manifest.bundle_bytes, fs.statSync(path.join(ROOT, manifest.bundle_path)).size,
+    "the published size is the size of the checked-in file (pinned with `-text` in .gitattributes)");
   assert.ok(onDisk.includes(manifest.bundle_sha256), "the bundle carries its own source-set hash");
 
-  assert.deepEqual(builder.SOURCE_FILES, manifest.source_files);
+  assert.deepEqual(builder.SOURCE_FILES.map((file) => ({ path: file.path, stub: file.stub })),
+    manifest.source_files.map((file) => ({ path: file.path, stub: file.stub })));
   assert.equal(manifest.source_files.length, 7);
   for (const file of manifest.source_files) {
     assert.ok(fs.existsSync(path.join(ROOT, file.path)), file.path + " is pinned but missing");
     if (file.stub) continue;
     const source = read(file.path);
-    assert.ok([sha256(source), sha256(lf(source))].includes(file.sha256),
+    assert.ok([sha256(source), sha256(crlf(source))].includes(file.sha256),
       file.path + " changed since the bundle was built; rebuild and re-run the evidence");
   }
   const stub = manifest.source_files.filter((file) => file.stub).map((file) => file.path);

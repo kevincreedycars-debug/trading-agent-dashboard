@@ -98,6 +98,12 @@ npm run test:usd-l1-controller  # 17 controller tests, including parity
 npm run check:usd-l1-controller:parity
 ```
 
+The runtime file is pinned with `-text` in `.gitattributes`, so a checkout hands back the published
+90,011 bytes — 96 of them the CR of the runtime template's line endings in the publishing checkout — and
+`bundle_bytes` in the manifest describes the same bytes the children run. The guard compares the bundle's
+code canonically and accepts a pinned source hash in either line-ending form, so a Windows working tree
+and an LF clone verify the same publication without either rewriting the other.
+
 `scripts/build_usd_l1_n8n_evidence.js` reads only captured artifacts; it is the only script in this lane
 that names the n8n instance, and it holds no credentials and makes no API call.
 
