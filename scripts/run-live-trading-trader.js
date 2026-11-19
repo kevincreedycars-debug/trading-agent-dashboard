@@ -847,6 +847,11 @@ function tradeCycles({
   reentryCrossing = false,
   requireDeviation = false,
   blind = false,
+  // The account's own working orders and positions as this run read them, tickets of every magic: the blind lane
+  // asks which of its tickets are still on the account, so a trade whose level the market has left behind and whose
+  // ticket the account no longer carries is read as ended rather than as still standing. Null when the caller made
+  // no such read, and then nothing about the account is inferred.
+  accountRows = null,
   callSealedMs = {},
   nowMs = null
 } = {}) {
@@ -898,6 +903,9 @@ function tradeCycles({
       requireDeviation,
       // This lane reads no Layer 1 call, so a call that has gone or turned is not one of the ways its trades end.
       blind,
+      // Which tickets the account itself still carries, so a trade the record no longer covers is not left standing
+      // on a level the market has already left.
+      ours: accountRows,
       withdrawnByCall,
       callSealedMs,
       nowMs
@@ -942,15 +950,29 @@ function tradeSummary(cycle) {
 // that are the user's own has happened. The words are this lane's own, so the log reads the same way when a trade
 // is standing, when its call has gone, when its target has been taken and when its target has been reached by a
 // market that never touched the entry.
-function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, exitPrice, withdrawn, blind } = {}) {
+function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, stopExit, ticketNumber, exitPrice, withdrawn, blind } = {}) {
   if (blind) {
     // The blind lane's own words: no call is read, so nothing here can be said in terms of one. The level stands
-    // until the target is taken; the pair is re-selected on that event rather than the next day.
+    // until the trade it belongs to is over; the pair is re-selected on that event rather than the next day.
     if (!endedBy) {
-      return `The blind lane's trade ${symbol} was triggered at ${trigger} and is still the pair's own: its target sits at ${target}, the level is permanent, and no Layer 1 call is read on this lane, so the trade stands until that target is taken or a hand ends it. The entry stays at that same level until a fresh three-leg deviation re-arms it.`;
+      return `The blind lane's trade ${symbol} was triggered at ${trigger} and is still the pair's own: its target sits at ${target}, the level is permanent, and no Layer 1 call is read on this lane, so the trade stands until that target is taken, its own stop is filled or a hand ends it. The entry stays at that same level until a fresh three-leg deviation re-arms it.`;
     }
     if (endedBy === "target-fill") {
       return `The blind lane's trade at ${trigger} has taken its target: the account's own record shows ${symbol} closing at ${settled?.price_close}, its own take-profit, so this pair's turn on these two lines is over and the next two lines are selected again.`;
+    }
+    // A stop is the other price the account can answer a trade at, and on this lane it is an ending rather than a
+    // level to stand on: the pair's turn at that line is over, so the two lines are selected again and the next
+    // three-leg deviation - on either of them - is what opens the next ticket. Left standing instead, the stopped
+    // rung was handed back to the entry path run after run (EURUSD and US100.cash from 2026-11-16, XAUUSD from
+    // 2026-11-18) and every deviation confirmed on the pair's new lines was refused against that old level.
+    if (endedBy === "stop-fill") {
+      return `The blind lane's trade at ${trigger} was closed at its own stop: the account's own record shows ${symbol} closing at ${stopExit?.price_close}, away from its take-profit at ${target}, so this trade is over and the two lines are selected again - the next three-leg deviation on either of them opens the next ticket rather than the level being put back as it stood.`;
+    }
+    // The same ending read off the account when the record no longer carries the trade: a limit whose level the
+    // market has left behind, with no working order or position of this loop's own behind it, is an entry that has
+    // been and gone. Nothing about it is on the account, so nothing of it is put back.
+    if (endedBy === "entry-gone") {
+      return `The blind lane's trade at ${trigger} is no longer on the account: ticket ${ticketNumber ?? "it was placed with"} is neither a working order nor an open position of this loop's, and ${side === "long" ? "the ask" : "the bid"} at ${exitPrice} is already past ${trigger}, so a limit there would not be a limit. Nothing filled and nothing stands, so this trade is over and the pair is selected again for its next deviation.`;
     }
     if (endedBy === "target-touched") {
       return `The blind lane's trade at ${trigger} has had its target reached without its entry filling: ${side === "long" ? "the bid" : "the ask"} is ${exitPrice} and the target this ticket was aiming at is ${target}, so the move the level was waiting for has happened without this entry and the pair is selected again for the next deviation.`;
@@ -989,6 +1011,11 @@ function tradeCycle(symbol, row, {
   reentryCrossing = false,
   requireDeviation = false,
   blind = false,
+  // The account's own working orders and positions for this loop, when the run made that read: the blind lane asks
+  // it which tickets are still standing, because a limit whose level the market has left behind and whose ticket
+  // the account no longer carries is an entry that has been and gone. Left null by a caller that made no such read,
+  // and then nothing on the account is inferred.
+  ours = null,
   withdrawnByCall = [],
   callSealedMs = {},
   nowMs = null
@@ -1064,6 +1091,46 @@ function tradeCycle(symbol, row, {
       ? trigger < market
       : trigger > market
     : null;
+  // The account's own record of this ticket's trade ending at its stop. A stop is not one of the endings the two
+  // called lanes read - their level goes back while the call stands - but on the blind lane it is the market's own
+  // answer to the level, and the pair's turn there is over. What standing on a stop cost, from the pulled window:
+  // EURUSD's ticket 200695485 stopped at 1.10115 and US100.cash's 200695492 at 27697.63 on 2026-11-16, XAUUSD's
+  // 201323839 at 3840.21 on the 18th - and every run after them read the old level and the old side as still the
+  // pair's own, so the deviations confirmed on the pair's *new* lines (EURUSD's long at 1.09782, XAUUSD's short at
+  // 3783.11 on the 18th) were answered with a ticket at the old level and refused as resting on the wrong side of
+  // the market. The trade is the level's, so it ends where the level's own stop is filled.
+  const stopExit = blind
+    ? closedTrades.reduce((latest, entry) => {
+        if (placedAtMs === null || entry?.symbol !== symbol) return latest;
+        if ((Date.parse(entry?.opened?.time_utc || "") || 0) < placedAtMs) return latest;
+        if (exitEnding(entry) !== "stop") return latest;
+        const closedAt = Date.parse(entry?.closed?.time_utc || "");
+        if (!Number.isFinite(closedAt)) return latest;
+        const latestAt = latest ? Date.parse(latest?.closed?.time_utc || "") || 0 : null;
+        return latestAt === null || closedAt > latestAt ? entry : latest;
+      }, null)
+    : null;
+  // And the same ending read off the account rather than off its history, for a stop older than the closed-trade
+  // window the feed states: the ticket this trade was placed with is not among this loop's own working orders or
+  // positions, and the market is on the far side of its level, so a limit there would be a market order and no
+  // position carries it. Either the entry filled and the trade left, or it never filled at all - in both cases
+  // nothing of this trade is on the account. `ours` is null when the run made no read, and then nothing is inferred.
+  const ownTickets = Array.isArray(ours)
+    ? new Set(ours.map(entry => Number(entry?.ticket)).filter(value => Number.isFinite(value)))
+    : null;
+  const heldByAccount = ownTickets !== null && placedTicket !== null && ownTickets.has(placedTicket);
+  const entryGone = blind
+    && ownTickets !== null
+    && placedTicket !== null
+    && resting === false
+    && !heldByAccount;
+  // The instant the trade ended, for a record that no longer carries it: the run that first saw the account without
+  // it is the only witness left, and the pair's re-selection reads a time rather than a boolean.
+  const stopExitMs = stopExit
+    ? Date.parse(stopExit?.closed?.time_utc || "") || null
+    : entryGone
+      ? (Number.isFinite(Number(nowMs)) ? Number(nowMs) : null)
+      : null;
   // The user's endings: a call that has gone or turned, the account's own record of the take-profit being taken,
   // and - added on 2026-10-06 - a market that has reached this trade's target while its entry is still only a
   // working limit. That last one is the invalidation the user stated ("wait for it to be hit or invalidated either
@@ -1074,9 +1141,11 @@ function tradeCycle(symbol, row, {
   const targetReached = marketHasReached(side, target, instrument, placedAtMs) === true;
   const exitPrice = exitPriceFor(side, instrument);
   // On the blind lane there is no call to end a trade with: the two live lanes read a call that has gone or turned
-  // as the end of the set-up, and this lane never had one. Its trades therefore end only where the owner said they
-  // do - the target taken, the target reached without a fill, or a hand - and a stop-out is not an ending here
-  // either: the level is re-armed by the next three-leg deviation, which the pair re-selection waits for.
+  // as the end of the set-up, and this lane never had one. Its trades end where the owner said they do - the target
+  // taken, the target reached without a fill, or a hand - and, since 2026-11-19, at the trade's own stop as well
+  // (`stopExit`, and `entryGone` for a ticket the account no longer carries): a stop is the market answering the
+  // level, so the pair's turn at that line is over and the level is re-armed by the next three-leg deviation rather
+  // than by a put-back at the price the market has already left.
   const callEnded = !blind && (!callSide || callSide !== side);
   const endedBy = callEnded
     ? "call"
@@ -1086,9 +1155,13 @@ function tradeCycle(symbol, row, {
         ? "hand-close"
         : settled
           ? "target-fill"
-          : targetReached
-            ? "target-touched"
-            : null;
+          : stopExit
+            ? "stop-fill"
+            : entryGone
+              ? "entry-gone"
+              : targetReached
+                ? "target-touched"
+                : null;
   // The exit that ended the previous attempt on this level: the account's own close of the position the newest
   // ticket produced. A ticket that never filled has no such close, and a trade with no exit on it asks the
   // candles nothing - there is nothing the level would be re-armed after.
@@ -1099,6 +1172,9 @@ function tradeCycle(symbol, row, {
     if (!Number.isFinite(closedAt)) return latest;
     return latest === null || closedAt > latest ? closedAt : latest;
   }, null);
+  // The same instant as a trade whose exit the record no longer carries: the run that found its ticket gone from the
+  // account is the window's own witness, and the pair's re-selection has to read a time.
+  const exitMs = stopExitMs === null || (lastExitMs !== null && lastExitMs >= stopExitMs) ? lastExitMs : stopExitMs;
   // Lane 2's correction of 2026-11-11, tightened on 2026-11-12 and asked for with --reentry-crossing: the newest
   // two completed M5 candles have to straddle the level - the one before the newest at or on the near side of it,
   // the newest at least a point beyond it - and the newest of the two has to *close* after the window opens. The
@@ -1116,10 +1192,10 @@ function tradeCycle(symbol, row, {
   // for the crossing, and the 13:46Z put-back of 2026-11-13 - which replayed a 06:40 close - is refused by it.
   const crossingRequired = reentryCrossing === true || requireDeviation === true;
   const sealedMs = Number.isFinite(Number(callSealedMs?.[asset])) ? Number(callSealedMs[asset]) : null;
-  const windowStart = lastExitMs === null ? sealedMs : sealedMs === null ? lastExitMs : Math.max(lastExitMs, sealedMs);
-  const windowBasis = lastExitMs === null
+  const windowStart = exitMs === null ? sealedMs : sealedMs === null ? exitMs : Math.max(exitMs, sealedMs);
+  const windowBasis = exitMs === null
     ? (sealedMs === null ? null : "call")
-    : sealedMs !== null && sealedMs > lastExitMs
+    : sealedMs !== null && sealedMs > exitMs
       ? "call"
       : "exit";
   const crossing = crossingRequired && !endedBy
@@ -1190,7 +1266,7 @@ function tradeCycle(symbol, row, {
       : null,
     target_reached: targetReached,
     exit_price: exitPrice,
-    reason: tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, exitPrice, withdrawn, blind }),
+    reason: tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, stopExit, ticketNumber: placedTicket, exitPrice, withdrawn, blind }),
     // The ticket this loop would put back, and the module's own words for why it is not a ticket at all when the
     // ladder cannot price one - no line marked beyond the level, or a stop the instrument's grid cannot hold.
     ticket: ticket && ticket.stage === "confirmed" ? ticket.plan : null,
@@ -1199,7 +1275,7 @@ function tradeCycle(symbol, row, {
     // Which candle re-armed the level, or the instant the window opened rather than a ticket: the log line is read
     // by the owner to check the set-up in front of the ticket, so the exit time it is measured from travels with
     // the crossing itself rather than only inside it.
-    last_exit_utc: lastExitMs === null ? null : new Date(lastExitMs).toISOString(),
+    last_exit_utc: exitMs === null ? null : new Date(exitMs).toISOString(),
     call_sealed_utc: sealedMs === null ? null : new Date(sealedMs).toISOString(),
     // The crossing the put-back waited for, when the lane asks for one: the two newest completed candles the gate
     // compares - the one on the near side and the one beyond - the instant the window opened and which of the two
@@ -2969,6 +3045,9 @@ function runOnce(options, deps = {}) {
       requireDeviation: options.requireDeviation === true,
       // The blind lane's trades end where its own rule says they do, never on a call it does not read.
       blind: options.blind === true,
+      // And, on that lane, where the account says they ended: the positions and working orders are already read for
+      // this run, and a ticket missing from both is the account's own statement that nothing of that trade stands.
+      accountRows: (Array.isArray(live.positions) ? live.positions : []).concat(Array.isArray(live.orders) ? live.orders : []),
       callSealedMs,
       nowMs: startedMs
     });
