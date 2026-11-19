@@ -26,7 +26,7 @@ scoring rules.
 | Builders | `scripts/build_usd_l1_n8n_cloud_workflows.js`, `scripts/build_usd_l1_n8n_evidence.js` | The first regenerates the three workflow JSONs and the bundle from the manifest; the second assembles the evidence file from captured artifacts only and never calls n8n. |
 | Evidence | `data/usd-layer1-backtester/n8n-execution-evidence-v1.json` | What ran, where, and what it returned. |
 | Raw transcripts | `data/usd-layer1-backtester/n8n/execution-*.json`, `executions-index-20261119.json` | The stored n8n executions the evidence is assembled from. |
-| Map | `lib/backtesting_n8n_map.js`, `backtesting.html#n8nmap` | Model-swap map, the tab's default view, rendered from the evidence file. It exists in this checkout; the published site is checked separately and is stated below. |
+| Map | `lib/backtesting_n8n_map.js`, `backtesting.html#n8nmap` | Model-swap map, the tab's default view, rendered from the evidence file. Published, and read back from the live site on 2026-11-19 (see Boundaries). |
 
 `backtester/lib/usd_layer1_backtester/current_model.js` is listed in the manifest as a stub and is
 deliberately **not** bundled: the production-control adapter's replay core reads local files and Supabase
@@ -103,10 +103,16 @@ that names the n8n instance, and it holds no credentials and makes no API call.
 
 ## Boundaries
 
-- Publication state, measured 2026-11-19: the published `backtesting.html` is 58,292 bytes and carries no
-  `n8nmap` markup, and `data/usd-layer1-backtester/n8n-execution-evidence-v1.json` returns 404 on `main`.
-  The 76,091-byte page and the evidence file exist in this checkout only, so the map and the Cloud pair
-  are built, imported and executed but not yet published. A reader of the live site cannot see them.
+- Publication state, measured 2026-11-19 after the merge: the map and the evidence file are live. PR #11
+  (`80a50536`) merged to `main` as `719bc1b2`, and the published `backtesting.html` then answered 200 at
+  75,024 bytes with four `n8nmap` references, its evidence file answered 200 at 62,511 bytes with sha256
+  `17dd410c05e3822099143031e7197f675e96f2e859407be96ae681166ba0cf45` - byte-identical to this checkout.
+  A headless read of the live page passed 18 of 18 checks: the map is the default view, 725/725, 0/725 and
+  2,175/2,175 render, both model versions and all four recorded cases are selectable, the child detail links
+  to executions 5472 and 5473 on `silver17.app.n8n.cloud`, the receipted case shows `receipted_incomplete`
+  as blocked, and the page raised no error and no failed response. Before the merge the same page was
+  58,292 bytes with no `n8nmap` and the evidence file returned 404, so the earlier "not published" reading
+  was accurate when it was taken.
 - Research only: no workflow is scheduled, no webhook is left authenticated for unattended use, and no
   node writes to Supabase or to a runtime table.
 - The checked-in JSON is the source of truth for what the workflows contain; the instance copy is

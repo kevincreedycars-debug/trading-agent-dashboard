@@ -33,6 +33,12 @@
   late-print rejection (untested on history) and a full n8n batch (four controlled dates only). Nothing
   scheduled, no order, stop, size, feed or runtime table was touched. Detail in
   `docs/USD_L1_N8N_CLOUD_WORKFLOWS.md`.
+- Published: PR #11 (`80a50536`), merged to `main` as `719bc1b2`, and read back from
+  `https://kevincreedycars-debug.github.io/trading-agent-dashboard/backtesting.html#n8nmap` the same evening.
+  The published page answered 200 at 75,024 bytes with four `n8nmap` references, its evidence file answered
+  200 at 62,511 bytes with sha256 `17dd410c...` - identical to the checkout - and a headless read passed 18
+  of 18 checks (map as the default view, 725/725, 0/725 and 2,175/2,175, both model versions, four recorded
+  cases, execution links 5472 and 5473, the blocked receipted case, no page error, no failed response).
 ## 2026-11-15 - The verified-mornings answer leads the Backtesting tab
 
 - Why: the owner asked one question of the tab - on how many of the 725 historical mornings can we prove the intended
