@@ -1,0 +1,638 @@
+{
+  "schema_version": "live-ctrader-copier-v1",
+  "generated_at_utc": "2026-11-19T21:05:49.741Z",
+  "stale_after_seconds": 1800,
+  "publisher": "scripts/publish-ctrader-copier.js",
+  "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
+  "read_only": true,
+  "order_functions_called": false,
+  "source": {
+    "lane": "ftmo-1",
+    "label": "FTMO account 1",
+    "account_login_masked": "***614",
+    "account_server": "FTMO-Server",
+    "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
+    "probed_at_utc": "2026-11-19T21:05:48.841842Z",
+    "positions_seen": 2
+  },
+  "destination": {
+    "login": 7348195,
+    "account_id": "42585819",
+    "broker": "ftmo",
+    "environment": "demo",
+    "demo": true
+  },
+  "connection": {
+    "connected": true,
+    "read_at_utc": "2026-11-19T21:03:59.118Z",
+    "account_id": "42585819",
+    "broker": "ftmo",
+    "environment": "demo",
+    "currency": "USD",
+    "leverage": 100,
+    "account_type": "hedging"
+  },
+  "copier": {
+    "version": "copier-20261119.1",
+    "mode": "live",
+    "schedule": {
+      "cadence_seconds": 60,
+      "description": "one --once poll every 60s, run by Task Scheduler",
+      "overlap_prevention": "the copier's own lock file plus Task Scheduler's IgnoreNew policy",
+      "restart_recovery": "a lock left by a dead pid is taken over on the next run; the mapping store is the dedupe key"
+    },
+    "heartbeat": {
+      "state": "ok",
+      "label": "OK",
+      "age_seconds": 1,
+      "last_poll_utc": "2026-11-19T21:05:49.049Z",
+      "last_success_utc": "2026-11-19T21:05:49.049Z",
+      "detail": "the last poll finished 1s ago and reported ok"
+    },
+    "last_poll_utc": "2026-11-19T21:05:49.049Z",
+    "last_success_utc": "2026-11-19T21:05:49.049Z",
+    "health": {
+      "status": "ok",
+      "started_utc": "2026-11-19T21:05:47.744Z",
+      "finished_utc": "2026-11-19T21:05:49.049Z",
+      "polls": 1,
+      "dry_run": false,
+      "source": {
+        "ok": true,
+        "account": {
+          "login": 511428614,
+          "server": "FTMO-Server"
+        },
+        "positions": 2,
+        "rows": [
+          {
+            "ticket": "309101669",
+            "symbol": "XAUUSD",
+            "side": "sell",
+            "volume": 0.01,
+            "entry": 3711.92,
+            "current": 3660.22,
+            "stop": 3701.73,
+            "target": 3640.15,
+            "open_time_utc": "2026-11-19T16:30:04Z"
+          },
+          {
+            "ticket": "309180633",
+            "symbol": "EURUSD",
+            "side": "sell",
+            "volume": 0.01,
+            "entry": 1.09783,
+            "current": 1.09735,
+            "stop": 1.09866,
+            "target": 1.09361,
+            "open_time_utc": "2026-11-19T18:35:09Z"
+          }
+        ],
+        "cause": null,
+        "probed_at_utc": "2026-11-19T21:05:48.841842Z"
+      },
+      "destination": {
+        "account_id": "42585819",
+        "symbols": [
+          "XAUUSD",
+          "EURUSD"
+        ],
+        "references": {
+          "XAUUSD": 3660.23,
+          "EURUSD": 1.09735
+        },
+        "spec_summary": {
+          "XAUUSD": {
+            "digits": 2,
+            "lotSizeBtc": 100,
+            "volumeScale": 10000,
+            "minVolume": 0.01,
+            "maxVolume": 100000,
+            "volumeStep": 0.01,
+            "tradeMode": "full",
+            "minStopDistance": 0,
+            "minStopPercent": null
+          },
+          "EURUSD": {
+            "digits": 5,
+            "lotSizeBtc": 100000,
+            "volumeScale": 10000000,
+            "minVolume": 0.01,
+            "maxVolume": 1000,
+            "volumeStep": 0.01,
+            "tradeMode": "full",
+            "minStopDistance": 0,
+            "minStopPercent": null
+          }
+        },
+        "spec_refusals": []
+      },
+      "reconcile": {
+        "checked": 0,
+        "mapped": 0,
+        "dropped": 0
+      },
+      "refusals": [],
+      "actions": [],
+      "closes": [],
+      "notes": []
+    }
+  },
+  "account": {
+    "balance": 23654.16,
+    "equity": 23662.67,
+    "equity_basis": "broker balance plus the open positions marked at the broker's own reference price",
+    "equity_estimated": true,
+    "currency": "USD",
+    "leverage": 100,
+    "money_digits": 2,
+    "open_positions": 2,
+    "pending_orders": 0,
+    "closed_trades": 11,
+    "read_at_utc": "2026-11-19T21:03:59.118Z"
+  },
+  "horizon": {
+    "window_days": 30,
+    "from_utc": "2026-10-20T21:03:59.118Z",
+    "to_utc": "2026-11-19T21:03:59.118Z"
+  },
+  "closed_trades": [
+    {
+      "position_id": "61401724",
+      "symbol": "EURUSD",
+      "side": "buy",
+      "volume_lots": 0.3,
+      "price_open": 1.11933,
+      "price_close": 1.11921,
+      "opened": {
+        "time_utc": "2026-11-02T19:52:29.345Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-02T19:54:29.417Z"
+      },
+      "duration_seconds": 120,
+      "profit": -3.6,
+      "commission": -2.25,
+      "swap": 0,
+      "net_profit": -5.85,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "176263405",
+      "dashboard_asset": "EURUSD",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 5
+    },
+    {
+      "position_id": "61460239",
+      "symbol": "XAUUSD",
+      "side": "buy",
+      "volume_lots": 0.02,
+      "price_open": 3930,
+      "price_close": 3919.09,
+      "opened": {
+        "time_utc": "2026-11-03T18:31:17.996Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-03T20:02:27.594Z"
+      },
+      "duration_seconds": 5470,
+      "profit": -21.82,
+      "commission": -0.17,
+      "swap": 0,
+      "net_profit": -21.99,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "176398823",
+      "dashboard_asset": "XAUUSD",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    },
+    {
+      "position_id": "61482669",
+      "symbol": "US100.cash",
+      "side": "buy",
+      "volume_lots": 0.4,
+      "price_open": 28104.98,
+      "price_close": 28372.23,
+      "opened": {
+        "time_utc": "2026-11-04T07:40:02.285Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-04T10:10:11.861Z"
+      },
+      "duration_seconds": 9010,
+      "profit": 106.9,
+      "commission": 0,
+      "swap": 0,
+      "net_profit": 106.9,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "176451066",
+      "dashboard_asset": "US100.cash",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    },
+    {
+      "position_id": "61482712",
+      "symbol": "EURUSD",
+      "side": "buy",
+      "volume_lots": 0.3,
+      "price_open": 1.1231,
+      "price_close": 1.12226,
+      "opened": {
+        "time_utc": "2026-11-04T16:09:53.234Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-04T16:15:51.894Z"
+      },
+      "duration_seconds": 359,
+      "profit": -25.2,
+      "commission": -2.25,
+      "swap": 0,
+      "net_profit": -27.45,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "176451158",
+      "dashboard_asset": "EURUSD",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 5
+    },
+    {
+      "position_id": "61557973",
+      "symbol": "US100.cash",
+      "side": "buy",
+      "volume_lots": 0.4,
+      "price_open": 28122.58,
+      "price_close": 28067.43,
+      "opened": {
+        "time_utc": "2026-11-05T14:11:51.304Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-05T14:30:20.491Z"
+      },
+      "duration_seconds": 1109,
+      "profit": -22.06,
+      "commission": 0,
+      "swap": 0,
+      "net_profit": -22.06,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "176623977",
+      "dashboard_asset": "US100.cash",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    },
+    {
+      "position_id": "61743714",
+      "symbol": "XAUUSD",
+      "side": "buy",
+      "volume_lots": 0.02,
+      "price_open": 4139.25,
+      "price_close": 4128.12,
+      "opened": {
+        "time_utc": "2026-11-09T21:07:07.645Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-10T00:20:17.422Z"
+      },
+      "duration_seconds": 11590,
+      "profit": -22.26,
+      "commission": -0.18,
+      "swap": -1.42,
+      "net_profit": -23.86,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "177030825",
+      "dashboard_asset": "XAUUSD",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    },
+    {
+      "position_id": "61770581",
+      "symbol": "US100.cash",
+      "side": "sell",
+      "volume_lots": 0.4,
+      "price_open": 27819.53,
+      "price_close": 27869.98,
+      "opened": {
+        "time_utc": "2026-11-10T10:54:05.871Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-10T11:34:22.488Z"
+      },
+      "duration_seconds": 2417,
+      "profit": -20.18,
+      "commission": 0,
+      "swap": 0,
+      "net_profit": -20.18,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "177091983",
+      "dashboard_asset": "US100.cash",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    },
+    {
+      "position_id": "61772801",
+      "symbol": "US100.cash",
+      "side": "sell",
+      "volume_lots": 0.4,
+      "price_open": 27840.03,
+      "price_close": 27652.18,
+      "opened": {
+        "time_utc": "2026-11-10T11:59:59.849Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-10T13:32:33.576Z"
+      },
+      "duration_seconds": 5554,
+      "profit": 75.14,
+      "commission": 0,
+      "swap": 0,
+      "net_profit": 75.14,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "177097097",
+      "dashboard_asset": "US100.cash",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    },
+    {
+      "position_id": "61828068",
+      "symbol": "US100.cash",
+      "side": "sell",
+      "volume_lots": 0.3,
+      "price_open": 28082.73,
+      "price_close": 28162.78,
+      "opened": {
+        "time_utc": "2026-11-11T07:44:28.172Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-11T08:03:09.622Z"
+      },
+      "duration_seconds": 1121,
+      "profit": -24.02,
+      "commission": 0,
+      "swap": 0,
+      "net_profit": -24.02,
+      "deal_count": 2,
+      "comment": null,
+      "order_id": "177222438",
+      "dashboard_asset": "US100.cash",
+      "copy_kind": "pre-copier",
+      "copy_label": "Before the copier",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    },
+    {
+      "position_id": "62201529",
+      "symbol": "BTCUSD",
+      "side": "buy",
+      "volume_lots": 0.01,
+      "price_open": 62463.39,
+      "price_close": 62462.93,
+      "opened": {
+        "time_utc": "2026-11-18T21:28:26.141Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-18T21:28:27.849Z"
+      },
+      "duration_seconds": 2,
+      "profit": -0.01,
+      "commission": -0.6,
+      "swap": 0,
+      "net_profit": -0.61,
+      "deal_count": 2,
+      "comment": "btc-test-120s",
+      "order_id": "178098682",
+      "dashboard_asset": "BTCUSD",
+      "copy_kind": "setup-test",
+      "copy_label": "Standalone setup test",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    },
+    {
+      "position_id": "62201543",
+      "symbol": "BTCUSD",
+      "side": "buy",
+      "volume_lots": 0.01,
+      "price_open": 62408.52,
+      "price_close": 62404.97,
+      "opened": {
+        "time_utc": "2026-11-18T21:29:50.504Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-18T21:31:50.671Z"
+      },
+      "duration_seconds": 120,
+      "profit": -0.04,
+      "commission": -0.6,
+      "swap": 0,
+      "net_profit": -0.64,
+      "deal_count": 2,
+      "comment": "btc-test-120s",
+      "order_id": "178098716",
+      "dashboard_asset": "BTCUSD",
+      "copy_kind": "setup-test",
+      "copy_label": "Standalone setup test",
+      "source_ticket": null,
+      "source_symbol": null,
+      "digits": 2
+    }
+  ],
+  "setup_tests": {
+    "trades": 2,
+    "net": -1.25,
+    "position_ids": [
+      "62201529",
+      "62201543"
+    ]
+  },
+  "pre_copier": {
+    "trades": 9,
+    "net": 36.63,
+    "position_ids": [
+      "61401724",
+      "61460239",
+      "61482669",
+      "61482712",
+      "61557973",
+      "61743714",
+      "61770581",
+      "61772801",
+      "61828068"
+    ]
+  },
+  "unattributed": {
+    "trades": 0,
+    "net": 0,
+    "position_ids": []
+  },
+  "mappings": [
+    {
+      "source_ticket": "309101669",
+      "target_position_id": "62272218",
+      "source_symbol": "XAUUSD",
+      "symbol": "XAUUSD",
+      "side": "sell",
+      "status": "open",
+      "status_detail": null,
+      "volume_lots": 0.01,
+      "protocol_units": 100,
+      "base_units": 1,
+      "entry_price": 3667.25,
+      "stop_price": 3704.29,
+      "target_price": null,
+      "expiry_utc": null,
+      "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
+      "request_id": "copy-309101669",
+      "copied_utc": "2026-11-19T20:11:00.213Z",
+      "reconciled": false
+    },
+    {
+      "source_ticket": "309180633",
+      "target_position_id": "62272219",
+      "source_symbol": "EURUSD",
+      "symbol": "EURUSD",
+      "side": "sell",
+      "status": "open",
+      "status_detail": null,
+      "volume_lots": 0.01,
+      "protocol_units": 100000,
+      "base_units": 1000,
+      "entry_price": 1.09756,
+      "stop_price": 1.09865,
+      "target_price": null,
+      "expiry_utc": null,
+      "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
+      "request_id": "copy-309180633",
+      "copied_utc": "2026-11-19T20:11:00.224Z",
+      "reconciled": false
+    }
+  ],
+  "differences": {
+    "count": 0,
+    "missing_copies": [],
+    "orphaned_mappings": [],
+    "unresolved_pending": [],
+    "unattributed_closes": []
+  },
+  "rejections": [],
+  "verification": [
+    {
+      "behaviour": "Copying a filled FTMO-1 position",
+      "state": "broker_observed",
+      "detail": "broker read 2026-11-19T21:03:59.118Z: #62272218 XAUUSD sell 0.01 lot, #62272219 EURUSD sell 0.01 lot from source 309101669, 309180633"
+    },
+    {
+      "behaviour": "Size conversion through the destination contract",
+      "state": "broker_observed",
+      "detail": "the adapter regression sends 0.01 lot of EURUSD as 100,000 protocol units, XAUUSD as 10,000, BTCUSD as 100 and the index at its own scale; the open copies above read back at 0.01 lot"
+    },
+    {
+      "behaviour": "Stop carried at entry",
+      "state": "broker_observed",
+      "detail": "the broker holds the stop the copier sent, placed as a distance from the destination's own reference price, so it differs from the source stop by the fill"
+    },
+    {
+      "behaviour": "Amending a stop or target after the copy",
+      "state": "not_sent",
+      "detail": "the copier has no amendment path: a source trail moves nothing on the destination, which keeps the stop placed at entry"
+    },
+    {
+      "behaviour": "Cancelling a resting source order",
+      "state": "not_sent",
+      "detail": "resting source orders are not mirrored: nothing rests on the destination, so a cancellation has nothing to withdraw. A fill is copied once the source position exists"
+    },
+    {
+      "behaviour": "Partial close on the source",
+      "state": "not_sent",
+      "detail": "a partial source close leaves the destination at its full copied size; the difference stays visible in the mapping and is not closed or amended automatically"
+    },
+    {
+      "behaviour": "Full close after a source exit",
+      "state": "awaiting_live_proof",
+      "detail": "tested on fixtures through the adapter's own close path, with the closed symbol's own volume scale; no copier close has been observed on this account yet. It stays unproved until a natural source exit closes the copy"
+    }
+  ],
+  "symbols": [
+    {
+      "source_symbol": "EURUSD",
+      "target_symbol": "EURUSD",
+      "mapped": true,
+      "excluded": false,
+      "held": true,
+      "digits": 5,
+      "lot_units": 100000,
+      "protocol_units_per_lot": 10000000,
+      "volume_step": 0.01,
+      "min_volume": 0.01,
+      "trade_mode": "full"
+    },
+    {
+      "source_symbol": "XAUUSD",
+      "target_symbol": "XAUUSD",
+      "mapped": true,
+      "excluded": false,
+      "held": true,
+      "digits": 2,
+      "lot_units": 100,
+      "protocol_units_per_lot": 10000,
+      "volume_step": 0.01,
+      "min_volume": 0.01,
+      "trade_mode": "full"
+    },
+    {
+      "source_symbol": "BTCUSD",
+      "target_symbol": "BTCUSD",
+      "mapped": true,
+      "excluded": false,
+      "held": false,
+      "digits": 2,
+      "lot_units": 1,
+      "protocol_units_per_lot": 100,
+      "volume_step": 0.01,
+      "min_volume": 0.01,
+      "trade_mode": "full"
+    },
+    {
+      "source_symbol": "US100.cash",
+      "target_symbol": "US100.cash",
+      "mapped": true,
+      "excluded": false,
+      "held": false,
+      "digits": 2,
+      "lot_units": 1,
+      "protocol_units_per_lot": 100,
+      "volume_step": 0.01,
+      "min_volume": 0.01,
+      "trade_mode": "full"
+    }
+  ]
+}
