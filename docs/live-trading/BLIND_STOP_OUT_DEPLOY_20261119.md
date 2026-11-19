@@ -43,7 +43,9 @@ flat with no working orders.
    equal, so what runs is what was tested.
 
 The lane's keys and identity, the feed task, the publisher, the watchdog, lanes 1 and 2 and every other
-host file were not touched. No task was re-registered, so nothing had to be re-armed.
+host file were not touched. No task was re-registered, so nothing had to be re-armed. This page itself was
+committed afterwards as `02d051a2` on the same branch, documents only, so the host now sits one docs-only
+commit behind the branch tip and will pick it up on its next pull without the trader file changing.
 
 ## 3. First tick on the new build, 17:01:30Z
 
