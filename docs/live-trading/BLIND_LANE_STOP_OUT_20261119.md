@@ -1,8 +1,8 @@
 # A stop ends a blind trade
 
 Written on 2026-11-19 in the `live-trading/blind-stop-fix-20261119` worktree, from the lane-3 log, state file and
-feed pulled off the FTMO-3 VPS for 2026-11-16 to 2026-11-19. The fix is committed here and **not deployed**: the lane
-keeps running the arming build until the owner says the change goes out (section 6).
+feed pulled off the FTMO-3 VPS for 2026-11-16 to 2026-11-19. The fix was deployed to the lane the same day at
+16:56:48Z with the owner's approval; `BLIND_STOP_OUT_DEPLOY_20261119.md` is that deployment's own record.
 
 ## 1. What the lane did
 
@@ -94,18 +94,22 @@ suites - blind lane, lane 2, trader and strategy - are 142 of 142, and the new f
 - Not a backtest. The three ticket numbers are the account's own, the closes are the feed's, and the re-selection and
   the short are the module's own output on those bars.
 - Not a change to what counts as a deviation, to the ladder, to the sizing, to the caps, or to the management rungs.
-- Not deployed, and not yet proved against the live lane: what the change has to show on the VPS is one stopped trade
-  followed by one placed ticket on the pair's new line, in the lane-3 log.
+- Proved on the live lane once, on the first two ticks of the deployed build (deploy page §3-§4): the three stopped
+  rows read `ended_by: "stop-fill"` and EURUSD placed a fresh short at 1.09782 on the pair's then-current line, which
+  the zombie had refused for a day. Still unproved: the `entry-gone` path, and the next stop nobody has watched yet.
 
 ## 6. Rollout
 
-1. Owner's word that a stop ends the blind trade, and the same word from the FTMO-3 lane's owner before the file on
-   that host changes.
-2. Copy `scripts/run-live-trading-trader.js` to the VPS beside the running build; run the focused suites there.
-3. Leave the running positions alone: the change reads them, it does not close or move them. A position the account
-   carries is `heldByAccount` and is never read as gone.
-4. Watch the first three stops against section 1's table: each should produce `ended_by: "stop-fill"` in the run
-   record's `trades` block and one placement on the pair's then-current lines, not a put-back at the old level.
+1. Done: the owner's word that a stop ends the blind trade, given on 2026-11-19 with the FTMO-3 lane's approval
+   folded into it - the deployment record names both.
+2. Done, and not by copying a file: commits `5630be69` and `441c308f` were pushed to
+   `live-trading/l2l-blind-20261114` and the host checkout fast-forwarded `d434fabe..441c308f` in a gap between
+   ticks, with the old file preserved at `C:\ftmo3\tmp\rollback\` first. A single-file copy was rejected because it
+   would have left a tracked file dirty and blocked the lane's next pull.
+3. Done: no running position was closed or moved. The account was flat at the deploy; a position the account carries
+   is `heldByAccount` and is never read as gone, which the new test file covers.
+4. Still standing: watch the first three stops after 2026-11-19 against section 1's table - each should produce
+   `ended_by: "stop-fill"` and one placement on the pair's then-current lines rather than a put-back at the old level.
 5. The ruleset's own statements are corrected with this change: `LIVE_L2L_BLIND_RULESET.md` §7.4, §8's ending table
    and its worked example, which stated that a stopped trade stood at its level. Anything else in that page that
    reads a stopped trade as still standing is a leftover to be found, not a second rule.
