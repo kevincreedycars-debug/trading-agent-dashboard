@@ -21,9 +21,14 @@ file, so `npm run build:usd-l1-n8n` rewrites identical bytes instead of placehol
 90/90). Full local bucket: 1,076 tests, 1,059 pass, 13 fail, 4 skipped; the same 11 failures exist at `origin/main`
 `5ab099a3` in a clean worktree (globe 2, layer-1 call map 2, M5 pan and zoom 2, research library 1, USD call map 2,
 USD logic dossier 2) and the other 2 are the clock-dependent `refresh_progress` cases, which also failed at `main`
-on a different test in the same rerun and passed 26/26 locally on the next. Not published: the live
-`backtesting.html` is 58,292 bytes with no `n8nmap` and the evidence file 404s on `main`, so the classification is
-built, imported, executed - not published. Nothing scheduled, no order, stop, size, feed or runtime table touched.
+on a different test in the same rerun and passed 26/26 locally on the next. Then published: a plain rebuild rewrote
+identical bytes, the lane was committed as `80a50536`, opened as PR #11 and merged to `main` as `719bc1b2`.
+Reading the live site back on 2026-11-19: `backtesting.html` answered 200 at 75,024 bytes with four `n8nmap`
+references, the evidence file answered 200 at 62,511 bytes with sha256 `17dd410c...` (identical to the checkout), and
+a headless pass of 18 of 18 checks - map as the default view, 725/725, 0/725 and 2,175/2,175, both model versions,
+four recorded cases, child links to executions 5472 and 5473, the blocked receipted case, no page error and no failed
+response. The earlier "not published" reading (58,292 bytes, no `n8nmap`, evidence 404) was accurate before the
+merge. Nothing scheduled, no order, stop, size, feed or runtime table touched.
 
 2026-11-15 late evening, second lane (factory drill-downs, branch `design/architecture-factory-drilldowns` off
 `origin/main` `fb059c17`) - the Architecture factory gained its two second levels and a corrected execution floor.
