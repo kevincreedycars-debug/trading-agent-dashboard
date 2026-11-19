@@ -28,7 +28,16 @@ references, the evidence file answered 200 at 62,511 bytes with sha256 `17dd410c
 a headless pass of 18 of 18 checks - map as the default view, 725/725, 0/725 and 2,175/2,175, both model versions,
 four recorded cases, child links to executions 5472 and 5473, the blocked receipted case, no page error and no failed
 response. The earlier "not published" reading (58,292 bytes, no `n8nmap`, evidence 404) was accurate before the
-merge. Nothing scheduled, no order, stop, size, feed or runtime table touched.
+merge. Nothing scheduled, no order, stop, size, feed or runtime table touched. After the merge, a fresh Windows
+checkout exposed a line-ending defect: `core.autocrlf` rewrote the checked-in runtime to 91,896 bytes, so the
+manifest's `bundle_bytes` no longer described the file a checkout handed back and the bundle guard failed. The
+runtime is now pinned with `-text` in `.gitattributes` and re-added with its published 90,011 bytes (96 of them
+the runtime template's CR), and the guard compares the bundle's code canonically with the source-set hash masked
+and accepts each pinned source hash in either line-ending form. Verified by measurement: a pristine clone of
+`origin/main` returns 90,011 bytes with 96 CR and passes the Cloud guard 5/5, a copy of the same files with LF
+endings passes 5/5, and the full guard set (Cloud, map, browser map, architecture map) is 22/22 with
+`node scripts/validate_architecture_map.js` exit 0. PR #13, merged as `856dbcfe`; no workflow JSON, manifest
+value, evidence byte or page changed.
 
 2026-11-15 late evening, second lane (factory drill-downs, branch `design/architecture-factory-drilldowns` off
 `origin/main` `fb059c17`) - the Architecture factory gained its two second levels and a corrected execution floor.

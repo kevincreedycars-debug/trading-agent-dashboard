@@ -39,6 +39,14 @@
   200 at 62,511 bytes with sha256 `17dd410c...` - identical to the checkout - and a headless read passed 18
   of 18 checks (map as the default view, 725/725, 0/725 and 2,175/2,175, both model versions, four recorded
   cases, execution links 5472 and 5473, the blocked receipted case, no page error, no failed response).
+- Fixed after publication: a fresh Windows checkout returned the runtime translated by `core.autocrlf`
+  (91,896 bytes), so `bundle_bytes` no longer described the checked-in file and the bundle guard failed.
+  `automation/n8n/usd-l1-cloud-runtime.js` is now pinned with `-text` in `.gitattributes` and re-added with
+  its published 90,011 bytes, and the guard compares the bundle's code canonically with the source-set hash
+  masked and accepts a pinned source hash in either line-ending form. A pristine clone of `origin/main`
+  returns 90,011 bytes with 96 CR and passes the Cloud guard 5/5, an LF copy of the same files passes 5/5, and
+  the guard set is 22/22 with `validate_architecture_map.js` exit 0. PR #13, merged as `856dbcfe`; no workflow
+  JSON, manifest value, evidence byte or page changed.
 ## 2026-11-15 - The verified-mornings answer leads the Backtesting tab
 
 - Why: the owner asked one question of the tab - on how many of the 725 historical mornings can we prove the intended
