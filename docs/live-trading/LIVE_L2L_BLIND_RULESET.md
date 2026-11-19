@@ -273,12 +273,15 @@ Blind keeps (a), drops (b), and settles the rest of this list. None of it is a p
    before the placement is not this question.
 3. **A removed rung cancels it.** A limit sitting at a line that is no longer in the published artifact is taken
    out rather than left at a price nobody has marked any more.
-4. **The session boundary does not cancel it.** The Prague day decides what evidence may *arm* a line, not how long
-   a working order may stand. A level that has just carried a stopped trade re-arms only on a fresh three-leg reclaim
-   completed after that exit, and that is the whole of the gate: the build re-uses lane 2's `crossedSince` window with
-   `requireDeviation` on, and the window opens on the exit itself because there is no call to seal. `--reentry-crossing`
-   is not asked for and is refused beside `--blind`: it would put a second, weaker two-candle test on top of the three
-   legs. A ticket put back without a new reclaim is a second ticket the rule did not ask for.
+4. **The session boundary does not cancel it, and it does not restart it.** The Prague day decides what evidence may
+   *arm* a line, not how long a working order may stand. A level that has just carried a stopped trade re-arms only on
+   a fresh three-leg reclaim completed after that exit, and that is the whole of the gate: the build re-uses lane 2's
+   `crossedSince` window with `requireDeviation` on, and the window opens on the exit itself because there is no call
+   to seal. A ticket put back without a new reclaim is a second ticket the rule did not ask for. The exit itself ends
+   the pair's trade (§8), so that reclaim is a fresh placement and never the stopped level re-stated; the three trades
+   that made this a correction rather than a reading are in `BLIND_LANE_STOP_OUT_20261119.md`. `--reentry-crossing` is
+   not asked for and is refused beside `--blind`: it would put a second, weaker two-candle test on top of the three
+   legs.
 5. **Every cancellation re-selects the pair** (section 4), so the lane does not keep sitting on a level it has just
    given up: the next pair is the market's own neighbourhood again rather than the abandoned line.
 
@@ -312,19 +315,23 @@ with no cap, because it is the difference between a new trade and the same one p
 | Row in the ledger | When the runner writes it | Counts as |
 | --- | --- | --- |
 | a fresh placement | a three-leg reclaim that is not the pair's standing trade being put back — including a reclaim of a line whose trade has already finished | one entry |
-| `re-entry-after-exit` | the pair's trade still stands and its own level is put back because the position was stopped out; the fresh reclaim of section 7 is what lets it back | a put-back, stated as its own event |
+| `re-entry-after-exit` | the pair's trade still stands and its own level is put back because the position was stopped out; the fresh reclaim of section 7 is what lets it back. This is the **called lanes'** row: since 2026-11-19 a stop ends the blind trade, so this lane writes a fresh placement instead | a put-back, stated as its own event |
 | `replacement-of-unfilled-limit` | the pair's trade still stands and its own level is put back because a working limit was cancelled without filling and without reaching its target | a replacement, stated as its own event |
 
-What ends the pair's trade — and so turns the next reclaim of that level into a fresh placement — is the target being
-filled or merely touched, or a hand close. On blind there is no call to turn (section 6), so the whole accounting
-reduces to one distinction, and one that is easy to get wrong: the free put-back is the **same side at the same
-level**. A reclaim of that level in the *other* direction is a different trade, and the standing one has to be finished
-first.
+What ends the pair's trade — and so turns the next reclaim of either watched line into a fresh placement — is the
+target being filled or merely touched, a hand close, or **the trade's own stop being hit**. On blind there is no call
+to turn (section 6), so the accounting reduces to one distinction: a trade that has ended takes its level and its side
+with it, and what the pair may do next is decided by the deviation in hand rather than by the trade that finished. The
+`re-entry-after-exit` row is the called lanes', which answer a stop at the level it was triggered on while their call
+stands (`STRATEGY_LIVE.md` §43); on blind that put-back was written down here as the design and never reached in
+practice, because the market that stopped a ticket has already left the level and no candle straddles it again - the
+three tickets in `BLIND_LANE_STOP_OUT_20261119.md` stood for days on that reading.
 
 | The trade on that instrument ended by | The same level, same side, reclaimed later in the day | Row |
 | --- | --- | --- |
 | its **target** | a new trade: the set-up finished where it was aimed | fresh placement |
-| its **stop** | the same trade re-entered; the fresh reclaim of section 7 is what lets it back | `re-entry-after-exit` |
+| its **stop** | a new trade: the stop answered the level, and the pair has usually been re-selected around the market by then | fresh placement |
+| a **hand close** | a new trade, on whichever watched line the reclaim is on | fresh placement |
 | a **cancel** that neither filled nor reached the target | the same trade, re-stated at its own level | `replacement-of-unfilled-limit` |
 
 Worked example, EURUSD alone, one Prague day, with nothing to spend and therefore nothing to run out of — it is here
@@ -338,20 +345,21 @@ because it is the row an operator reads to tell a fresh entry from a put-back. R
 | 11:05 | fills, and the target at 1.12308 is taken: the trade ends where it was aimed | — |
 | 11:05 | re-selected at price 1.12350 | 1.12308 / 1.12729 |
 | 12:30 | bearish reclaim at 1.12729 → **sell limit 1.12729**, stop 1.12813, target 1.12308. Fresh: a new trade on a new level | unchanged |
-| 14:10 | fills, and the stop at 1.12813 is hit: the trade survives its stop, and its level waits | — |
+| 14:10 | fills, and the stop at 1.12813 is hit: **the trade ends on its own stop** | — |
 | 14:10 | re-selected at price 1.12813 | 1.12729 / 1.13150 |
-| 15:35 | the market closes back below 1.12729, swings above it once more and closes below again — a fresh bearish reclaim after the 14:10 exit, with the three legs satisfied — → **sell limit 1.12729** put back at the trade's own level. Not a fresh trade | unchanged |
-| 16:20 | fills, and the stop at 1.12813 is hit a second time | — |
-| 18:30 | the target at 1.12308 is reached at last: the trade ends where it was aimed | — |
-| 18:30 | re-selected at price 1.12320 | 1.11887 / 1.12308 |
-| 19:40 | bearish reclaim at 1.12308 — now the upper line of the pair — → **sell limit 1.12308**, target 1.11887. Fresh, because the trade that used this level finished at its target | unchanged |
+| 15:35 | the market closes back below 1.12729, swings above it once more and closes below again — a fresh bearish reclaim after the 14:10 exit, with the three legs satisfied — → **sell limit 1.12729**, stop 1.12813, target 1.12308. Fresh: a new trade, because the stop ended the last one | unchanged |
+| 16:20 | fills, and the stop at 1.12813 is hit a second time: ended again, and nothing stands | — |
+| 18:30 | price falls to 1.12320, below the pair: re-selection with no trade standing | 1.11887 / 1.12308 |
+| 19:40 | bearish reclaim at 1.12308 — now the upper line of the pair — → **sell limit 1.12308**, target 1.11887. Fresh | unchanged |
 
-The 15:35 row is the one to look at. Under a count that charged only fresh placements, that put-back would have been
-free, and a level that keeps stopping out could be sold and stopped all day; under a count that charged every ticket it
-would have been the fourth of four. Neither question exists any more, because the owner removed the limit: the row is
-still labelled so that the day's record says *what* happened, and the pair's re-selection on the 14:10 exit is what
-bounds the repetition. The only per-instrument bound left is the fresh reclaim of section 7 — a stopped-out level
-re-arms on a new three-leg reclaim and not before — and the only cross-instrument bound is the four instruments.
+The 15:35 row is the one to look at. It is the row the build before 2026-11-19 read as a put-back and charged as
+`re-entry-after-exit`, on the reading that a stopped trade stood at its own level until a fresh reclaim let it back;
+what a live lane showed instead is that the reclaim of that level never comes once the market has left it. A stop ends
+the trade, so the row is a fresh placement and the day's record says so. The pair's re-selection on the 14:10 exit is
+what bounds the repetition — a second sell at the same level needs a second three-leg reclaim of it, and the pair only
+returns to that level if the market comes back to it. The only per-instrument bound left is the fresh reclaim of
+section 7 - a stopped-out level re-arms on a new three-leg reclaim and not before - and the only cross-instrument
+bound is the four instruments.
 
 So the worst case a blind day can hold is four minimum-lot positions, and if all four stops are hit that is about
 **$18.60** — around 3.7% of the $500 daily limit on a $10,000 account and under 2% of the $1,000 total. The real risk
