@@ -22195,6 +22195,7 @@ function liveCtraderCopierMappings(data) {
           <tbody>${body}</tbody>
         </table>
       </div>
+      <p class="live-trading-performance-hint">Scroll the table sideways for every column.</p>
       <p class="live-trading-table-caption">Lots is the order the copier sent. Wire units is what cTrader's protocol carries for that size (one lot is the symbol's own <span class="live-trading-mono">lotSize</span>: 10,000,000 for EURUSD, 10,000 for XAUUSD, 100 for BTCUSD and the index), and asset units is the same quantity in the asset itself. A market order has no expiry, so the column says so rather than showing a blank. The entry, stop and target are the broker's own numbers while the position is open; a closed row keeps the store's record and states that it closed. A mapping the broker no longer shows is marked, not hidden.</p>
     </section>
   `;
@@ -22320,6 +22321,7 @@ function liveCtraderCopierClosedTrades(data) {
           <tbody>${body}</tbody>
         </table>
       </div>
+      <p class="live-trading-performance-hint">Scroll the table sideways for every column.</p>
       <p class="live-trading-table-caption">Every close on the account inside the window is here, including the standalone setup tests that proved the order path. A row labelled "Copied from FTMO-1" is a copy; a row labelled "Standalone setup test" moved the balance and is kept in this history, and the performance panel below leaves it out of the copier's figures. Net is the broker's gross profit plus the commission and swap it recorded. A source ticket is stated where the copier's own record identifies it.</p>
     </section>
   `;

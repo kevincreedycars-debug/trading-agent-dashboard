@@ -8476,6 +8476,12 @@ body {
 /* The copier's evidence column is prose a reader has to finish, so it wraps inside its own column instead of
    being cut at a note's width: the paragraph says what was proved and how, and an ellipsis would hide the "how". */
 .live-trading-table td.live-copier-evidence { white-space: normal; min-width: 320px; max-width: 560px; color: #c3d2e2; font-size: 10.5px; line-height: 1.5; }
+/* On a phone the copier tab's "read at" line sat under the status widgets pinned to the top-right corner. Stacking
+   the header puts it on its own line, left-aligned, where nothing floats over it. */
+@media (max-width: 720px) {
+  #liveCtraderCopierView .section-header { flex-wrap: wrap; }
+  #liveCtraderCopierView .section-header > p { flex-basis: 100%; }
+}
 .live-trading-table-empty { margin: 0; color: #a9bdd4; font: 500 11.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-table-caption { margin: 0; color: #7f93aa; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-table-note-line { margin: 0; color: #8ea6c0; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
