@@ -1,10 +1,10 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-11-18T06:07:44.308Z",
-  "last_run_finished_at": "2026-11-18T06:07:44.308Z",
+  "status": "failed",
+  "last_run_started_at": "2026-11-19T06:05:29.511Z",
+  "last_run_finished_at": "2026-11-19T06:05:29.511Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Master Orchestrator finished with errors.",
+  "failed_step": "NQ Collector",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -24,7 +24,8 @@
     },
     {
       "name": "NQ Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "The connection to the server was closed unexpectedly, perhaps it is offline. You can retry the request immediately or wait and retry later."
     },
     {
       "name": "BTC Collector",
@@ -71,5 +72,8 @@
       "status": "success"
     }
   ],
-  "error": null
+  "error": {
+    "step": "NQ Collector",
+    "reason": "The connection to the server was closed unexpectedly, perhaps it is offline. You can retry the request immediately or wait and retry later."
+  }
 }
