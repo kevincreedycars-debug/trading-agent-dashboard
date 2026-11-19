@@ -42,6 +42,11 @@ const liveTradingCloseUrl = "./data/live-trading-close-request.json?v=20261024-l
 // close request is asked on, so it is read when an ask is made rather than when the page loads: a page served
 // before the document existed can still ask, on the primary lane whose feed it is reading.
 const liveTradingLanesUrl = "./data/live-trading-lanes.json?v=20261115-live-trading-blind";
+// The copier's own read: one document built on the trading host from the copier's health and mapping store plus
+// a broker read of the cTrader account. Optional on purpose - a page served before the first publish says the
+// document is not published yet rather than showing an error - because the first publish follows the copier's
+// first run.
+const liveCtraderCopierUrl = "./data/live-ctrader-copier.json?v=20261119-live-ctrader-copier-v1";
 const LIVE_TRADING_FEED_PATH = "data/live-trading.json";
 // Each lane's trader heartbeat: the small document the loop writes on every run, which the publisher carries in
 // the same commit as the snapshot. The accounts strip reads it, so a missing heartbeat costs one card a row
@@ -343,6 +348,12 @@ let confidenceBandDeliveryData = null;
 let researchProofMapData = null;
 let backtestEngineData = null;
 let liveTradingData = null;
+// The copier's document, or null when it has not been published yet. Held separately from `liveTradingData`:
+// the copier follows one lane's orders onto another broker, and the FTMO tabs must keep reading their own files.
+let liveCtraderCopierData = null;
+// One breakdown at a time on the copier's performance panel, held above the render so a refresh does not send
+// the reader back to Weekday while they are reading the strategy rows.
+let liveCtraderCopierPerformanceTab = "weekday";
 // The accounts strip's own reads: the publisher's lanes document and each lane's snapshot and heartbeat. Kept
 // apart from `liveTradingData` because the primary lane's snapshot is that same object, and a strip that
 // replaced it would make the tables below disagree with the card above.
@@ -21985,6 +21996,577 @@ function ensureBacktestingLoaded() {
   return backtestingRequest;
 }
 
+// ---- The Live cTrader Copier tab -----------------------------------------------------------------------
+// This tab describes a copier, not a strategy: it follows FTMO-1's accepted orders onto a cTrader account and
+// says what happened to each. Every fact below comes from `data/live-ctrader-copier.json`, which the trading host
+// builds from the copier's own health and mapping files plus one broker read of the destination. Nothing here
+// can trade, and a figure without a broker read behind it is labelled as such rather than drawn as if it were.
+
+function liveCtraderCopierAge(seconds) {
+  if (seconds === null || seconds === undefined) return "age unknown";
+  const value = Number(seconds);
+  if (!Number.isFinite(value)) return "age unknown";
+  if (value < 60) return `${Math.max(0, Math.round(value))}s ago`;
+  if (value < 3600) return `${Math.floor(value / 60)}m ago`;
+  if (value < 86400) return `${Math.floor(value / 3600)}h ${Math.floor((value % 3600) / 60)}m ago`;
+  return `${Math.floor(value / 86400)}d ago`;
+}
+
+// Two clocks are stated, never mixed: the document's own age (is this page current?) and the copier's heartbeat
+// age (was the loop running when the document was built?). The heartbeat allowance is wider than the copier's
+// cadence because the document is published on its own slower schedule, and the page says which is which.
+function liveCtraderCopierFreshness(data) {
+  if (data?.meta?.error) {
+    return { tone: "error", label: "NOT PUBLISHED", detail: String(data.meta.error) };
+  }
+  const generated = Date.parse(data?.generated_at_utc || "");
+  const ageSeconds = Number.isNaN(generated) ? null : Math.max(0, Math.round((Date.now() - generated) / 1000));
+  const window = Number(data?.stale_after_seconds) > 0 ? Number(data.stale_after_seconds) : 1800;
+  if (ageSeconds === null) {
+    return { tone: "unknown", label: "AGE UNKNOWN", detail: "generated_at_utc is missing or unreadable" };
+  }
+  if (ageSeconds <= window) {
+    return {
+      tone: "fresh",
+      label: "FRESH",
+      detail: `Copier read ${liveCtraderCopierAge(ageSeconds)}, inside the ${Math.round(window / 60)}m window this document is published on`
+    };
+  }
+  return {
+    tone: "stale",
+    label: "STALE",
+    detail: `The last copier read is ${liveCtraderCopierAge(ageSeconds)}, outside the ${Math.round(window / 60)}m window. The heartbeat below is the age of the poll inside that read, not of this page.`
+  };
+}
+
+function liveCtraderCopierPrice(value, digits) {
+  if (value === null || value === undefined) return displayDash();
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return displayDash();
+  return numeric.toFixed(Number.isInteger(Number(digits)) ? Number(digits) : 2);
+}
+
+function liveCtraderCopierMoney(value, currency, digits = 2) {
+  const signed = liveTradingSigned(value, digits);
+  if (signed === displayDash()) return signed;
+  return `${signed}${currency ? ` ${currency}` : ""}`;
+}
+
+const LIVE_CTRADER_COPIER_STATES = {
+  broker_observed: { label: "Broker observed", tone: "fresh", note: "the broker itself answered" },
+  tested: { label: "Tested", tone: "unknown", note: "exercised through the adapter on fixtures" },
+  not_sent: { label: "Not sent", tone: "stale", note: "the copier has no such path by design" },
+  awaiting_live_proof: { label: "Awaiting live proof", tone: "stale", note: "no natural event has exercised it yet" }
+};
+
+function liveCtraderCopierStateChip(state) {
+  const meta = LIVE_CTRADER_COPIER_STATES[state] || { label: state || "unknown", tone: "unknown", note: "" };
+  return `<span class="live-trading-badge ${escapeHtml(meta.tone)}" title="${escapeHtml(meta.note)}">${escapeHtml(meta.label)}</span>`;
+}
+
+function liveCtraderCopierMappingTone(status) {
+  if (status === "open") return "fresh";
+  if (status === "closed") return "unknown";
+  if (status === "pending") return "stale";
+  return "error";
+}
+
+function liveCtraderCopierChips(data) {
+  const account = data?.account || {};
+  const connection = data?.connection || {};
+  const copier = data?.copier || {};
+  const heartbeat = copier.heartbeat || {};
+  const health = copier.health || {};
+  const schedule = copier.schedule || {};
+  const currency = account.currency || "";
+  const rows = [
+    ["Login", connection.account_id || displayDash()],
+    ["Broker", connection.broker || displayDash()],
+    ["Environment", connection.environment === "live" ? "live" : connection.environment === "demo" ? "demo" : displayDash()],
+    ["Currency", currency || displayDash()],
+    ["Balance", liveCtraderCopierMoney(account.balance, currency)],
+    ["Equity", `${liveCtraderCopierMoney(account.equity, currency)}${account.equity_estimated ? " (marked)" : ""}`],
+    ["Open positions", String(account.open_positions ?? 0)],
+    ["Pending orders", String(account.pending_orders ?? 0)],
+    ["Closed trades", String(account.closed_trades ?? 0)],
+    ["Copier", copier.version || displayDash()],
+    ["Mode", copier.mode || displayDash()],
+    ["Schedule", schedule.cadence_seconds ? `every ${schedule.cadence_seconds}s` : displayDash()],
+    ["Heartbeat", heartbeat.state ? `${heartbeat.label} \u00b7 ${liveCtraderCopierAge(heartbeat.age_seconds)}` : displayDash()],
+    ["Last poll", copier.last_poll_utc ? liveTradingDateTimeLabel(copier.last_poll_utc) : displayDash()],
+    ["Last success", copier.last_success_utc ? liveTradingDateTimeLabel(copier.last_success_utc) : displayDash()],
+    ["Last reconcile", health.reconcile ? `${health.reconcile.checked ?? 0} checked \u00b7 ${health.reconcile.mapped ?? 0} mapped \u00b7 ${health.reconcile.dropped ?? 0} dropped` : displayDash()],
+    ["Source read", health.source?.probed_at_utc ? `${health.source.positions ?? 0} position(s) at ${liveTradingTimestampLabel(health.source.probed_at_utc)}` : displayDash()]
+  ];
+  return rows
+    .map(([label, value]) => `<span class="live-trading-chip"><b>${escapeHtml(label)}</b>${escapeHtml(String(value))}</span>`)
+    .join("");
+}
+
+function liveCtraderCopierVerification(data) {
+  const rows = Array.isArray(data?.verification) ? data.verification : [];
+  if (!rows.length) return "";
+  const body = rows.map((row) => `
+    <tr>
+      <th scope="row">${escapeHtml(row.behaviour || displayDash())}</th>
+      <td>${liveCtraderCopierStateChip(row.state)}</td>
+      <td class="live-copier-evidence">${escapeHtml(row.detail || "")}</td>
+    </tr>
+  `).join("");
+  return `
+    <section class="live-trading-table-panel">
+      <div class="live-trading-table-head">
+        <h3>What is proved, and how</h3>
+        <p class="live-trading-table-meta">Broker observed vs tested vs not sent</p>
+      </div>
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr><th scope="col">Behaviour</th><th scope="col">State</th><th scope="col">Evidence</th></tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">"Broker observed" means the broker itself answered - a position it holds, a stop it accepted, a close it acknowledged. "Tested" means the path was exercised through the relay's own adapter on fixtures; that is not a broker statement. "Not sent" means the copier has no such path by design: it does not amend, cancel or partially close, and the difference is kept visible elsewhere on this tab rather than papered over. A full close stays "awaiting live proof" until a natural source exit produces a broker-confirmed close, and no trade is forced to produce one.</p>
+    </section>
+  `;
+}
+
+function liveCtraderCopierMappings(data) {
+  const rows = Array.isArray(data?.mappings) ? data.mappings : [];
+  const symbols = Object.fromEntries((Array.isArray(data?.symbols) ? data.symbols : []).map((row) => [row.target_symbol || row.source_symbol, row]));
+  const head = `
+    <div class="live-trading-table-head">
+      <h3>Source ticket to cTrader position</h3>
+      <p class="live-trading-table-meta">${rows.length} mapping row${rows.length === 1 ? "" : "s"} &middot; lots, wire units and asset units stated separately</p>
+    </div>
+  `;
+  if (!rows.length) {
+    return `<section class="live-trading-table-panel">${head}<p class="live-trading-table-empty">No source ticket is mapped to a cTrader position. The copier writes a row when the broker accepts a copy and moves it to closed when the destination is flat.</p></section>`;
+  }
+  const body = rows.map((row) => {
+    const spec = symbols[row.symbol] || {};
+    const digits = Number.isInteger(Number(spec.digits)) ? Number(spec.digits) : null;
+    const tone = liveCtraderCopierMappingTone(row.status);
+    return `
+      <tr>
+        <th scope="row">${escapeHtml(row.source_ticket)}</th>
+        <td>${row.target_position_id ? `#${escapeHtml(String(row.target_position_id))}` : displayDash()}</td>
+        <td>
+          <span class="live-trading-asset">${escapeHtml(row.source_symbol || displayDash())}</span>
+          <span class="live-trading-table-symbol">${escapeHtml(row.symbol || displayDash())}</span>
+        </td>
+        <td>${row.side ? `<span class="live-trading-side ${escapeHtml(row.side)}">${escapeHtml(String(row.side).toUpperCase())}</span>` : displayDash()}</td>
+        <td class="num">${escapeHtml(row.volume_lots === null ? displayDash() : String(row.volume_lots))}</td>
+        <td class="num">${escapeHtml(row.protocol_units === null ? displayDash() : String(row.protocol_units))}</td>
+        <td class="num">${escapeHtml(row.base_units === null ? displayDash() : String(row.base_units))}</td>
+        <td class="num">${escapeHtml(liveCtraderCopierPrice(row.entry_price, digits))}</td>
+        <td class="num">${escapeHtml(liveCtraderCopierPrice(row.stop_price, digits))}</td>
+        <td class="num">${escapeHtml(liveCtraderCopierPrice(row.target_price, digits))}</td>
+        <td class="live-trading-table-note">${escapeHtml(row.expiry_utc || "n/a \u00b7 market")}</td>
+        <td>
+          <span class="live-trading-badge ${escapeHtml(tone)}">${escapeHtml(String(row.status || "unknown").replace(/_/g, " ").toUpperCase())}</span>
+          ${row.status_detail ? `<span class="live-trading-table-magic">${escapeHtml(row.status_detail)}</span>` : ""}
+        </td>
+      </tr>
+    `;
+  }).join("");
+  return `
+    <section class="live-trading-table-panel">
+      ${head}
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr>
+              <th scope="col">Source ticket</th>
+              <th scope="col">cTrader</th>
+              <th scope="col">Symbol</th>
+              <th scope="col">Side</th>
+              <th scope="col">Lots</th>
+              <th scope="col">Wire units</th>
+              <th scope="col">Asset units</th>
+              <th scope="col">Entry</th>
+              <th scope="col">SL</th>
+              <th scope="col">TP</th>
+              <th scope="col">Expiry</th>
+              <th scope="col">Copy status</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">Lots is the order the copier sent. Wire units is what cTrader's protocol carries for that size (one lot is the symbol's own <span class="live-trading-mono">lotSize</span>: 10,000,000 for EURUSD, 10,000 for XAUUSD, 100 for BTCUSD and the index), and asset units is the same quantity in the asset itself. A market order has no expiry, so the column says so rather than showing a blank. The entry, stop and target are the broker's own numbers while the position is open; a closed row keeps the store's record and states that it closed. A mapping the broker no longer shows is marked, not hidden.</p>
+    </section>
+  `;
+}
+
+function liveCtraderCopierDifferences(data) {
+  const differences = data?.differences || {};
+  const rejections = Array.isArray(data?.rejections) ? data.rejections : [];
+  const groups = [
+    ["Missing copy", differences.missing_copies, (row) => row.source_ticket],
+    ["Orphaned mapping", differences.orphaned_mappings, (row) => row.source_ticket],
+    ["Unresolved send", differences.unresolved_pending, (row) => row.request_id || row.source_ticket],
+    ["Unattributed close", differences.unattributed_closes, (row) => row.target_position_id],
+    ["Rejection", rejections, (row) => row.ticket]
+  ];
+  const openRows = groups.flatMap(([label, rows, reference]) =>
+    (Array.isArray(rows) ? rows : []).map((row) => ({
+      label,
+      reference: reference(row) || displayDash(),
+      symbol: row.symbol || row.target_symbol || row.source_symbol || displayDash(),
+      detail: [row.code, row.detail].filter(Boolean).join(": "),
+      at: row.at_utc || row.closed_utc || null
+    }))
+  );
+  const counts = groups
+    .map(([label, rows]) => `${label.toLowerCase()} ${Array.isArray(rows) ? rows.length : 0}`)
+    .join(" \u00b7 ");
+  const body = openRows.length
+    ? openRows.map((row) => `
+        <tr>
+          <th scope="row">${escapeHtml(row.label)}</th>
+          <td>${escapeHtml(String(row.reference))}</td>
+          <td>${escapeHtml(String(row.symbol))}</td>
+          <td class="live-trading-table-note">${escapeHtml(row.detail || "")}</td>
+          <td>${escapeHtml(row.at ? liveTradingDateTimeLabel(row.at) : displayDash())}</td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="5" class="live-trading-table-empty">Nothing is unresolved: every source ticket is mapped and every mapping the broker no longer shows is a close already in flight.</td></tr>`;
+  return `
+    <section class="live-trading-table-panel">
+      <div class="live-trading-table-head">
+        <h3>Differences and rejections</h3>
+        <p class="live-trading-table-meta">${escapeHtml(counts)}</p>
+      </div>
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr><th scope="col">Kind</th><th scope="col">Reference</th><th scope="col">Symbol</th><th scope="col">Detail</th><th scope="col">When (UTC)</th></tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">A missing copy is a source position the copier has no mapping for and did not refuse for a stated reason. An orphaned mapping is the store claiming a cTrader position the broker does not show. An unresolved send is a claim the broker has not yet been asked about. An unattributed close is a closed position that is neither a copy nor a labelled setup test. Rejections are the refusals in the copier's own health file, kept with the ticket and the reason so a refusal can be read rather than guessed.</p>
+    </section>
+  `;
+}
+
+function liveCtraderCopierClosedTrades(data) {
+  const trades = Array.isArray(data?.closed_trades) ? data.closed_trades : [];
+  const currency = data?.account?.currency || "";
+  const windowDays = Number(data?.horizon?.window_days);
+  const windowLabel = Number.isFinite(windowDays) && windowDays > 0 ? `the last ${windowDays} day${windowDays === 1 ? "" : "s"}` : "the window this read states";
+  const net = trades.reduce((total, trade) => total + (Number(trade?.net_profit) || 0), 0);
+  const head = `
+    <div class="live-trading-table-head">
+      <h3>Account history</h3>
+      <p class="live-trading-table-meta">${trades.length} closed position${trades.length === 1 ? "" : "s"} in ${escapeHtml(windowLabel)} &middot; net ${escapeHtml(liveCtraderCopierMoney(net, currency))}</p>
+    </div>
+  `;
+  if (!trades.length) {
+    return `
+      <section class="live-trading-table-panel">
+        ${head}
+        <p class="live-trading-table-empty">No position has closed on this cTrader account inside the window. A copied position appears here after it closes on the destination, labelled with the source ticket it came from.</p>
+      </section>
+    `;
+  }
+  const body = trades.map((trade) => {
+    const tone = trade.copy_kind === "copy" ? "fresh" : trade.copy_kind === "setup-test" ? "stale" : trade.copy_kind === "pre-copier" ? "unknown" : "error";
+    return `
+      <tr>
+        <th scope="row">${escapeHtml(liveTradingDateTimeLabel(trade?.closed?.time_utc))}</th>
+        <td>${escapeHtml(trade?.symbol || displayDash())}</td>
+        <td><span class="live-trading-side ${trade?.side === "sell" ? "sell" : "buy"}">${escapeHtml(String(trade?.side || "").toUpperCase())}</span></td>
+        <td class="num">${escapeHtml(trade?.volume_lots === null || trade?.volume_lots === undefined ? displayDash() : String(trade.volume_lots))}</td>
+        <td class="num">${escapeHtml(liveCtraderCopierPrice(trade?.price_open, trade?.digits))}</td>
+        <td class="num">${escapeHtml(liveCtraderCopierPrice(trade?.price_close, trade?.digits))}</td>
+        <td class="num">${escapeHtml(liveTradingDurationLabel(trade?.duration_seconds))}</td>
+        ${liveTradingMoneyCell(trade?.profit)}
+        ${liveTradingMoneyCell(trade?.commission)}
+        ${liveTradingMoneyCell(trade?.swap)}
+        <td class="num${liveTradingToneClass(trade?.net_profit)}"><b>${escapeHtml(liveTradingSigned(trade?.net_profit, 2))}</b></td>
+        <td>
+          <span class="live-trading-badge ${tone}">${escapeHtml(trade?.copy_label || "Unattributed")}</span>
+          ${trade?.source_ticket ? `<span class="live-trading-table-magic">source ${escapeHtml(String(trade.source_ticket))}</span>` : ""}
+        </td>
+        <td class="num">#${escapeHtml(String(trade?.position_id ?? displayDash()))}</td>
+      </tr>
+    `;
+  }).join("");
+  return `
+    <section class="live-trading-table-panel">
+      ${head}
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr>
+              <th scope="col">Closed (UTC)</th>
+              <th scope="col">Trade</th>
+              <th scope="col">Side</th>
+              <th scope="col">Lots</th>
+              <th scope="col">Entry</th>
+              <th scope="col">Exit</th>
+              <th scope="col">Held</th>
+              <th scope="col">Profit</th>
+              <th scope="col">Commission</th>
+              <th scope="col">Swap</th>
+              <th scope="col">Net</th>
+              <th scope="col">Origin</th>
+              <th scope="col">cTrader</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">Every close on the account inside the window is here, including the standalone setup tests that proved the order path. A row labelled "Copied from FTMO-1" is a copy; a row labelled "Standalone setup test" moved the balance and is kept in this history, and the performance panel below leaves it out of the copier's figures. Net is the broker's gross profit plus the commission and swap it recorded. A source ticket is stated where the copier's own record identifies it.</p>
+    </section>
+  `;
+}
+
+function liveCtraderCopierPerformance(data) {
+  const performance = typeof LiveTradingPerformance !== "undefined" ? LiveTradingPerformance : null;
+  const trades = (Array.isArray(data?.closed_trades) ? data.closed_trades : []).filter((trade) => trade.copy_kind === "copy");
+  const summary = performance
+    ? performance.summarise(trades, {
+      history: { window_days: data?.horizon?.window_days, from_utc: data?.horizon?.from_utc, to_utc: data?.horizon?.to_utc },
+      strategyOf: () => ({ key: "copied-ftmo1", label: "Copied from FTMO-1" })
+    })
+    : null;
+  const currency = data?.account?.currency || "";
+  const tests = data?.setup_tests || { trades: 0, net: 0 };
+  const head = `
+    <div class="live-trading-table-head">
+      <div class="live-trading-performance-title">
+        <h3 id="liveCtraderCopierPerformanceHeading">Copied trades &middot; performance</h3>
+        <p class="live-trading-performance-period">${escapeHtml(summary ? performance.periodLabel(summary.period) : "Reporting period not stated by this read")}</p>
+      </div>
+      <p class="live-trading-table-meta">Copies only &middot; net after recorded costs</p>
+    </div>
+  `;
+  if (!summary) {
+    return `<section class="live-trading-performance">${head}<p class="live-trading-table-empty">The performance reader did not load, so this panel states no figures rather than guessing them.</p></section>`;
+  }
+  if (!summary.trades) {
+    return `
+      <section class="live-trading-performance">
+        ${head}
+        <p class="live-trading-table-empty">No copied position has closed on this account inside the window, so there is no breakdown and no win rate to show.${tests.trades ? ` The account's ${tests.trades} setup-test close${tests.trades === 1 ? "" : "s"} (${escapeHtml(liveCtraderCopierMoney(tests.net, currency))}) ${tests.trades === 1 ? "is" : "are"} in the history above and excluded from this panel.` : ""}</p>
+      </section>
+    `;
+  }
+  const totals = summary.totals;
+  const totalsStrip = `
+    <dl class="live-trading-performance-totals">
+      <div>
+        <dt>Net P&amp;L</dt>
+        <dd class="live-trading-performance-value${liveTradingToneClass(totals.net)}">${escapeHtml(liveTradingPerformanceMoney(totals.net, currency))}</dd>
+      </div>
+      <div>
+        <dt>Win rate</dt>
+        <dd class="live-trading-performance-value">${escapeHtml(liveTradingPerformancePercent(totals.winRatePct) || displayDash())}</dd>
+      </div>
+      <div>
+        <dt>Closed trades</dt>
+        <dd class="live-trading-performance-value">${escapeHtml(String(totals.trades))}</dd>
+      </div>
+    </dl>
+  `;
+  const tabs = LIVE_TRADING_PERFORMANCE_TABS.map((tab) => {
+    const selected = liveCtraderCopierPerformanceTab === tab.key;
+    return `
+      <button
+        type="button"
+        role="tab"
+        class="live-trading-performance-tab${selected ? " is-active" : ""}"
+        id="liveCtraderCopierPerformanceTab-${tab.key}"
+        aria-selected="${selected ? "true" : "false"}"
+        aria-controls="liveCtraderCopierPerformanceBody-${tab.key}"
+        tabindex="${selected ? "0" : "-1"}"
+        data-live-ctrader-performance-tab="${tab.key}">${escapeHtml(tab.label)}</button>
+    `;
+  }).join("");
+  const bodies = LIVE_TRADING_PERFORMANCE_TABS.map((tab) => {
+    const rows = tab.key === "weekday" ? summary.weekday : tab.key === "strategy" ? summary.strategy : summary.asset;
+    const selected = liveCtraderCopierPerformanceTab === tab.key;
+    return `
+      <div
+        class="live-trading-table-scroll live-trading-performance-body"
+        id="liveCtraderCopierPerformanceBody-${tab.key}"
+        role="tabpanel"
+        aria-labelledby="liveCtraderCopierPerformanceTab-${tab.key}"
+        data-live-ctrader-performance-body="${tab.key}"${selected ? "" : " hidden"}>
+        <table class="live-trading-table live-trading-performance-table">
+          <thead>
+            <tr>
+              <th scope="col">${escapeHtml(tab.column)}</th>
+              <th scope="col" class="num">Closed trades</th>
+              <th scope="col" class="num">Share of trades %</th>
+              <th scope="col" class="num">Wins</th>
+              <th scope="col" class="num">Losses</th>
+              <th scope="col" class="num">Breakeven</th>
+              <th scope="col" class="num">Win rate %</th>
+              <th scope="col" class="num">Net P&amp;L</th>
+            </tr>
+          </thead>
+          <tbody>${liveTradingPerformanceRows(rows, currency)}</tbody>
+        </table>
+      </div>
+    `;
+  }).join("");
+  return `
+    <section class="live-trading-performance" aria-labelledby="liveCtraderCopierPerformanceHeading">
+      ${head}
+      ${totalsStrip}
+      <div class="live-trading-table-head live-trading-performance-tab-head">
+        <div class="live-trading-performance-tabs" role="tablist" aria-label="Copied trades performance breakdown">${tabs}</div>
+        <p class="live-trading-table-meta">One breakdown at a time</p>
+      </div>
+      ${bodies}
+      <p class="live-trading-performance-hint">Scroll the table sideways for every column.</p>
+      <p class="live-trading-table-caption">The same three breakdowns, weekday rule and win rule the other live tabs use, read here from the cTrader account's own closes. A trade sits on the day it closed in ${escapeHtml(summary.weekdayZone || "London")}; a win is a net above zero, a loss below it and a breakeven exactly zero, so the three counts add up to the row's own trades and the win rate is its wins over all of them. Only copied positions are counted; the account's setup-test closes stay in the history above and out of every row here${tests.trades ? ` (${tests.trades} of them, worth ${escapeHtml(liveCtraderCopierMoney(tests.net, currency))})` : ""}. The strategy row names the copier because a copied cTrader deal carries no FTMO rule identifier of its own.</p>
+    </section>
+  `;
+}
+
+function liveCtraderCopierSymbols(data) {
+  const rows = Array.isArray(data?.symbols) ? data.symbols : [];
+  if (!rows.length) return "";
+  const body = rows.map((row) => `
+    <tr>
+      <th scope="row">${escapeHtml(row.source_symbol || displayDash())}</th>
+      <td>${row.mapped ? escapeHtml(row.target_symbol) : `<span class="live-trading-badge error">EXCLUDED</span>`}</td>
+      <td class="num">${escapeHtml(row.lot_units === null ? displayDash() : String(row.lot_units))}</td>
+      <td class="num">${escapeHtml(row.protocol_units_per_lot === null ? displayDash() : String(row.protocol_units_per_lot))}</td>
+      <td class="num">${escapeHtml(row.volume_step === null ? displayDash() : String(row.volume_step))}</td>
+      <td>${row.held ? "held" : "flat"}</td>
+      <td class="live-trading-table-note">${escapeHtml(row.trade_mode || "")}</td>
+    </tr>
+  `).join("");
+  return `
+    <section class="live-trading-table-panel">
+      <div class="live-trading-table-head">
+        <h3>Instruments the copier maps</h3>
+        <p class="live-trading-table-meta">Source name to cTrader name, one contract per row</p>
+      </div>
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr>
+              <th scope="col">FTMO-1 symbol</th>
+              <th scope="col">cTrader symbol</th>
+              <th scope="col">Units per lot</th>
+              <th scope="col">Wire units per lot</th>
+              <th scope="col">Volume step</th>
+              <th scope="col">Account</th>
+              <th scope="col">Trade mode</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">The index is the row to read: FTMO's terminal calls it <span class="live-trading-mono">US100.cash</span> and the cTrader column is the destination the deployed symbols file maps it to. Units per lot is the base asset in one lot; wire units per lot is what cTrader's protocol counts for the same lot. The conversion tests cover 0.01 lot on each of these four contracts, including the index at its own step.</p>
+    </section>
+  `;
+}
+
+function applyLiveCtraderCopierPerformanceTab(panel) {
+  if (!panel) return;
+  panel.querySelectorAll("[data-live-ctrader-performance-tab]").forEach((tab) => {
+    const selected = tab.dataset.liveCtraderPerformanceTab === liveCtraderCopierPerformanceTab;
+    tab.classList.toggle("is-active", selected);
+    tab.setAttribute("aria-selected", selected ? "true" : "false");
+    tab.tabIndex = selected ? 0 : -1;
+  });
+  panel.querySelectorAll("[data-live-ctrader-performance-body]").forEach((body) => {
+    body.hidden = body.dataset.liveCtraderPerformanceBody !== liveCtraderCopierPerformanceTab;
+  });
+}
+
+function setupLiveCtraderCopierControls(panel) {
+  if (!panel || panel.dataset.liveCtraderCopierBound === "true") return;
+  panel.dataset.liveCtraderCopierBound = "true";
+  panel.addEventListener("click", (event) => {
+    const tab = event.target.closest("[data-live-ctrader-performance-tab]");
+    if (!tab) return;
+    liveCtraderCopierPerformanceTab = tab.dataset.liveCtraderPerformanceTab || "weekday";
+    applyLiveCtraderCopierPerformanceTab(panel);
+  });
+}
+
+function renderLiveCtraderCopier(passedData) {
+  const panel = document.getElementById("liveCtraderCopierPanel");
+  const updated = document.getElementById("liveCtraderCopierUpdated");
+  if (!panel) return;
+  const data = passedData && typeof passedData === "object" ? passedData : {};
+  const freshness = liveCtraderCopierFreshness(data);
+
+  if (data?.meta?.error) {
+    if (updated) updated.textContent = `NOT PUBLISHED \u00b7 ${data.meta.error}`;
+    panel.innerHTML = `
+      <div class="live-trading-banner error">
+        <span class="live-trading-badge error">NOT PUBLISHED</span>
+        <p>${escapeHtml(String(data.meta.error))}. The tab is served the moment the copier's document is published; until then it states that absence rather than drawing an empty account.</p>
+      </div>
+      <div class="live-trading-provenance">
+        <p><b>The copier, not a strategy.</b> This tab describes the process that follows FTMO-1's accepted orders onto cTrader login 7348195 and reports what happened to each. It generates no signal of its own, opens nothing by itself, and holds no broker connection: it reads one document written on the trading host and states what is in it.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const copier = data.copier || {};
+  const heartbeat = copier.heartbeat || {};
+  const schedule = copier.schedule || {};
+  const connection = data.connection || {};
+  const account = data.account || {};
+  const source = data.source || {};
+  const health = copier.health || {};
+  const tone = heartbeat.state === "error" || heartbeat.state === "missing"
+    ? "error"
+    : heartbeat.state === "stale" || heartbeat.state === "killed"
+      ? "stale"
+      : freshness.tone;
+  const bannerLabel = `${freshness.label} \u00b7 COPIER ${heartbeat.label || "UNKNOWN"}`;
+  const bannerDetail = `${freshness.detail} ${heartbeat.detail || ""}`.trim();
+
+  if (updated) {
+    updated.textContent = `${freshness.label} \u00b7 copier ${heartbeat.label || "unknown"} \u00b7 read ${data.generated_at_utc || "unknown"}`;
+  }
+
+  panel.innerHTML = `
+    <div class="live-trading-banner ${escapeHtml(tone)}">
+      <span class="live-trading-badge ${escapeHtml(tone)}">${escapeHtml(bannerLabel)}</span>
+      <p>${escapeHtml(bannerDetail)}</p>
+    </div>
+
+    <div class="live-trading-chips">${liveCtraderCopierChips(data)}</div>
+
+    ${liveCtraderCopierVerification(data)}
+
+    ${liveCtraderCopierMappings(data)}
+
+    ${liveCtraderCopierDifferences(data)}
+
+    ${liveCtraderCopierClosedTrades(data)}
+
+    ${liveCtraderCopierPerformance(data)}
+
+    ${liveCtraderCopierSymbols(data)}
+
+    <div class="live-trading-provenance">
+      <p><b>The copier, not a strategy.</b> Every position above came from an accepted FTMO-1 order: the copier reads that account's own positions through a read-only probe, converts each size through the destination contract, sends one market order with the source stop placed against cTrader's own reference price, and closes the copy when the source position is gone. It sends no signal, holds no market view, and this tab cannot trade. FTMO-1's own lane keeps its own tab and its own snapshot; nothing on this page reads another lane's files.</p>
+      <p>The copier's schedule is ${escapeHtml(schedule.description || "stated in its own file")}. Overlap is prevented by ${escapeHtml(schedule.overlap_prevention || "the copier's own lock")}, and a restart recovers because ${escapeHtml(schedule.restart_recovery || "the mapping store is the dedupe key")}. Cadence matters for copying: a source fill becomes a copy on the next poll (within ${escapeHtml(String(schedule.cadence_seconds || "?"))}s) and a source exit is closed on the next poll, so the destination can lag the source by one poll but never by a watched hand.</p>
+      <p>Source read: ${escapeHtml(source.label || "FTMO account 1")} (${escapeHtml(source.account_login_masked || "login masked")} / ${escapeHtml(source.account_server || "server unknown")}) at ${escapeHtml(source.probed_at_utc ? liveTradingDateTimeLabel(source.probed_at_utc) : "unknown")}, ${escapeHtml(String(health.source?.positions ?? source.positions_seen ?? "?"))} position(s). Destination: cTrader login ${escapeHtml(String(connection.account_id || "?"))} on ${escapeHtml(connection.broker || "broker unknown")} (${escapeHtml(connection.environment || "environment unknown")}), read at ${escapeHtml(account.read_at_utc ? liveTradingDateTimeLabel(account.read_at_utc) : "unknown")}.</p>
+      <p>Balance and equity are the broker's account facts; equity is marked from the open positions at the broker's own reference price and is labelled as marked where it is, because cTrader's account message carries the balance rather than a live equity. Closed trades are the broker's own deals paired into positions; the standalone setup tests are kept in that history and left out of the copier's figures. The document is built by <span class="live-trading-mono">scripts/build-live-ctrader-copier.js</span> from <span class="live-trading-mono">data/live-ctrader-copier.json</span>'s inputs on the trading host and published as one data file, so this page never talks to a broker.</p>
+    </div>
+  `;
+
+  setupLiveCtraderCopierControls(panel);
+  applyLiveCtraderCopierPerformanceTab(panel);
+}
+
 function setTab(tab) {
   const availableTabs = getAvailableTopLevelTabs();
   const fallbackTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -22005,6 +22587,7 @@ function setTab(tab) {
   const usdLayer1BacktesterView = document.getElementById("usdLayer1BacktesterView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
   const liveTradingView = document.getElementById("liveTradingView");
+  const liveCtraderCopierView = document.getElementById("liveCtraderCopierView");
   const architectureView = document.getElementById("architectureView");
   const liveTradeLogicView = document.getElementById("liveTradeLogicView");
   const agentView = document.getElementById("agentView");
@@ -22019,6 +22602,7 @@ function setTab(tab) {
   if (usdLayer1BacktesterView) usdLayer1BacktesterView.classList.toggle("active-view", activeTab === "usd-layer1-backtester");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
   if (liveTradingView) liveTradingView.classList.toggle("active-view", activeTab === "live-trading");
+  if (liveCtraderCopierView) liveCtraderCopierView.classList.toggle("active-view", activeTab === "live-ctrader-copier");
   if (architectureView) architectureView.classList.toggle("active-view", activeTab === "architecture");
   if (liveTradeLogicView) liveTradeLogicView.classList.toggle("active-view", activeTab === "live-trade-logic");
   if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(activeTab));
@@ -22037,6 +22621,7 @@ function setTab(tab) {
   }
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
   if (activeTab === "live-trading") renderLiveTrading(liveTradingData || {});
+  if (activeTab === "live-ctrader-copier") renderLiveCtraderCopier(liveCtraderCopierData || {});
   // The System section's own rule page: static copy, so it renders the same whether or not a snapshot loaded,
   // and it is rendered here rather than on load so a reader who never opens the tab pays nothing for it.
   if (activeTab === "live-trade-logic") renderLiveTradeLogic();
@@ -22536,7 +23121,7 @@ async function loadDashboard() {
   // The registry read below is numbered before it starts, so a load that finishes late cannot replace the
   // documents a newer load (or an upload's own follow-up read) already applied.
   const documentsRead = researchLibraryNextDocumentsRead();
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, liveTradingResult, liveTradingLevelsResult, liveTradingCloseResult, researchLibraryResult, researchLibraryDocumentsResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, liveTradingResult, liveTradingLevelsResult, liveTradingCloseResult, researchLibraryResult, researchLibraryDocumentsResult, liveCtraderCopierResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
@@ -22552,7 +23137,8 @@ async function loadDashboard() {
     fetchLocalJson(liveTradingLevelsUrl),
     fetchLocalJson(liveTradingCloseUrl),
     fetchLocalJson(researchLibraryUrl),
-    fetchLocalJson(researchLibraryDocumentsUrl)
+    fetchLocalJson(researchLibraryDocumentsUrl),
+    fetchOptionalJson(liveCtraderCopierUrl)
   ]);
 
   try {
@@ -22788,6 +23374,20 @@ async function loadDashboard() {
   // The accounts strip is read after the primary snapshot, so its first card is that snapshot's own object
   // rather than a second fetch of the same file.
   await loadLiveTradingLanes();
+
+  // The copier's read, optional by design: `fetchOptionalJson` resolves with `{present, data, error}` so a page
+  // served before the first publish draws the tab's own "not published yet" note rather than a broken panel.
+  if (liveCtraderCopierResult.status === "fulfilled" && liveCtraderCopierResult.value?.present) {
+    liveCtraderCopierData = liveCtraderCopierResult.value.data;
+  } else {
+    liveCtraderCopierData = {
+      meta: {
+        error: liveCtraderCopierResult.status === "fulfilled"
+          ? liveCtraderCopierResult.value?.error || "the copier document is not published yet"
+          : String(liveCtraderCopierResult.reason?.message || liveCtraderCopierResult.reason)
+      }
+    };
+  }
   renderLiveTrading(liveTradingData);
   renderWorkflowStatus(workflowStatus);
   renderOverviewStatusPanel();
@@ -22796,6 +23396,9 @@ async function loadDashboard() {
   if (orderedAgents.includes(activeTab) && layer1Data) {
     renderAgentDetail(activeTab);
   }
+  // A reader may already be on the copier tab when its document finishes loading; without this the tab would
+  // keep the empty first paint until they switched away and back.
+  if (activeTab === "live-ctrader-copier") renderLiveCtraderCopier(liveCtraderCopierData || {});
 }
 
 setupTabs();
