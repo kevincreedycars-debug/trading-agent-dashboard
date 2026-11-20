@@ -285,9 +285,12 @@ test("the verification matrix separates what the broker answered from what only 
   assert.equal(byName["Copying a filled FTMO-1 position"], "broker_observed");
   assert.equal(byName["Size conversion through the destination contract"], "broker_observed");
   assert.equal(byName["Stop carried at entry"], "broker_observed");
-  assert.equal(byName["Amending a stop or target after the copy"], "not_sent");
-  assert.equal(byName["Cancelling a resting source order"], "not_sent");
-  assert.equal(byName["Partial close on the source"], "not_sent");
+  assert.equal(byName["Amending a stop or target after the copy"], "tested", "the path exists and the adapter suite exercises it, but no source trail has moved a copy yet");
+  assert.equal(byName["Copying a resting source order"], "tested");
+  assert.equal(byName["Cancelling a resting source order"], "tested");
+  assert.equal(byName["Partial close on the source"], "tested");
+  assert.match(open.find((row) => row.behaviour === "Amending a stop or target after the copy").detail, /no source trail has moved a copy/);
+  assert.match(open.find((row) => row.behaviour === "Partial close on the source").detail, /only the difference is closed/);
   assert.equal(byName["Full close after a source exit"], "awaiting_live_proof", "no close has been observed, so the live path stays unproved");
   assert.match(open.find((row) => row.behaviour === "Copying a filled FTMO-1 position").detail, /#62272218 XAUUSD sell 0.01 lot/);
   // The size row quotes the wire numbers the regression actually reads, not a rounded story about them.
@@ -414,4 +417,20 @@ test("the file builder reads the three files and refuses to write a document it 
   const withoutHealth = builder.buildFromFiles({ ...options, health: path.join(directory, "absent.json") }, { now: NOW });
   assert.equal(withoutHealth.copier.heartbeat.state, "missing");
 });
+test("the copier's publish gate is the ten-minute cadence its own task runs on, inside the Pages limit", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const publisher = require("../scripts/publish-ctrader-copier.js");
+  const feed = require("../scripts/publish-live-trading-feed.js");
+  const task = fs.readFileSync(path.join(__dirname, "..", "ctrader", "copier", "copier-dashboard.ps1"), "utf8");
+  assert.equal(publisher.DEFAULT_MIN_INTERVAL_SECONDS, 600);
+  // Six builds an hour from this file, against the ten GitHub documents for a branch-built site, and never
+  // tighter than the floor the feed publisher refuses to go below.
+  assert.ok(3600 / publisher.DEFAULT_MIN_INTERVAL_SECONDS <= feed.PAGES_BUILDS_PER_HOUR);
+  assert.ok(publisher.DEFAULT_MIN_INTERVAL_SECONDS >= feed.PAGES_BUILDS_PER_HOUR_FLOOR_SECONDS);
+  // The scheduled task states the number too, so a task that stopped passing it would still be inside the gate.
+  assert.match(task, /--min-interval-seconds', '600'/);
+  assert.match(publisher.USAGE, /default 600/);
+});
+
 

@@ -25,7 +25,7 @@ Two Windows tasks on the trading host, registered by `ctrader/copier/register-co
 | Task | Cadence | Action |
 | --- | --- | --- |
 | `ctrader-copier-poll` | every 1 minute | `copier-poll.ps1`: one `--once` copier poll with `--symbols` |
-| `ctrader-copier-dashboard` | every 10 minutes | `copier-dashboard.ps1`: snapshot, build, publish (publisher's own gate allows a publish every 20 minutes) |
+| `ctrader-copier-dashboard` | every 10 minutes | `copier-dashboard.ps1`: snapshot, build, publish (the publisher's own gate is the same 10 minutes) |
 
 Both run as `Administrator` with `LogonType Interactive` and `RunLevel Highest`, copied from the relay's existing
 tasks because that account's DPAPI store holds the cTrader vault. `MultipleInstances = IgnoreNew` means a slow
@@ -35,11 +35,14 @@ because Task Scheduler's floor is one minute: a source fill becomes a copy, and 
 poll plus the probe and connection time (about 4s observed), so the destination lags the source by a minute at
 worst and never waits for a hand. The 15s in-process loop remains available by hand but is not the scheduled mode.
 
-The document is published every 20 minutes (`--min-interval-seconds 1200`) rather than every poll: the lanes
-publisher already spends publishes on the same Pages site, and three builds an hour from here keeps the total
-inside GitHub's documented soft limit. The tab states both cadences, and its stale window (30 minutes) is set
-against the publish cadence while the heartbeat allowance (25 minutes) is set against it too — a heartbeat is
-current as of the publish that carried it.
+The document is published every 10 minutes (`--min-interval-seconds 600`), the cadence the dashboard task already
+runs on, so a run that has a new read publishes rather than waiting for every other one; a run with nothing new is
+refused by the engine's strictly-newer gate instead of republishing the same bytes. Six builds an hour from this
+file sits inside GitHub's documented soft limit of ten an hour for a branch-built site, and the lanes publisher
+shares that site while spending publishes of its own only when its files change. The gate was 1200s until
+`copier-dashboard.ps1` was changed on 20 November 2026. The tab states both cadences, and its stale window (30
+minutes) and heartbeat allowance (25 minutes) are unchanged by that: at a 10-minute publish they mean three missed
+publishes and two and a half, and a heartbeat is current as of the publish that carried it.
 
 ## Evidence collected on 19 November 2026
 
@@ -72,10 +75,11 @@ current as of the publish that carried it.
 
 The matrix separates `broker_observed` (the broker answered), `tested` (exercised through the adapter on
 fixtures), `not_sent` (no such path by design) and `awaiting_live_proof`. Copying, size conversion, the stop at
-entry and — since 21:42:26Z — the full close after a source exit are broker-observed. Amendments, cancellation of
-a resting source order and partial closes are `not_sent`: the copier does not amend, does not mirror resting
-orders and does not close partially; a source partial close leaves the destination at its copied size and that
-difference stays visible rather than being papered over.
+entry and — since 21:42:26Z — the full close after a source exit are broker-observed. Amendments, resting source
+orders, their cancellation and partial closes read `tested` since 20 November 2026: the copier has all of those
+paths and the adapter suite exercises them, but no source has done any of them on this account yet, so none is
+claimed as observed. See `docs/live-trading/CTRADER_COPIER_LIFECYCLE_20261120.md` for what each path now does and
+for the observation gaps that remain.
 
 **The full close is now proved live, not just on fixtures.** The XAUUSD source ticket `309101669` exited
 naturally at about 21:39Z; the copier closed cTrader `62272218` at `3626.39` on `2026-11-19T21:42:26.546Z` for a
