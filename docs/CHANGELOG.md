@@ -31,9 +31,11 @@
   first-publication rule, the lookback refusal, the H.10 holiday fallbacks). `test:usd-session` is 102/102.
   Four existing assertions that encoded "no evidence exists" now assert the measured counts instead; no
   assertion was removed and none of the thresholds moved.
-- Regenerated: screen payload `b801822d…`, morning run `2f584719…`, the candidate artefact and the morning
+- Regenerated: screen payload `63a526c2…`, morning run `2f584719…`, the candidate artefact and the morning
   markdown. `report:layer1` is unchanged at `a458d02a…`. The acceptance package's digests are the ones it
-  was signed against; this work records its own.
+  was signed against; this work records its own. The screen digest also moved when this note and the
+  acquisition note were added to `docs/research/usd-session/v1/`, because the payload embeds the file list
+  its identity scan searched — the open item the acceptance package already carries, demonstrated here.
 
 ## 2026-11-20 - The Layer 1 n8n backtester gets an acceptance package, and the screen payload is regenerated to match
 
