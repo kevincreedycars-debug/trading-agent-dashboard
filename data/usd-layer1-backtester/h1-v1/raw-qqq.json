@@ -1,0 +1,27 @@
+{
+  "input": "qqq",
+  "series": "Nasdaq quote API historical table for QQQ",
+  "clock_rule": "nasdaq_official_close",
+  "clock_statement": "Nasdaq publishes the official QQQ closing price after the 16:00 ET close; 16:15 ET is used.",
+  "clock_policy": {
+    "basis": "publisher_stated_release_time",
+    "rule": "A historical record has no receipt. Its publication clock is reconstructed as the publisher's stated release time on the stated release day, converted to UTC in the publisher's own time zone. The observed clock is the instant the value is determined, which is never later than the reconstructed publication clock. Both clocks, the rule id and the margin in hours to the 05:00 London cutoff are written onto every record.",
+    "receipt": "received_at_utc is null on every historical record. A reconstructed clock is not a receipt.",
+    "late_print": "The reconstruction assumes the stated release time was met. It cannot exclude a late print, which is why the margin is published and late-print rejection stays an untested gate."
+  },
+  "availability_evidence": "The Nasdaq table returned 725 rows for the requested window on 2026-11-20, each with an official close.",
+  "acquired_at": "2026-11-20T09:04:23.720Z",
+  "offline": false,
+  "files_read": 1,
+  "files_failed": 0,
+  "files": [
+    {
+      "url": "https://api.nasdaq.com/api/quote/QQQ/historical?assetclass=etf&fromdate=2023-12-01&todate=2026-11-20&limit=9999",
+      "file": "nasdaq-qqq-history.json",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 81049,
+      "sha256": "9f801d6f5817ed4aa52a4bc95f5aa1bc07c87b635d67e53212b66b9ccd08e8a8"
+    }
+  ]
+}

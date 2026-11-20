@@ -235,6 +235,7 @@ test("the committed candidate reproduces from run-v1, the tape and the evidence 
   // Per-input readiness is reported separately from fully eligible mornings.
   assert.equal(committed.inputs.readiness.ice.evidence_present, true);
   assert.equal(committed.inputs.readiness.ice.detail.records, 455);
-  assert.equal(committed.inputs.readiness.vix.evidence_present, false);
+  assert.equal(committed.inputs.readiness.vix.evidence_present, true, "the Cboe close was imported on 2026-11-20");
+  assert.equal(committed.inputs.readiness.gold.evidence_present, false, "no LBMA fixing was acquired");
   assert.equal(committed.inputs.fully_eligible_mornings, 0);
 });

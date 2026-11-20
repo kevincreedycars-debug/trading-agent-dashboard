@@ -1,0 +1,51 @@
+{
+  "input": "real",
+  "series": "Treasury Daily Treasury Real Yield Curve Rates, 10 YR column",
+  "clock_rule": "treasury_eod_close",
+  "clock_statement": "The Treasury publishes the daily real yield curve after the 15:30 ET nominal curve; 16:15 ET is used as the reconstructed clock, which is the later of the two and matches the H.15 release time.",
+  "clock_policy": {
+    "basis": "publisher_stated_release_time",
+    "rule": "A historical record has no receipt. Its publication clock is reconstructed as the publisher's stated release time on the stated release day, converted to UTC in the publisher's own time zone. The observed clock is the instant the value is determined, which is never later than the reconstructed publication clock. Both clocks, the rule id and the margin in hours to the 05:00 London cutoff are written onto every record.",
+    "receipt": "received_at_utc is null on every historical record. A reconstructed clock is not a receipt.",
+    "late_print": "The reconstruction assumes the stated release time was met. It cannot exclude a late print, which is why the margin is published and late-print rejection stays an untested gate."
+  },
+  "availability_evidence": "Yearly CSVs are served by the Treasury for every year in the run window; the 2026-11-20 fetch returned the 10 YR column for 2024. H.15 itself publishes no real yield at all, which is what H1-A02 records.",
+  "acquired_at": "2026-11-20T09:04:23.148Z",
+  "offline": false,
+  "files_read": 4,
+  "files_failed": 0,
+  "files": [
+    {
+      "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2023/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2023&page&_format=csv",
+      "file": "treasury-real-yield-2023.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 9042,
+      "sha256": "ef28bcafaca75c45bb6b3491b4df4bd1b5e2ab7ff35ac014b6f8362df330c0ca"
+    },
+    {
+      "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2024/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2024&page&_format=csv",
+      "file": "treasury-real-yield-2024.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 9042,
+      "sha256": "d3ff00a9287ebf68fdc80e72fb2d1895a73c84b3ff2a6ca8c6d64648cb470f16"
+    },
+    {
+      "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2025/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2025&page&_format=csv",
+      "file": "treasury-real-yield-2025.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 9006,
+      "sha256": "d3d3131c41e1f93f4661d227ce7079049d51888b395aaff863b6ad8e08838b64"
+    },
+    {
+      "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_real_yield_curve&field_tdr_date_value=2026&page&_format=csv",
+      "file": "treasury-real-yield-2026.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 8034,
+      "sha256": "905210141b2e52c0e8315ed499e3ec3406ca06d742310573e31f3e89d40567e0"
+    }
+  ]
+}

@@ -357,3 +357,13 @@ rungs passing on no morning) and predictive performance (pooled accuracy 51.93 /
 interval spanning 50, every market delta negative, no holdout or multiplicity control). Also not accepted: any
 claim that late-print rejection has been exercised, and any use of these workflows for unattended or live
 trading.
+
+## 14. Digests are per-commit
+
+Every digest above is the one this package was signed against. A later commit that regenerates a generated
+artefact changes that artefact's digest without changing any accepted claim: the screen payload and the
+morning run are functions of the committed inputs, so importing new H1 evidence moves both. The next
+acquisition (2026-11-20, six of the nine H1 inputs imported) records its own digests —
+`b801822d…` for the screen and `2f584719…` for the morning run — and leaves the acceptance classes in
+§1 exactly as they are stated here: the n8n integration, the swap and the reproduction remain accepted;
+H1 validity and performance remain unaccepted.
