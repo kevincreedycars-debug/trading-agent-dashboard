@@ -319,6 +319,84 @@ test("the verification matrix separates what the broker answered from what only 
   assert.match(fullClose.detail, /#62272218 XAUUSD closed at 3661\.05 on 2026-11-19T21:42:34\.000Z, net 5\.98/);
 });
 
+test("the lifecycle counters survive into the document, and a behaviour is promoted only from an accepted answer", () => {
+  const acceptedStop = { type: "amend_sltp", ticket: "309101669", symbol: "XAUUSD", positionId: "62272218", stopLoss: 3690.25, takeProfit: null, source_stop: 3690.25, applied_stop: 3690.3, applied_target: null, sent: true, outcome: "accepted" };
+  const refusedStop = { type: "amend_sltp", ticket: "309180633", symbol: "EURUSD", positionId: "62272219", stopLoss: 1.098, applied_stop: null, applied_target: null, sent: false, outcome: "refused", code: "invalid_stop" };
+  const placed = { ticket: "309200001", symbol: "XAUUSD", side: "buy", orderType: "limit", volume: 0.01, price: 3650, stopPrice: 3630, takeProfit: 3700, requestId: "copy-309200001", sent: true, outcome: "accepted", orderId: "900123" };
+  const cancelled = { ticket: "309200002", orderId: "900124", symbol: "XAUUSD", reason: "source_order_gone", sent: true, outcome: "accepted" };
+  const health = healthFixture({
+    stops: [acceptedStop, refusedStop],
+    pending_orders: { placed: [placed], amended: [], cancelled: [cancelled], checked: [] },
+    order_checks: [{ ticket: "309200003", orderId: "900125", symbol: "XAUUSD", reason: "order_left_book" }],
+    reconcile_orders: { checked: 1, mapped: 0, dropped: 0, filled: 1 },
+    closes: [{ type: "close", ticket: "309101669", symbol: "XAUUSD", positionId: "62272218", volume: 0.005, target_volume: 0.01, source_volume: 0.01, partial: true, outcome: "accepted", sent: true }]
+  });
+  const document = lib.buildDocument({ health, state: stateFixture(), snapshot: snapshotFixture(), now: NOW });
+  // The four blocks are carried whole, not reduced to the counts that used to be dropped at the projection.
+  assert.equal(document.copier.health.stops.length, 2);
+  assert.equal(document.copier.health.pending_orders.placed[0].orderId, "900123");
+  assert.equal(document.copier.health.pending_orders.cancelled[0].reason, "source_order_gone");
+  assert.equal(document.copier.health.order_checks[0].reason, "order_left_book");
+  assert.equal(document.copier.health.reconcile_orders.filled, 1);
+  const byName = Object.fromEntries(document.verification.map((row) => [row.behaviour, row]));
+  assert.equal(byName["Amending a stop or target after the copy"].state, "broker_observed");
+  assert.match(byName["Amending a stop or target after the copy"].detail, /amended at the broker to stop 3690\.3/);
+  assert.equal(byName["Copying a resting source order"].state, "broker_observed");
+  assert.match(byName["Copying a resting source order"].detail, /order 900123/);
+  assert.equal(byName["Cancelling a resting source order"].state, "broker_observed");
+  assert.match(byName["Cancelling a resting source order"].detail, /order 900124/);
+  assert.equal(byName["Partial close on the source"].state, "broker_observed");
+  assert.match(byName["Partial close on the source"].detail, /closed 0\.005 of 0\.01 lots/);
+
+  // A counter is not an answer. With the same reconciliation count and no accepted row, every lifecycle path stays
+  // where it was, because nothing in the file says the broker accepted it.
+  const countersOnly = lib.buildDocument({
+    health: healthFixture({
+      stops: [refusedStop],
+      pending_orders: { placed: [{ ...placed, outcome: "dry_run", sent: false, orderId: null }], amended: [], cancelled: [], checked: [] },
+      order_checks: [],
+      reconcile_orders: { checked: 1, mapped: 0, dropped: 0, filled: 1 }
+    }),
+    state: stateFixture(),
+    snapshot: snapshotFixture(),
+    now: NOW
+  });
+  for (const behaviour of ["Amending a stop or target after the copy", "Copying a resting source order", "Cancelling a resting source order", "Partial close on the source"]) {
+    assert.equal(countersOnly.verification.find((row) => row.behaviour === behaviour).state, "tested", behaviour);
+  }
+});
+
+test("a lifecycle answer the store kept still counts after the poll that carried it is overwritten", () => {
+  // The health file is one poll; the store is the record that outlives it. Each field below is written only after
+  // the broker answered `accepted`, so it is evidence of the same strength, stated with its own provenance.
+  const rows = lib.mappingRows({
+    mappings: {
+      "309101669": { source_ticket: "309101669", symbol: "XAUUSD", side: "sell", volume: 0.01, target_position_id: "62272218", stop_price: 3690.3, sltp_utc: "2026-11-19T20:20:00.000Z", copied_utc: "2026-11-19T20:11:00.213Z", reconciled: true },
+      "309200001": { source_ticket: "309200001", symbol: "XAUUSD", side: "buy", volume: 0.01, order_kind: "limit", target_order_id: "900123", price: 3650, copied_utc: "2026-11-19T20:15:00.000Z", reconciled: true }
+    },
+    positions: snapshotFixture().positions,
+    symbols: SPECS
+  });
+  const historyRows = lib.mappingRows({
+    history: [{ source_ticket: "309200002", target_order_id: "900124", symbol: "XAUUSD", side: "buy", order_kind: "limit", volume: 0.01, close_outcome: "cancelled", copied_utc: "2026-11-19T20:16:00.000Z", closed_utc: "2026-11-19T20:17:00.000Z" }],
+    symbols: SPECS
+  });
+  const verification = lib.verification({
+    health: healthFixture({ stops: [], pending_orders: { placed: [], amended: [], cancelled: [], checked: [] }, closes: [] }),
+    mappings: [...rows, ...historyRows, { source_ticket: "309101669", target_position_id: "62272218", symbol: "XAUUSD", status: "open", volume_lots: 0.01, last_partial_utc: "2026-11-19T20:21:00.000Z" }],
+    snapshot: snapshotFixture()
+  });
+  const byName = Object.fromEntries(verification.map((row) => [row.behaviour, row]));
+  assert.equal(byName["Amending a stop or target after the copy"].state, "broker_observed");
+  assert.match(byName["Amending a stop or target after the copy"].detail, /records the amendment the broker accepted at 2026-11-19T20:20:00\.000Z/);
+  assert.equal(byName["Copying a resting source order"].state, "broker_observed");
+  assert.match(byName["Copying a resting source order"].detail, /limit records a broker order/);
+  assert.equal(byName["Cancelling a resting source order"].state, "broker_observed");
+  assert.match(byName["Cancelling a resting source order"].detail, /was cancelled in the copier's own history/);
+  assert.equal(byName["Partial close on the source"].state, "broker_observed");
+  assert.match(byName["Partial close on the source"].detail, /records a partial close the broker accepted at 2026-11-19T20:21:00\.000Z/);
+});
+
 test("the heartbeat is one word the file can defend", () => {
   assert.equal(lib.healthState({ health: healthFixture(), now: NOW }).state, "ok");
   const stale = lib.healthState({ health: healthFixture({ finished_utc: "2026-11-19T20:00:00.000Z" }), now: NOW });
@@ -417,20 +495,26 @@ test("the file builder reads the three files and refuses to write a document it 
   const withoutHealth = builder.buildFromFiles({ ...options, health: path.join(directory, "absent.json") }, { now: NOW });
   assert.equal(withoutHealth.copier.heartbeat.state, "missing");
 });
-test("the copier's publish gate is the ten-minute cadence its own task runs on, inside the Pages limit", () => {
+test("the copier's publish gate sits under its ten-minute task so every run can publish, inside the Pages limit", () => {
   const fs = require("node:fs");
   const path = require("node:path");
   const publisher = require("../scripts/publish-ctrader-copier.js");
   const feed = require("../scripts/publish-live-trading-feed.js");
   const task = fs.readFileSync(path.join(__dirname, "..", "ctrader", "copier", "copier-dashboard.ps1"), "utf8");
-  assert.equal(publisher.DEFAULT_MIN_INTERVAL_SECONDS, 600);
-  // Six builds an hour from this file, against the ten GitHub documents for a branch-built site, and never
-  // tighter than the floor the feed publisher refuses to go below.
+  assert.equal(publisher.DEFAULT_MIN_INTERVAL_SECONDS, 540);
+  // At most seven builds an hour from this file, against the ten GitHub documents for a branch-built site, and
+  // never tighter than the floor the feed publisher refuses to go below.
   assert.ok(3600 / publisher.DEFAULT_MIN_INTERVAL_SECONDS <= feed.PAGES_BUILDS_PER_HOUR);
   assert.ok(publisher.DEFAULT_MIN_INTERVAL_SECONDS >= feed.PAGES_BUILDS_PER_HOUR_FLOOR_SECONDS);
+  // The task runs every ten minutes and its publish lands about thirty seconds into a run. A gate of 600s refuses
+  // the next run by a few seconds and halves the cadence to twenty minutes; this is the defect 540s fixes. It
+  // stays above half the interval, so a retried run cannot publish twice for one read.
+  const taskIntervalSeconds = 600;
+  assert.ok(publisher.DEFAULT_MIN_INTERVAL_SECONDS < taskIntervalSeconds, "the gate must sit under the task interval");
+  assert.ok(publisher.DEFAULT_MIN_INTERVAL_SECONDS > taskIntervalSeconds / 2, "the gate must refuse a retry inside one interval");
   // The scheduled task states the number too, so a task that stopped passing it would still be inside the gate.
-  assert.match(task, /--min-interval-seconds', '600'/);
-  assert.match(publisher.USAGE, /default 600/);
+  assert.match(task, /--min-interval-seconds', '540'/);
+  assert.match(publisher.USAGE, /default 540/);
 });
 
 

@@ -22072,6 +22072,28 @@ function liveCtraderCopierStateChip(state) {
   return `<span class="live-trading-badge ${escapeHtml(meta.tone)}" title="${escapeHtml(meta.note)}">${escapeHtml(meta.label)}</span>`;
 }
 
+// How many rows the broker accepted, per lifecycle list. A chip states counts; the panel below states outcomes.
+function liveCtraderCopierOutcomeCount(rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  if (!list.length) return "none";
+  const accepted = list.filter((row) => row && row.outcome === "accepted").length;
+  return `${accepted} of ${list.length} accepted`;
+}
+
+// The reconciliation block's own numbers, read as the copier wrote them. Older health files state mapped/dropped;
+// the current one states gone, and a reader should see whichever the file actually says rather than a zero for a
+// field it never carried.
+function liveCtraderCopierReconcileText(reconcile) {
+  if (!reconcile || typeof reconcile !== "object") return displayDash();
+  const parts = [`${reconcile.checked ?? 0} checked`];
+  if (reconcile.mapped !== undefined || reconcile.dropped !== undefined) {
+    parts.push(`${reconcile.mapped ?? 0} mapped`, `${reconcile.dropped ?? 0} dropped`);
+  }
+  if (reconcile.gone !== undefined) parts.push(`${reconcile.gone} gone`);
+  parts.push(`${reconcile.filled ?? 0} filled`);
+  return parts.join(" \u00b7 ");
+}
+
 function liveCtraderCopierMappingTone(status) {
   if (status === "open") return "fresh";
   if (status === "closed") return "unknown";
@@ -22085,6 +22107,7 @@ function liveCtraderCopierChips(data) {
   const copier = data?.copier || {};
   const heartbeat = copier.heartbeat || {};
   const health = copier.health || {};
+  const pendingOrders = health.pending_orders && typeof health.pending_orders === "object" ? health.pending_orders : {};
   const schedule = copier.schedule || {};
   const currency = account.currency || "";
   const rows = [
@@ -22104,7 +22127,12 @@ function liveCtraderCopierChips(data) {
     ["Last poll", copier.last_poll_utc ? liveTradingDateTimeLabel(copier.last_poll_utc) : displayDash()],
     ["Last success", copier.last_success_utc ? liveTradingDateTimeLabel(copier.last_success_utc) : displayDash()],
     ["Last reconcile", health.reconcile ? `${health.reconcile.checked ?? 0} checked \u00b7 ${health.reconcile.mapped ?? 0} mapped \u00b7 ${health.reconcile.dropped ?? 0} dropped` : displayDash()],
-    ["Source read", health.source?.probed_at_utc ? `${health.source.positions ?? 0} position(s) at ${liveTradingTimestampLabel(health.source.probed_at_utc)}` : displayDash()]
+    ["Source read", health.source?.probed_at_utc ? `${health.source.positions ?? 0} position(s) at ${liveTradingTimestampLabel(health.source.probed_at_utc)}` : displayDash()],
+    ["Stops this poll", liveCtraderCopierOutcomeCount(health.stops)],
+    ["Resting orders", liveCtraderCopierOutcomeCount([...(Array.isArray(pendingOrders.placed) ? pendingOrders.placed : []), ...(Array.isArray(pendingOrders.amended) ? pendingOrders.amended : []), ...(Array.isArray(pendingOrders.cancelled) ? pendingOrders.cancelled : [])])],
+    ["Order checks", Array.isArray(health.order_checks) && health.order_checks.length ? `${health.order_checks.length} asked` : "none"],
+    ["Order reconciliation", liveCtraderCopierReconcileText(health.reconcile_orders)]
+
   ];
   return rows
     .map(([label, value]) => `<span class="live-trading-chip"><b>${escapeHtml(label)}</b>${escapeHtml(String(value))}</span>`)
@@ -22135,10 +22163,115 @@ function liveCtraderCopierVerification(data) {
           <tbody>${body}</tbody>
         </table>
       </div>
-      <p class="live-trading-table-caption">"Broker observed" means the broker itself answered - a position it holds, a stop it accepted, a close it acknowledged. "Tested" means the path was exercised through the relay's own adapter on fixtures; that is not a broker statement. "Not sent" means the copier has no such path by design: it does not amend, cancel or partially close, and the difference is kept visible elsewhere on this tab rather than papered over. A full close stays "awaiting live proof" until a natural source exit produces a broker-confirmed close, and no trade is forced to produce one.</p>
+      <p class="live-trading-table-caption">"Broker observed" means the broker itself answered - a position it holds, a stop or target it amended, a resting order it accepted or withdrew, a partial close it took, a close it acknowledged. "Tested" means the path was exercised through the relay's own adapter on fixtures; that is not a broker statement. "Not sent" means the copier has no such path by design, which on this tab is the state it no longer claims for any of the four paths it carries: amendment, resting orders, cancellation and partial close all have a path, and each waits for a real event. A full close stays "awaiting live proof" until a natural source exit produces a broker-confirmed close, and no trade is forced to produce one.</p>
     </section>
   `;
 }
+
+function liveCtraderCopierOutcomeTone(outcome) {
+  if (outcome === "accepted") return "fresh";
+  if (outcome === "refused") return "error";
+  if (outcome === "unknown") return "stale";
+  return "unknown";
+}
+
+function liveCtraderCopierOutcomeLabel(outcome) {
+  const key = String(outcome || "planned");
+  return key.replace(/_/g, " ");
+}
+
+// Every lifecycle action the last poll planned or sent, as one row each: what happened, what the broker answered,
+// and the numbers that answer carries. The counters are kept on the chips; this table is where an outcome can be
+// read rather than counted, because a counter alone cannot say whether the broker accepted anything.
+function liveCtraderCopierLifecycleRows(data) {
+  const health = data?.copier?.health || {};
+  const rows = [];
+  const add = (what, ticket, instrument, outcome, detail) => rows.push({
+    what,
+    ticket: ticket ? String(ticket) : displayDash(),
+    instrument: instrument ? String(instrument) : displayDash(),
+    outcome: outcome || "planned",
+    detail: detail || ""
+  });
+  const priceText = (value) => (value === null || value === undefined || value === "" || !Number.isFinite(Number(value)) ? null : String(value));
+  const pricePair = (stop, target) => {
+    const parts = [];
+    if (priceText(stop) !== null) parts.push(`stop ${priceText(stop)}`);
+    if (priceText(target) !== null) parts.push(`target ${priceText(target)}`);
+    return parts.join(" and ") || "no price";
+  };
+  for (const row of Array.isArray(health.stops) ? health.stops : []) {
+    add("Stop / target amendment", row.positionId ? `#${row.positionId}` : null, row.symbol, row.outcome,
+      `asked for ${pricePair(row.stopLoss, row.takeProfit)}${row.source_stop !== undefined ? `, source stop ${priceText(row.source_stop) || "none"}` : ""}; broker returned ${pricePair(row.applied_stop, row.applied_target)}`);
+  }
+  const pending = health.pending_orders && typeof health.pending_orders === "object" ? health.pending_orders : {};
+  for (const row of Array.isArray(pending.placed) ? pending.placed : []) {
+    add("Resting order placed", row.ticket, row.symbol, row.outcome,
+      `${row.orderType || "order"} ${row.side || ""} ${row.volume ?? "?"} lot at ${priceText(row.price) || "?"} with ${pricePair(row.stopPrice, row.takeProfit)}${row.orderId ? `, broker order ${row.orderId}` : ""}`);
+  }
+  for (const row of Array.isArray(pending.amended) ? pending.amended : []) {
+    add("Resting order amended", row.ticket, row.symbol, row.outcome, `order ${row.orderId || "?"}${row.message ? `: ${row.message}` : ""}`);
+  }
+  for (const row of Array.isArray(pending.cancelled) ? pending.cancelled : []) {
+    add("Resting order cancelled", row.ticket, row.symbol, row.outcome, `order ${row.orderId || "?"}${row.reason ? ` (${row.reason})` : ""}`);
+  }
+  for (const row of Array.isArray(pending.checked) ? pending.checked : []) {
+    add("Resting order checked", row.ticket, row.symbol, row.outcome, `order ${row.orderId || "?"}${row.reason ? `: ${row.reason}` : ""}`);
+  }
+  for (const row of Array.isArray(health.order_checks) ? health.order_checks : []) {
+    add("Destination order check", row.orderId, row.symbol, "planned", `asked why ${row.reason || "the order left the working book"}`);
+  }
+  const reconcile = health.reconcile_orders;
+  if (reconcile && typeof reconcile === "object") {
+    add("Order reconciliation", null, null, "reported", escapeHtml(liveCtraderCopierReconcileText(reconcile)));
+  }
+  return rows;
+}
+
+function liveCtraderCopierLifecycle(data) {
+  const rows = liveCtraderCopierLifecycleRows(data);
+  const health = data?.copier?.health || {};
+  const finished = health.finished_utc ? liveTradingDateTimeLabel(health.finished_utc) : "the last copier read";
+  const accepted = rows.filter((row) => row.outcome === "accepted").length;
+  const head = `
+    <div class="live-trading-table-head">
+      <h3>Lifecycle actions in the last poll</h3>
+      <p class="live-trading-table-meta">${rows.length} row${rows.length === 1 ? "" : "s"} &middot; ${accepted} accepted by the broker &middot; ${escapeHtml(finished)}</p>
+    </div>
+  `;
+  if (!rows.length) {
+    return `
+      <section class="live-trading-table-panel">
+        ${head}
+        <p class="live-trading-table-empty">The last poll planned no stop amendment, no resting order and no destination order check, so there is no outcome to show. A row appears here only when the copier acted or asked; an empty poll is not evidence that a path works.</p>
+      </section>
+    `;
+  }
+  const body = rows.map((row) => `
+    <tr>
+      <th scope="row">${escapeHtml(row.what)}</th>
+      <td class="live-trading-mono">${escapeHtml(row.ticket)}</td>
+      <td>${escapeHtml(row.instrument)}</td>
+      <td><span class="live-trading-badge ${escapeHtml(liveCtraderCopierOutcomeTone(row.outcome))}">${escapeHtml(liveCtraderCopierOutcomeLabel(row.outcome))}</span></td>
+      <td class="live-copier-evidence">${row.detail || escapeHtml(displayDash())}</td>
+    </tr>
+  `).join("");
+  return `
+    <section class="live-trading-table-panel">
+      ${head}
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr><th scope="col">What</th><th scope="col">Ticket</th><th scope="col">Instrument</th><th scope="col">Outcome</th><th scope="col">The broker's answer</th></tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">Each row is one thing the copier planned or sent and the answer it came back with: "accepted" is the broker's own word, "refused" carries its code, and "planned" or "dry run" means nothing was sent. The verification matrix above promotes a behaviour to broker observed only from an accepted row here or from the record the copier kept after one - never from a count.</p>
+    </section>
+  `;
+}
+
 
 function liveCtraderCopierMappings(data) {
   const rows = Array.isArray(data?.mappings) ? data.mappings : [];
@@ -22554,6 +22687,8 @@ function renderLiveCtraderCopier(passedData) {
     <div class="live-trading-chips">${liveCtraderCopierChips(data)}</div>
 
     ${liveCtraderCopierVerification(data)}
+
+    ${liveCtraderCopierLifecycle(data)}
 
     ${liveCtraderCopierMappings(data)}
 

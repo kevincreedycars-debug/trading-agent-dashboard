@@ -69,7 +69,7 @@ try {
         '--feed', "$root\dashboard.json",
         '--checkout', 'C:\live-trading\ctrader-publish',
         '--state', "$root\publish-state.json",
-        '--min-interval-seconds', '600'
+        '--min-interval-seconds', '540'
       )
       $lines += ("== publish exit {0}" -f $publishCode)
     }
