@@ -10,7 +10,7 @@ let economicEventRefreshUrl = economicEventRefreshUrlDefault;
 let economicEventsSourceUrl = economicEventsSourceUrlDefault;
 let inputHealthUrl = inputHealthUrlDefault;
 // The five Backtest Checker corpora are 56.8MB of an 80.4MB published tree, and a Pages deployment moves the whole
-// tree rather than the files a publish changed - on a 1200s publish cycle that is what made GitHub's own deploy step
+// tree rather than the files a publish changed - on a ten-minute publish cycle that is what made GitHub's own deploy step
 // time out. They are frozen on a branch of their own, which raw serves with an open origin, and read from there until
 // the checker is used again. Nothing on the default page asks for them: this sub-tab is what asks, and it still asks
 // in one click. To bring them back into the published tree, check them onto `main` and point these five lines at
@@ -22037,7 +22037,7 @@ function liveCtraderCopierFreshness(data) {
     return {
       tone: "fresh",
       label: "FRESH",
-      detail: `Copier read ${liveCtraderCopierAge(ageSeconds)}, inside the ${Math.round(window / 60)}m window this document is published on`
+      detail: `Copier read ${liveCtraderCopierAge(ageSeconds)}, inside the ${Math.round(window / 60)}m window this tab allows it to age`
     };
   }
   return {
