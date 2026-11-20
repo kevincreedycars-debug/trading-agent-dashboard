@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-20T09:00:21.480Z",
+  "generated_at_utc": "2026-11-20T09:10:54.093Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,7 +12,7 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-20T08:59:21.565230Z",
+    "probed_at_utc": "2026-11-20T09:10:25.392253Z",
     "positions_seen": 0
   },
   "destination": {
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-20T09:00:21.032Z",
+    "read_at_utc": "2026-11-20T09:10:53.659Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -33,7 +33,7 @@
     "account_type": "hedging"
   },
   "copier": {
-    "version": "copier-20261119.1",
+    "version": "copier-20261120.1",
     "mode": "live",
     "schedule": {
       "cadence_seconds": 60,
@@ -44,17 +44,17 @@
     "heartbeat": {
       "state": "ok",
       "label": "OK",
-      "age_seconds": 60,
-      "last_poll_utc": "2026-11-20T08:59:21.620Z",
-      "last_success_utc": "2026-11-20T08:59:21.620Z",
-      "detail": "the last poll finished 60s ago and reported ok"
+      "age_seconds": 29,
+      "last_poll_utc": "2026-11-20T09:10:25.460Z",
+      "last_success_utc": "2026-11-20T09:10:25.460Z",
+      "detail": "the last poll finished 29s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-20T08:59:21.620Z",
-    "last_success_utc": "2026-11-20T08:59:21.620Z",
+    "last_poll_utc": "2026-11-20T09:10:25.460Z",
+    "last_success_utc": "2026-11-20T09:10:25.460Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-20T08:59:20.772Z",
-      "finished_utc": "2026-11-20T08:59:21.620Z",
+      "started_utc": "2026-11-20T09:10:24.478Z",
+      "finished_utc": "2026-11-20T09:10:25.460Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -66,19 +66,22 @@
         "positions": 0,
         "rows": [],
         "cause": null,
-        "probed_at_utc": "2026-11-20T08:59:21.565230Z"
+        "probed_at_utc": "2026-11-20T09:10:25.392253Z",
+        "orders": []
       },
       "destination": {
         "account_id": "42585819",
         "symbols": [],
         "references": {},
+        "exposure": {},
         "spec_summary": {},
         "spec_refusals": []
       },
       "reconcile": {
         "checked": 0,
         "mapped": 0,
-        "dropped": 0
+        "dropped": 0,
+        "filled": 0
       },
       "refusals": [],
       "actions": [],
@@ -97,12 +100,12 @@
     "open_positions": 0,
     "pending_orders": 0,
     "closed_trades": 13,
-    "read_at_utc": "2026-11-20T09:00:21.032Z"
+    "read_at_utc": "2026-11-20T09:10:53.659Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-21T09:00:21.032Z",
-    "to_utc": "2026-11-20T09:00:21.032Z"
+    "from_utc": "2026-10-21T09:10:53.659Z",
+    "to_utc": "2026-11-20T09:10:53.659Z"
   },
   "closed_trades": [
     {
@@ -568,18 +571,23 @@
     },
     {
       "behaviour": "Amending a stop or target after the copy",
-      "state": "not_sent",
-      "detail": "the copier has no amendment path: a source trail moves nothing on the destination, which keeps the stop placed at entry"
+      "state": "tested",
+      "detail": "the copier compares the source's own stop and target with the destination's on every poll and amends only a difference, sending the protection as a stop-loss rather than as an entry; exercised on fixtures through the adapter, and no source trail has moved a copy on this account yet"
+    },
+    {
+      "behaviour": "Copying a resting source order",
+      "state": "tested",
+      "detail": "a working source order is copied as a working destination order at the source's own entry, carrying its protection as a stop-loss and its expiry under a client order id the copier can claim on the next poll; exercised on fixtures through the adapter, and no resting source order has been placed on this account yet"
     },
     {
       "behaviour": "Cancelling a resting source order",
-      "state": "not_sent",
-      "detail": "resting source orders are not mirrored: nothing rests on the destination, so a cancellation has nothing to withdraw. A fill is copied once the source position exists"
+      "state": "tested",
+      "detail": "a source cancellation withdraws the copy with a cancel, and a copy the destination cancels while the source still holds is re-placed once under a new client order id and recorded; exercised on fixtures through the adapter, and no cancellation has happened on this account yet"
     },
     {
       "behaviour": "Partial close on the source",
-      "state": "not_sent",
-      "detail": "a partial source close leaves the destination at its full copied size; the difference stays visible in the mapping and is not closed or amended automatically"
+      "state": "tested",
+      "detail": "the destination's own volume is compared with the share of the source still open and only the difference is closed, with the new baseline held while the broker's answer settles so the next poll does not close twice; exercised on fixtures through the adapter, and no partial close has happened at the source yet"
     },
     {
       "behaviour": "Full close after a source exit",
