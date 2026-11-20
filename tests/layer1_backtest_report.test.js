@@ -138,7 +138,10 @@ test("a report from another schema is refused rather than rendered half-way", ()
 
 test("the committed markdown equals a fresh render of the stored artefacts", () => {
   const committed = fs.readFileSync(path.join(ROOT, DOC_PATH), "utf8");
-  assert.equal(committed, renderMarkdown(report()), `${DOC_PATH} is stale; rerun the builder`);
+  // The builder emits LF. A Windows checkout with core.autocrlf=true returns the committed file as CRLF,
+  // so compare canonical text - the same rule the builder's --check applies - rather than line endings.
+  const canonical = (text) => text.replace(/\r\n/g, "\n");
+  assert.equal(canonical(committed), canonical(renderMarkdown(report())), `${DOC_PATH} is stale; rerun the builder`);
 });
 
 test("the provenance digest is reproducible and the inputs are the files it names", () => {

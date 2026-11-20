@@ -155,8 +155,11 @@ test("the legacy 0/725 and the 97% reach figures keep their original labels and 
 
 test("the committed JSON and markdown reproduce from the committed artefacts", () => {
   const fresh = build();
-  assert.equal(fs.readFileSync(path.join(ROOT, OUT_PATH), "utf8"), fresh.text);
-  assert.equal(fs.readFileSync(path.join(ROOT, DOC_PATH), "utf8"), fresh.markdown);
+  // Compare canonical text: a Windows checkout with core.autocrlf=true rewrites committed files as CRLF,
+  // while the builder emits LF. Line endings are not content drift, so both sides are normalised.
+  const canonical = (text) => text.replace(/\r\n/g, "\n");
+  assert.equal(canonical(fs.readFileSync(path.join(ROOT, OUT_PATH), "utf8")), canonical(fresh.text));
+  assert.equal(canonical(fs.readFileSync(path.join(ROOT, DOC_PATH), "utf8")), canonical(fresh.markdown));
   assert.equal(fresh.report.provenance.artifact_sha256.length, 64);
   assert.equal(JSON.stringify(fresh.report).includes("[object Object]"), false);
   assert.equal(/\bNaN\b/.test(JSON.stringify(fresh.report)), false);

@@ -1,4 +1,34 @@
 # Changelog
+## 2026-11-20 - The Layer 1 n8n backtester gets an acceptance package, and the screen payload is regenerated to match
+
+- Why: the workflow, swap and reproduction evidence existed across a manifest, an evidence file and a
+  screen, but no single artefact said what had been accepted and what had not. Separately,
+  `npm run screen:backtesting:check` failed on this checkout because the payload embeds the file paths the
+  package-identity search looked at, and a new live-copier data file had appeared in `data/`.
+- What changed: `docs/research/usd-session/v1/ACCEPTANCE_LAYER1_N8N.md` records the verdict per acceptance
+  class, the workflow ids and links, the two invoked identities and the two deliberately not invoked, the
+  four recorded mornings (5471-5482, all `success`), the 2024-03-26 replay with its three model outcomes and
+  nine H1 blockers, the audit and integrity counts (541 blocked, 0 with a direction, 0 with a trade, 0
+  scored; the legacy 75 directions and 21 trade flags preserved as labelled audit evidence only), per-test
+  readiness, and the reproduction checks with digests. `backtesting-screen-v1.json` was regenerated:
+  `2d8ec033…` → `951788c5…`, a diff of 7 insertions and 1 deletion, all inside the search/hit lists and the
+  digest; no model, morning, count, readiness or test field changed.
+- What it says: accepted — deterministic workflow identity (15/15), the swap on four recorded mornings,
+  reproduction (1,450/1,450 Cloud decisions, 2,175/2,175 decisions and 8,700/8,700 results locally), and the
+  audit counts. Not accepted — an edge (pooled accuracy 51.93 / 49.74 / 49.93 per cent, every interval
+  spanning 50), strict or receipted validity (0 of 725; clock and identity rungs pass on 0 mornings),
+  late-print rejection (untested), H1 readiness (0 of 725 eligible, `earliest_eligible: null`), and live use
+  (nothing scheduled, no order, stop, size, feed or runtime table touched).
+- Fixed while validating: the two markdown-reproduction tests compared raw bytes, so a Windows checkout with
+  `core.autocrlf=true` failed them even though the content matched. They now compare canonical text, the same
+  rule the builders' `--check` already applies; `npm run test:usd-session` is 90/90 with no assertion
+  removed.
+- Delivery: committed on the scoped branch `backtesting/usd-l1-n8n-acceptance-20261120` and pushed with a pull
+  request against `origin/main`; see the pull-request link on that branch. Not merged and not published — the
+  live dashboard still serves the 2026-11-19 build. The stale local `main` (8 commits dated 2026-09-07) is
+  untouched: back it up and compare with the remote before any merge or reset. Delivery through a separate
+  branch is unaffected by that.
+
 ## 2026-11-19 - The USD Layer 1 backtest runs as two swappable n8n Cloud workflows, and the map proves it
 
 - Why: the two existing n8n wrappers use the `Execute Command` node, which n8n Cloud does not offer, so
