@@ -91,6 +91,29 @@ to close without a volume, the transport refused an undefined size, and the copy
 copier now states the size it opened, and the adapter treats a close with no volume as "all of it" by reading the
 position's own volume; a position whose volume cannot be read is refused rather than sent. Both paths have tests.
 
+## What the next publication showed
+
+The 09:10:54Z document could not vouch for the deployed build: it was built before the first poll on the new copier.
+The publication after it, `0ec6a041` at `2026-11-20T09:50:22.020Z`, does. It carries `copier-20261120.1`, and its
+heartbeat is the 09:49:22.469Z poll - 60s old at build time, `state: ok` - with the source read at 09:49:22.410833Z
+and no orders in it. Nothing had been sent, refused or closed by then.
+
+Two facts worth keeping from that run:
+
+- Publishes landed at 09:00:21, 09:10:54, 09:30:21 and 09:50:22 - every twenty minutes, not every ten. The gate is
+  strict (`now - lastPublished < 600s` refuses), the task fires every ten minutes, and the poll's own offset puts the
+  09:20 run about 565s after the 09:10 publish, so it is refused and the next one carries both intervals. The change
+  moved the effective cadence from thirty minutes to twenty; six an hour is the ceiling the gate now allows, not the
+  rate this task reaches.
+- The published health block is the fixed projection written on 19 November: status, start and finish, polls, source,
+  destination, reconcile, refusals, actions, closes, notes. The new `stops`, `pending_orders`, `order_checks` and
+  `reconcile_orders` blocks are in `health.json` on the host and do not reach the document, so the tab cannot yet show
+  a resting-order copy, an amend, a cancel or a partial close even when one happens. The matrix rows stay `tested`
+  until the broker's own answer is visible in a read, which is the honest order of events.
+
+No artificial order was placed to exercise those paths. Copying stays live and untouched; the account was flat at
+09:53:22Z, with the poll `ok` and nothing in any of its action lists.
+
 ## Deployed on 20 November 2026
 
 The lifecycle code went to the host over the key-only SSH door (`Administrator@158.220.87.240`), with the previous
@@ -112,9 +135,6 @@ SHA-256 was read back on the host and matches this repository's copy. `mappings.
   FTMO-1 position" reads `awaiting_live_proof` and size and stop read `tested`.
 - The repository side was merged first (PR #16, `82711848`), so the publish checkout's `script.js` and `index.html`
   are the new wording and the moved asset version (`20261120-live-ctrader-copier-lifecycle`).
-
-
-
 
 ## Files
 
