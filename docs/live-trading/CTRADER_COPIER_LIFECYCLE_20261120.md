@@ -78,10 +78,12 @@ Through `node --test`, on fixtures and a fake client:
 
 **None of those paths has run against the live account yet.** No resting source order has been placed, no copy has
 been amended, cancelled or partially closed at the source since these paths existed, and no order claim has been
-answered by the broker for real. The dashboard's verification matrix therefore reads `tested` for the four
-lifecycle rows and keeps `broker_observed` for the paths the broker has already answered: copying, size conversion,
-the stop at entry and the full close of `62272218` at 21:42:26Z. A local pass is not a live proof, and the matrix
-says so rather than promoting a fixture.
+answered by the broker for real. The dashboard's verification matrix therefore reads `tested` for the four lifecycle
+rows. The rows above them are data-driven rather than declared: a copy row can only say `broker_observed` while a
+copy is open in the read, so on the 09:10Z document of 20 November, with nothing open, "Copying a filled FTMO-1
+position" reads `awaiting_live_proof` and size and stop read `tested`, while "Full close after a source exit" keeps
+`broker_observed` from the closed mapping and the account's own deal for `62272218`. A local pass is not a live proof,
+and the matrix says so rather than promoting a fixture.
 
 ## The publish gate
 

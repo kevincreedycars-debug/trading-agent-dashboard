@@ -74,8 +74,10 @@ publishes and two and a half, and a heartbeat is current as of the publish that 
 ## What the verification matrix says, and what it does not
 
 The matrix separates `broker_observed` (the broker answered), `tested` (exercised through the adapter on
-fixtures), `not_sent` (no such path by design) and `awaiting_live_proof`. Copying, size conversion, the stop at
-entry and — since 21:42:26Z — the full close after a source exit are broker-observed. Amendments, resting source
+fixtures), `not_sent` (no such path by design) and `awaiting_live_proof`. The copy, size and stop rows are read from
+the account rather than declared: they say `broker_observed` while a copy is open with its ticket and size quoted,
+and fall back to `awaiting_live_proof` or `tested` when nothing is open. The full close after a source exit has been
+`broker_observed` since 21:42:26Z, from its closed mapping and the account's own deal. Amendments, resting source
 orders, their cancellation and partial closes read `tested` since 20 November 2026: the copier has all of those
 paths and the adapter suite exercises them, but no source has done any of them on this account yet, so none is
 claimed as observed. See `docs/live-trading/CTRADER_COPIER_LIFECYCLE_20261120.md` for what each path now does and
@@ -88,6 +90,29 @@ net `+40.77 USD`, moved the mapping to the store's history, and the next broker 
 to close without a volume, the transport refused an undefined size, and the copy stayed open for three polls. The
 copier now states the size it opened, and the adapter treats a close with no volume as "all of it" by reading the
 position's own volume; a position whose volume cannot be read is refused rather than sent. Both paths have tests.
+## Deployed on 20 November 2026
+
+The lifecycle code went to the host over the key-only SSH door (`Administrator@158.220.87.240`), with the previous
+files kept in `C:\ProgramData\ctrader-relay\backup-20261120\` first: `CTRADER_TRANSPORT_20261114.js` (993 lines, was
+782), `CTRADER_ADAPTER_20261114.js` (935, was 691), `CTRADER_COPIER_20261119.js` (1847, was 984),
+`live-trading-positions-probe.py` (165, was 155), `copier/copier-dashboard.ps1` (600s gate),
+`copier-tools/lib/live_ctrader_copier.js` and `copier-tools/scripts/publish-ctrader-copier.js`. Each copied file's
+SHA-256 was read back on the host and matches this repository's copy. `mappings.json` was not touched.
+
+- `ctrader-copier-poll` was disabled for the swap and re-enabled after it. The first poll on the new code,
+  09:10:23Z, printed `copier copier-20261120.1: poll 60s, LIVE sends` and `poll 1: ok source 0 position(s) open 0
+  close 0 refused 0` - the FTMO account is flat, so nothing was copied and nothing was sent.
+- `ctrader-copier-dashboard` at 09:10:52Z: snapshot (0 positions, 0 orders, 26 deals, balance 23693.99), build
+  (2 mappings, 13 closed trades, heartbeat ok), publish `published` with `min_interval_seconds: 600` - the first run
+  on the new gate - as `cbf177f4`, `82711848..cbf177f4 HEAD -> main`.
+- The published `data/live-ctrader-copier.json` (09:10:54Z) carries the new rows: "Copying a resting source order",
+  "Amending a stop or target after the copy", "Cancelling a resting source order" and "Partial close on the source"
+  all read `tested`; "Full close after a source exit" reads `broker_observed`; with no copy open, "Copying a filled
+  FTMO-1 position" reads `awaiting_live_proof` and size and stop read `tested`.
+- The repository side was merged first (PR #16, `82711848`), so the publish checkout's `script.js` and `index.html`
+  are the new wording and the moved asset version (`20261120-live-ctrader-copier-lifecycle`).
+
+
 
 
 ## Files
