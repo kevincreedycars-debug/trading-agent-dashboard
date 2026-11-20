@@ -18,6 +18,7 @@ const ROOT = path.join(__dirname, "..");
 const MANIFEST_PATH = "automation/n8n/usd-l1-cloud-workflows.manifest.json";
 const EVIDENCE_PATH = "data/usd-layer1-backtester/n8n-execution-evidence-v1.json";
 const COMBINE_NODE = "Compare the two decisions";
+const MERGE_NODE = "Gather both child answers";
 const BIND_TO_CALL = [
   ["Bind challenger v0", "Run Challenger v0"],
   ["Bind challenger v1", "Run Challenger v1"]
@@ -170,8 +171,13 @@ test("the paired controller swaps two versioned children and schedules nothing",
     "each branch binds its own model key before the child is called");
   for (const [bindName, callName] of BIND_TO_CALL) {
     assert.deepEqual(parent.connections[bindName].main[0].map((connection) => connection.node), [callName]);
-    assert.equal(parent.connections[callName].main[0][0].node, COMBINE_NODE);
+    assert.equal(parent.connections[callName].main[0][0].node, MERGE_NODE);
   }
+  const merge = nodeNamed(parent, MERGE_NODE);
+  assert.equal(merge.type, "n8n-nodes-base.merge");
+  assert.deepEqual(parent.connections[MERGE_NODE].main[0].map((connection) => connection.node), [COMBINE_NODE]);
+  assert.deepEqual(merge.parameters, { mode: "append", numberInputs: 2 },
+    "both children must finish before the combiner pairs them");
 
   const combine = nodeNamed(parent, COMBINE_NODE).parameters.jsCode;
   assert.ok(combine.includes("Run Challenger v0") && combine.includes("Run Challenger v1"),
@@ -310,3 +316,23 @@ test("the map swaps the model without changing the morning or the gate", () => {
   assert.deepEqual(graph0.edges.map((edge) => edge.from + "->" + edge.to),
     graph1.edges.map((edge) => edge.from + "->" + edge.to));
 });
+
+test("the same controller accepts a bounded batch without changing the child contract", () => {
+  const config = nodeNamed(parent, "Run configuration").parameters.jsCode;
+  assert.match(config, /body\.dates/, "the webhook accepts a list of mornings");
+  assert.match(config, /at most 40/, "a batch is bounded so one execution stays inspectable");
+  assert.match(config, /dates\.length === 1 \? dates\[0\] : null/, "a single-date request keeps the original config shape");
+
+  const select = nodeNamed(parent, "Select one saved morning").parameters.jsCode;
+  assert.match(select, /config\.dates/, "selection reads the list, not one literal date");
+  assert.match(select, /wanted\.map/, "one item per morning so each child execution stays visible");
+
+  const combine = nodeNamed(parent, COMBINE_NODE).parameters.jsCode;
+  assert.match(combine, /\.all\(\)/, "the combiner pairs every returned child answer");
+  assert.match(combine, /usd-l1-n8n-technical-failure-v1/,
+    "a missing child is recorded as a technical failure, never as a guessed call");
+  assert.match(combine, /wanted\.length > 1/, "the batch block is only added for a multi-morning run");
+  assert.match(combine, /requested_dates/);
+  assert.match(combine, /performance/i);
+});
+

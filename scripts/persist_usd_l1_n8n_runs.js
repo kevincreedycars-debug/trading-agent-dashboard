@@ -1,0 +1,204 @@
+#!/usr/bin/env node
+"use strict";
+
+/**
+ * Persist captured n8n paired records into the durable run ledger (research only).
+ *
+ *   node scripts/persist_usd_l1_n8n_runs.js --capture backtester/tmp/run-1.json --label "batch 1"
+ *   node scripts/persist_usd_l1_n8n_runs.js --status --from 2024-01-02 --to 2024-01-31
+ *   node scripts/persist_usd_l1_n8n_runs.js --capture <file> --check
+ *
+ * A capture is the JSON the paired webhook returned: one paired record or an array of them. Records are
+ * keyed by validation mode and morning, verified against the committed panel and the local controller,
+ * and only unseen keys are appended, so re-running a range or re-ingesting a capture never duplicates a
+ * morning. The write is atomic and is skipped when nothing changed, which is what makes a restart safe.
+ *
+ * This script reads files only. It never calls n8n, never activates a workflow and never touches a live
+ * trading path.
+ */
+
+const fs = require("node:fs");
+const path = require("node:path");
+
+const ledgerLib = require("../lib/backtesting_n8n_run_ledger");
+
+const ROOT = path.resolve(__dirname, "..");
+const DEFAULT_LEDGER = "data/usd-layer1-backtester/n8n/run-ledger-v1.json";
+const DEFAULT_DATASET = "data/usd-layer1-backtester/run-v1.json";
+
+function parseArgs(argv) {
+  const args = { capture: [] };
+  for (let index = 2; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) throw new Error(`unexpected argument: ${token}`);
+    const key = token.slice(2);
+    const takesValue = ["capture", "ledger", "dataset", "dates", "from", "to", "validation", "label", "captured-at"].includes(key);
+    if (takesValue) {
+      const next = argv[index + 1];
+      if (!next || next.startsWith("--")) throw new Error(`--${key} needs a value`);
+      index += 1;
+      if (key === "capture") args.capture.push(next);
+      else args[key === "captured-at" ? "capturedAt" : key] = next;
+    } else {
+      args[key] = true;
+    }
+  }
+  return args;
+}
+
+function resolvePath(relativeOrAbsolute) {
+  return path.isAbsolute(relativeOrAbsolute) ? relativeOrAbsolute : path.resolve(ROOT, relativeOrAbsolute);
+}
+
+function displayPath(filePath) {
+  const relative = path.relative(ROOT, filePath);
+  return relative.startsWith("..") ? filePath : relative.split(path.sep).join("/");
+}
+
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, ""));
+}
+
+function readCapture(filePath) {
+  const parsed = readJson(filePath);
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && Array.isArray(parsed.records)) return parsed.records;
+  return [parsed];
+}
+
+function readLedger(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  return readJson(filePath);
+}
+
+function writeLedger(filePath, ledger) {
+  const text = `${JSON.stringify(ledger, null, 2)}\n`;
+  const temporary = `${filePath}.tmp`;
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(temporary, text, "utf8");
+  fs.renameSync(temporary, filePath);
+  return text;
+}
+
+function planDates(args, ledger) {
+  if (args.dates) {
+    return args.dates.split(",").map((entry) => entry.trim()).filter(Boolean);
+  }
+  if (args.from || args.to) {
+    return ledgerLib.planRange({ from: args.from, to: args.to });
+  }
+  if (ledger && ledger.records) {
+    return ledgerLib.summarise(ledger).dates;
+  }
+  return [];
+}
+
+function usage() {
+  return [
+    "Usage: node scripts/persist_usd_l1_n8n_runs.js [options]",
+    "",
+    "  --capture <path>       paired webhook response (record or array); repeatable",
+    "  --label <text>         label the ingest in the run history",
+    "  --ledger <path>        ledger file (default " + DEFAULT_LEDGER + ")",
+    "  --dataset <path>       committed panel used for verification (default " + DEFAULT_DATASET + ")",
+    "  --captured-at <iso>    capture time recorded on new rows (default: now)",
+    "  --status               print coverage and the restart plan only",
+    "  --from / --to          plan range for --status",
+    "  --dates <a,b>          explicit plan dates for --status",
+    "  --validation <mode>    structural (default) | receipted",
+    "  --check                re-merge the captures and fail if the committed ledger differs",
+    "  --write                write the ledger (default when a capture is given and --check is absent)"
+  ].join("\n");
+}
+
+module.exports = { DEFAULT_LEDGER, DEFAULT_DATASET, parseArgs, readCapture, readLedger, writeLedger, planDates, usage };
+
+function main(argv = process.argv) {
+  const args = parseArgs(argv);
+  if (args.help) {
+    console.log(JSON.stringify({ usage: usage() }, null, 2));
+    return 0;
+  }
+  const ledgerPath = resolvePath(args.ledger || DEFAULT_LEDGER);
+  const datasetPath = resolvePath(args.dataset || DEFAULT_DATASET);
+  const dataset = readJson(datasetPath);
+  const existing = readLedger(ledgerPath);
+  const validationMode = args.validation || "structural";
+  const dates = planDates(args, existing);
+
+  if (args.status) {
+    const summary = existing ? ledgerLib.summarise(existing) : ledgerLib.summarise(ledgerLib.emptyLedger());
+    const plan = dates.length > 0 ? ledgerLib.resumePlan(existing, { dates, validation_mode: validationMode }) : null;
+    console.log(JSON.stringify({
+      ledger: displayPath(ledgerPath),
+      exists: Boolean(existing),
+      summary,
+      plan
+    }, null, 2));
+    return 0;
+  }
+
+  const captures = args.capture.map((file) => ({ file: displayPath(resolvePath(file)), records: readCapture(resolvePath(file)) }));
+  if (captures.length === 0) {
+    console.log(JSON.stringify({ usage: usage() }, null, 2));
+    return 1;
+  }
+  const recordsMerged = { added: [], duplicates: [], rejected: [], runs: [] };
+  let working = existing;
+  for (const capture of captures) {
+    const merged = ledgerLib.mergeLedger(working, {
+      records: capture.records,
+      dataset,
+      capturedAt: args.capturedAt || new Date().toISOString(),
+      label: captures.length === 1 ? (args.label || null) : `${args.label || "capture"} · ${path.basename(capture.file)}`
+    });
+    working = merged.ledger;
+    recordsMerged.added.push(...merged.added);
+    recordsMerged.duplicates.push(...merged.duplicates);
+    recordsMerged.rejected.push(...merged.rejected);
+    recordsMerged.runs.push(merged.run);
+  }
+  const merged = { ledger: working, added: recordsMerged.added, duplicates: recordsMerged.duplicates, rejected: recordsMerged.rejected, run: recordsMerged.runs };
+
+  const nextText = `${JSON.stringify(merged.ledger, null, 2)}\n`;
+  const currentText = fs.existsSync(ledgerPath) ? fs.readFileSync(ledgerPath, "utf8").replace(/^\uFEFF/, "") : null;
+  const unchanged = currentText === nextText;
+
+  const report = {
+    ledger: displayPath(ledgerPath),
+    captures: captures.map((capture) => ({ file: capture.file, records: capture.records.length })),
+    added: merged.added,
+    duplicates: merged.duplicates,
+    rejected: merged.rejected,
+    run: merged.run,
+    unchanged,
+    summary: ledgerLib.summarise(merged.ledger),
+    verification_failures: merged.ledger.records
+      .filter((row) => !row.verification || row.verification.verified !== true)
+      .map((row) => ({
+        key: row.key,
+        mismatches: row.verification ? row.verification.mismatches : ["no verification recorded"]
+      }))
+  };
+
+  if (args.check) {
+    report.check = unchanged ? "ledger reproduces" : "ledger is stale - re-run without --check to persist the captured records";
+    console.log(JSON.stringify(report, null, 2));
+    return unchanged ? 0 : 1;
+  }
+
+  if (!unchanged) writeLedger(ledgerPath, merged.ledger);
+  report.written = !unchanged;
+  console.log(JSON.stringify(report, null, 2));
+  return merged.rejected.length > 0 ? 1 : 0;
+}
+
+if (require.main === module) {
+  try {
+    process.exitCode = main(process.argv);
+  } catch (error) {
+    console.error(JSON.stringify({ ok: false, error: error.message }, null, 2));
+    process.exitCode = 1;
+  }
+}
+

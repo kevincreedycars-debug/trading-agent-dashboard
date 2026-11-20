@@ -102,6 +102,15 @@ test("the Layer 1 map is visible, filterable and linked to the recorded n8n exec
     await page.locator(".map-node").filter({ hasText: "H1 candidate" }).first().locator("button").click();
     assert.match(await page.locator(".map-detail").first().textContent(), /USD-L1-25F-H1-v0.1.0/);
     assert.match(await page.locator(".map-detail").first().textContent(), /Never substitute/);
+    await page.waitForSelector("text=Batch runs, restart recovery and independent checks", { timeout: 30000 });
+    await page.waitForFunction(() => document.querySelector("#view").textContent.includes("persisted mornings"), { timeout: 30000 });
+    assert.equal(await page.locator(".map-stat").filter({ hasText: "9" }).count() >= 1, true);
+    assert.equal(await page.locator(".map-stat").filter({ hasText: "9 / 9" }).count(), 1);
+    assert.equal(await page.locator(".map-stat").filter({ hasText: "3" }).filter({ hasText: "duplicate results prevented" }).count(), 1);
+    assert.match(await page.locator("#view").textContent(), /Run history/);
+    const ledgerLinks = await page.locator(".map-links a").evaluateAll((nodes) => nodes.map((node) => node.href));
+    assert.equal(ledgerLinks.some((href) => /\/execution\/5512$/.test(href)), true);
+    assert.equal(ledgerLinks.some((href) => /\/execution\/5525$/.test(href)), true);
     assert.deepEqual(pageErrors, []);
   } finally {
     await browser.close();

@@ -1,4 +1,39 @@
 # Changelog
+## 2026-11-20 - The n8n controller runs a bounded date range and a restart cannot duplicate a morning
+
+- Why: the accepted n8n integration covered four hand-picked mornings. The open milestone was a small date
+  range through the same controller with persisted, independently re-checked results, proven invalid-input
+  rejection and proven restart recovery.
+- What changed in the workflow: the same parent (`89uk5JnPbWPL5lGD`) accepts `dates` (up to 40 mornings) as
+  well as `date`. Selection emits one item per morning, both `executeWorkflow` branches run per item, a new
+  Merge node waits for both children before pairing, and the combiner returns one paired record per date. A
+  missing child answer is emitted as `usd-l1-n8n-technical-failure-v1` so it is rejected loudly, never
+  guessed. The child contract is unchanged; the bundle is byte-identical (`e1e7ecb0…`, 90,011 bytes).
+- What changed in the ledger: `lib/backtesting_n8n_run_ledger.js` keys a result by `validation_mode|date`,
+  re-verifies every row before saving it (dataset join, local replay of the same model, four-market outcome
+  arithmetic from the stored call and the panel, two child execution ids, the recorded gate and the
+  `same_direction` comparison), and merges idempotently. `scripts/persist_usd_l1_n8n_runs.js`
+  (`npm run persist:usd-l1-n8n`, `npm run status:usd-l1-n8n`) ingests captures and exposes the restart plan.
+- Recorded runs, all read back from stored executions: 5505 (2024-01-02…04, 3 structural mornings, all
+  abstained), 5512 (2024-01-02…09, 6 mornings, 1 allowed and 5 abstained, 3 rows already held), 5525
+  (2024-01-10…11 receipted, both blocked `receipted_incomplete`), 5530 (2024-01-06 absent from the panel,
+  blocked `not_in_dataset`) and 5534 (`2024-13-01` refused at "Run configuration" with `date is not a real
+  calendar day`).
+- Measured ledger state: 9 rows (7 structural, 2 receipted), 9 of 9 independently verified, 0 failed checks,
+  4 runs, 3 duplicate results prevented by the restart. Re-ingesting the restart capture added 0 rows and left
+  the ledger byte-identical; `--check` reports `ledger reproduces`, 0 added, 12 duplicates skipped.
+- What changed on the dashboard: `backtesting.html#n8nmap` now renders "Batch runs, restart recovery and
+  independent checks" from the ledger - persisted and verified counts, duplicate results prevented, the
+  structural and receipted tables, the run history and direct links to executions 5505, 5512, 5525 and 5530.
+  The shared heading, sidebar and existing model/case selection are unchanged.
+- Boundaries: the temporary header-auth credential created for the capture window was deleted, the instance
+  workflow was restored from the checked-in JSON and deactivated, and no schedule, order, stop, size, feed or
+  runtime table was touched. The strategy/H1 lane is untouched: `ready` stays 0 of 725.
+- Guards: `npm run test:usd-l1-n8n` 24 of 24 (including a 3D-free browser read of the ledger panel),
+  `npm run test:usd-l1-controller`, `npm run test:usd-session`, the three `--check` builders and
+  `npm run check:h1-a02` are run on the merged tree; the completion checklist is
+  `docs/research/usd-session/v1/PLATFORM_COMPLETION_CHECKLIST.md`.
+
 ## 2026-11-20 - Six of the nine H1 evidence inputs are acquired from the agencies that publish them
 
 - Why: the H1 ladder was blocked at 1 of 9 inputs (the amended `ice` tape), and every morning failed on

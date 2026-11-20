@@ -27,6 +27,10 @@ scoring rules.
 | Evidence | `data/usd-layer1-backtester/n8n-execution-evidence-v1.json` | What ran, where, and what it returned. |
 | Raw transcripts | `data/usd-layer1-backtester/n8n/execution-*.json`, `executions-index-20261119.json` | The stored n8n executions the evidence is assembled from. |
 | Map | `lib/backtesting_n8n_map.js`, `backtesting.html#n8nmap` | Model-swap map, the tab's default view, rendered from the evidence file. Published, and read back from the live site on 2026-11-19 (see Boundaries). |
+| Run ledger module | `lib/backtesting_n8n_run_ledger.js` | Pure ledger: key `validation_mode\|date`, independent re-verification against the panel and the local controller, idempotent merge, restart plan. |
+| Run ledger | `data/usd-layer1-backtester/n8n/run-ledger-v1.json` | The durable results of the recorded batch runs: 9 rows (7 structural, 2 receipted), 4 runs, every row carrying its parent and child execution links. |
+| Ledger CLI | `scripts/persist_usd_l1_n8n_runs.js` (`npm run persist:usd-l1-n8n`, `npm run status:usd-l1-n8n`) | Ingests captured paired records, verifies them, and appends only unseen mornings; `--check` proves the committed ledger is the merge of the committed captures. |
+| Batch captures | `data/usd-layer1-backtester/n8n/batch-20261120-*.json` | The stored executions 5505, 5512, 5525, 5530 and 5534, extracted from the execution data rather than retyped. |
 
 `backtester/lib/usd_layer1_backtester/current_model.js` is listed in the manifest as a stub and is
 deliberately **not** bundled: the production-control adapter's replay core reads local files and Supabase
@@ -61,6 +65,40 @@ Every parent execution returned `success`, and every child answer carries its ow
 id, identity, `model_version`, direction and conviction. Both children returned the same validation
 verdicts on all four mornings: the gate is shared, the decision is not.
 
+## Batch runs, restart recovery and the ledger (2026-11-20)
+
+The same parent now accepts `dates` (up to 40 mornings) as well as `date`. Selection emits one item per
+morning, both `executeWorkflow` branches run once per item, a Merge node waits for both children, and the
+combiner returns one paired record per morning. A missing child answer is emitted as
+`usd-l1-n8n-technical-failure-v1` so the ledger rejects it loudly instead of storing a guessed call.
+
+| Parent execution | Dates | Validation | Records | Result |
+| --- | --- | --- | --- | --- |
+| 5505 | 2024-01-02, 01-03, 01-04 | structural | 3 | all abstained |
+| 5512 | 2024-01-02 … 01-09 | structural | 6 | 1 allowed, 5 abstained; the 3 mornings from 5505 were already held |
+| 5525 | 2024-01-10, 01-11 | receipted | 2 | blocked, `receipted_incomplete` |
+| 5530 | 2024-01-06 | structural | 1 | blocked, `not_in_dataset` |
+| 5534 | 2024-13-01 | structural | 0 | refused at "Run configuration": `date is not a real calendar day` |
+
+The ledger is the durable result of those runs:
+
+- key: `validation_mode|date`, so a receipted refusal never overwrites the structural call for the same
+  morning and a second run can never add a duplicate;
+- before a row is saved it is re-verified: the dataset join, a local replay of the same model through
+  `backtest_controller.runBacktest`, the four-market outcome arithmetic recomputed from the stored call and
+  the panel, the two distinct child execution ids, the recorded gate, and the `same_direction` comparison;
+- a failed check keeps the row with `verified: false`; it never silently drops it;
+- run history records `added_keys` and `duplicate_keys`, so a restart is visible as an attempt with zero
+  new rows.
+
+Measured on 2026-11-20: 9 rows, 9 verified, 0 failed checks, 4 runs, 3 duplicate results prevented when the
+restart ran over the three mornings already held. Re-ingesting the restart capture again added 0 rows and
+left the ledger byte-identical (`--check` → `ledger reproduces`, 12 duplicates skipped). Impossible dates are
+refused before the panel is fetched, so no paired record exists for them.
+
+The webhook still answers with the first paired record; the whole batch is read from the stored execution
+data (`GET /executions/<id>?includeData=true`), which is also what the captures above are extracted from.
+
 ## What this proves, and what it does not
 
 Proves:
@@ -93,9 +131,11 @@ Does not prove:
 
 ```
 npm run build:usd-l1-n8n        # rewrite the Cloud workflows and the bundle from the manifest
-npm run test:usd-l1-n8n         # Cloud bundle, child pinning, controller wiring, evidence, map
+npm run test:usd-l1-n8n         # Cloud bundle, child pinning, controller wiring, batch mode, evidence, map, ledger
 npm run test:usd-l1-controller  # 17 controller tests, including parity
 npm run check:usd-l1-controller:parity
+npm run persist:usd-l1-n8n -- --capture <capture.json> --check   # ledger is the merge of its captures
+npm run status:usd-l1-n8n -- --from 2024-01-02 --to 2024-01-09  # coverage and the restart plan
 ```
 
 The runtime file is pinned with `-text` in `.gitattributes`, so a checkout hands back the published
