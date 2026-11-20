@@ -90,6 +90,7 @@ net `+40.77 USD`, moved the mapping to the store's history, and the next broker 
 to close without a volume, the transport refused an undefined size, and the copy stayed open for three polls. The
 copier now states the size it opened, and the adapter treats a close with no volume as "all of it" by reading the
 position's own volume; a position whose volume cannot be read is refused rather than sent. Both paths have tests.
+
 ## Deployed on 20 November 2026
 
 The lifecycle code went to the host over the key-only SSH door (`Administrator@158.220.87.240`), with the previous

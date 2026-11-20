@@ -106,7 +106,9 @@ One surface, copied together, with the poll task stopped for the swap:
   `orders_get` block is what the resting-order path reads);
 - `ctrader/copier/copier-dashboard.ps1` → `C:\ctrader-relay\copier\copier-dashboard.ps1` (the 600s gate);
 - `scripts/publish-ctrader-copier.js`, `scripts/build-live-ctrader-copier.js`, `lib/live_ctrader_copier.js` →
-  `C:\ctrader-relay\copier-tools\`, with `script.js` in the publish checkout.
+  `C:\ctrader-relay\copier-tools\`, with `script.js` in the publish checkout. In the event only the publish script and
+  the lib differed: `build-live-ctrader-copier.js`, `validate_live_ctrader_copier.js` and
+  `publish-live-trading-feed.js` already matched their repository copies by SHA-256, so they were left alone.
 
 `C:\ProgramData\ctrader-relay\copier\mappings.json` needs no migration. Its rows keep their target ids and stay
 open; a row written before `source_volume` existed has that field backfilled from the destination's own volume on
@@ -115,9 +117,13 @@ the next reconcile, so the partial-close path starts from the truth rather than 
 are additive blocks in the same file; the older copier finds its own keys in a store the new one wrote and ignores
 the rest. Nothing is re-sent on a restart: the mapping store, not the lock, is the dedupe key.
 
-Order of work on the host: stop the `ctrader-copier-poll` task, copy the files, run one `--once` poll by hand with
-`--dry-run` and read it, drop the flag for a real poll, then re-enable the task and read `health.json` and one
-`dashboard.out.txt`. Rollback is the previous files; the store is untouched by the code swap.
+Order of work on the host, as carried out on 20 November 2026: the originals were copied to
+`C:\ProgramData\ctrader-relay\backup-20261120\`, the `ctrader-copier-poll` task was disabled, the seven files were
+copied and their SHA-256 read back and matched, the task was re-enabled and run once by hand, and the
+`ctrader-copier-dashboard` task was then run and its `dashboard.out.txt` read. `health.json` reported
+`copier-20261120.1`, status `ok`. A separate `--dry-run` was not needed in the end: the source read came back with no
+positions and no orders, so the first real poll had nothing to send, and the dry run would have proved no more. The
+task's next run is on its 60s schedule. Rollback is the backup folder; the store was not touched by the code swap.
 
 ## Observation gaps, stated rather than papered over
 
