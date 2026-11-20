@@ -85,15 +85,29 @@ position" reads `awaiting_live_proof` and size and stop read `tested`, while "Fu
 `broker_observed` from the closed mapping and the account's own deal for `62272218`. A local pass is not a live proof,
 and the matrix says so rather than promoting a fixture.
 
+**Updated at 13:40Z on 20 November.** The four rows are now promoted from evidence, not from the passage of time. The
+rule is: a lifecycle row moves to `broker_observed` only when a health row for the poll that did it carries
+`outcome: accepted`, or when the store kept the same answer (`sltp_utc` after an accepted stop amendment,
+`order_kind` plus `target_order_id` after an accepted resting order, `last_partial_utc` after an accepted partial
+close, or a history row with `close_outcome: cancelled`). A planned row, a dry run, a refusal, or a counter such as
+`reconcile_orders.filled` is not an answer and promotes nothing. On that read the source had done two of the four for
+real: two source limit orders were copied as broker orders earlier that day (`309462132` -> `178348935`,
+`309464502` -> `178349950`, both `order_kind: limit` and both later filled), and a stop amendment on `#62308557` was
+accepted by the broker at `13:17:23.525Z`. The 13:40Z publication therefore reads `broker_observed` for "Amending a
+stop or target" and "Copying a resting source order", and `tested` for cancellation and partial close, which have not
+happened. The full evidence is in `docs/live-trading/CTRADER_COPIER_DASHBOARD_20261119.md`.
+
 ## The publish gate
 
-`scripts/publish-ctrader-copier.js` now defaults to `--min-interval-seconds 600`, the ten-minute cadence the
-`ctrader-copier-dashboard` task already runs on, and `ctrader/copier/copier-dashboard.ps1` passes the same number
-explicitly. A run with nothing new is refused by the engine's strictly-newer gate rather than republishing; six
-builds an hour from this file sits inside GitHub's documented soft limit of ten an hour for a branch-built site.
-The document's stale window (1800s) and the heartbeat allowance (1500s) are unchanged: at a ten-minute publish they
-mean three missed publishes and two and a half. The tab's freshness line no longer calls the 30-minute window "the
-publish cadence", and the heartbeat's stale detail no longer calls 1500s a cadence either.
+`scripts/publish-ctrader-copier.js` defaults to `--min-interval-seconds 540`, and `ctrader/copier/copier-dashboard.ps1`
+passes the same number explicitly. The earlier 600s was the task's own interval, not a gate under it: the task fires
+every ten minutes and its publish lands about thirty seconds into a run, so the next run arrived 565-600s after the
+last publish and was refused, halving the cadence to twenty minutes. 540s sits under the interval and still refuses a
+retry inside one run; it allows at most seven publishes an hour from this file, inside GitHub's documented soft limit
+of ten for a branch-built site. A run with nothing new is refused by the engine's strictly-newer gate rather than
+republished. The document's stale window (1800s) and the heartbeat allowance (1500s) are unchanged, so at a ten-minute
+publish they mean three missed publishes and two and a half. The tab's freshness line no longer calls the 30-minute
+window "the publish cadence", and the heartbeat's stale detail no longer calls 1500s a cadence either.
 
 
 ## Deploying it without disturbing the mappings

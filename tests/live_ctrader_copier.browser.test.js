@@ -48,7 +48,18 @@ function copierDocument() {
       heartbeat: { state: "ok", label: "OK", age_seconds: 42, last_poll_utc: at(1), last_success_utc: at(1), detail: "the last poll finished 42s ago and reported ok" },
       last_poll_utc: at(1),
       last_success_utc: at(1),
-      health: { status: "ok", started_utc: at(1), finished_utc: at(1), polls: 1, dry_run: false, source: { ok: true, positions: 2, probed_at_utc: at(1) }, destination: { account_id: "42585819", symbols: ["XAUUSD", "EURUSD"] }, reconcile: { checked: 0, mapped: 0, dropped: 0 }, refusals: [], actions: [], closes: [], notes: [] }
+      health: {
+        status: "ok", started_utc: at(1), finished_utc: at(1), polls: 1, dry_run: false,
+        source: { ok: true, positions: 2, probed_at_utc: at(1) }, destination: { account_id: "42585819", symbols: ["XAUUSD", "EURUSD"] },
+        reconcile: { checked: 0, mapped: 0, dropped: 0 },
+        // The lifecycle blocks the builder now carries whole: one stop the broker accepted, and a reconciliation
+        // that had nothing to map. The page must show the outcome, not only the count.
+        stops: [{ type: "amend_sltp", ticket: "309101669", symbol: "XAUUSD", positionId: "62272218", stopLoss: 3680.1, takeProfit: null, source_stop: 3680.1, applied_stop: 3680.15, applied_target: null, sent: true, outcome: "accepted" }],
+        pending_orders: { placed: [], amended: [], cancelled: [], checked: [] },
+        order_checks: [],
+        reconcile_orders: { checked: 1, filled: 0, gone: 0 },
+        refusals: [], actions: [], closes: [], notes: []
+      }
     },
     account: { balance: 23654.16, equity: 23662.67, equity_basis: "balance plus open positions marked at the reference price", equity_estimated: true, currency: "USD", leverage: 100, money_digits: 2, open_positions: 2, pending_orders: 0, closed_trades: 2, read_at_utc: at(1) },
     horizon: { window_days: 30, from_utc: at(43200), to_utc: at(1) },
@@ -78,7 +89,7 @@ function copierDocument() {
     verification: [
       { behaviour: "Copying a filled FTMO-1 position", state: "broker_observed", detail: "broker read: #62272218 XAUUSD sell 0.01 lot" },
       { behaviour: "Size conversion through the destination contract", state: "broker_observed", detail: "the adapter regression sends 0.01 lot of EURUSD as 100,000 protocol units" },
-      { behaviour: "Amending a stop or target after the copy", state: "not_sent", detail: "the copier has no amendment path" },
+      { behaviour: "Amending a stop or target after the copy", state: "broker_observed", detail: "copier health 2026-11-20T09:49:22.000Z: #62272218 XAUUSD amended at the broker to stop 3680.15" },
       { behaviour: "Full close after a source exit", state: "awaiting_live_proof", detail: "tested on fixtures; no copier close has been observed yet" }
     ],
     symbols: [
@@ -142,7 +153,20 @@ test("the copier tab draws the mapping, the verification states and the labelled
     const verification = await page.locator("#liveCtraderCopierPanel .live-trading-table-panel", { hasText: "What is proved" }).innerText();
     assert.match(verification, /Broker observed/);
     assert.match(verification, /Awaiting live proof/);
-    assert.match(verification, /Not sent/);
+
+    // The lifecycle blocks are read, not just counted: the stop the broker accepted is a row with its own outcome
+    // and the prices it returned, and the reconciliation states its four numbers.
+    const lifecycle = await page.locator("#liveCtraderCopierPanel .live-trading-table-panel", { hasText: "Lifecycle actions" }).innerText();
+    assert.match(lifecycle, /Stop \/ target amendment/i);
+    assert.match(lifecycle, /#62272218/);
+    assert.match(lifecycle, /accepted/);
+    assert.match(lifecycle, /3680\.15/);
+    assert.match(lifecycle, /Order reconciliation/i);
+    assert.match(lifecycle, /1 checked/i);
+    assert.match(lifecycle, /0 gone/i);
+    assert.match(chips, /Stops this poll/i);
+    assert.match(chips, /1 of 1 accepted/i);
+    assert.match(chips, /Order checks/i);
 
     const history = await page.locator("#liveCtraderCopierPanel .live-trading-table-panel", { hasText: "Account history" }).innerText();
     assert.match(history, /Copied from FTMO-1/);

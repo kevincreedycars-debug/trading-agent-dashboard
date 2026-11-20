@@ -159,3 +159,61 @@ SHA-256 was read back on the host and matches this repository's copy. `mappings.
 - The published state and publisher lock live beside the state file in
   `C:\ProgramData\ctrader-relay\copier\publish-state.json`.
 
+## The two follow-ups, done on 20 November
+
+The 09:50Z publication was vouchable but incomplete: the lifecycle blocks stayed on the host and the gate published
+every twenty minutes. Both were fixed on the same day, deployed to the host, and checked against real publications
+rather than a local run.
+
+**What the document carries now.** `lib/live_ctrader_copier.js` keeps `stops`, `pending_orders.{placed,amended,cancelled,checked}`,
+`order_checks` and `reconcile_orders` whole in `copier.health` instead of reducing them to counts, and each mapping row
+carries `order_kind`, `target_order_id`, `sltp_utc` and `last_partial_utc` so an accepted lifecycle answer outlives
+the poll that carried it. The verification matrix promotes a path to `broker_observed` only from a row whose
+`outcome` is `accepted`, or from one of those stored records; a planned row, a dry run, a refusal, or a counter is not
+an answer. The tab draws a new "Lifecycle actions in the last poll" table (what, ticket, instrument, outcome, the
+broker's answer) plus chips for the four blocks, and its verification caption no longer claims the copier has no
+amendment, cancel or partial-close path.
+
+**What the source had actually done.** Between the 09:10Z deploy and 13:40Z the FTMO-1 lane placed two limit orders
+that the copier copied as working cTrader orders - `309462132` -> `178348935` (EURUSD, filled into `#62308557`) and
+`309464502` -> `178349950` (XAUUSD, filled into `#62309024`) - and the lane's trail moved the stop on `#62308557`,
+which the broker accepted at `13:17:23.525Z`. The 13:40Z publication therefore reads `broker_observed` for "Amending a
+stop or target" and "Copying a resting source order", with the order ids and the accepted amendment time in the
+evidence column; cancellation and partial close remain `tested`, because neither has happened.
+
+**The gate.** `scripts/publish-ctrader-copier.js` and `copier/copier-dashboard.ps1` now use 540s. Under the old 600s
+the task's next run landed 565-600s after a publish and was refused, which is why the commits before this change are
+twenty minutes apart (09:30, 09:50, 10:10 ... 13:10, 13:30). The first two automatic publications on the new gate:
+
+| commit | published at | document generated | gap from the previous publish |
+| --- | --- | --- | --- |
+| `032c38c2` | 13:30:27Z | 13:30:22.637Z | 1200s (old gate) |
+| `b7a7cb40` | 13:40:26Z | 13:40:23.619Z | 599s |
+| `096fef1a` | 13:50:27Z | 13:50:23.520Z | 601s |
+| `0590de13` | 14:00:26Z | 14:00:22.950Z | 599s |
+| `5e2169d9` | 14:10:24Z | 14:10:22.750Z | 598s |
+
+Four successive automatic runs between 13:40 and 14:10, 598-601 seconds apart, each with a fresh document - the
+refusal on alternating runs is gone. The publish state on the host records `min_interval_seconds: 540` from the 13:40Z run, and 13:40Z's document is
+the first built with the new lib.
+
+**Deployed, with a rollback copy.** At 13:34Z the three files were copied over the previous ones, which were kept in
+`C:\ProgramData\ctrader-relay\backup-20261120b\`; the lib was copied again at 13:49Z with the order-id addition and
+its previous version kept beside the backup as `live_ctrader_copier.before-target-order-id.js`. Host SHA-256 equals
+the working copy for each:
+
+| file | SHA-256 |
+| --- | --- |
+| `ctrader/copier/copier-dashboard.ps1` | `63a572b676e60eb8f250de42aeff2a5e8b8074bb0111b512e3225fb77b7b4402` |
+| `scripts/publish-ctrader-copier.js` | `bb3b2b733f095b31eaeb3fe42728a6f024e44fd2fee63773ef0707dd10199789` |
+| `lib/live_ctrader_copier.js` | `738dcaf309d0e661bab42bfd686a0c09eab7e8efeba560fa0b00a96093520dcb` |
+
+The mapping store was not touched, the poll task was not stopped (the changed files are read only by the ten-minute
+dashboard task), and no order was sent by this change: it edits the document's shape and the publisher's gate, not
+the copier's send path.
+
+**Tests.** `tests/live_ctrader_copier.test.js` (15 tests) holds the projection and the promotion rule, including the
+counter-only case that must stay `tested`; `tests/live_ctrader_copier.browser.test.js` (2 tests) holds the new table
+and chips in a browser; the publish-gate test now asserts 540 against the task's 600 and the Pages floor.
+
+

@@ -8,11 +8,13 @@
 //   node scripts/publish-ctrader-copier.js --feed C:\ProgramData\ctrader-relay\copier\dashboard.json \
 //     --checkout C:\live-trading\ctrader-publish --state C:\ProgramData\ctrader-relay\copier\publish-state.json
 //
-// The cadence gate defaults to 600s, the ten-minute cadence the dashboard task itself runs on, so a run that has a
-// new read can publish instead of being held back to every other one: six builds an hour from this file, inside
-// GitHub's documented soft limit of ten an hour for a branch-built site. The lanes publisher shares that site and
-// spends publishes of its own only when its files change, which is what keeps the two together inside the limit.
-// A run with nothing new is refused by the engine's own strictly-newer gate, not republished.
+// The cadence gate defaults to 540s: the dashboard task runs every ten minutes, and a publish lands about thirty
+// seconds into each run, so a 600s gate refuses every other run by a few seconds and halves the cadence to twenty
+// minutes. 540s leaves room for a late run while still refusing a second publish from the same run, and at most
+// seven builds an hour from this file sits inside GitHub's documented soft limit of ten for a branch-built site. The
+// lanes publisher shares that site and spends publishes of its own only when its files change, which is what
+// keeps the two together inside the limit. A run with nothing new is refused by the engine's own strictly-newer
+// gate, not republished.
 "use strict";
 
 const fs = require("node:fs");
@@ -21,7 +23,7 @@ const { validateLiveCtraderCopier } = require("./validate_live_ctrader_copier.js
 
 const TARGET = "data/live-ctrader-copier.json";
 const DEFAULT_STATE = "tmp/live-ctrader-copier-publish-state.json";
-const DEFAULT_MIN_INTERVAL_SECONDS = 600;
+const DEFAULT_MIN_INTERVAL_SECONDS = 540;
 
 const USAGE = [
   "Usage: node scripts/publish-ctrader-copier.js --feed <file> [options]",
@@ -30,7 +32,7 @@ const USAGE = [
   "  --checkout <path>             the publish checkout, reset to the remote branch each run",
   "  --remote <name>               git remote (default origin)",
   "  --branch <name>               branch Pages serves (default main)",
-  "  --min-interval-seconds <n>    fastest cadence allowed between publishes (default 600)",
+  "  --min-interval-seconds <n>    fastest cadence allowed between publishes (default 540)",
   "  --state <path>                where the last publish is recorded",
   "  --lock <path>                 the lock this publisher holds (default: beside the state file)",
   "  --force                       publish now even if the interval gate says wait",
