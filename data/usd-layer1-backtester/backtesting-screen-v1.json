@@ -158,6 +158,7 @@
         "docs\\research\\usd-session\\v1\\CHECKPOINT_2.md",
         "docs\\research\\usd-session\\v1\\CHECKPOINT_3.md",
         "docs\\research\\usd-session\\v1\\H1_EVIDENCE_ACQUISITION_20261120.md",
+        "docs\\research\\usd-session\\v1\\H1_RULE_RESOLUTIONS_20261120.md",
         "docs\\research\\usd-session\\v1\\README.md",
         "docs\\research\\usd-session\\v1\\exposed_periods.md",
         "docs\\research\\usd-session\\v1\\external_state_verification_20261117.md",
@@ -219,6 +220,7 @@
       ],
       "hits": [
         "docs\\research\\usd-session\\v1\\ACCEPTANCE_LAYER1_N8N.md",
+        "docs\\research\\usd-session\\v1\\H1_RULE_RESOLUTIONS_20261120.md",
         "docs\\research\\usd-session\\v1\\layer1_morning_run_2024-03-26.md",
         "lib\\layer1_backtesting\\h1_candidate.js",
         "lib\\layer1_backtesting\\h1_candidate_dxy_cash.js",
@@ -365,13 +367,14 @@
       "binding": {
         "model_id": "usd_l1_25f_h1",
         "model_version": "USD-L1-25F-H1-v0.1.0",
+        "evaluated_contract": "USD-L1-25F-H1-v0.1.0 supplied rules + H1-A01 v0.1.1 (accepted by owner 2026-11-18) + H1-A02 v0.1.2 (proposed, pending owner)",
         "run_id": "run-v1",
         "run_version": "usd-l1-backtester-r1",
         "run_generated_at": "2026-11-14T00:00:00.000Z",
         "run_first_session": "2024-01-02",
         "run_last_session": "2026-10-12",
         "gate": "H1.1 nine-feature evidence contract",
-        "basis": "H1.1 input source/instrument/transform, five-interval lookback, freshness and 05:00 observed/published clocks for historical reconstruction; a received clock is additionally required for sealed live replay; the v0.1.1 source amendment replaces the licensed ICE fixing with the archived DXY.cash tape",
+        "basis": "H1.1 input source/instrument/transform, five-interval lookback, freshness and 05:00 observed/published clocks for historical reconstruction; a received clock is additionally required for sealed live replay; H1-A01 v0.1.1 replaces the licensed ICE fixing with the archived DXY.cash tape, and H1-A02 v0.1.2 records the Treasury as the publisher of record for the real yield, which H.15 never published",
         "evidence_mode": "historical_reconstruction",
         "package_archive_sha256": "1c82e9048a3cf2237ffea6873b8099389d09fccefa083cd38ccb87517e3672e0"
       },
@@ -2492,7 +2495,7 @@
     "coverage": {
       "status": "measured",
       "measured_on": "2026-11-17",
-      "basis": "H1.1 input source/instrument/transform, five-interval lookback, freshness and 05:00 observed/published clocks for historical reconstruction; a received clock is additionally required for sealed live replay; the v0.1.1 source amendment replaces the licensed ICE fixing with the archived DXY.cash tape",
+      "basis": "H1.1 input source/instrument/transform, five-interval lookback, freshness and 05:00 observed/published clocks for historical reconstruction; a received clock is additionally required for sealed live replay; H1-A01 v0.1.1 replaces the licensed ICE fixing with the archived DXY.cash tape, and H1-A02 v0.1.2 records the Treasury as the publisher of record for the real yield, which H.15 never published",
       "label": "H1 historical reconstruction measured: 0 of 725 ready; sealed live replay: 0 of 725 eligible; earliest eligible historical morning: none",
       "unmeasured_label": "H1 historical coverage unmeasured; earliest eligible morning unknown",
       "legacy_replacement": {
@@ -2868,7 +2871,7 @@
             }
           ],
           "factor_count": 3,
-          "identity_state": "named_alias",
+          "identity_state": "verified_original",
           "identity_note": "The legacy field is a named alias, not a verified original observation.",
           "present": 725,
           "named": 0,
@@ -2981,7 +2984,7 @@
             }
           ],
           "factor_count": 2,
-          "identity_state": "named_alias",
+          "identity_state": "verified_original",
           "identity_note": "The legacy field is a named alias, not a verified original observation.",
           "present": 725,
           "named": 0,
@@ -3150,7 +3153,7 @@
             }
           ],
           "factor_count": 2,
-          "identity_state": "derived_alias",
+          "identity_state": "verified_original",
           "identity_note": "The legacy field is a named alias, not a verified original observation.",
           "present": 725,
           "named": 0,
@@ -3311,7 +3314,8 @@
           "amended": {
             "version": "v0.1.2",
             "id": "H1-A02",
-            "decided_on": "2026-11-20"
+            "decided_on": "2026-11-20",
+            "status": "proposed_pending_owner"
           },
           "supplied_contract": {
             "source": "Federal Reserve H.15",
@@ -3342,7 +3346,7 @@
           ],
           "factor_count": 2,
           "identity_state": "amended_source",
-          "identity_note": "The v0.1.1 amendment replaces the ICE fixing with the archived DXY.cash tape. The instrument is named on every record and is not the official index.",
+          "identity_note": "H1-A02 (v0.1.2, proposed pending owner) replaces the supplied source. The instrument is named on every record.",
           "present": 725,
           "named": 0,
           "original": 725,
@@ -3505,7 +3509,7 @@
             }
           ],
           "factor_count": 1,
-          "identity_state": "named_alias",
+          "identity_state": "verified_original",
           "identity_note": "The legacy field is a named alias, not a verified original observation.",
           "present": 725,
           "named": 0,
@@ -3637,7 +3641,8 @@
           "amended": {
             "version": "v0.1.1",
             "id": "H1-A01",
-            "decided_on": "2026-11-18"
+            "decided_on": "2026-11-18",
+            "status": "accepted_by_owner"
           },
           "supplied_contract": {
             "source": "ICE",
@@ -3663,7 +3668,7 @@
           ],
           "factor_count": 1,
           "identity_state": "amended_source",
-          "identity_note": "The v0.1.1 amendment replaces the ICE fixing with the archived DXY.cash tape. The instrument is named on every record and is not the official index.",
+          "identity_note": "H1-A01 (v0.1.1, accepted by owner) replaces the supplied source. The instrument is named on every record. It is a broker CFD and not the official ICE index.",
           "present": 455,
           "named": 0,
           "original": 455,
@@ -4523,7 +4528,7 @@
           },
           "reusable_evidence": "704 legacy value(s) present, but the instrument is a proxy or a different series; it is not reusable as the H1 operand.",
           "remaining_requirement": "The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
-          "user_action": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts.",
+          "user_action": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. Access is licensed: the LBMA prices page read on 2026-11-20 states an IBA licence is required to obtain and use historical benchmark data, so this is a paid-access decision, not a free download.",
           "missing": 21,
           "incomplete": 0,
           "blocked": 725,
@@ -4600,7 +4605,7 @@
           "availability": "The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
           "publication": "LBMA publishes the PM auction price shortly after the 15:00 London auction.",
           "reconstructable": "LBMA auction records reconstruct the PM publication time; the archive contains neither the auction records nor a receipt.",
-          "acquisition": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts.",
+          "acquisition": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. Access is licensed: the LBMA prices page read on 2026-11-20 states an IBA licence is required to obtain and use historical benchmark data, so this is a paid-access decision, not a free download.",
           "import": {
             "target_file": "data/usd-layer1-backtester/h1-v1/gold.json",
             "record_fields": [
@@ -4647,7 +4652,7 @@
             }
           ],
           "factor_count": 1,
-          "identity_state": "identity_mismatch",
+          "identity_state": "verified_original",
           "identity_note": "The legacy field is a different instrument. It cannot be relabelled as the H1 input.",
           "present": 725,
           "named": 0,
@@ -5811,7 +5816,7 @@
             ]
           },
           "missing_evidence": "The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
-          "obtain": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts.",
+          "obtain": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. Access is licensed: the LBMA prices page read on 2026-11-20 states an IBA licence is required to obtain and use historical benchmark data, so this is a paid-access decision, not a free download.",
           "import": {
             "target_file": "data/usd-layer1-backtester/h1-v1/gold.json",
             "record_fields": [
@@ -5831,7 +5836,7 @@
           },
           "reusable_evidence": "704 legacy value(s) present, but the instrument is a proxy or a different series; it is not reusable as the H1 operand.",
           "remaining_requirement": "The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
-          "user_action": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts."
+          "user_action": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. Access is licensed: the LBMA prices page read on 2026-11-20 states an IBA licence is required to obtain and use historical benchmark data, so this is a paid-access decision, not a free download."
         },
         {
           "input": "calendar",
@@ -37471,7 +37476,7 @@
               "failed_rungs": [
                 "fresh"
               ],
-              "identity_state": "named_alias",
+              "identity_state": "verified_original",
               "clock": {
                 "stamp": "2024-12-16",
                 "precision": "date",
@@ -37654,7 +37659,7 @@
               "failed_rungs": [
                 "fresh"
               ],
-              "identity_state": "named_alias",
+              "identity_state": "verified_original",
               "clock": {
                 "stamp": "2024-01-15",
                 "precision": "date",
@@ -37816,7 +37821,7 @@
               "failed_rungs": [
                 "fresh"
               ],
-              "identity_state": "named_alias",
+              "identity_state": "verified_original",
               "clock": {
                 "stamp": null,
                 "precision": "missing",
@@ -38772,7 +38777,7 @@
               "failed_rungs": [
                 "fresh"
               ],
-              "identity_state": "derived_alias",
+              "identity_state": "verified_original",
               "clock": {
                 "stamp": null,
                 "precision": "missing",
@@ -38790,7 +38795,7 @@
               "failed_rungs": [
                 "fresh"
               ],
-              "identity_state": "named_alias",
+              "identity_state": "verified_original",
               "clock": {
                 "stamp": "2025-12-29",
                 "precision": "date",
@@ -38874,7 +38879,7 @@
               "failed_rungs": [
                 "fresh"
               ],
-              "identity_state": "derived_alias",
+              "identity_state": "verified_original",
               "clock": {
                 "stamp": null,
                 "precision": "missing",
@@ -38975,7 +38980,7 @@
               "failed_rungs": [
                 "fresh"
               ],
-              "identity_state": "derived_alias",
+              "identity_state": "verified_original",
               "clock": {
                 "stamp": null,
                 "precision": "missing",
@@ -39089,7 +39094,7 @@
               "failed_rungs": [
                 "fresh"
               ],
-              "identity_state": "derived_alias",
+              "identity_state": "verified_original",
               "clock": {
                 "stamp": null,
                 "precision": "missing",
@@ -39239,6 +39244,28 @@
         "amended_inputs": [
           "ice",
           "real"
+        ],
+        "amended_versions": [
+          {
+            "input": "ice",
+            "id": "H1-A01",
+            "version": "v0.1.1",
+            "status": "accepted_by_owner",
+            "decided_on": "2026-11-18"
+          },
+          {
+            "input": "real",
+            "id": "H1-A02",
+            "version": "v0.1.2",
+            "status": "proposed_pending_owner",
+            "decided_on": "2026-11-20"
+          }
+        ],
+        "pending_amendments": [
+          "H1-A02"
+        ],
+        "not_read_by_any_family": [
+          "front"
         ],
         "supplied_package_versions": [
           "USD-L1-25F-H1-v0.1.0",
@@ -39465,8 +39492,8 @@
               "same_day_gain_upper_bound": 28
             },
             "evidence": [
-              "One observed BBSIS refresh exists: the 2026-11-19 file was last updated 12:22:17 on 2026-11-19, which is same-day, but it is a single stamp and not a 2024 guarantee.",
-              "Thirty-five hours of margin separate the strict bound's 23:59 Berlin timestamp from that observed refresh, so the bound holds everywhere it was checked."
+              "Two observed BBSIS refreshes, both same-day: `last update,2026-11-19 12:22:17` (the file already carried the 2026-11-19 value) and `last update,2026-11-20 12:29:01` (the file already carried the 2026-11-20 value), both read on 2026-11-20. Neither is a historical 2024 stamp.",
+              "The strict bound (23:59 Europe/Berlin on T+1) sits 35.5 hours after the later observed refresh, so it cannot be earlier than a refresh that keeps the same daily pattern; that the 2024 pattern was the same is supported by two stamps a year apart and is not proven by them."
             ],
             "disproof": "Capture one historical BBSIS update stamp for a 2024 date that is later than the following 05:00 London cutoff. That voids the same-day claim for that date and keeps the strict bound.",
             "does_not_license": "It does not license dropping the publication clock, using a US close as a Berlin publication time, or filling a missing common date. The spread is still built on common observation dates only."
@@ -39476,13 +39503,13 @@
       "next_data_action": {
         "priority": 1,
         "title": "H1 is blocked on the gold fixing and the event schedule; three rule decisions are open",
-        "detail": "Seven of the nine inputs carry imported evidence: `vix`, `front`, `spread`, `real`, `broad` and `qqq` were acquired from the agencies that publish them, and `ice` was supplied by H1-A01 as a labelled DXY.cash tape whose first completed 05:00 bar is 2024-12-12, so 455 of 725 mornings have a proxy value. `gold` and `calendar` have no evidence at all: the LBMA price host answers 403 to every request from this environment, and no release schedule has been archived with a publication timestamp. Three supplied rules also block mornings on their own terms, and each is published as a measured candidate rather than applied: H1-C01, whose observation-age window leaves 161 of 725 broad mornings behind while the publication clock is never more than 175.75 hours behind the cutoff; H1-C02, whose 24-hour window cannot be met by a schedule published months ahead; and H1-C03, whose strict Bundesbank next-day bound costs 28 spread mornings. A receipt is required only for sealed live replay, and no receipt exists yet.",
+        "detail": "Seven of the nine inputs carry imported evidence: `vix`, `front`, `spread`, `real`, `broad` and `qqq` were acquired from the agencies that publish them, and `ice` was supplied by H1-A01 as a labelled DXY.cash tape whose first completed 05:00 bar is 2024-12-12, so 455 of 725 mornings have a proxy value. `gold` and `calendar` have no evidence at all: the LBMA price host answers 403 to every request from this environment and the publisher states that historical benchmark data requires an IBA licence, so `gold` is a paid-access decision; no release schedule has been archived with a publication timestamp. Three supplied rules also block mornings on their own terms, and each is published as a measured candidate rather than applied: H1-C01, whose observation-age window leaves 161 of 725 broad mornings behind while the publication clock is never more than 175.75 hours behind the cutoff; H1-C02, whose 24-hour window cannot be met by a schedule published months ahead; and H1-C03, whose strict Bundesbank next-day bound costs 28 spread mornings. A receipt is required only for sealed live replay, and no receipt exists yet.",
         "inputs": [
           "gold",
           "calendar"
         ],
         "steps": [
-          "Obtain LBMA Gold Price PM USD access and import `gold` with the supplied five-fixing transform; do not substitute OANDA XAU/USD.",
+          "Buy an IBA licence for the LBMA Gold Price PM USD history (the publisher states a licence is required for historical benchmark data), then import `gold` with the supplied five-fixing transform; do not substitute OANDA XAU/USD.",
           "Archive the BLS, BEA and FOMC schedules with their publication timestamps, then import `calendar` as a vintage-stamped record; do not scrape a calendar of unknown vintage.",
           "Decide H1-C01: measure H.10 freshness on the publication clock with the latest-release condition, instead of on the observation date.",
           "Decide H1-C02: treat a schedule as applicable knowledge (published by the cutoff, newest vintage, complete release types) instead of as a decaying observation.",
@@ -39493,13 +39520,14 @@
       "binding": {
         "model_id": "usd_l1_25f_h1",
         "model_version": "USD-L1-25F-H1-v0.1.0",
+        "evaluated_contract": "USD-L1-25F-H1-v0.1.0 supplied rules + H1-A01 v0.1.1 (accepted by owner 2026-11-18) + H1-A02 v0.1.2 (proposed, pending owner)",
         "run_id": "run-v1",
         "run_version": "usd-l1-backtester-r1",
         "run_generated_at": "2026-11-14T00:00:00.000Z",
         "run_first_session": "2024-01-02",
         "run_last_session": "2026-10-12",
         "gate": "H1.1 nine-feature evidence contract",
-        "basis": "H1.1 input source/instrument/transform, five-interval lookback, freshness and 05:00 observed/published clocks for historical reconstruction; a received clock is additionally required for sealed live replay; the v0.1.1 source amendment replaces the licensed ICE fixing with the archived DXY.cash tape",
+        "basis": "H1.1 input source/instrument/transform, five-interval lookback, freshness and 05:00 observed/published clocks for historical reconstruction; a received clock is additionally required for sealed live replay; H1-A01 v0.1.1 replaces the licensed ICE fixing with the archived DXY.cash tape, and H1-A02 v0.1.2 records the Treasury as the publisher of record for the real yield, which H.15 never published",
         "evidence_mode": "historical_reconstruction",
         "package_archive_sha256": "1c82e9048a3cf2237ffea6873b8099389d09fccefa083cd38ccb87517e3672e0"
       }
@@ -48272,7 +48300,7 @@
             "text": "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered."
           },
           "recoverable": "LBMA auction records reconstruct the PM publication time; the archive contains neither the auction records nor a receipt.",
-          "acquisition": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts."
+          "acquisition": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. Access is licensed: the LBMA prices page read on 2026-11-20 states an IBA licence is required to obtain and use historical benchmark data, so this is a paid-access decision, not a free download."
         },
         {
           "key": "qqq",
@@ -48456,7 +48484,7 @@
           "max_age_hours": 96
         },
         "issue": "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
-        "action": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts."
+        "action": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. Access is licensed: the LBMA prices page read on 2026-11-20 states an IBA licence is required to obtain and use historical benchmark data, so this is a paid-access decision, not a free download."
       },
       {
         "input": "calendar",
@@ -48518,7 +48546,7 @@
         "label": "LBMA gold PM 5d",
         "value": 0.7103,
         "recoverable": "LBMA auction records reconstruct the PM publication time; the archive contains neither the auction records nor a receipt.",
-        "acquisition": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts."
+        "acquisition": "Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. Access is licensed: the LBMA prices page read on 2026-11-20 states an IBA licence is required to obtain and use historical benchmark data, so this is a paid-access decision, not a free download."
       },
       {
         "input": "qqq",
@@ -48869,7 +48897,7 @@
           "sha256": "5d32f4ff4e9287121a75cd746549115f39e0b01afd4bdb078d03668f8c5e40fa"
         }
       ],
-      "artifact_sha256": "2b499317b52e1745ef02d1a54cb0668fffed9378d27ae9cb784d80c0553eb19d",
+      "artifact_sha256": "c004848f93f5cfd7ab49b9b929637e6f6513cb36fdc776205d22b12ba659041d",
       "note": "The digest is over the body before this block. The report builder reruns the same committed artefacts and must reproduce it."
     }
   },
@@ -481820,6 +481848,7 @@
       "docs\\research\\usd-session\\v1\\CHECKPOINT_2.md",
       "docs\\research\\usd-session\\v1\\CHECKPOINT_3.md",
       "docs\\research\\usd-session\\v1\\H1_EVIDENCE_ACQUISITION_20261120.md",
+      "docs\\research\\usd-session\\v1\\H1_RULE_RESOLUTIONS_20261120.md",
       "docs\\research\\usd-session\\v1\\README.md",
       "docs\\research\\usd-session\\v1\\exposed_periods.md",
       "docs\\research\\usd-session\\v1\\external_state_verification_20261117.md",
@@ -481881,6 +481910,7 @@
     ],
     "hits": [
       "docs\\research\\usd-session\\v1\\ACCEPTANCE_LAYER1_N8N.md",
+      "docs\\research\\usd-session\\v1\\H1_RULE_RESOLUTIONS_20261120.md",
       "docs\\research\\usd-session\\v1\\layer1_morning_run_2024-03-26.md",
       "lib\\layer1_backtesting\\h1_candidate.js",
       "lib\\layer1_backtesting\\h1_candidate_dxy_cash.js",
@@ -482872,7 +482902,7 @@
       }
     ],
     "report_sha256": "a458d02a409ed53480de7eb2921bf4bebcddadd1235e5bbe353af0023f157024",
-    "screen_sha256": "e3f99cfaee9f6d799e676a2846ed6c88653d7f1c320e95c818cc98d5990d7696",
+    "screen_sha256": "a219bc6384e6a6d7868aafdc55e9e5030c4da84cc76387d6be59e879f51a8f62",
     "note": "The digest is taken over the body before this block. Rebuilding the screen from the same artefacts reproduces it."
   }
 }

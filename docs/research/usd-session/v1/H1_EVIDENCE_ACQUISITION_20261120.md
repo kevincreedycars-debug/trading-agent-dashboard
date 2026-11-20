@@ -12,7 +12,8 @@ Seven of the nine inputs now carry imported evidence (`vix`, `front`, `spread`, 
 `ice` under H1-A01). `gold` and `calendar` are still absent, so **0 of 725 mornings are eligible** and
 `earliest_eligible` stays `null`. The claim "no eligible morning" is unchanged; the reason is now two
 inputs rather than nine, and every input has a named source, a named next step or a measured rule decision
-waiting on the owner.
+waiting on the owner. 336 of the 725 mornings are blocked by `gold` and `calendar` alone, beginning with
+2024-12-12; the decisions and the proposal answers are in `H1_RULE_RESOLUTIONS_20261120.md`.
 
 ## 2. The eight inputs
 
@@ -25,7 +26,7 @@ waiting on the owner.
 | `qqq` | Nasdaq official QQQ close, five intervals | Nasdaq quote API historical table | 725 official closes returned for the window on 2026-11-20 | **725 of 725** | none |
 | `ice` | the dollar index at 05:00 London | archived DXY.cash hourly tape (H1-A01) | 10,052 bars from 2024-12-10; the first completed 05:00 bar is 2024-12-12 | **455 of 725**, only after the tape starts | extend the tape or collect live |
 | `spread` | DGS2 minus Bundesbank Svensson 2.0-year | H.15 (readable) **and** the Bundesbank BBSIS CSV (readable, 233,452 bytes) | both operands answer on common observation dates; no Bundesbank release-time statement can be cited, so the strict T+1 bound is used | **697 of 725** | decide the Bundesbank bound (§4, H1-C03) |
-| `gold` | LBMA Gold Price PM USD, five fixings | `prices.lbma.org.uk/json/gold_pm.json` | **unreachable**: 403 with a 4,546-byte block page on every attempt (http and https, browser and non-browser user agent, with and without referer, HTTP/2 and HTTP/1.1) | **0 of 725** | obtain LBMA data access or a licensed feed |
+| `gold` | LBMA Gold Price PM USD, five fixings | `prices.lbma.org.uk/json/gold_pm.json` | **unreachable**: 403 with a 4,546-byte block page on every attempt (http and https, browser and non-browser user agent, with and without referer, HTTP/2 and HTTP/1.1) | **0 of 725** | buy an IBA licence for the historical series (the prices page read on 2026-11-20 states one is required) or accept `gold` stays absent |
 | `calendar` | release count in `[cutoff, endpoint)` for five release families | BLS API and release archive, BEA schedule, Federal Reserve FOMC calendar — all readable | schedules are readable, but they are published months before the window they describe | **0 of 725** — the 24-hour freshness window cannot be met | decide the freshness rule (§4, H1-C02), then import |
 
 ## 3. How the acquisition works
@@ -128,6 +129,11 @@ and a holiday on either side adds days. On 28 of 725 mornings the age then excee
 (first 2024-01-03, last 2026-09-09, worst 151 hours). The candidate keeps the strict bound as the default and
 allows a same-day bound only where a captured BBSIS update stamp shows the value available before the next
 05:00 London cutoff; `same_day_gain_upper_bound` is 28, which is the most the relaxation could ever return.
+Two stamps were captured on 2026-11-20: `last update,2026-11-19 12:22:17` on the file already carrying the
+2026-11-19 value, and `last update,2026-11-20 12:29:01` on the file already carrying the 2026-11-20 value.
+Both are same-day, and both sit more than 35 hours before the strict bound for the same value, but neither is
+a 2024 stamp and a single observed refresh cannot prove a 2024 pattern. The bound therefore stays strict, and
+the 28 mornings stay blocked until a dated publisher statement or a dated historical stamp is available.
 
 ## 5. The ladder after the acquisition
 
@@ -150,10 +156,15 @@ nine inputs, and two are absent. The morning of 2024-03-26 now names three block
 partial: 697 of 725 mornings carry an evidenced spread, and the 28 that do not fail on the publication
 clock, not on the data.
 
+The morning that matters for a first run is 2024-12-12: it is the first of the 336 mornings whose only
+blockers are `gold` and `calendar`, and it is also the first morning on which the H1-A01 tape carries a
+completed 05:00 bar. Both missing inputs are therefore the whole of the remaining gap for that morning; no
+rule candidate, freshness decision or clock bound stands between it and eligibility.
+
 ## 6. What is still unproven
 
-- **No eligible morning.** 0 of 725, unchanged. Two inputs, one of them unreachable from this
-  environment, and three rule decisions stand in the way.
+- **No eligible morning.** 0 of 725, unchanged. Two inputs, one of them both licensed and unreachable from
+  this environment, and three rule decisions stand in the way.
 - **No receipts.** Every historical record has `received_at_utc: null`. Sealed live replay is 0 of 725.
 - **Late-print rejection is still untested.** The reconstructed clocks assume the stated release times
   were met; the margin is published so the assumption is visible, and nothing yet proves the gate would
