@@ -98,7 +98,9 @@ publish cadence", and the heartbeat's stale detail no longer calls 1500s a caden
 
 ## Deploying it without disturbing the mappings
 
-One surface, copied together, with the poll task stopped for the swap:
+One surface, copied together, with the poll task stopped for the swap. The three relay files under
+`ctrader/relay/src/` are the working copy of what runs on the host and are not tracked by this repository: they exist
+in the working folder and on the host, and the copy below is what moves them, not a pull.
 
 - `ctrader/relay/src/CTRADER_TRANSPORT_20261114.js`, `CTRADER_ADAPTER_20261114.js`,
   `CTRADER_COPIER_20261119.js` → `C:\ctrader-relay\`;
