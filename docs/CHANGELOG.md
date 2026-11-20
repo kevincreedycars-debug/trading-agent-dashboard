@@ -1,4 +1,42 @@
 # Changelog
+## 2026-11-20 - Six of the nine H1 evidence inputs are acquired from the agencies that publish them
+
+- Why: the H1 ladder was blocked at 1 of 9 inputs (the amended `ice` tape), and every morning failed on
+  eight absent files. Import validation alone proved nothing about eligible mornings, so the next step had
+  to be real acquisition: the series the supplied `inputs.json` names, read from the publisher.
+- What changed: `scripts/acquire_h1_evidence.js` and `lib/layer1_backtesting/h1_acquire.js` fetch, parse
+  and stamp five inputs and hand them to the existing importer, which stays the only writer into `data/`.
+  `vix` (Cboe `VIX_History.csv`), `front` (H.15 `RIFLGFCY02_N.B`), `real` (Treasury real yield curve 10 YR),
+  `broad` (H.10 weekly `1) BROAD`, 153 weekly pages including 18 holiday releases read on the Tuesday) and
+  `qqq` (Nasdaq official closes) now carry 725 records each; with `ice` that is 4,080 records, 6 of 9
+  inputs, every one `received_at_utc: null`.
+- The clock rule, stated once and recorded on every record: a historical reconstruction has no receipt, so
+  the publication clock is the publisher's own stated release time on the stated release day, and the margin
+  to the 05:00 London cutoff is published (7.75h minimum, 79.75h for the daily inputs, 175.75h for the
+  weekly broad dollar). Observed ≤ published ≤ cutoff is enforced when the record is built.
+- `H1-A02` (contract v0.1.2, `proposed_pending_owner`): the supplied `real` row cites the Federal Reserve
+  H.15 for `DFII10`, but H.15 publishes nominal yields only — the fetched matrix is the evidence. The
+  amendment names the U.S. Treasury as publisher of record and leaves the instrument, the transform and the
+  96-hour window untouched. Two amendments now compose, oldest version first.
+- Measured coverage after the import: `vix`, `front`, `real`, `qqq` 725 of 725 eligible; `broad` 564 of 725
+  (its freshness rung is the only failure); `ice` 455 of 725; `spread`, `gold` and `calendar` still 0.
+  **Ready mornings stay 0 of 725 and `earliest_eligible` stays `null`.** The morning of 2024-03-26 now names
+  four blockers rather than nine.
+- Still blocked, each with a named next action: `gold` (LBMA price host answers 403 to every request from
+  this environment), `spread` (both operands readable, no citable Bundesbank release time, so no
+  publication clock), `calendar` (archives readable, but a schedule published months ahead can never pass a
+  24-hour freshness window). The H.10 cadence leaves Monday mornings 224 to 248 hours behind, past the
+  192-hour window: both freshness rules are recorded as candidates for a decision, not patched here.
+- Tests: `tests/h1_acquire.test.js` (12 offline cases: DST clock arithmetic, five parsers, the
+  first-publication rule, the lookback refusal, the H.10 holiday fallbacks). `test:usd-session` is 102/102.
+  Four existing assertions that encoded "no evidence exists" now assert the measured counts instead; no
+  assertion was removed and none of the thresholds moved.
+- Regenerated: screen payload `63a526c2…`, morning run `2f584719…`, the candidate artefact and the morning
+  markdown. `report:layer1` is unchanged at `a458d02a…`. The acceptance package's digests are the ones it
+  was signed against; this work records its own. The screen digest also moved when this note and the
+  acquisition note were added to `docs/research/usd-session/v1/`, because the payload embeds the file list
+  its identity scan searched — the open item the acceptance package already carries, demonstrated here.
+
 ## 2026-11-20 - The Layer 1 n8n backtester gets an acceptance package, and the screen payload is regenerated to match
 
 - Why: the workflow, swap and reproduction evidence existed across a manifest, an evidence file and a

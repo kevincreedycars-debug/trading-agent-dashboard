@@ -310,7 +310,7 @@
           "VIX close: FRED VIXCLS is an alias for the Cboe VIX close, but the archive stores neither the Cboe record nor a receipt clock. The 05:00 availability is unproven.",
           "DGS2 5d: Only the five-interval change is stored. The five DGS2 observations, their vintages and clocks are absent, so the change cannot be reconciled to H1's declared transform.",
           "US-DE 2Y spread 5d: No DGS2-minus-Bundesbank spread is present in the H1 input fields. The archive cannot construct the declared five common-interval change or its clocks.",
-          "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified.",
+          "DFII10 5d: The archive stores only the five-interval change. The five DFII10 observations and their vintages were absent until the 2026-11-20 acquisition read the Treasury's Daily Treasury Real Yield Curve history directly.",
           "DTWEXBGS 5d: Only the five-interval return is stored. The five DTWEXBGS observations and their vintages are absent, so the return and its clocks cannot be verified.",
           "DXY.cash 05:00 return: no value in the archive; The archive holds the completed-hour DXY.cash tape from 2024-12-10 (10052 bars). The 05:00 London value is the bar that closes at the cutoff, so it needs no lookahead; but the broker prints no bar on a weekend or holiday boundary, and the export carries no publication receipt. A morning without its own 05:00 bar is blocked, never filled from a neighbouring hour.",
           "LBMA gold PM 5d: The legacy gold return is derived from an OANDA XAU/USD quote, not the LBMA Gold Price PM USD auction. The instrument identity fails before the missing five fixings are considered.",
@@ -383,7 +383,7 @@
         {
           "source": "gate",
           "code": "h1_historical_evidence_blocked",
-          "text": "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified."
+          "text": "DFII10 5d: The archive stores only the five-interval change. The five DFII10 observations and their vintages were absent until the 2026-11-20 acquisition read the Treasury's Daily Treasury Real Yield Curve history directly."
         },
         {
           "source": "gate",
@@ -1225,14 +1225,14 @@
         "key": "real",
         "label": "DFII10 5d",
         "required": {
-          "source": "Federal Reserve H.15",
+          "source": "U.S. Department of the Treasury",
           "instrument": "DFII10",
           "transform": "5 completed observation intervals, bp",
           "max_age_hours": 96
         },
         "legacy_field": "inputs.us_10y_real_d5_bps",
         "value": -11,
-        "source": "Federal Reserve H.15",
+        "source": "U.S. Department of the Treasury",
         "availability": {
           "stamp": "2024-03-26",
           "precision": "date",
@@ -1269,11 +1269,11 @@
             "clocked",
             "identity"
           ],
-          "identity_state": "named_alias",
-          "text": "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified."
+          "identity_state": "amended_source",
+          "text": "DFII10 5d: The archive stores only the five-interval change. The five DFII10 observations and their vintages were absent until the 2026-11-20 acquisition read the Treasury's Daily Treasury Real Yield Curve history directly."
         },
-        "recoverable": "FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed.",
-        "acquisition": "Acquire the H.15 DFII10 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and receipt clocks."
+        "recoverable": "The published value and a publication time no earlier than the publisher's stated release time are reconstructable. A recipient receipt at 05:00 London cannot be reconstructed from a historical archive.",
+        "acquisition": "Read the Daily Treasury Real Yield Curve 10-year column for every business day in the run window and retain the five completed intervals behind each change. A receipt is required only for sealed live replay."
       },
       {
         "key": "broad",
@@ -1618,7 +1618,7 @@
         "clocked",
         "identity"
       ],
-      "identity_state": "named_alias",
+      "identity_state": "amended_source",
       "clock": {
         "stamp": "2024-03-26",
         "precision": "date",
@@ -1627,7 +1627,7 @@
         "received": null,
         "note": "date-only metadata 2024-03-26; no observation, publication or receipt clock"
       },
-      "reason": "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified."
+      "reason": "DFII10 5d: The archive stores only the five-interval change. The five DFII10 observations and their vintages were absent until the 2026-11-20 acquisition read the Treasury's Daily Treasury Real Yield Curve history directly."
     },
     {
       "input": "broad",
@@ -1779,13 +1779,13 @@
     {
       "input": "real",
       "required": {
-        "source": "Federal Reserve H.15",
+        "source": "U.S. Department of the Treasury",
         "instrument": "DFII10",
         "transform": "5 completed observation intervals, bp",
         "max_age_hours": 96
       },
-      "issue": "DFII10 5d: Only the five-interval change is stored. The five DFII10 observations and their vintages are absent, so the exact H1 transform is unverified.",
-      "action": "Acquire the H.15 DFII10 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and receipt clocks."
+      "issue": "DFII10 5d: The archive stores only the five-interval change. The five DFII10 observations and their vintages were absent until the 2026-11-20 acquisition read the Treasury's Daily Treasury Real Yield Curve history directly.",
+      "action": "Read the Daily Treasury Real Yield Curve 10-year column for every business day in the run window and retain the five completed intervals behind each change. A receipt is required only for sealed live replay."
     },
     {
       "input": "broad",
@@ -1869,8 +1869,8 @@
       "input": "real",
       "label": "DFII10 5d",
       "value": -11,
-      "recoverable": "FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed.",
-      "acquisition": "Acquire the H.15 DFII10 daily series with ALFRED vintages and the five raw observations behind each change. Record publication and receipt clocks."
+      "recoverable": "The published value and a publication time no earlier than the publisher's stated release time are reconstructable. A recipient receipt at 05:00 London cannot be reconstructed from a historical archive.",
+      "acquisition": "Read the Daily Treasury Real Yield Curve 10-year column for every business day in the run window and retain the five completed intervals behind each change. A receipt is required only for sealed live replay."
     },
     {
       "input": "broad",
@@ -2242,7 +2242,7 @@
         "sha256": "5d32f4ff4e9287121a75cd746549115f39e0b01afd4bdb078d03668f8c5e40fa"
       }
     ],
-    "artifact_sha256": "c376affc95b9c38672229df7e07c3bf6d282e7c07602b232922e71a01f4d6110",
+    "artifact_sha256": "2f584719fa6a4a5c003371de19e1838b4bee1d43a6c1bf651f00003bbdf6c100",
     "note": "The digest is over the body before this block. The report builder reruns the same committed artefacts and must reproduce it."
   }
 }

@@ -126,22 +126,43 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
     assert.ok(input.blocker_text, `${input.key} must name its first blocker`);
     assert.ok(input.acquisition, `${input.key} must name the acquisition`);
   }
-  // No morning is ready: eight inputs block all 725 and the amended ice input reaches 455 of them.
+  // No morning is ready: three inputs are still absent and the amended ice input reaches 455 of the 725.
   assert.equal(h1.coverage.mornings.every((morning) => morning.ready === false), true);
+  const byKey = new Map(h1.coverage.inputs.map((input) => [input.key, input]));
   const amended = h1.coverage.inputs.filter((input) => input.amended);
-  assert.deepEqual(amended.map((input) => input.key), ["ice"], "only the ice input carries an amendment");
-  assert.equal(amended[0].eligible, 455);
-  assert.equal(amended[0].blocked, 270);
-  assert.equal(amended[0].supplied_contract.source, "ICE", "the v0.1.0 row is published beside the amendment");
-  assert.equal(amended[0].is_official_cash_dxy, false);
-  assert.equal(amended[0].code, "partial_evidence");
-  for (const input of h1.coverage.inputs.filter((row) => !row.amended)) {
-    assert.equal(input.eligible, 0, `${input.key} must not claim H1 eligibility`);
+  assert.deepEqual(
+    amended.map((input) => input.key),
+    ["real", "ice"],
+    "the real and ice inputs are the two the audit evaluates under an amendment"
+  );
+  assert.equal(byKey.get("ice").eligible, 455);
+  assert.equal(byKey.get("ice").blocked, 270);
+  assert.equal(byKey.get("ice").supplied_contract.source, "ICE", "the v0.1.0 row is published beside the amendment");
+  assert.equal(byKey.get("ice").is_official_cash_dxy, false);
+  assert.equal(byKey.get("ice").code, "partial_evidence");
+  assert.equal(byKey.get("real").supplied_contract.source, "Federal Reserve H.15", "H1-A02 names the publisher of record");
+  assert.equal(byKey.get("real").source, "U.S. Department of the Treasury");
+  // The imported evidence reaches every morning for four inputs, most of them for the broad dollar, and none
+  // for the three inputs that are still absent.
+  for (const [key, eligible] of [
+    ["front", 725],
+    ["real", 725],
+    ["vix", 725],
+    ["qqq", 725],
+    ["broad", 564],
+    ["ice", 455],
+    ["spread", 0],
+    ["gold", 0],
+    ["calendar", 0],
+  ]) {
+    assert.equal(byKey.get(key).eligible, eligible, `${key} must report its own measured eligibility`);
+  }
+  for (const input of h1.coverage.inputs) {
     assert.equal(input.source.length > 0, true);
   }
   assert.equal(h1.coverage.mornings.length, 725);
   assert.ok(h1.coverage.mornings.every((morning) => morning.ready === false));
-  assert.equal(h1.coverage.gaps.length, 9, "each of the nine inputs must appear as a gap");
+  assert.equal(h1.coverage.gaps.length, 5, "every input that still has a gap must appear");
   for (const gap of h1.coverage.gaps) {
     assert.ok(gap.dataset.includes("·"), `${gap.input} must name its dataset and source`);
     assert.ok(gap.factor_count > 0, `${gap.input} must name the factors it blocks`);
@@ -414,7 +435,8 @@ test("the morning-run payload keeps H1 blocked and the legacy 0/725 attached to 
   assert.equal(morning.models.h1.direction, "NO_CALL");
   assert.equal(morning.models.h1.conviction, null);
   assert.equal(morning.models.h1.trade_eligible, false);
-  assert.equal(morning.h1_blockers.length, 9);
+  assert.equal(morning.h1_blockers.length, 4, "spread, ice, gold and calendar still block this morning");
+  assert.deepEqual(morning.h1_blockers.map((blocker) => blocker.input), ["spread", "ice", "gold", "calendar"]);
   assert.equal(morning.inputs.current.length, 12);
   assert.equal(morning.inputs.h1.length, 9);
   assert.equal(morning.sample_reconciliation.h1.blocked, 725);
@@ -466,7 +488,7 @@ test("the four agreed tests are preserved, each with its own readiness for the r
     assert.equal(definition.h1_readiness.eligible_mornings, 0, `${definition.id} must not claim an H1 morning`);
     assert.equal(definition.h1_readiness.scheduled_mornings, 725);
     assert.match(definition.h1_readiness.status, /blocked/);
-    assert.equal(definition.h1_readiness.blocked_by.length, 9);
+    assert.equal(definition.h1_readiness.blocked_by.length, 5, `${definition.id} must name every blocking input`);
   }
   const supplementary = screen.tests.supplementary;
   assert.equal(supplementary.length, 1);

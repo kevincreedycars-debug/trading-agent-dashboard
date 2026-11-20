@@ -357,3 +357,14 @@ rungs passing on no morning) and predictive performance (pooled accuracy 51.93 /
 interval spanning 50, every market delta negative, no holdout or multiplicity control). Also not accepted: any
 claim that late-print rejection has been exercised, and any use of these workflows for unattended or live
 trading.
+
+## 14. Digests are per-commit
+
+Every digest above is the one this package was signed against. A later commit that regenerates a generated
+artefact changes that artefact's digest without changing any accepted claim: the screen payload and the
+morning run are functions of the committed inputs, so importing new H1 evidence moves both. The
+acquisition of 2026-11-20 (six of the nine H1 inputs imported) is such a commit; the digests it produced
+are recorded in `docs/CHANGELOG.md` and on the pull request, never here, because this document is inside
+the identity scan's own file list and a digest quoted here would move the digest. The acceptance classes
+in §1 are unchanged: the n8n integration, the swap and the reproduction remain accepted; H1 validity and
+performance remain unaccepted. This is open item 7 in §12, felt rather than described.

@@ -173,11 +173,17 @@ test("a mismatch between the declared instrument and the package contract is ref
   assert.match(checked.errors.join(" "), /instrument/);
 });
 
-test("the v0.1.1 amendment replaces the ICE fixing and leaves the supplied package text intact", () => {
-  const { amendContracts, assertReplacementsHold, ICE_AMENDMENT } = require("../lib/layer1_backtesting/h1_source_amendments");
+test("the two amendments replace only what they name and leave the supplied package text intact", () => {
+  const {
+    amendContracts,
+    assertReplacementsHold,
+    ICE_AMENDMENT,
+    REAL_AMENDMENT,
+    VERSION,
+  } = require("../lib/layer1_backtesting/h1_source_amendments");
   const { SUPPLIED_CONTRACTS, SOURCE_AMENDMENTS } = require("../lib/layer1_backtesting/h1_coverage");
 
-  // v0.1.0 still says what it always said; the audit evaluates the amendment instead.
+  // v0.1.0 still says what it always said; the audit evaluates the amendments instead.
   assert.equal(SUPPLIED_CONTRACTS.ice.source, "ICE");
   assert.equal(SUPPLIED_CONTRACTS.ice.instrument, "US Dollar Index spot");
   assert.equal(CONTRACTS.ice.source, "FTMO Global Markets Ltd");
@@ -191,24 +197,39 @@ test("the v0.1.1 amendment replaces the ICE fixing and leaves the supplied packa
   assert.equal(SUPPLIED_CONTRACTS.ice.hours, 0);
   assert.equal(CONTRACTS.ice.max_lookback_days, 4);
 
-  assert.equal(SOURCE_AMENDMENTS.length, 1);
-  assert.equal(SOURCE_AMENDMENTS[0].id, "H1-A01");
-  assert.equal(SOURCE_AMENDMENTS[0].preserves, "USD-L1-25F-H1-v0.1.0");
+  // H1-A02 only renames the publisher of the real yield: instrument, transform and window are the
+  // supplied ones, which is what makes it a labelling correction rather than a substitution.
+  assert.equal(SUPPLIED_CONTRACTS.real.source, "Federal Reserve H.15");
+  assert.equal(CONTRACTS.real.source, "U.S. Department of the Treasury");
+  assert.equal(CONTRACTS.real.instrument, SUPPLIED_CONTRACTS.real.instrument);
+  assert.equal(CONTRACTS.real.transform, SUPPLIED_CONTRACTS.real.transform);
+  assert.equal(CONTRACTS.real.hours, SUPPLIED_CONTRACTS.real.hours);
+  assert.equal(REAL_AMENDMENT.kind, "publisher_of_record");
+
+  assert.equal(VERSION, "v0.1.2");
+  assert.deepEqual(SOURCE_AMENDMENTS.map((amendment) => amendment.id), ["H1-A01", "H1-A02"]);
+  for (const amendment of SOURCE_AMENDMENTS) {
+    assert.equal(amendment.preserves, "USD-L1-25F-H1-v0.1.0");
+  }
   assert.equal(SOURCE_AMENDMENTS[0].instrument.sha256.length, 64);
+  assert.equal(SOURCE_AMENDMENTS[1].input, "real");
 
   // Every other input is carried over untouched.
-  for (const key of ["vix", "front", "spread", "real", "broad", "gold", "qqq", "calendar"]) {
+  for (const key of ["vix", "front", "spread", "broad", "gold", "qqq", "calendar"]) {
     assert.deepEqual(CONTRACTS[key], { ...SUPPLIED_CONTRACTS[key] });
   }
 
-  // The amendment is a delta against the supplied text: if that text moves, the audit must refuse.
+  // Each amendment is a delta against the supplied text: if that text moves, the audit must refuse.
   const drifted = { ...SUPPLIED_CONTRACTS, ice: { ...SUPPLIED_CONTRACTS.ice, source: "another vendor" } };
   assert.throws(() => amendContracts(drifted), /the amendment replaces "ICE"/);
   assert.throws(
-    () => assertReplacementsHold({ ...SUPPLIED_CONTRACTS, ice: { ...SUPPLIED_CONTRACTS.ice, hours: 24 } }),
+    () => assertReplacementsHold({ ...SUPPLIED_CONTRACTS, ice: { ...SUPPLIED_CONTRACTS.ice, hours: 24 } }, "v0.1.1"),
     /the amendment replaces 0/
   );
+  const driftedReal = { ...SUPPLIED_CONTRACTS, real: { ...SUPPLIED_CONTRACTS.real, instrument: "DGS10" } };
+  assert.throws(() => amendContracts(driftedReal), /the amendment replaces "DFII10"/);
   assert.equal(ICE_AMENDMENT.differences.length >= 5, true);
+  assert.equal(REAL_AMENDMENT.differences.length >= 4, true);
 });
 
 test("the imported ice evidence is a completion clock on 455 mornings, never a receipt", () => {
