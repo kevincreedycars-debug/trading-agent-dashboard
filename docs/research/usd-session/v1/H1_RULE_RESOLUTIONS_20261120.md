@@ -47,7 +47,6 @@ Three of the six are therefore live: P-01's principle in the sealed lane, P-02's
 payload, and P-06's behaviour. P-03, P-04 and P-05 are accepted as positions but land with the package
 revision, because the v0.1.0 package is preserved byte for byte and cannot be edited in place.
 
-
 ## 3. The contract the coverage is evaluated under
 
 | Layer | Version | Status | Where it is published |
@@ -85,6 +84,7 @@ Six decisions. Each one names the recommendation, the measurement behind it, and
 | **D6** | `calendar` evidence | **Import vintage-stamped schedules for the five required release types** | Required types: CPI, Employment Situation, advance GDP, Personal Income and Outlays, FOMC policy decision. The schedules are readable; none has been archived with a publication timestamp | `calendar` blocks all 725 mornings; a zero event count is not evidence (P-06) |
 
 D5 and D6 are the only decisions that can move ready mornings off zero. D1, D3 and D4 set how many mornings
+survive once the two inputs exist; D2 is the rule the calendar evidence has to be imported under.
 
 ## 5. What this does not do
 
@@ -111,5 +111,3 @@ npm run test:usd-session
 H1-A02 status and the exact evaluated-contract string, the three candidate effects, the DXY.cash labelling,
 the IBA licence wording on `gold`, the 0 of 725 ready count, and the fact that 2024-12-12 is blocked by
 `gold` and `calendar` alone.
-
-survive once the two inputs exist; D2 is the rule the calendar evidence has to be imported under.
