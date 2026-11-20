@@ -126,7 +126,7 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
     assert.ok(input.blocker_text, `${input.key} must name its first blocker`);
     assert.ok(input.acquisition, `${input.key} must name the acquisition`);
   }
-  // No morning is ready: three inputs are still absent and the amended ice input reaches 455 of the 725.
+  // No morning is ready: two inputs are still absent and the amended ice input reaches 455 of the 725.
   assert.equal(h1.coverage.mornings.every((morning) => morning.ready === false), true);
   const byKey = new Map(h1.coverage.inputs.map((input) => [input.key, input]));
   const amended = h1.coverage.inputs.filter((input) => input.amended);
@@ -142,8 +142,8 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
   assert.equal(byKey.get("ice").code, "partial_evidence");
   assert.equal(byKey.get("real").supplied_contract.source, "Federal Reserve H.15", "H1-A02 names the publisher of record");
   assert.equal(byKey.get("real").source, "U.S. Department of the Treasury");
-  // The imported evidence reaches every morning for four inputs, most of them for the broad dollar, and none
-  // for the three inputs that are still absent.
+  // The imported evidence reaches every morning for four inputs, most of them for the broad dollar and the
+  // spread, and none for the two inputs that are still absent.
   for (const [key, eligible] of [
     ["front", 725],
     ["real", 725],
@@ -151,7 +151,7 @@ test("H1 historical readiness is the measured nine-input audit, not a legacy sco
     ["qqq", 725],
     ["broad", 564],
     ["ice", 455],
-    ["spread", 0],
+    ["spread", 697],
     ["gold", 0],
     ["calendar", 0],
   ]) {
@@ -435,8 +435,8 @@ test("the morning-run payload keeps H1 blocked and the legacy 0/725 attached to 
   assert.equal(morning.models.h1.direction, "NO_CALL");
   assert.equal(morning.models.h1.conviction, null);
   assert.equal(morning.models.h1.trade_eligible, false);
-  assert.equal(morning.h1_blockers.length, 4, "spread, ice, gold and calendar still block this morning");
-  assert.deepEqual(morning.h1_blockers.map((blocker) => blocker.input), ["spread", "ice", "gold", "calendar"]);
+  assert.equal(morning.h1_blockers.length, 3, "ice, gold and calendar still block this morning");
+  assert.deepEqual(morning.h1_blockers.map((blocker) => blocker.input), ["ice", "gold", "calendar"]);
   assert.equal(morning.inputs.current.length, 12);
   assert.equal(morning.inputs.h1.length, 9);
   assert.equal(morning.sample_reconciliation.h1.blocked, 725);

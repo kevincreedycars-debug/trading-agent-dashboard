@@ -108,7 +108,7 @@ The legacy engine-v1 artefact's own flags are preserved separately: 196 directio
 | DFII10 5d | -11 | The published value and a publication time no earlier than the publisher's stated release time are reconstructable. A recipient receipt at 05:00 London cannot be reconstructed from a historical archive. | Read the Daily Treasury Real Yield Curve 10-year column for every business day in the run window and retain the five completed intervals behind each change. A receipt is required only for sealed live replay. |
 | DTWEXBGS 5d | 0.6511 | FRED ALFRED vintages reconstruct the publication series; recipient receipt at 05:00 London cannot be reconstructed. | Acquire the H.10 DTWEXBGS daily series with ALFRED vintages and the five raw observations behind each return. Record publication and receipt clocks. |
 | DXY.cash 05:00 return | — | Publication at the cutoff is proven by the completed bar itself. A recipient receipt cannot be reconstructed from a retrospective export, so sealed live replay stays blocked for this input. | Collect the DXY.cash 05:00 bar close live at the cutoff and record a genuine receipt, so this input can also enter the sealed lane. No ICE licence is required and none is requested. |
-| LBMA gold PM 5d | 0.7103 | LBMA auction records reconstruct the PM publication time; the archive contains neither the auction records nor a receipt. | Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. |
+| LBMA gold PM 5d | 0.7103 | LBMA auction records reconstruct the PM publication time; the archive contains neither the auction records nor a receipt. | Acquire the LBMA Gold Price PM USD auction history (do not substitute OANDA XAU/USD). Retain five completed fixings, publication timestamps and collector receipts. Access is licensed: the LBMA prices page read on 2026-11-20 states an IBA licence is required to obtain and use historical benchmark data, so this is a paid-access decision, not a free download. |
 | QQQ close 5d | 2.01 | Nasdaq official close history reconstructs the publication time; the archive contains neither the official closes nor a receipt. | Acquire Nasdaq official QQQ closing prices (not the Nasdaq-100 index) and five completed closes, split-adjusted as known at each cutoff. Record publication and receipt clocks. |
 | Release calendar | 0 | Official schedules and release timestamps reconstruct the published release times; collector receipt times are not archived. | Acquire complete archived BLS, BEA and Federal Reserve schedules for CPI, Employment Situation, advance GDP, Personal Income and Outlays and FOMC decisions. Record each release timestamp and collector receipt. |
 
@@ -129,7 +129,7 @@ The legacy engine-v1 artefact's own flags are preserved separately: 196 directio
 
 ## 11. Provenance
 
-Report digest: `2f584719fa6a4a5c003371de19e1838b4bee1d43a6c1bf651f00003bbdf6c100`
+Report digest: `89a6a82b02905532d84aa198ecba5f8a2bc585a223e6ee556905251ae313c0d1`
 
 | Input | Bytes | sha256 |
 | --- | ---: | --- |

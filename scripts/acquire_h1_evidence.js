@@ -32,6 +32,8 @@ const {
   SOURCES,
   CLOCK_POLICY,
   buildBundle,
+  buildSpreadBundle,
+  spreadSeries,
   fetchPlan,
   loadSessions,
   observationsFromRaw,
@@ -154,7 +156,7 @@ async function acquire(key, { offline, quiet }) {
     if (result.text) {
       record.bytes = Buffer.byteLength(result.text);
       record.sha256 = sha256(result.text);
-      raw.push({ text: result.text, release: entry.release || null });
+      raw.push({ text: result.text, release: entry.release || null, file: entry.file });
     } else {
       record.error = `http ${result.status}`;
     }
@@ -178,13 +180,21 @@ async function acquire(key, { offline, quiet }) {
     return { key, failed: true };
   }
   const sessions = loadSessions({ root: ROOT });
-  const bundle = buildBundle({
-    key,
-    contract,
-    sessions,
-    observations: observationsFromRaw(key, raw),
-    provenance: { raw_manifest: `${MANIFEST_DIR}/raw-${key}.json` },
-  });
+  const bundle =
+    key === "spread"
+      ? buildSpreadBundle({
+          contract,
+          sessions,
+          series: spreadSeries(raw),
+          provenance: { raw_manifest: `${MANIFEST_DIR}/raw-${key}.json` },
+        })
+      : buildBundle({
+          key,
+          contract,
+          sessions,
+          observations: observationsFromRaw(key, raw),
+          provenance: { raw_manifest: `${MANIFEST_DIR}/raw-${key}.json` },
+        });
   const checked = validateBundle(bundle, key, contract, { file: `staged:${key}` });
   const stageFile = path.join(ROOT, STAGE_DIR, `h1-${key}-v1.json`);
   fs.writeFileSync(stageFile, `${JSON.stringify(bundle, null, 2)}\n`);
