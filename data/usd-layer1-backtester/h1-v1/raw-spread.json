@@ -1,0 +1,59 @@
+{
+  "input": "spread",
+  "series": "H.15 RIFLGFCY02_N.B and Bundesbank BBSIS 2.0-year Svensson spot",
+  "clock_rule": "bundesbank_end_of_next_day_bound",
+  "clock_statement": "The Bundesbank serves the daily Svensson curve with its own `last update` stamp: the file fetched on 2026-11-20 reads `last update,2026-11-19 12:22:17` and already carries the 2026-11-19 value, so the curve is refreshed on the observation day itself. That single stamp is not proof of how the file behaved in 2024, and no Bundesbank release-time statement can be cited, so the reconstruction assumes nothing from it: a value dated T is treated as available only at 23:59 Europe/Berlin on T+1. The assumption can never outrun a next-morning refresh, it is 35.6 hours later than the only refresh this project has observed, and the cost is one day of lag, not a missing session.",
+  "clock_policy": {
+    "basis": "publisher_stated_release_time",
+    "rule": "A historical record has no receipt. Its publication clock is reconstructed as the publisher's stated release time on the stated release day, converted to UTC in the publisher's own time zone. The observed clock is the instant the value is determined, which is never later than the reconstructed publication clock. Both clocks, the rule id and the margin in hours to the 05:00 London cutoff are written onto every record.",
+    "receipt": "received_at_utc is null on every historical record. A reconstructed clock is not a receipt.",
+    "late_print": "The reconstruction assumes the stated release time was met. It cannot exclude a late print, which is why the margin is published and late-print rejection stays an untested gate."
+  },
+  "availability_evidence": "The BBSIS CSV is served without a key: 233,452 bytes on the 2026-11-20 fetch, 2 decimals, daily rows from 1997 with `No value available` on non-business days. Its header carries the publisher's own `last update` stamp, which is the only publication evidence the Bundesbank exposes on this endpoint. The bound is a bound: a print later than 23:59 Europe/Berlin on the day after the observation is not excluded, and only a live receipt could prove one.",
+  "acquired_at": "2026-11-20T10:11:45.488Z",
+  "offline": false,
+  "files_read": 5,
+  "files_failed": 0,
+  "files": [
+    {
+      "url": "https://www.federalreserve.gov/datadownload/Output.aspx?rel=H15&series=bf17364827e38702b42a58cf8eaa3f78&lastobs=&from=01/01/2023&to=12/31/2023&filetype=csv&label=include&layout=seriescolumn",
+      "file": "h15-matrix-2023.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 19193,
+      "sha256": "2e5737076568eef66efe8798577bed06942462959e7526e580339ce91b9db5e7"
+    },
+    {
+      "url": "https://www.federalreserve.gov/datadownload/Output.aspx?rel=H15&series=bf17364827e38702b42a58cf8eaa3f78&lastobs=&from=01/01/2024&to=12/31/2024&filetype=csv&label=include&layout=seriescolumn",
+      "file": "h15-matrix-2024.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 19283,
+      "sha256": "4b874e51ff02dfde21a7a8009ad8da5833d4bc2ff12c89f890723a6a9d355de0"
+    },
+    {
+      "url": "https://www.federalreserve.gov/datadownload/Output.aspx?rel=H15&series=bf17364827e38702b42a58cf8eaa3f78&lastobs=&from=01/01/2025&to=12/31/2025&filetype=csv&label=include&layout=seriescolumn",
+      "file": "h15-matrix-2025.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 19216,
+      "sha256": "69b2cdbcd6b4bcbebf7d250948bfbfbc264d2b96641e244e466d23cb93ab08df"
+    },
+    {
+      "url": "https://www.federalreserve.gov/datadownload/Output.aspx?rel=H15&series=bf17364827e38702b42a58cf8eaa3f78&lastobs=&from=01/01/2026&to=12/31/2026&filetype=csv&label=include&layout=seriescolumn",
+      "file": "h15-matrix-2026.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 17205,
+      "sha256": "834b94b51ac4d58146c23815b4707ae30ae95d1a5fc41fd2ec74f5fd7b920e75"
+    },
+    {
+      "url": "https://api.statistiken.bundesbank.de/rest/download/BBSIS/D.I.ZST.ZI.EUR.S1311.B.A604.R02XX.R.A.A._Z._Z.A?format=csv&lang=en",
+      "file": "bundesbank-bbsis-2y.csv",
+      "http_status": 200,
+      "cached": true,
+      "bytes": 233449,
+      "sha256": "20a33d56dbfe55e770c80007ec5779d7902d3769de3a4e9c46948608c1f87b9b"
+    }
+  ]
+}

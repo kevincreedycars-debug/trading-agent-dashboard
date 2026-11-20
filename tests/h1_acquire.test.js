@@ -188,7 +188,15 @@ test("a source that cannot be read keeps its provenance and its next action", ()
   assert.equal(SOURCES.gold.reachable, false);
   assert.equal(SOURCES.gold.blocked.code, "http_403");
   assert.ok(SOURCES.gold.blocked.next_action.includes("LBMA"));
-  assert.equal(SOURCES.spread.blocked.code, "unclocked_publication");
+  // The spread is readable from both publishers. What it cannot do is cite a Bundesbank release time, so its
+  // publication clock is a conservative bound and the residual cost is published as a rule candidate
+  // (H1-C03) rather than resolved here.
+  assert.equal(SOURCES.spread.reachable, true);
+  assert.equal(SOURCES.spread.blocked, undefined, "a readable source carries no blocked record");
+  assert.equal(SOURCES.spread.clock.id, "bundesbank_end_of_next_day_bound");
+  assert.equal(SOURCES.spread.clock.published_lag_days, 1);
+  assert.equal(SOURCES.spread.clockEvidence.kind, "conservative_bound");
+  assert.match(SOURCES.spread.clockEvidence.receipt, /not a receipt/);
   assert.equal(SOURCES.calendar.blocked.code, "rule_defect_freshness");
   assert.ok(CLOCK_POLICY.rule.includes("reconstructed"));
 });
