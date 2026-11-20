@@ -147,6 +147,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0d1922;border:1px sol
 "use strict";
 const payloadUrl="data/usd-layer1-backtester/backtesting-screen-v1.json";
 const n8nEvidenceUrl="data/usd-layer1-backtester/n8n-execution-evidence-v1.json";
+const n8nLedgerUrl="data/usd-layer1-backtester/n8n/run-ledger-v1.json";
 const tabs={n8nmap:"Layer 1 map",overview:"Overview",architecture:"Architecture",tests:"Tests",morning:"Morning run",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
 const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all",n8nEvidence:null,n8nError:null,n8nLoading:null,mapCase:null,mapModel:"challenger",mapNode:"child"};
 function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=text;if(cls)n.className=cls;if(parent)parent.append(n);return n}
@@ -937,6 +938,54 @@ function mapDetailRows(node,model,caseEntry,ev,api){
   ];
   return [{label:"Source",value:node.files.join(", ")||"—",status:"accepted"}];
 }
+function loadN8nLedger(){
+  if(state.n8nLedger||state.n8nLedgerLoading)return;
+  state.n8nLedgerError=null;
+  state.n8nLedgerLoading=fetch(n8nLedgerUrl).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(json=>{state.n8nLedger=json}).catch(error=>{state.n8nLedgerError=error.message}).finally(()=>{state.n8nLedgerLoading=null;if(location.hash==="#n8nmap")render()});
+}
+function renderN8nLedger(v){
+  el("h3","Batch runs, restart recovery and independent checks",v);
+  el("p","The ledger is built from stored n8n executions only. Each morning is keyed by validation mode and date, so re-running a range or resuming after an interruption cannot add a second result. Every row is re-checked against the committed panel and the local controller before it is saved; a failed check stays visible instead of being dropped.",v);
+  if(state.n8nLedgerError){const b=el("div",null,v,"banner bad");el("strong","The run ledger could not be loaded: "+state.n8nLedgerError,b);return}
+  if(!state.n8nLedger){el("p","Loading the persisted run ledgerâ€¦",v);loadN8nLedger();return}
+  const l=state.n8nLedger;
+  const rows=l.records||[];
+  const structural=rows.filter(row=>row.validation_mode==="structural");
+  const receipted=rows.filter(row=>row.validation_mode==="receipted");
+  const verified=rows.filter(row=>row.verification&&row.verification.verified===true).length;
+  const duplicates=(l.runs||[]).reduce((total,run)=>total+(run.duplicate_keys||[]).length,0);
+  const stats=el("div",null,v,"map-stats");
+  for(const [value,label] of [[String(rows.length),"persisted mornings"],[verified+" / "+rows.length,"independently verified"],[String(duplicates),"duplicate results prevented"],[String((l.runs||[]).length),"recorded runs"],[String(receipted.filter(row=>row.outcome==="blocked").length),"receipted gate refusals"]]){
+    const s=el("div",null,stats,"map-stat");el("b",value,s);el("small",label,s);
+  }
+  el("h3","Structural batch",v);
+  table(v,["Date","Outcome","v0 call","v1 call","Agree","Hit / scored","Verified","Parent execution"],
+    structural.map(row=>[row.date,row.outcome,row.calls.challenger.direction||"â€”",row.calls.challenger_v1.direction||"â€”",row.calls.challenger.direction===row.calls.challenger_v1.direction?"yes":"no",(row.calls.challenger.results?Object.values(row.calls.challenger.results).filter(r=>r==="hit").length+" / "+Object.values(row.calls.challenger.results).filter(r=>["hit","miss","flat"].includes(r)).length:"â€”"),row.verification&&row.verification.verified?"yes":"NO",row.executions.parent.id||"â€”"]));
+  el("p","A blocked or abstained row shows the direction the model computed but is never counted as a hit. Hit / scored counts the four comparison markets and includes flat and no-outcome results in the denominator only when they were scored.",v,"caption");
+  if(receipted.length){
+    el("h3","Receipted gate",v);
+    table(v,["Date","Outcome","v0 call","v1 call","Result stored","Verified","Parent execution"],
+      receipted.map(row=>[row.date,row.outcome,row.calls.challenger.direction||"â€”",row.calls.challenger_v1.direction||"â€”",row.calls.challenger.results?"yes":"no",row.verification&&row.verification.verified?"yes":"NO",row.executions.parent.id||"â€”"]));
+    el("p","The receipted gate refuses a morning whose consumed inputs do not all carry a full timestamp before 05:00 London. The refusal is stored with the same morning key as the structural call, not merged into it.",v,"caption");
+  }
+  const withRuns=l.runs||[];
+  if(withRuns.length){
+    el("h3","Run history (resume and duplicate handling)",v);
+    table(v,["Run","Label","Parent execution","Added","Already held"],
+      withRuns.map(run=>[run.run_id,run.label||"â€”",run.execution_id||"â€”",String((run.added_keys||[]).length),String((run.duplicate_keys||[]).length)]));
+  }
+  const links=el("div",null,v,"map-links");
+  const seen=new Set();
+  for(const row of rows){
+    const url=row.executions.parent.url;
+    if(!url||seen.has(url))continue;
+    seen.add(url);
+    const a=el("a","n8n execution "+row.executions.parent.id,links);
+    a.href=url;a.target="_blank";a.rel="noopener";
+  }
+  el("p","Ledger schema "+l.schema_version+" Â· updated "+l.updated_at+" Â· dataset run "+(l.dataset.run_version||"â€”"),v,"caption mono");
+}
+
 function renderN8nMap(v){
   v.replaceChildren();
   el("h2","USD Layer 1 n8n map",v);
@@ -1013,6 +1062,7 @@ function renderN8nMap(v){
   el("h3","The four backtests",v);
   table(v,["#","Test","Status","Usable","Outcome source"],api.testRows(ev).map(row=>[String(row.ordinal),row.label,row.status,String(row.usable_sessions??"—"),row.outcome_source]));
   el("p","Tests 3 and 4 are blocked on history; test 1 is a broker proxy. None of these rows is an edge claim.",v,"caption");
+  renderN8nLedger(v);
   const excluded=el("div",null,v,"n8n-excluded");
   el("strong","H1 is not in this map's selected models.",excluded);
   el("p","The two children are usd-layer1-challenger-v0 and usd-layer1-challenger-v1. USD-L1-25F-H1-v0.1.0 is unscored and separate. Current is not bundled in the Cloud runtime; the local controller still runs it.",excluded);

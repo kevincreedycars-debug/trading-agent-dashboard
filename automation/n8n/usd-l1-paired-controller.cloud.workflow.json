@@ -48,9 +48,9 @@
         0
       ],
       "parameters": {
-        "jsCode": "const first = $input.first().json || {};\r\nconst body = first.body && typeof first.body === \"object\" ? first.body : first;\r\nconst config = {\r\n  dataset_url: body.dataset_url || \"https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/data/usd-layer1-backtester/run-v1.json\",\r\n  date: body.date || \"2024-01-10\",\r\n  validation: body.validation || \"structural\",\r\n  instance_url: body.instance_url || \"https://silver17.app.n8n.cloud\"\r\n};\r\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(config.date)) {\r\n  throw new Error(\"date must be YYYY-MM-DD\");\r\n}\r\nif (config.validation !== \"structural\" && config.validation !== \"receipted\") {\r\n  throw new Error(\"validation must be structural or receipted\");\r\n}\r\nif (!/^https:\\/\\//.test(config.dataset_url)) {\r\n  throw new Error(\"dataset_url must be an https URL\");\r\n}\r\nreturn [{ json: config }];\r\n"
+        "jsCode": "const first = $input.first().json || {};\r\nconst body = first.body && typeof first.body === \"object\" ? first.body : first;\r\nconst rawDates = body.dates !== undefined && body.dates !== null\r\n  ? body.dates\r\n  : (body.date !== undefined && body.date !== null ? [body.date] : []);\r\nconst supplied = (Array.isArray(rawDates) ? rawDates : String(rawDates).split(\",\"))\r\n  .map((entry) => String(entry).trim())\r\n  .filter((entry) => entry.length > 0);\r\nconst dates = Array.from(new Set(supplied)).sort();\r\nif (dates.length === 0) dates.push(\"2024-01-10\");\r\nif (dates.length > 40) {\r\n  throw new Error(\"at most 40 mornings per controlled run; split the range so one execution stays inspectable\");\r\n}\r\nfor (const date of dates) {\r\n  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) throw new Error(\"date must be YYYY-MM-DD, received \" + date);\r\n  const ms = Date.parse(date + \"T00:00:00Z\");\r\n  if (!Number.isFinite(ms) || new Date(ms).toISOString().slice(0, 10) !== date) {\r\n    throw new Error(\"date is not a real calendar day: \" + date);\r\n  }\r\n}\r\nconst validation = body.validation || \"structural\";\r\nif (validation !== \"structural\" && validation !== \"receipted\") {\r\n  throw new Error(\"validation must be structural or receipted\");\r\n}\r\nconst dataset_url = body.dataset_url || \"https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/data/usd-layer1-backtester/run-v1.json\";\r\nif (!/^https:\\/\\//.test(dataset_url)) {\r\n  throw new Error(\"dataset_url must be an https URL\");\r\n}\r\nreturn [{\r\n  json: {\r\n    dataset_url,\r\n    date: dates.length === 1 ? dates[0] : null,\r\n    dates,\r\n    batch: dates.length > 1,\r\n    validation,\r\n    instance_url: body.instance_url || \"https://silver17.app.n8n.cloud\"\r\n  }\r\n}];\r\n\r\n"
       },
-      "notes": "One date, one validation label. Defaults to both challenger versions on 2024-01-10."
+      "notes": "One morning or a bounded batch of up to 40 mornings, one validation label. Defaults to both challenger versions on 2024-01-10."
     },
     {
       "name": "Fetch committed panel",
@@ -77,9 +77,9 @@
         0
       ],
       "parameters": {
-        "jsCode": "const config = $(\"Run configuration\").first().json;\r\nconst raw = $input.first().json || {};\r\nconst dataset = typeof raw.data === \"string\"\r\n  ? JSON.parse(raw.data)\r\n  : (raw.data && typeof raw.data === \"object\" ? raw.data : raw);\r\nconst sessions = Array.isArray(dataset.sessions) ? dataset.sessions : [];\r\nconst found = sessions.find((session) => session && session.date === config.date) || null;\r\nconst session = found ? Object.assign({}, found, { source_legend: dataset.input_source_legend || [] }) : null;\r\nreturn [{\r\n  json: {\r\n    date: config.date,\r\n    model_v0: \"challenger\",\r\n    model_v1: \"challenger_v1\",\r\n    validation: config.validation,\r\n    session,\r\n    session_found: Boolean(found),\r\n    dataset_meta: {\r\n      path: config.dataset_url,\r\n      schema_version: dataset.schema_version || null,\r\n      run_version: dataset.run && dataset.run.run_version ? dataset.run.run_version : null,\r\n      generated_at: dataset.generated_at || null,\r\n      sessions: sessions.length,\r\n      input_source_legend: dataset.input_source_legend || []\r\n    },\r\n    dataset_window: {\r\n      first: sessions.length ? sessions[0].date : null,\r\n      last: sessions.length ? sessions[sessions.length - 1].date : null\r\n    }\r\n  }\r\n}];\r\n"
+        "jsCode": "const config = $(\"Run configuration\").first().json;\r\nconst raw = $input.first().json || {};\r\nconst dataset = typeof raw.data === \"string\"\r\n  ? JSON.parse(raw.data)\r\n  : (raw.data && typeof raw.data === \"object\" ? raw.data : raw);\r\nconst sessions = Array.isArray(dataset.sessions) ? dataset.sessions : [];\r\nconst byDate = new Map(sessions.filter((session) => session && session.date).map((session) => [session.date, session]));\r\nconst wanted = Array.isArray(config.dates) && config.dates.length > 0 ? config.dates : [config.date];\r\nconst dataset_meta = {\r\n  path: config.dataset_url,\r\n  schema_version: dataset.schema_version || null,\r\n  run_version: dataset.run && dataset.run.run_version ? dataset.run.run_version : null,\r\n  generated_at: dataset.generated_at || null,\r\n  sessions: sessions.length,\r\n  input_source_legend: dataset.input_source_legend || []\r\n};\r\nconst dataset_window = {\r\n  first: sessions.length ? sessions[0].date : null,\r\n  last: sessions.length ? sessions[sessions.length - 1].date : null\r\n};\r\n// One item per requested morning, in the order the run configuration sorted them. An absent morning is\r\n// passed as a null session so the child returns an explicit refusal instead of a filled value.\r\nreturn wanted.map((date) => {\r\n  const found = byDate.get(date) || null;\r\n  const session = found ? Object.assign({}, found, { source_legend: dataset.input_source_legend || [] }) : null;\r\n  return {\r\n    json: {\r\n      date,\r\n      model_v0: \"challenger\",\r\n      model_v1: \"challenger_v1\",\r\n      validation: config.validation,\r\n      session,\r\n      session_found: Boolean(found),\r\n      batch: wanted.length > 1,\r\n      batch_total: wanted.length,\r\n      dataset_meta,\r\n      dataset_window\r\n    }\r\n  };\r\n});\r\n\r\n"
       },
-      "notes": "The dataset decides whether the date exists. A missing date is passed as a null session so both children return an explicit block."
+      "notes": "The dataset decides whether each morning exists. One item per requested date; a missing date is passed as a null session so both children return an explicit block."
     },
     {
       "name": "Bind challenger v0",
@@ -90,9 +90,9 @@
         -100
       ],
       "parameters": {
-        "jsCode": "const item = $input.first().json; return [{ json: Object.assign({}, item, { model: \"challenger\" }) }];"
+        "jsCode": "return $input.all().map((item) => ({ json: Object.assign({}, item.json, { model: \"challenger\" }) }));"
       },
-      "notes": "Binds this branch to usd-layer1-challenger-v0 before the child is called."
+      "notes": "Binds this branch to usd-layer1-challenger-v0 before the child is called; one child run per requested morning."
     },
     {
       "name": "Bind challenger v1",
@@ -103,9 +103,9 @@
         100
       ],
       "parameters": {
-        "jsCode": "const item = $input.first().json; return [{ json: Object.assign({}, item, { model: \"challenger_v1\" }) }];"
+        "jsCode": "return $input.all().map((item) => ({ json: Object.assign({}, item.json, { model: \"challenger_v1\" }) }));"
       },
-      "notes": "Binds this branch to usd-layer1-challenger-v1 before the child is called."
+      "notes": "Binds this branch to usd-layer1-challenger-v1 before the child is called; one child run per requested morning."
     },
     {
       "name": "Run Challenger v0",
@@ -152,17 +152,31 @@
       "notes": "Separately versioned Layer 1 workflow pinned to usd-layer1-challenger-v1."
     },
     {
+      "name": "Gather both child answers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        420,
+        0
+      ],
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2
+      },
+      "notes": "Waits for both versioned children before any pairing. The two branches never race into the combiner."
+    },
+    {
       "name": "Compare the two decisions",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        480,
+        640,
         0
       ],
       "parameters": {
-        "jsCode": "const v0 = $(\"Run Challenger v0\").first().json;\r\nconst v1 = $(\"Run Challenger v1\").first().json;\r\nconst d0 = v0 && v0.decision;\r\nconst d1 = v1 && v1.decision;\r\nif (!d0 || !d1) {\r\n  throw new Error(\"one of the versioned Layer 1 children returned no decision\");\r\n}\r\nfunction availability(decision) {\r\n  const validation = decision.validation || {};\r\n  const inputs = validation.inputs || {};\r\n  const receipted = validation.receipted || {};\r\n  return {\r\n    cutoff_at_utc: validation.cutoff_at_utc || null,\r\n    contract_cutoff_at_utc: validation.contract_cutoff_at_utc || null,\r\n    structural_accepted: validation.structural_accepted === undefined ? validation.accepted : validation.structural_accepted,\r\n    accepted: validation.accepted === true,\r\n    reasons: (validation.reasons || []).map((reason) => reason.code),\r\n    declared_inputs: inputs.declared === undefined ? null : inputs.declared,\r\n    present_inputs: inputs.present === undefined ? null : inputs.present,\r\n    missing_inputs: inputs.missing === undefined ? null : inputs.missing,\r\n    missing_keys: inputs.missing_keys || [],\r\n    stamped_before_cutoff: inputs.stamped_before_cutoff === undefined ? null : inputs.stamped_before_cutoff,\r\n    receipted_complete: receipted.complete === true,\r\n    unclocked_keys: receipted.unclocked_keys || []\r\n  };\r\n}\r\nconst sameDirection = d0.call.direction === d1.call.direction;\r\nconst result = {\r\n  schema_version: \"usd-l1-n8n-cloud-execution-v1\",\r\n  generated_at: new Date().toISOString(),\r\n  date: v0.date,\r\n  validation_mode: v0.validation_mode,\r\n  dataset: v0.dataset,\r\n  models: {\r\n    challenger: {\r\n      identity: \"usd-layer1-challenger-v0\",\r\n      workflow_id: v0.workflow_id,\r\n      workflow_name: v0.workflow_name,\r\n      execution_id: v0.execution_id,\r\n      execution_url: v0.execution_url,\r\n      decision: d0\r\n    },\r\n    challenger_v1: {\r\n      identity: \"usd-layer1-challenger-v1\",\r\n      workflow_id: v1.workflow_id,\r\n      workflow_name: v1.workflow_name,\r\n      execution_id: v1.execution_id,\r\n      execution_url: v1.execution_url,\r\n      decision: d1\r\n    }\r\n  },\r\n  input_availability: availability(d0),\r\n  input_availability_by_model: {\r\n    challenger: availability(d0),\r\n    challenger_v1: availability(d1)\r\n  },\r\n  comparison: {\r\n    same_direction: sameDirection,\r\n    challenger: d0.call.direction,\r\n    challenger_v1: d1.call.direction,\r\n    challenger_conviction: d0.call.conviction,\r\n    challenger_v1_conviction: d1.call.conviction,\r\n    note: \"Version 0 and version 1 share the same scoring code but not the same frozen weighting; a same-direction result is not a performance claim.\"\r\n  },\r\n  n8n: {\r\n    execution_id: $execution.id,\r\n    execution_url: \"https://silver17.app.n8n.cloud/execution/\" + $execution.id,\r\n    workflow_id: $workflow.id,\r\n    workflow_name: $workflow.name\r\n  },\r\n  labels: {\r\n    research_only: \"Research only. This is a replayed historical morning, not a live call.\",\r\n    replay_not_performance: \"Agreement between the two versions or with a stored call is reproduction evidence. It is not accuracy, edge, or historical validity beyond the validation gate named here.\",\r\n    h1_not_invoked: \"USD-L1-25F-H1-v0.1.0 is a separate, unscored model identity and is not one of these two children.\"\r\n  }\r\n};\r\nreturn [{ json: result }];\r\n"
+        "jsCode": "const config = $(\"Run configuration\").first().json;\r\nconst wanted = Array.isArray(config.dates) && config.dates.length > 0 ? config.dates : [config.date];\r\nconst v0Items = $(\"Run Challenger v0\").all().map((item) => item.json).filter(Boolean);\r\nconst v1Items = $(\"Run Challenger v1\").all().map((item) => item.json).filter(Boolean);\r\nfunction byDate(items) {\r\n  return items.reduce((map, item) => {\r\n    if (item && item.date) map.set(item.date, item);\r\n    return map;\r\n  }, new Map());\r\n}\r\nconst v0ByDate = byDate(v0Items);\r\nconst v1ByDate = byDate(v1Items);\r\nfunction availability(decision) {\r\n  const validation = decision.validation || {};\r\n  const inputs = validation.inputs || {};\r\n  const receipted = validation.receipted || {};\r\n  return {\r\n    cutoff_at_utc: validation.cutoff_at_utc || null,\r\n    contract_cutoff_at_utc: validation.contract_cutoff_at_utc || null,\r\n    structural_accepted: validation.structural_accepted === undefined ? validation.accepted : validation.structural_accepted,\r\n    accepted: validation.accepted === true,\r\n    reasons: (validation.reasons || []).map((reason) => reason.code),\r\n    declared_inputs: inputs.declared === undefined ? null : inputs.declared,\r\n    present_inputs: inputs.present === undefined ? null : inputs.present,\r\n    missing_inputs: inputs.missing === undefined ? null : inputs.missing,\r\n    missing_keys: inputs.missing_keys || [],\r\n    stamped_before_cutoff: inputs.stamped_before_cutoff === undefined ? null : inputs.stamped_before_cutoff,\r\n    receipted_complete: receipted.complete === true,\r\n    unclocked_keys: receipted.unclocked_keys || []\r\n  };\r\n}\r\nfunction pairedRecord(v0, v1) {\r\n  const d0 = v0.decision;\r\n  const d1 = v1.decision;\r\n  if (!d0 || !d1) {\r\n    throw new Error(\"one of the versioned Layer 1 children returned no decision\");\r\n  }\r\n  const result = {\r\n    schema_version: \"usd-l1-n8n-cloud-execution-v1\",\r\n    generated_at: new Date().toISOString(),\r\n    date: v0.date,\r\n    validation_mode: v0.validation_mode,\r\n    dataset: v0.dataset,\r\n    models: {\r\n      challenger: {\r\n        identity: \"usd-layer1-challenger-v0\",\r\n        workflow_id: v0.workflow_id,\r\n        workflow_name: v0.workflow_name,\r\n        execution_id: v0.execution_id,\r\n        execution_url: v0.execution_url,\r\n        decision: d0\r\n      },\r\n      challenger_v1: {\r\n        identity: \"usd-layer1-challenger-v1\",\r\n        workflow_id: v1.workflow_id,\r\n        workflow_name: v1.workflow_name,\r\n        execution_id: v1.execution_id,\r\n        execution_url: v1.execution_url,\r\n        decision: d1\r\n      }\r\n    },\r\n    input_availability: availability(d0),\r\n    input_availability_by_model: {\r\n      challenger: availability(d0),\r\n      challenger_v1: availability(d1)\r\n    },\r\n    comparison: {\r\n      same_direction: d0.call.direction === d1.call.direction,\r\n      challenger: d0.call.direction,\r\n      challenger_v1: d1.call.direction,\r\n      challenger_conviction: d0.call.conviction,\r\n      challenger_v1_conviction: d1.call.conviction,\r\n      note: \"Version 0 and version 1 share the same scoring code but not the same frozen weighting; a same-direction result is not a performance claim.\"\r\n    },\r\n    n8n: {\r\n      execution_id: $execution.id,\r\n      execution_url: \"https://silver17.app.n8n.cloud/execution/\" + $execution.id,\r\n      workflow_id: $workflow.id,\r\n      workflow_name: $workflow.name\r\n    },\r\n    labels: {\r\n      research_only: \"Research only. This is a replayed historical morning, not a live call.\",\r\n      replay_not_performance: \"Agreement between the two versions or with a stored call is reproduction evidence. It is not accuracy, edge, or historical validity beyond the validation gate named here.\",\r\n      h1_not_invoked: \"USD-L1-25F-H1-v0.1.0 is a separate, unscored model identity and is not one of these two children.\"\r\n    }\r\n  };\r\n  if (wanted.length > 1) {\r\n    result.batch = {\r\n      requested_dates: wanted,\r\n      total: wanted.length,\r\n      index: wanted.indexOf(v0.date) + 1\r\n    };\r\n  }\r\n  return result;\r\n}\r\n// One paired record per requested morning. A missing child is a transport failure, never a guessed\r\n// direction: it is emitted as its own schema so the ledger rejects it loudly instead of storing a call.\r\nconst output = [];\r\nfor (const date of wanted) {\r\n  const v0 = v0ByDate.get(date);\r\n  const v1 = v1ByDate.get(date);\r\n  if (!v0 || !v1) {\r\n    output.push({\r\n      json: {\r\n        schema_version: \"usd-l1-n8n-technical-failure-v1\",\r\n        generated_at: new Date().toISOString(),\r\n        date,\r\n        validation_mode: config.validation,\r\n        missing: [!v0 ? \"challenger\" : null, !v1 ? \"challenger_v1\" : null].filter(Boolean),\r\n        n8n: { execution_id: $execution.id, workflow_id: $workflow.id },\r\n        labels: { research_only: \"Research only. A missing child answer is a technical failure, not a call.\" }\r\n      }\r\n    });\r\n    continue;\r\n  }\r\n  output.push({ json: pairedRecord(v0, v1) });\r\n}\r\nif (output.length !== wanted.length) {\r\n  throw new Error(\"the paired controller produced \" + output.length + \" records for \" + wanted.length + \" mornings\");\r\n}\r\nreturn output;\r\n\r\n"
       },
-      "notes": "Combines the two child outputs. It never re-scores a child result and never selects a winner from performance."
+      "notes": "Pairs the two child outputs per morning and returns one record per date. It never re-scores a child result, never invents a missing one and never selects a winner from performance."
     },
     {
       "name": "Return paired record",
@@ -275,7 +289,7 @@
       "main": [
         [
           {
-            "node": "Compare the two decisions",
+            "node": "Gather both child answers",
             "type": "main",
             "index": 0
           }
@@ -283,6 +297,17 @@
       ]
     },
     "Run Challenger v1": {
+      "main": [
+        [
+          {
+            "node": "Gather both child answers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Gather both child answers": {
       "main": [
         [
           {

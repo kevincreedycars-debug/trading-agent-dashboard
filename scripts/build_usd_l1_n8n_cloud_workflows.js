@@ -199,7 +199,7 @@ function parentWorkflow({ v0Id, v1Id, webhookCredentialId }) {
         typeVersion: 2,
         position: [-520, 0],
         parameters: { jsCode: template("usd-l1-parent-config.js") },
-        notes: "One date, one validation label. Defaults to both challenger versions on 2024-01-10."
+        notes: "One morning or a bounded batch of up to 40 mornings, one validation label. Defaults to both challenger versions on 2024-01-10."
       },
       {
         name: "Fetch committed panel",
@@ -215,7 +215,7 @@ function parentWorkflow({ v0Id, v1Id, webhookCredentialId }) {
         typeVersion: 2,
         position: [-40, 0],
         parameters: { jsCode: template("usd-l1-parent-select.js") },
-        notes: "The dataset decides whether the date exists. A missing date is passed as a null session so both children return an explicit block."
+        notes: "The dataset decides whether each morning exists. One item per requested date; a missing date is passed as a null session so both children return an explicit block."
       },
       {
         name: "Bind challenger v0",
@@ -223,9 +223,9 @@ function parentWorkflow({ v0Id, v1Id, webhookCredentialId }) {
         typeVersion: 2,
         position: [100, -100],
         parameters: {
-          jsCode: "const item = $input.first().json; return [{ json: Object.assign({}, item, { model: \"challenger\" }) }];"
+          jsCode: "return $input.all().map((item) => ({ json: Object.assign({}, item.json, { model: \"challenger\" }) }));"
         },
-        notes: "Binds this branch to usd-layer1-challenger-v0 before the child is called."
+        notes: "Binds this branch to usd-layer1-challenger-v0 before the child is called; one child run per requested morning."
       },
       {
         name: "Bind challenger v1",
@@ -233,9 +233,9 @@ function parentWorkflow({ v0Id, v1Id, webhookCredentialId }) {
         typeVersion: 2,
         position: [100, 100],
         parameters: {
-          jsCode: "const item = $input.first().json; return [{ json: Object.assign({}, item, { model: \"challenger_v1\" }) }];"
+          jsCode: "return $input.all().map((item) => ({ json: Object.assign({}, item.json, { model: \"challenger_v1\" }) }));"
         },
-        notes: "Binds this branch to usd-layer1-challenger-v1 before the child is called."
+        notes: "Binds this branch to usd-layer1-challenger-v1 before the child is called; one child run per requested morning."
       },
       {
         name: "Run Challenger v0",
@@ -272,12 +272,20 @@ function parentWorkflow({ v0Id, v1Id, webhookCredentialId }) {
         notes: "Separately versioned Layer 1 workflow pinned to usd-layer1-challenger-v1."
       },
       {
+        name: "Gather both child answers",
+        type: "n8n-nodes-base.merge",
+        typeVersion: 3,
+        position: [420, 0],
+        parameters: { mode: "append", numberInputs: 2 },
+        notes: "Waits for both versioned children before any pairing. The two branches never race into the combiner."
+      },
+      {
         name: "Compare the two decisions",
         type: "n8n-nodes-base.code",
         typeVersion: 2,
-        position: [480, 0],
+        position: [640, 0],
         parameters: { jsCode: template("usd-l1-parent-combine.js") },
-        notes: "Combines the two child outputs. It never re-scores a child result and never selects a winner from performance."
+        notes: "Pairs the two child outputs per morning and returns one record per date. It never re-scores a child result, never invents a missing one and never selects a winner from performance."
       },
       {
         name: "Return paired record",
@@ -310,8 +318,9 @@ function parentWorkflow({ v0Id, v1Id, webhookCredentialId }) {
       },
       "Bind challenger v0": { main: [[{ node: "Run Challenger v0", type: "main", index: 0 }]] },
       "Bind challenger v1": { main: [[{ node: "Run Challenger v1", type: "main", index: 0 }]] },
-      "Run Challenger v0": { main: [[{ node: "Compare the two decisions", type: "main", index: 0 }]] },
-      "Run Challenger v1": { main: [[{ node: "Compare the two decisions", type: "main", index: 0 }]] },
+      "Run Challenger v0": { main: [[{ node: "Gather both child answers", type: "main", index: 0 }]] },
+      "Run Challenger v1": { main: [[{ node: "Gather both child answers", type: "main", index: 1 }]] },
+      "Gather both child answers": { main: [[{ node: "Compare the two decisions", type: "main", index: 0 }]] },
       "Compare the two decisions": { main: [[{ node: "Return paired record", type: "main", index: 0 }]] }
     }
   };
