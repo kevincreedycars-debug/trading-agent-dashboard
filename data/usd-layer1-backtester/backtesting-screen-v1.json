@@ -157,6 +157,7 @@
         "docs\\research\\usd-session\\v1\\CHECKPOINT_1.md",
         "docs\\research\\usd-session\\v1\\CHECKPOINT_2.md",
         "docs\\research\\usd-session\\v1\\CHECKPOINT_3.md",
+        "docs\\research\\usd-session\\v1\\CREDENTIAL_EXPOSURE_CHECK_20261121.md",
         "docs\\research\\usd-session\\v1\\H1_EVIDENCE_ACQUISITION_20261120.md",
         "docs\\research\\usd-session\\v1\\H1_RULE_RESOLUTIONS_20261120.md",
         "docs\\research\\usd-session\\v1\\PLATFORM_COMPLETION_CHECKLIST.md",
@@ -196,6 +197,7 @@
         "exports\\usd_layer1_agent.json",
         "lib\\layer1_backtesting\\coverage_trace.js",
         "lib\\layer1_backtesting\\engine.js",
+        "lib\\layer1_backtesting\\execution_accounting.js",
         "lib\\layer1_backtesting\\flat_bands.js",
         "lib\\layer1_backtesting\\h1_acquire.js",
         "lib\\layer1_backtesting\\h1_candidate.js",
@@ -208,6 +210,8 @@
         "lib\\layer1_backtesting\\h1_review.js",
         "lib\\layer1_backtesting\\h1_rule_candidates.js",
         "lib\\layer1_backtesting\\h1_source_amendments.js",
+        "lib\\layer1_backtesting\\input_retrieval.js",
+        "lib\\layer1_backtesting\\input_sources.js",
         "lib\\layer1_backtesting\\l2l_simulation.js",
         "lib\\layer1_backtesting\\ledger.js",
         "lib\\layer1_backtesting\\markdown.js",
@@ -218,6 +222,8 @@
         "lib\\layer1_backtesting\\report.js",
         "lib\\layer1_backtesting\\scoring_contract.js",
         "lib\\layer1_backtesting\\screen.js",
+        "lib\\layer1_backtesting\\spec_check.js",
+        "lib\\layer1_backtesting\\test_modules.js",
         "lib\\layer1_backtesting\\tests.js"
       ],
       "hits": [
@@ -48936,8 +48942,8 @@
           {
             "path": "lib/layer1_backtesting/tests.js",
             "present": true,
-            "bytes": 16851,
-            "sha256": "f3b584fb95ec488b4f34de0175ebde2220616153f5f599efce659a9661f715ad",
+            "bytes": 17827,
+            "sha256": "7c8ad703a144b75b597909685eca42e16e72f2a9c3f74913805b1221a27821f6",
             "date": "2026-11-14T00:00:00.000Z",
             "note": "the four test definitions and the pair-combination definition"
           }
@@ -49608,6 +49614,13 @@
           "module": "lib/layer1_backtesting/l2l_simulation.js",
           "tests": "tests/l2l_simulation.test.js",
           "cases": 7,
+          "accounting": {
+            "status": "implemented_and_fixture_demonstrated",
+            "module": "lib/layer1_backtesting/execution_accounting.js",
+            "fixture": "data/usd-layer1-backtester/fixtures/execution-accounting-v1.json",
+            "tests": "tests/execution_accounting.test.js",
+            "statement": "Costs, 1% sizing, equity and drawdown are implemented from contracts.ACCOUNT and demonstrated on a labelled fixture. No historical trade path exists to apply them to."
+          },
           "statement": "The frozen 5R path rule is implemented and unit-tested on synthetic tapes. The historical 5-minute tape and level ladder are absent, so the rule has never been measured on history."
         },
         "blocked_on": "history",
@@ -49663,6 +49676,13 @@
           "module": "lib/layer1_backtesting/l2l_simulation.js",
           "tests": "tests/l2l_simulation.test.js",
           "cases": 7,
+          "accounting": {
+            "status": "implemented_and_fixture_demonstrated",
+            "module": "lib/layer1_backtesting/execution_accounting.js",
+            "fixture": "data/usd-layer1-backtester/fixtures/execution-accounting-v1.json",
+            "tests": "tests/execution_accounting.test.js",
+            "statement": "Costs, 1% sizing, equity and drawdown are implemented from contracts.ACCOUNT and demonstrated on a labelled fixture. No historical trade path exists to apply them to."
+          },
           "statement": "The levels-plus-midpoints ladder and the frozen 3R path are implemented and unit-tested on synthetic tapes. The historical 5-minute tape and level ladder are absent, so the rule has never been measured on history."
         },
         "blocked_on": "history",
@@ -481877,6 +481897,7 @@
       "docs\\research\\usd-session\\v1\\CHECKPOINT_1.md",
       "docs\\research\\usd-session\\v1\\CHECKPOINT_2.md",
       "docs\\research\\usd-session\\v1\\CHECKPOINT_3.md",
+      "docs\\research\\usd-session\\v1\\CREDENTIAL_EXPOSURE_CHECK_20261121.md",
       "docs\\research\\usd-session\\v1\\H1_EVIDENCE_ACQUISITION_20261120.md",
       "docs\\research\\usd-session\\v1\\H1_RULE_RESOLUTIONS_20261120.md",
       "docs\\research\\usd-session\\v1\\PLATFORM_COMPLETION_CHECKLIST.md",
@@ -481916,6 +481937,7 @@
       "exports\\usd_layer1_agent.json",
       "lib\\layer1_backtesting\\coverage_trace.js",
       "lib\\layer1_backtesting\\engine.js",
+      "lib\\layer1_backtesting\\execution_accounting.js",
       "lib\\layer1_backtesting\\flat_bands.js",
       "lib\\layer1_backtesting\\h1_acquire.js",
       "lib\\layer1_backtesting\\h1_candidate.js",
@@ -481928,6 +481950,8 @@
       "lib\\layer1_backtesting\\h1_review.js",
       "lib\\layer1_backtesting\\h1_rule_candidates.js",
       "lib\\layer1_backtesting\\h1_source_amendments.js",
+      "lib\\layer1_backtesting\\input_retrieval.js",
+      "lib\\layer1_backtesting\\input_sources.js",
       "lib\\layer1_backtesting\\l2l_simulation.js",
       "lib\\layer1_backtesting\\ledger.js",
       "lib\\layer1_backtesting\\markdown.js",
@@ -481938,6 +481962,8 @@
       "lib\\layer1_backtesting\\report.js",
       "lib\\layer1_backtesting\\scoring_contract.js",
       "lib\\layer1_backtesting\\screen.js",
+      "lib\\layer1_backtesting\\spec_check.js",
+      "lib\\layer1_backtesting\\test_modules.js",
       "lib\\layer1_backtesting\\tests.js"
     ],
     "hits": [
@@ -482933,8 +482959,8 @@
         "sha256": "fa58dd4bfee1a80d18ce9abb706301efeed0c9fea9a88f4af774339d74e7b6b9"
       }
     ],
-    "report_sha256": "c84f64211339476a5ede26a408473580e9b801311797d507dd9802fd730a0570",
-    "screen_sha256": "fdecfa91d26d26a393b2a5dd654dc181b8ce15f8992fadb8e5da67b9096507e6",
+    "report_sha256": "e73fb5c62b20e9fbc1fba2c11a8d215ad48e009233eec0101dd11cf323448f76",
+    "screen_sha256": "e78530518740269c2d9f79eb3576f59583a5fa8bbf10b2046abeaba4c28cf839",
     "note": "The digest is taken over the body before this block. Rebuilding the screen from the same artefacts reproduces it."
   }
 }

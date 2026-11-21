@@ -1,0 +1,136 @@
+{
+  "schema_version": "usd-l1-test-selection-verification-v1",
+  "base_url": "https://silver17.app.n8n.cloud/",
+  "uploaded": [
+    {
+      "model": "challenger",
+      "workflow_id": "giGJKNQw5WLh1xbX",
+      "updated_at": "2026-11-21T21:30:07.222Z"
+    },
+    {
+      "model": "challenger_v1",
+      "workflow_id": "42sxXHScRvE3qSTX",
+      "updated_at": "2026-11-21T21:30:07.662Z"
+    },
+    {
+      "model": "fixture_constant",
+      "workflow_id": "kaWqy2iYIz8UzPRS",
+      "updated_at": "2026-11-21T21:30:08.161Z"
+    },
+    {
+      "model": "parent",
+      "workflow_id": "89uk5JnPbWPL5lGD"
+    }
+  ],
+  "runs": [
+    {
+      "requested_tests": [
+        "four_markets"
+      ],
+      "date": "2024-01-10",
+      "parent_execution": "7138",
+      "parent_execution_url": "https://silver17.app.n8n.cloud/execution/7138",
+      "child_execution": "7140",
+      "test_configuration": {
+        "schema_version": "usd-l1-test-configuration-v1",
+        "modules": [
+          "four_markets"
+        ],
+        "requested": [
+          "four_markets"
+        ],
+        "defaulted": false,
+        "scored_markets": [
+          "EURUSD",
+          "XAUUSD",
+          "BTCUSD",
+          "NAS100"
+        ],
+        "simulations": [],
+        "applied_by": "the controller that evaluated the morning",
+        "statement": "The selection is executed, not annotated: only the markets the selected modules consume are scored, and a selected module this record cannot carry is recorded as not_run or blocked_on_history."
+      },
+      "result_keys": [
+        "EURUSD",
+        "XAUUSD",
+        "BTCUSD",
+        "NAS100"
+      ],
+      "module_states": [
+        [
+          "four_markets",
+          "scored"
+        ]
+      ],
+      "status": "allowed",
+      "direction": "BULLISH"
+    },
+    {
+      "requested_tests": [
+        "l2l_full_5r",
+        "l2l_half_3r"
+      ],
+      "date": "2024-01-10",
+      "parent_execution": "7142",
+      "parent_execution_url": "https://silver17.app.n8n.cloud/execution/7142",
+      "child_execution": "7144",
+      "test_configuration": {
+        "schema_version": "usd-l1-test-configuration-v1",
+        "modules": [
+          "l2l_full_5r",
+          "l2l_half_3r"
+        ],
+        "requested": [
+          "l2l_full_5r",
+          "l2l_half_3r"
+        ],
+        "defaulted": false,
+        "scored_markets": [],
+        "simulations": [
+          "full_5r",
+          "half_3r"
+        ],
+        "applied_by": "the controller that evaluated the morning",
+        "statement": "The selection is executed, not annotated: only the markets the selected modules consume are scored, and a selected module this record cannot carry is recorded as not_run or blocked_on_history."
+      },
+      "result_keys": [],
+      "module_states": [
+        [
+          "l2l_full_5r",
+          "blocked_on_history"
+        ],
+        [
+          "l2l_half_3r",
+          "blocked_on_history"
+        ]
+      ],
+      "status": "allowed",
+      "direction": "BULLISH"
+    }
+  ],
+  "webhook_activated_for_run": true,
+  "webhook_deactivated_after_run": true,
+  "checks": [
+    {
+      "id": "market_selection_scores_four_markets",
+      "ok": true,
+      "detail": "tests=four_markets returned EURUSD, XAUUSD, BTCUSD, NAS100"
+    },
+    {
+      "id": "path_selection_scores_no_market",
+      "ok": true,
+      "detail": "tests=3,4 returned 0 market result(s)"
+    },
+    {
+      "id": "path_modules_are_blocked_on_history",
+      "ok": true,
+      "detail": "l2l_full_5r=blocked_on_history, l2l_half_3r=blocked_on_history"
+    },
+    {
+      "id": "selection_is_recorded_as_the_experiment",
+      "ok": true,
+      "detail": "four_markets vs l2l_full_5r,l2l_half_3r"
+    }
+  ],
+  "verdict": "pass"
+}

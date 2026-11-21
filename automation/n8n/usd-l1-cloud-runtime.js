@@ -7,12 +7,12 @@
   root.UsdL1CloudRuntime = factory();
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
-  const BUNDLE_VERSION = "usd-l1-cloud-runtime-v2";
-  const BUNDLE_SHA256 = "5fbc87f2568007cdb7a4fa5340cd88f878d7c639b4b47de55028fb446076219e";
+  const BUNDLE_VERSION = "usd-l1-cloud-runtime-v3";
+  const BUNDLE_SHA256 = "bb92e002976270d9016b9d584599c9bb01d2e6fee61d2b59205699bc6b7fd69b";
   const SOURCE_FILES = [
   {
     "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
-    "sha256": "6639111429c81da3c96ce499b12ff65d977d6e6249844e4790ac6d4875533d38",
+    "sha256": "99659c4c29abbf9db9d05a759919ab1a6b94396bb3ecd25ba9f2dffbcb579d4e",
     "stub": false
   },
   {
@@ -22,7 +22,7 @@
   },
   {
     "path": "backtester/lib/usd_layer1_backtester/model_registry.js",
-    "sha256": "d7174aaa42122351462bce1d22ef655010f6c0e61856ab71ed798c29de92113f",
+    "sha256": "cf210ac68321e93a53b7ddfdd0e65fa5bb7e8ec62e59cf26708d9459205fdffb",
     "stub": false
   },
   {
@@ -38,6 +38,11 @@
   {
     "path": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
     "sha256": "269bfdf4e1649456d89863718e1bd1c25440de24296a81d190af594a1b8d154f",
+    "stub": false
+  },
+  {
+    "path": "lib/layer1_backtesting/test_modules.js",
+    "sha256": "bdc617d3266c6cea1a4fc9c8a4a048174e9e6dd3ab9a51c54cb9e2477d009716",
     "stub": false
   },
   {
@@ -80,6 +85,7 @@
       
       const contracts = require("./contracts");
       const registry = require("./model_registry");
+      const testModules = require("../../../lib/layer1_backtesting/test_modules");
       const { resolveSession } = require("../usd_session_engine_interface");
       
       const CONTROLLER_VERSION = "usd-l1-backtest-controller-v1";
@@ -390,10 +396,18 @@
        *
        * The contract is contrarian because a USD-bullish call predicts EUR/USD, gold and NAS100 lower. A flat
        * outcome is kept out of the denominator; a missing outcome is no_outcome; an abstention is no_call.
+       *
+       * `markets` is the set the caller asked to score. It defaults to all four committed markets so an
+       * unqualified call behaves exactly as before; when a run selects fewer test modules, only the markets those
+       * modules consume are scored, and the markets that were not asked for are absent rather than counted as
+       * no_outcome.
        */
-      function scoreCall(direction, outcomes) {
+      function scoreCall(direction, outcomes, markets = contracts.MARKETS) {
+        const list = markets
+          .map((market) => (typeof market === "string" ? contracts.MARKETS.find((entry) => entry.key === market) : market))
+          .filter(Boolean);
         const results = {};
-        for (const market of contracts.MARKETS) {
+        for (const market of list) {
           const outcome = outcomes ? outcomes[market.key] : null;
           if (direction === "NO_CALL") results[market.key] = "no_call";
           else if (!outcome || !outcome.direction) results[market.key] = "no_outcome";
@@ -428,9 +442,17 @@
       /**
        * Decide one morning: validate, evaluate, score. The model is never called on a morning the structural
        * gate refused, and a model exception is reported as a blocked decision rather than crashing a batch.
+       *
+       * `options.testModules` is the run's test selection. It decides which markets are scored and is recorded
+       * per module, so a selection is an executed decision rather than a caption: asking for test 2 alone scores
+       * the four markets, asking for tests 3 and 4 alone scores no market outcome and records both modules as
+       * blocked on their missing tape.
        */
-      function decideMorning(session, modelId = "current") {
+      function decideMorning(session, modelId = "current", options = {}) {
         const adapter = resolveLayer1(modelId);
+        const selection = testModules.resolveModules(options.testModules);
+        const marketKeys = testModules.marketsFor(selection, contracts.MARKETS.map((market) => market.key));
+        const scoredMarkets = contracts.MARKETS.filter((market) => marketKeys.includes(market.key));
         const date = session && session.date ? session.date : null;
         const values = session ? (session.saved_inputs || session.values || {}) : {};
         const snapshot = {
@@ -449,6 +471,11 @@
           status: "blocked",
           call: emptyCall(),
           validation,
+          tests: {
+            modules: testModules.idsOf(selection),
+            scored_markets: marketKeys,
+            states: testModules.moduleRunStates({ modules: selection, results: [], session })
+          },
           results: null,
           outcomes: session && session.outcomes ? session.outcomes : null
         };
@@ -463,10 +490,16 @@
         try {
           const fresh = adapter.evaluate({ date, values });
           const call = normaliseCall(adapter, fresh);
+          const results = scoreCall(call.direction, base.outcomes, scoredMarkets);
+          base.tests.states = testModules.moduleRunStates({
+            modules: selection,
+            results: Object.keys(results).map((market) => ({ market, result: results[market] })),
+            session
+          });
           return Object.assign(base, {
             status: call.direction === "NO_CALL" ? "abstained" : "allowed",
             call,
-            results: scoreCall(call.direction, base.outcomes)
+            results
           });
         } catch (error) {
           base.call = Object.assign(emptyCall(), {
@@ -506,7 +539,14 @@
       }
       
       /** Aggregate a list of decisions without looking at a model or a file. */
-      function summarise(decisions) {
+      /**
+       * Aggregate a list of decisions without looking at a model or a file.
+       *
+       * `options.markets` restricts the per-market tallies to the markets the run actually scored. An unscored
+       * market is omitted rather than reported as a zero, because "not asked" and "asked and empty" are different
+       * facts about a run.
+       */
+      function summarise(decisions, options = {}) {
         const statuses = { blocked: 0, allowed: 0, abstained: 0 };
         const validation = {
           structural_accepted: 0,
@@ -514,8 +554,13 @@
           receipted_complete: 0,
           receipted_incomplete: 0
         };
+        const restricted = Array.isArray(options.markets);
+        const scoredMarketKeys = restricted
+          ? options.markets.map((market) => (typeof market === "string" ? market : market.key))
+          : contracts.MARKETS.map((market) => market.key);
+        const marketList = contracts.MARKETS.filter((market) => scoredMarketKeys.includes(market.key));
         const markets = {};
-        for (const market of contracts.MARKETS) markets[market.key] = emptyMarketTally();
+        for (const market of marketList) markets[market.key] = emptyMarketTally();
         const pooled = emptyMarketTally();
         const reasons = {};
         for (const decision of decisions) {
@@ -534,15 +579,15 @@
             reasons[reason.code] = (reasons[reason.code] || 0) + 1;
           }
           if (!decision.results) continue;
-          for (const market of contracts.MARKETS) {
+          for (const market of marketList) {
             const result = decision.results[market.key] || "no_outcome";
             addResult(markets[market.key], result);
             addResult(pooled, result);
           }
         }
-        for (const market of contracts.MARKETS) finishTally(markets[market.key]);
+        for (const market of marketList) finishTally(markets[market.key]);
         finishTally(pooled);
-        return {
+        return Object.assign({
           sessions: decisions.length,
           statuses,
           validation,
@@ -550,7 +595,7 @@
           markets,
           pooled,
           participation: round(statuses.allowed / Math.max(1, statuses.allowed + statuses.abstained), 4)
-        };
+        }, marketList.length === contracts.MARKETS.length ? {} : { scored_markets: marketList.map((market) => market.key) });
       }
       
       function sessionWindow(decisions) {
@@ -633,17 +678,20 @@
         from = null,
         to = null,
         validationMode = "structural",
+        testModules: requestedTests = null,
         includeDecisions = true
       } = {}) {
         if (!VALIDATION_MODES.includes(validationMode)) {
           throw new Error(`unknown validation mode "${validationMode}"; expected one of ${VALIDATION_MODES.join(", ")}`);
         }
         const layer1 = resolveLayer1(adapter || model);
+        const selection = testModules.resolveModules(requestedTests);
+        const scoredMarketKeys = testModules.marketsFor(selection, contracts.MARKETS.map((market) => market.key));
         const normalised = normaliseDataset(dataset, datasetPath);
         const selected = selectSessions(normalised.sessions, { dates, from, to });
         const decisions = selected.map((session) => {
           if (!session) return null;
-          const decision = decideMorning(session, layer1);
+          const decision = decideMorning(session, layer1, { testModules: selection });
           if (validationMode === "receipted" && decision.validation.accepted && !decision.validation.receipted.complete) {
             decision.status = "blocked";
             decision.call.reason = "receipted gate: not every consumed input carries a full timestamp before the cutoff";
@@ -673,8 +721,14 @@
             input_contract: layer1.input_contract || null
           },
           validation_mode: validationMode,
+          test_configuration: {
+            modules: testModules.idsOf(selection),
+            defaulted: requestedTests === undefined || requestedTests === null || requestedTests === "",
+            scored_markets: scoredMarketKeys,
+            simulations: testModules.simulationsFor(selection)
+          },
           window: sessionWindow(decisions),
-          summary: summarise(decisions),
+          summary: summarise(decisions, { markets: scoredMarketKeys }),
           decisions: includeDecisions ? decisions : undefined
         };
       }
@@ -852,6 +906,9 @@
         MODEL_IDS,
         LAYER1_ADAPTERS,
         CURRENT_INPUT_KEYS,
+        TEST_MODULES: testModules.MODULES,
+        DEFAULT_TEST_MODULES: testModules.DEFAULT_SELECTION,
+        resolveTestModules: testModules.resolveModules,
         resolveLayer1,
         parseIsoDate,
         validateSnapshot,
@@ -1124,7 +1181,8 @@
       const fixtureConstant = require("./fixture_constant");
       
       const REGISTRY_VERSION = "usd-l1-model-registry-v1";
-      const INPUT_CONTRACT_VERSION = "usd-l1-model-input-contract-v1";
+      const INPUT_CONTRACT_VERSION = "usd-l1-model-input-contract-v2";
+      const SOURCE_CATALOGUE = "lib/layer1_backtesting/input_sources.js";
       const MAX_SELECTED_MODELS = 4;
       
       /** Every key the current model can read from a saved morning. */
@@ -1178,9 +1236,12 @@
       function inputContract(keys, mechanisms) {
         return Object.freeze({
           contract_version: INPUT_CONTRACT_VERSION,
-          retrieval: "saved_panel_replay",
+          retrieval: "declared_sources_with_reconstruction_disclosure",
           retrieval_statement:
-            "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+            "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+          source_catalogue: SOURCE_CATALOGUE,
+          source_clock_policy:
+            "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
           missing_input_policy: "abstain_or_block",
           fill_policy: "the controller never fills a missing value and never estimates one",
           keys: contractKeys(keys, mechanisms)
@@ -1903,6 +1964,182 @@
       
       
     },
+    "lib/layer1_backtesting/test_modules.js": function(module, exports, require) {
+      "use strict";
+      
+      /**
+       * The four agreed test modules as executable contracts (research only).
+       *
+       * A test module is not a tab label. Each entry says what the module consumes, which session markets it
+       * scores, and what it needs before it can be scored at all. The controller reads this file when a run asks
+       * for a test selection, so choosing a module changes what is computed - which markets are scored and which
+       * modules are recorded as not run - rather than only what an experiment record says about itself.
+       *
+       * Two distinctions are kept explicit because collapsing them would overstate what a run proved:
+       *   - `per_record: "market_outcomes"` modules are scored inside a replayed record from the committed panel;
+       *   - `per_record: "trade_paths"` modules need a 5-minute tape and a level ladder per market, so a record
+       *     that carries no `trade_paths` is recorded as `blocked_on_history`, never as a zero.
+       *
+       * Nothing here reads a file, the network or a production path.
+       */
+      
+      const MODULES = Object.freeze([
+        Object.freeze({
+          id: "dxy_direction_broker_cfd",
+          ordinal: 1,
+          label: "USD direction on the broker DXY.cash series",
+          markets: Object.freeze([]),
+          per_record: "not_run",
+          requires: Object.freeze(["broker_dxy_h1_closes"]),
+          reason:
+            "the replayed panel carries no broker DXY outcome per morning; test 1 is scored once per run from the broker's one-hour candles, not inside a per-morning record"
+        }),
+        Object.freeze({
+          id: "four_markets",
+          ordinal: 2,
+          label: "USD-only opposite-direction mapping in four markets",
+          markets: Object.freeze(["EURUSD", "XAUUSD", "BTCUSD", "NAS100"]),
+          per_record: "market_outcomes",
+          requires: Object.freeze([]),
+          reason: null
+        }),
+        Object.freeze({
+          id: "l2l_full_5r",
+          ordinal: 3,
+          label: "Original Layer 2 levels with the frozen 5R rules",
+          markets: Object.freeze([]),
+          per_record: "trade_paths",
+          simulation: "full_5r",
+          requires: Object.freeze(["m5_tape", "level_ladder"]),
+          reason:
+            "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+        }),
+        Object.freeze({
+          id: "l2l_half_3r",
+          ordinal: 4,
+          label: "Original levels plus midpoints with the frozen 3R rules",
+          markets: Object.freeze([]),
+          per_record: "trade_paths",
+          simulation: "half_3r",
+          requires: Object.freeze(["m5_tape", "level_ladder"]),
+          reason:
+            "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+        })
+      ]);
+      
+      const MODULE_IDS = Object.freeze(MODULES.map((module) => module.id));
+      const DEFAULT_SELECTION = MODULE_IDS;
+      
+      function byId(id) {
+        return MODULES.find((module) => module.id === id) || null;
+      }
+      
+      /**
+       * Turn a requested selection into module definitions.
+       *
+       * A webhook body, a query string or a dashboard checkbox group all arrive as strings, so a string is
+       * accepted. An unknown module is an error: a run must never report a test it did not execute, and a typo
+       * must not silently fall back to the full set. An empty request means "all four", which is the committed
+       * default the published run used.
+       */
+      function resolveModules(requested) {
+        if (requested === undefined || requested === null || requested === "") return MODULES.slice();
+        const raw = Array.isArray(requested) ? requested : String(requested).split(",");
+        const ids = [];
+        for (const entry of raw) {
+          const id = entry && typeof entry === "object" && entry.id ? String(entry.id) : String(entry).trim();
+          if (!id) continue;
+          if (!byId(id)) {
+            throw new Error(`unknown test module ${JSON.stringify(id)}; the committed modules are ${MODULE_IDS.join(", ")}`);
+          }
+          if (!ids.includes(id)) ids.push(id);
+        }
+        if (ids.length === 0) throw new Error("a run must select at least one test module");
+        return ids.map(byId);
+      }
+      
+      /** The markets the selection scores, in the contract order the panel publishes. */
+      function marketsFor(modules, marketOrder) {
+        const wanted = new Set();
+        for (const module of modules) {
+          for (const market of module.markets) wanted.add(market);
+        }
+        const order = Array.isArray(marketOrder) ? marketOrder : ["EURUSD", "XAUUSD", "BTCUSD", "NAS100"];
+        return order.filter((market) => wanted.has(market));
+      }
+      
+      /** The frozen simulation rules the selection asks for, in module order. */
+      function simulationsFor(modules) {
+        return modules.filter((module) => module.simulation).map((module) => module.simulation);
+      }
+      
+      function idsOf(modules) {
+        return modules.map((module) => module.id);
+      }
+      
+      /**
+       * What happened to each selected module on one record.
+       *
+       * `scored` needs a stored result; `no_outcome` is a scored module whose morning had no readable outcome;
+       * `blocked_on_history` is a path module without a tape; `not_run` is a module the record cannot carry.
+       * A module that was not selected is not reported here at all, so a reader can tell "not asked" from "asked
+       * and refused".
+       */
+      function moduleRunStates({ modules, results, session } = {}) {
+        const selected = Array.isArray(modules) && modules.length > 0 ? modules : resolveModules(null);
+        const rows = Array.isArray(results) ? results : [];
+        const tradePaths = session && session.trade_paths && typeof session.trade_paths === "object"
+          ? session.trade_paths
+          : null;
+        return selected.map((module) => {
+          if (module.per_record === "market_outcomes") {
+            const scored = module.markets
+              .map((market) => rows.find((row) => row && row.market === market))
+              .filter(Boolean);
+            const anyOutcome = scored.some((row) => ["hit", "miss", "flat"].includes(row.result));
+            return {
+              id: module.id,
+              ordinal: module.ordinal,
+              state: anyOutcome ? "scored" : "no_outcome",
+              markets: module.markets.slice(),
+              reason: anyOutcome ? null : "no selected market had a readable outcome for this morning"
+            };
+          }
+          if (module.per_record === "trade_paths") {
+            const markets = tradePaths && Array.isArray(tradePaths.markets) ? tradePaths.markets : [];
+            const usable = markets.filter((market) => tradePaths[market] && Array.isArray(tradePaths[market].candles));
+            return {
+              id: module.id,
+              ordinal: module.ordinal,
+              state: usable.length > 0 ? "scored" : "blocked_on_history",
+              simulation: module.simulation,
+              markets: usable,
+              reason: usable.length > 0 ? null : module.reason
+            };
+          }
+          return {
+            id: module.id,
+            ordinal: module.ordinal,
+            state: "not_run",
+            markets: [],
+            reason: module.reason
+          };
+        });
+      }
+      
+      module.exports = {
+        MODULES,
+        MODULE_IDS,
+        DEFAULT_SELECTION,
+        byId,
+        resolveModules,
+        marketsFor,
+        simulationsFor,
+        idsOf,
+        moduleRunStates
+      };
+      
+    },
     "lib/usd_l1_votes.js": function(module, exports, require) {
       /**
        * The challenger's rule interpreter, shared by the research engine and the dashboard panel.
@@ -2295,6 +2532,7 @@
       model,
       dates: [date],
       validationMode: validation,
+      testModules: Array.isArray(payload.tests) && payload.tests.length > 0 ? payload.tests : null,
       includeDecisions: true
     });
     return {
@@ -2317,6 +2555,7 @@
       layer1: result.layer1,
       controller_version: result.controller_version,
       validation_mode: result.validation_mode,
+      test_configuration: result.test_configuration,
       dataset: result.dataset,
       summary: result.summary,
       decision: result.decisions[0]

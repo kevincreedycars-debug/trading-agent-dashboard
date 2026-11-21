@@ -100,6 +100,27 @@ refused before the panel is fetched, so no paired record exists for them.
 The webhook still answers with the first paired record; the whole batch is read from the stored execution
 data (`GET /executions/<id>?includeData=true`), which is also what the captures above are extracted from.
 
+## Configurable models, executed test modules and platform evidence (2026-11-21)
+
+The model set is registry-driven and the test-module selection is executed, not annotated:
+
+- `model_registry.js` owns the model list; the Cloud children, the parent, the ledger, the comparisons and
+  the map all read it. Bundle `usd-l1-cloud-runtime-v3` adds `lib/layer1_backtesting/test_modules.js`.
+- The parent forwards `tests` into each child. The controller scores only the markets the selected modules
+  consume and records every selected module as `scored`, `no_outcome`, `blocked_on_history` or `not_run`.
+  `identity.test_configuration` carries the executed modules, the scored markets and the simulations.
+- Remote proof on one morning, 2026-11-21: executions `7138`/`7140` with `tests: ["four_markets"]` returned
+  EURUSD, XAUUSD, BTCUSD and NAS100; executions `7142`/`7144` with tests 3 and 4 returned no market result
+  and recorded both modules as `blocked_on_history`. The transcript is
+  `data/usd-layer1-backtester/n8n/test-selection-verification-20261121.json`. The parent was activated for
+  those two calls and deactivated afterwards.
+- Four platform artefacts are built from committed inputs only: `spec-check-v1.json` (independent
+  specification checks), `input-retrieval-v1.json` (declared sources, clocks, receipts and reconstruction
+  digests), `coverage-v1.json` (per model, mode and configuration) and `morning-traces-v1.json` (one morning
+  from source to outcome). `npm run check:usd-l1-platform` reproduces all four without writing.
+- The webhook credential was checked for exposure: no ref, object or unreachable blob carries the value, so
+  no rotation was required. See `docs/research/usd-session/v1/CREDENTIAL_EXPOSURE_CHECK_20261121.md`.
+
 ## What this proves, and what it does not
 
 Proves:

@@ -1,0 +1,1921 @@
+{
+  "schema_version": "usd-l1-input-retrieval-v1",
+  "generated_at": "2026-11-14T00:00:00.000Z",
+  "dataset": {
+    "path": "data/usd-layer1-backtester/run-v1.json",
+    "run_version": "usd-l1-backtester-r1",
+    "generated_at": "2026-11-14T00:00:00.000Z",
+    "sessions": 725
+  },
+  "inventory": {
+    "path": "data/research/usd-session/macro-data-inventory.json",
+    "provenance_path": "data/usd-layer1-backtester/run-v1.json",
+    "outcome_series": [
+      {
+        "market": "EURUSD",
+        "label": "EUR/USD",
+        "series": "oanda_eur_usd_h1.csv",
+        "usd_bullish_predicts": "DOWN"
+      },
+      {
+        "market": "XAUUSD",
+        "label": "XAU/USD",
+        "series": "oanda_xau_usd_h1.csv",
+        "usd_bullish_predicts": "DOWN"
+      },
+      {
+        "market": "BTCUSD",
+        "label": "BTC/USD",
+        "series": "binance_btcusdt_1h.csv",
+        "usd_bullish_predicts": "DOWN"
+      },
+      {
+        "market": "NAS100",
+        "label": "NAS100",
+        "series": "oanda_nas100_usd_h1.csv",
+        "usd_bullish_predicts": "DOWN"
+      }
+    ]
+  },
+  "capture_corpus": {
+    "directory": "data/usd-layer1-backtester/captures",
+    "files": [],
+    "entries": 0,
+    "fixtures_ignored": 0,
+    "rejected": [],
+    "schema": "usd-l1-input-capture-v1",
+    "note": "a capture is only evidence when it was taken at or before the cutoff and carries a receipt id; fixture captures are ignored by this artefact"
+  },
+  "models": {
+    "current": {
+      "identity": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+      "label": "Current USD model",
+      "role": "control",
+      "kind": "research",
+      "fixture": false,
+      "contract_version": "usd-l1-model-input-contract-v2",
+      "keys": [
+        {
+          "key": "vix_level",
+          "source": {
+            "provider": "fred",
+            "series": "VIXCLS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "read directly",
+            "parents": [],
+            "publication": {
+              "release": "provider close on the observation date, redistributed by FRED",
+              "schedule": "the value is that date's close and is not knowable before it; the redistribution lag was not measured in this cycle, so the alignment uses a declared one-business-day lag",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://fred.stlouisfed.org/",
+              "verified_on": "2026-10-13 (redistribution only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 717,
+          "mornings_missing": 8,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 717,
+            "none": 8
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 717,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "c8c726be51d5620a35b4a0e0b836cf99e7e7c91e32049ba87e76d74c6fe9d8b7",
+          "series_scope": "717 morning values, 725 panel mornings"
+        },
+        {
+          "key": "vix_d5_chg",
+          "source": {
+            "provider": "fred",
+            "series": "VIXCLS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "five-business-day change in VIX points",
+            "parents": [
+              "vix_level"
+            ],
+            "publication": {
+              "release": "provider close on the observation date, redistributed by FRED",
+              "schedule": "the value is that date's close and is not knowable before it; the redistribution lag was not measured in this cycle, so the alignment uses a declared one-business-day lag",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://fred.stlouisfed.org/",
+              "verified_on": "2026-10-13 (redistribution only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 707,
+          "mornings_missing": 18,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 707,
+            "none": 18
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 707,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "6da04fb00a646d1ed026d8c6dd319e89024f528df88c163a90b4950b7f4b5ec8",
+          "series_scope": "707 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_2y_d5_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DGS2",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "five-business-day change in basis points",
+            "parents": [
+              "us_2y_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 661,
+          "mornings_missing": 64,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 661,
+            "none": 64
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 661,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "60123945415afbd4fdb6abfd0bc52789cf80dc097f17c1222c40bbd5e8efcae7",
+          "series_scope": "661 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_10y_real_d5_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DFII10",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "five-business-day change in basis points",
+            "parents": [
+              "us_10y_real_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 661,
+          "mornings_missing": 64,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 661,
+            "none": 64
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 661,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "3b6ca0e7a8008b034fed81b50fe32c78963d7577a8a061faf1137016475c438a",
+          "series_scope": "661 morning values, 725 panel mornings"
+        },
+        {
+          "key": "broad_dollar_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DTWEXBGS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "broad_dollar"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "8464ad70a5fb09426d6ab7997fef7cdf7c78f88bb4420475771f01aa0c1b9930",
+          "series_scope": "690 morning values, 725 panel mornings"
+        },
+        {
+          "key": "gold_d5_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_xau_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "five-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 704,
+          "mornings_missing": 21,
+          "clocks": {
+            "timestamp": 704,
+            "date_only": 0,
+            "none": 21
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 704,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "23435f4f5ad462616773045159e8bcfdf395f01868687413d7ddfc4d8f6d107a",
+          "series_scope": "704 morning values, 725 panel mornings"
+        },
+        {
+          "key": "nasdaq100_d5_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_nas100_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "five-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 704,
+          "mornings_missing": 21,
+          "clocks": {
+            "timestamp": 704,
+            "date_only": 0,
+            "none": 21
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 704,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "282c7b7463fb0f9b5050f13078006b6b3a4b222b5e3079067acaf0e759483753",
+          "series_scope": "704 morning values, 725 panel mornings"
+        },
+        {
+          "key": "eurusd_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DEXUSEU",
+            "frequency": "daily",
+            "units": "usd_per_eur",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "eurusd"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "6968eff24c5a4dbc99b746f995bd1542b33da3f08630b0fbe5e682f9bf742f09",
+          "series_scope": "690 morning values, 725 panel mornings"
+        },
+        {
+          "key": "usdjpy_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DEXJPUS",
+            "frequency": "daily",
+            "units": "jpy_per_usd",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "usdjpy"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "f0e138fceac852db52c9dbf9f6e41ae960789e33c40fec49b8a7457f1315e1dd",
+          "series_scope": "690 morning values, 725 panel mornings"
+        },
+        {
+          "key": "usdjpy_d1_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DEXJPUS",
+            "frequency": "daily",
+            "units": "jpy_per_usd",
+            "transform": "one-business-day percentage change",
+            "parents": [
+              "usdjpy"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 706,
+          "mornings_missing": 19,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 706,
+            "none": 19
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 706,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "40ab7131a85102ba3584a4bd971e565aca5cd48f69f8ac62a4212bb25a986c02",
+          "series_scope": "706 morning values, 725 panel mornings"
+        },
+        {
+          "key": "usdchf_d1_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DEXSZUS",
+            "frequency": "daily",
+            "units": "chf_per_usd",
+            "transform": "one-business-day percentage change",
+            "parents": [
+              "usdchf"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 706,
+          "mornings_missing": 19,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 706,
+            "none": 19
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 706,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "88d7de6655246ec628f64bb84f8c652bc8e0d802dc80f80921076f4924be25fb",
+          "series_scope": "706 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_2y_yield",
+          "source": {
+            "provider": "fred",
+            "series": "DGS2",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "read directly",
+            "parents": [],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 694,
+          "mornings_missing": 31,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 694,
+            "none": 31
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 694,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "1aa3dfabb7849fc3acc629714443dddfe461493552132c125c3ddc4520c81b1b",
+          "series_scope": "694 morning values, 725 panel mornings"
+        },
+        {
+          "key": "de_2y_yield",
+          "source": {
+            "provider": null,
+            "series": null,
+            "frequency": null,
+            "units": null,
+            "transform": null,
+            "parents": [],
+            "publication": {
+              "release": null,
+              "schedule": null,
+              "declared_lag_business_days": null,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": false
+          },
+          "mornings_with_value": 725,
+          "mornings_missing": 0,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 725,
+            "none": 0
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 725,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "4d27f7b8078985a17f711aca1329c6daac4bafaca2c7b9ccc258077571b118d4",
+          "series_scope": "725 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_de_2y_spread",
+          "source": {
+            "provider": "fred + bundesbank",
+            "series": "DGS2 - BBSIS daily 2Y spot",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "US 2Y minus German 2Y, in percentage points",
+            "parents": [
+              "us_2y_yield",
+              "de_2y_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 694,
+          "mornings_missing": 31,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 0,
+            "none": 725
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 694,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "3d2164b9bbb59c4f2d1c6222e345538c773883f19aa8f47069a786a621cf4700",
+          "series_scope": "694 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_de_2y_spread_d5_bps",
+          "source": {
+            "provider": "fred + bundesbank",
+            "series": "DGS2 - BBSIS daily 2Y spot",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "five-business-day change of the spread, in basis points",
+            "parents": [
+              "us_2y_yield",
+              "de_2y_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 661,
+          "mornings_missing": 64,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 0,
+            "none": 725
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 661,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "b26b5003da3faf98bf07f05f3926ff346612a353af65f34a8c1f0ca37cb6876e",
+          "series_scope": "661 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_2y_d20_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DGS2",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "twenty-business-day change in basis points",
+            "parents": [
+              "us_2y_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 649,
+          "mornings_missing": 76,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 649,
+            "none": 76
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 649,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "cd136c14f2118f9087df93ad3df98cb72ebc59fab438ae9e89740dc1c228daec",
+          "series_scope": "649 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_10y_real_yield",
+          "source": {
+            "provider": "fred",
+            "series": "DFII10",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "read directly",
+            "parents": [],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 694,
+          "mornings_missing": 31,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 694,
+            "none": 31
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 694,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "d01e313f669913704af6400bfbb43a1f5314f55ee2b606613242abc5221eef13",
+          "series_scope": "694 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_10y_real_d20_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DFII10",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "twenty-business-day change in basis points",
+            "parents": [
+              "us_10y_real_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 649,
+          "mornings_missing": 76,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 649,
+            "none": 76
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 649,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "494c4e0d1458963838b79eaa783bd9d25a3584fbe8634089874910469e5602bb",
+          "series_scope": "649 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_10y_yield",
+          "source": {
+            "provider": "fred",
+            "series": "DGS10",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "read directly",
+            "parents": [],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 694,
+          "mornings_missing": 31,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 694,
+            "none": 31
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 694,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "2a48cd998b3fcc4c9f7a5b7ede928df8dd4d14336517f8d7e4b29b027279f48a",
+          "series_scope": "694 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_10y_d5_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DGS10",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "five-business-day change in basis points",
+            "parents": [
+              "us_10y_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 661,
+          "mornings_missing": 64,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 661,
+            "none": 64
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 661,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "2eaaf418a58793a7124ecabf06bcea976dae6197d552ebbda9c978cf9cfc5830",
+          "series_scope": "661 morning values, 725 panel mornings"
+        },
+        {
+          "key": "vix_d1_chg",
+          "source": {
+            "provider": "fred",
+            "series": "VIXCLS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "one-business-day change in VIX points",
+            "parents": [
+              "vix_level"
+            ],
+            "publication": {
+              "release": "provider close on the observation date, redistributed by FRED",
+              "schedule": "the value is that date's close and is not knowable before it; the redistribution lag was not measured in this cycle, so the alignment uses a declared one-business-day lag",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://fred.stlouisfed.org/",
+              "verified_on": "2026-10-13 (redistribution only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 709,
+          "mornings_missing": 16,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 709,
+            "none": 16
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 709,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "f810d38e324815e2a1913e1ad4012d265e0d3520646379364dd6d33bc0fdcd28",
+          "series_scope": "709 morning values, 725 panel mornings"
+        },
+        {
+          "key": "broad_dollar",
+          "source": {
+            "provider": "fred",
+            "series": "DTWEXBGS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "read directly",
+            "parents": [],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 710,
+          "mornings_missing": 15,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 710,
+            "none": 15
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 710,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "cd867c3c948a523babbd7f29e7957674f609f4434b2b57f1d742c1a0ce3796a9",
+          "series_scope": "710 morning values, 725 panel mornings"
+        },
+        {
+          "key": "broad_dollar_d1_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DTWEXBGS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "one-business-day percentage change",
+            "parents": [
+              "broad_dollar"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 706,
+          "mornings_missing": 19,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 706,
+            "none": 19
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 706,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "38dec7a232568c3a4083327cb4491b1dcecb3d2b049473dcbc7ec2c941ffb531",
+          "series_scope": "706 morning values, 725 panel mornings"
+        },
+        {
+          "key": "broad_dollar_d20_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DTWEXBGS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "twenty-business-day percentage change",
+            "parents": [
+              "broad_dollar"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 675,
+          "mornings_missing": 50,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 675,
+            "none": 50
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 675,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "91c19528bb04fd60dff4508dbaa5ba7ae3454efb6636630455d7b16b1d0ea5d7",
+          "series_scope": "675 morning values, 725 panel mornings"
+        },
+        {
+          "key": "gold_price",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_xau_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "cached one-hour close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 716,
+          "mornings_missing": 9,
+          "clocks": {
+            "timestamp": 716,
+            "date_only": 0,
+            "none": 9
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 716,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "409705a4eecaf268c3f1c2eede946efb3ac0e6a53b16bf54b02325492b87415a",
+          "series_scope": "716 morning values, 725 panel mornings"
+        },
+        {
+          "key": "gold_d1_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_xau_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "one-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 706,
+          "mornings_missing": 19,
+          "clocks": {
+            "timestamp": 706,
+            "date_only": 0,
+            "none": 19
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 706,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "9cc8b1d68b124df6d447cc31cbdfc869aa0ea80667bc61f5c4691b5d6f54d2b4",
+          "series_scope": "706 morning values, 725 panel mornings"
+        },
+        {
+          "key": "gold_d20_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_xau_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "twenty-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 687,
+          "mornings_missing": 38,
+          "clocks": {
+            "timestamp": 687,
+            "date_only": 0,
+            "none": 38
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 687,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "e7422ad8ba74e05cb76d21dc101969267d0a189b6dc8399f70471fb0f725ed14",
+          "series_scope": "687 morning values, 725 panel mornings"
+        },
+        {
+          "key": "nasdaq100_price",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_nas100_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "cached one-hour close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 716,
+          "mornings_missing": 9,
+          "clocks": {
+            "timestamp": 716,
+            "date_only": 0,
+            "none": 9
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 716,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "42a4c8810366ffb562212a93e6a6c456239670d1804a425d6974109eefb8ce49",
+          "series_scope": "716 morning values, 725 panel mornings"
+        },
+        {
+          "key": "nasdaq100_d1_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_nas100_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "one-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 706,
+          "mornings_missing": 19,
+          "clocks": {
+            "timestamp": 706,
+            "date_only": 0,
+            "none": 19
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 706,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "7ac0f0b68790779eb60f68b0ee831f3189aa3ab9db7a955ff75921cf2453ebf4",
+          "series_scope": "706 morning values, 725 panel mornings"
+        },
+        {
+          "key": "nasdaq100_d20_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_nas100_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "twenty-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 687,
+          "mornings_missing": 38,
+          "clocks": {
+            "timestamp": 687,
+            "date_only": 0,
+            "none": 38
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 687,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "e6524a68c501628da8637dea43d4b702c7322b6ff46dc8a5f22605de4a71c5d4",
+          "series_scope": "687 morning values, 725 panel mornings"
+        }
+      ],
+      "totals": {
+        "key_values_present": 20775,
+        "key_values_missing": 975,
+        "contemporaneous": 0,
+        "reconstructed": 20775,
+        "conflicts": 0
+      },
+      "mornings": {
+        "panel": 725,
+        "with_every_key_present": 551,
+        "fully_contemporaneous": 0
+      },
+      "availability_claim": "not_established",
+      "statement": "Reconstruction is not retrieval. A key counts as contemporaneous only when a capture taken at or before the cutoff matches the replayed value and carries a receipt id."
+    },
+    "challenger": {
+      "identity": "usd-layer1-challenger-v0",
+      "label": "Challenger v0",
+      "role": "challenger",
+      "kind": "research",
+      "fixture": false,
+      "contract_version": "usd-l1-model-input-contract-v2",
+      "keys": [
+        {
+          "key": "vix_level",
+          "source": {
+            "provider": "fred",
+            "series": "VIXCLS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "read directly",
+            "parents": [],
+            "publication": {
+              "release": "provider close on the observation date, redistributed by FRED",
+              "schedule": "the value is that date's close and is not knowable before it; the redistribution lag was not measured in this cycle, so the alignment uses a declared one-business-day lag",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://fred.stlouisfed.org/",
+              "verified_on": "2026-10-13 (redistribution only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 717,
+          "mornings_missing": 8,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 717,
+            "none": 8
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 717,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "c8c726be51d5620a35b4a0e0b836cf99e7e7c91e32049ba87e76d74c6fe9d8b7",
+          "series_scope": "717 morning values, 725 panel mornings"
+        },
+        {
+          "key": "vix_d5_chg",
+          "source": {
+            "provider": "fred",
+            "series": "VIXCLS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "five-business-day change in VIX points",
+            "parents": [
+              "vix_level"
+            ],
+            "publication": {
+              "release": "provider close on the observation date, redistributed by FRED",
+              "schedule": "the value is that date's close and is not knowable before it; the redistribution lag was not measured in this cycle, so the alignment uses a declared one-business-day lag",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://fred.stlouisfed.org/",
+              "verified_on": "2026-10-13 (redistribution only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 707,
+          "mornings_missing": 18,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 707,
+            "none": 18
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 707,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "6da04fb00a646d1ed026d8c6dd319e89024f528df88c163a90b4950b7f4b5ec8",
+          "series_scope": "707 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_2y_d5_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DGS2",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "five-business-day change in basis points",
+            "parents": [
+              "us_2y_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 661,
+          "mornings_missing": 64,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 661,
+            "none": 64
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 661,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "60123945415afbd4fdb6abfd0bc52789cf80dc097f17c1222c40bbd5e8efcae7",
+          "series_scope": "661 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_10y_real_d5_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DFII10",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "five-business-day change in basis points",
+            "parents": [
+              "us_10y_real_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 661,
+          "mornings_missing": 64,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 661,
+            "none": 64
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 661,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "3b6ca0e7a8008b034fed81b50fe32c78963d7577a8a061faf1137016475c438a",
+          "series_scope": "661 morning values, 725 panel mornings"
+        },
+        {
+          "key": "broad_dollar_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DTWEXBGS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "broad_dollar"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "8464ad70a5fb09426d6ab7997fef7cdf7c78f88bb4420475771f01aa0c1b9930",
+          "series_scope": "690 morning values, 725 panel mornings"
+        },
+        {
+          "key": "gold_d5_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_xau_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "five-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 704,
+          "mornings_missing": 21,
+          "clocks": {
+            "timestamp": 704,
+            "date_only": 0,
+            "none": 21
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 704,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "23435f4f5ad462616773045159e8bcfdf395f01868687413d7ddfc4d8f6d107a",
+          "series_scope": "704 morning values, 725 panel mornings"
+        },
+        {
+          "key": "nasdaq100_d5_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_nas100_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "five-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 704,
+          "mornings_missing": 21,
+          "clocks": {
+            "timestamp": 704,
+            "date_only": 0,
+            "none": 21
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 704,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "282c7b7463fb0f9b5050f13078006b6b3a4b222b5e3079067acaf0e759483753",
+          "series_scope": "704 morning values, 725 panel mornings"
+        },
+        {
+          "key": "eurusd_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DEXUSEU",
+            "frequency": "daily",
+            "units": "usd_per_eur",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "eurusd"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "6968eff24c5a4dbc99b746f995bd1542b33da3f08630b0fbe5e682f9bf742f09",
+          "series_scope": "690 morning values, 725 panel mornings"
+        },
+        {
+          "key": "usdjpy_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DEXJPUS",
+            "frequency": "daily",
+            "units": "jpy_per_usd",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "usdjpy"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "f0e138fceac852db52c9dbf9f6e41ae960789e33c40fec49b8a7457f1315e1dd",
+          "series_scope": "690 morning values, 725 panel mornings"
+        }
+      ],
+      "totals": {
+        "key_values_present": 6224,
+        "key_values_missing": 301,
+        "contemporaneous": 0,
+        "reconstructed": 6224,
+        "conflicts": 0
+      },
+      "mornings": {
+        "panel": 725,
+        "with_every_key_present": 618,
+        "fully_contemporaneous": 0
+      },
+      "availability_claim": "not_established",
+      "statement": "Reconstruction is not retrieval. A key counts as contemporaneous only when a capture taken at or before the cutoff matches the replayed value and carries a receipt id."
+    },
+    "challenger_v1": {
+      "identity": "usd-layer1-challenger-v1",
+      "label": "Challenger v1",
+      "role": "challenger",
+      "kind": "research",
+      "fixture": false,
+      "contract_version": "usd-l1-model-input-contract-v2",
+      "keys": [
+        {
+          "key": "vix_level",
+          "source": {
+            "provider": "fred",
+            "series": "VIXCLS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "read directly",
+            "parents": [],
+            "publication": {
+              "release": "provider close on the observation date, redistributed by FRED",
+              "schedule": "the value is that date's close and is not knowable before it; the redistribution lag was not measured in this cycle, so the alignment uses a declared one-business-day lag",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://fred.stlouisfed.org/",
+              "verified_on": "2026-10-13 (redistribution only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 717,
+          "mornings_missing": 8,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 717,
+            "none": 8
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 717,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "c8c726be51d5620a35b4a0e0b836cf99e7e7c91e32049ba87e76d74c6fe9d8b7",
+          "series_scope": "717 morning values, 725 panel mornings"
+        },
+        {
+          "key": "vix_d5_chg",
+          "source": {
+            "provider": "fred",
+            "series": "VIXCLS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "five-business-day change in VIX points",
+            "parents": [
+              "vix_level"
+            ],
+            "publication": {
+              "release": "provider close on the observation date, redistributed by FRED",
+              "schedule": "the value is that date's close and is not knowable before it; the redistribution lag was not measured in this cycle, so the alignment uses a declared one-business-day lag",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://fred.stlouisfed.org/",
+              "verified_on": "2026-10-13 (redistribution only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 707,
+          "mornings_missing": 18,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 707,
+            "none": 18
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 707,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "6da04fb00a646d1ed026d8c6dd319e89024f528df88c163a90b4950b7f4b5ec8",
+          "series_scope": "707 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_2y_d5_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DGS2",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "five-business-day change in basis points",
+            "parents": [
+              "us_2y_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 661,
+          "mornings_missing": 64,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 661,
+            "none": 64
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 661,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "60123945415afbd4fdb6abfd0bc52789cf80dc097f17c1222c40bbd5e8efcae7",
+          "series_scope": "661 morning values, 725 panel mornings"
+        },
+        {
+          "key": "us_10y_real_d5_bps",
+          "source": {
+            "provider": "fred",
+            "series": "DFII10",
+            "frequency": "daily",
+            "units": "percent",
+            "transform": "five-business-day change in basis points",
+            "parents": [
+              "us_10y_real_yield"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.15 Selected Interest Rates",
+              "schedule": "the page confirms a daily release, but the exact publication time was NOT captured in this cycle, so the alignment uses a declared one-business-day lag and the timing must be re-verified before any live use",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://www.federalreserve.gov/releases/h15/",
+              "verified_on": "2026-10-13 (frequency only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 661,
+          "mornings_missing": 64,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 661,
+            "none": 64
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 661,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "3b6ca0e7a8008b034fed81b50fe32c78963d7577a8a061faf1137016475c438a",
+          "series_scope": "661 morning values, 725 panel mornings"
+        },
+        {
+          "key": "broad_dollar_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DTWEXBGS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "broad_dollar"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "8464ad70a5fb09426d6ab7997fef7cdf7c78f88bb4420475771f01aa0c1b9930",
+          "series_scope": "690 morning values, 725 panel mornings"
+        },
+        {
+          "key": "gold_d5_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_xau_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "five-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 704,
+          "mornings_missing": 21,
+          "clocks": {
+            "timestamp": 704,
+            "date_only": 0,
+            "none": 21
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 704,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "23435f4f5ad462616773045159e8bcfdf395f01868687413d7ddfc4d8f6d107a",
+          "series_scope": "704 morning values, 725 panel mornings"
+        },
+        {
+          "key": "nasdaq100_d5_pct",
+          "source": {
+            "provider": "oanda",
+            "series": "oanda_nas100_usd_h1.csv",
+            "frequency": "one-hour candles",
+            "units": "quoted price",
+            "transform": "five-business-day percentage change of the cached close",
+            "parents": [],
+            "publication": {
+              "release": "provider candle cache",
+              "schedule": "the candle closes at the 05:00 London boundary; the cache records no acquisition timestamp, so the retrieval time is not a publication receipt",
+              "declared_lag_business_days": 0,
+              "timing_verified": false,
+              "verified_from": null,
+              "verified_on": null
+            },
+            "known": true
+          },
+          "mornings_with_value": 704,
+          "mornings_missing": 21,
+          "clocks": {
+            "timestamp": 704,
+            "date_only": 0,
+            "none": 21
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 704,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "282c7b7463fb0f9b5050f13078006b6b3a4b222b5e3079067acaf0e759483753",
+          "series_scope": "704 morning values, 725 panel mornings"
+        },
+        {
+          "key": "eurusd_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DEXUSEU",
+            "frequency": "daily",
+            "units": "usd_per_eur",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "eurusd"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "6968eff24c5a4dbc99b746f995bd1542b33da3f08630b0fbe5e682f9bf742f09",
+          "series_scope": "690 morning values, 725 panel mornings"
+        },
+        {
+          "key": "usdjpy_d5_pct",
+          "source": {
+            "provider": "fred",
+            "series": "DEXJPUS",
+            "frequency": "daily",
+            "units": "jpy_per_usd",
+            "transform": "five-business-day percentage change",
+            "parents": [
+              "usdjpy"
+            ],
+            "publication": {
+              "release": "Federal Reserve H.10 Foreign Exchange Rates",
+              "schedule": "Mondays at 16:15 America/New_York, carrying daily bilateral exchange rates and the U.S. dollar indexes for the previous business week; if the Monday is a Federal Reserve holiday the release moves to the following business day",
+              "declared_lag_business_days": null,
+              "timing_verified": true,
+              "verified_from": "https://www.federalreserve.gov/releases/h10/",
+              "verified_on": "2026-10-13"
+            },
+            "known": true
+          },
+          "mornings_with_value": 690,
+          "mornings_missing": 35,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 690,
+            "none": 35
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 690,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "f0e138fceac852db52c9dbf9f6e41ae960789e33c40fec49b8a7457f1315e1dd",
+          "series_scope": "690 morning values, 725 panel mornings"
+        }
+      ],
+      "totals": {
+        "key_values_present": 6224,
+        "key_values_missing": 301,
+        "contemporaneous": 0,
+        "reconstructed": 6224,
+        "conflicts": 0
+      },
+      "mornings": {
+        "panel": 725,
+        "with_every_key_present": 618,
+        "fully_contemporaneous": 0
+      },
+      "availability_claim": "not_established",
+      "statement": "Reconstruction is not retrieval. A key counts as contemporaneous only when a capture taken at or before the cutoff matches the replayed value and carries a receipt id."
+    },
+    "fixture_constant": {
+      "identity": "usd-layer1-fixture-constant-v0",
+      "label": "Fixture - constant USD bullish (not a research model)",
+      "role": "fixture",
+      "kind": "fixture",
+      "fixture": true,
+      "contract_version": "usd-l1-model-input-contract-v2",
+      "keys": [
+        {
+          "key": "vix_level",
+          "source": {
+            "provider": "fred",
+            "series": "VIXCLS",
+            "frequency": "daily",
+            "units": "index",
+            "transform": "read directly",
+            "parents": [],
+            "publication": {
+              "release": "provider close on the observation date, redistributed by FRED",
+              "schedule": "the value is that date's close and is not knowable before it; the redistribution lag was not measured in this cycle, so the alignment uses a declared one-business-day lag",
+              "declared_lag_business_days": 1,
+              "timing_verified": false,
+              "verified_from": "https://fred.stlouisfed.org/",
+              "verified_on": "2026-10-13 (redistribution only)"
+            },
+            "known": true
+          },
+          "mornings_with_value": 717,
+          "mornings_missing": 8,
+          "clocks": {
+            "timestamp": 0,
+            "date_only": 717,
+            "none": 8
+          },
+          "retrieval": {
+            "contemporaneous": 0,
+            "reconstructed": 717,
+            "conflicts": 0,
+            "after_cutoff": 0
+          },
+          "series_digest": "c8c726be51d5620a35b4a0e0b836cf99e7e7c91e32049ba87e76d74c6fe9d8b7",
+          "series_scope": "717 morning values, 725 panel mornings"
+        }
+      ],
+      "totals": {
+        "key_values_present": 717,
+        "key_values_missing": 8,
+        "contemporaneous": 0,
+        "reconstructed": 717,
+        "conflicts": 0
+      },
+      "mornings": {
+        "panel": 725,
+        "with_every_key_present": 717,
+        "fully_contemporaneous": 0
+      },
+      "availability_claim": "not_established",
+      "statement": "Reconstruction is not retrieval. A key counts as contemporaneous only when a capture taken at or before the cutoff matches the replayed value and carries a receipt id."
+    }
+  },
+  "statement": "Every value in this artefact is a reconstruction from the committed panel unless its receipt is non-null. No receipt is generated here, and an empty capture corpus is reported as an empty corpus."
+}

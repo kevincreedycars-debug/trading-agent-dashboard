@@ -45,6 +45,7 @@
     "evidence:usd-l1-n8n": "node scripts/build_usd_l1_n8n_evidence.js",
     "test:usd-l1-n8n": "node --test tests/usd_l1_n8n_cloud_workflows.test.js tests/backtesting_n8n_map.test.js tests/backtesting_n8n_run_ledger.test.js tests/backtesting_n8n_sweep.test.js",
     "persist:usd-l1-n8n": "node scripts/persist_usd_l1_n8n_runs.js",
+    "check:usd-l1-ledger": "node scripts/check_usd_l1_n8n_ledger.js",
     "status:usd-l1-n8n": "node scripts/persist_usd_l1_n8n_runs.js --status",
     "checker:corpus": "node scripts/fetch-checker-corpus.js",
     "test:refresh-browser": "node --test tests/refresh_progress.browser.test.js",
@@ -53,7 +54,11 @@
     "test:unit": "node scripts/test-local.js unit",
     "test:browser": "node scripts/test-local.js browser",
     "compare:usd-l1-models": "node scripts/build_usd_l1_model_comparison.js",
-    "test:l2l-simulation": "node --test tests/l2l_simulation.test.js tests/model_comparison.test.js"
+    "test:l2l-simulation": "node --test tests/l2l_simulation.test.js tests/model_comparison.test.js",
+    "test:usd-l1-platform": "node --test tests/test_modules.test.js tests/input_retrieval.test.js tests/spec_check.test.js tests/execution_accounting.test.js tests/backtesting_morning_trace.test.js",
+    "build:usd-l1-platform": "node scripts/build_usd_l1_platform_evidence.js",
+    "check:usd-l1-platform": "node scripts/build_usd_l1_platform_evidence.js --check",
+    "verify:usd-l1-test-selection": "node scripts/verify_usd_l1_test_selection.js"
   },
   "devDependencies": {
     "playwright": "^1.62.1"
