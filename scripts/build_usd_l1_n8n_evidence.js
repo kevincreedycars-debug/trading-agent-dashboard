@@ -34,6 +34,9 @@ const run = readJson(path.join(DATA, "run-v1.json"));
 const parity = readJson(path.join(DATA, "parity-v1.json"));
 const compare = readJson(path.join(DATA, "compare-v1.json"));
 const index = readJson(path.join(N8N, "executions-index-20261119.json"));
+const registry = require(path.join(ROOT, "backtester", "lib", "usd_layer1_backtester", "model_registry"));
+const ledgerLib = require(path.join(ROOT, "lib", "backtesting_n8n_run_ledger"));
+const ledger = fs.existsSync(path.join(N8N, "run-ledger-v1.json")) ? readJson(path.join(N8N, "run-ledger-v1.json")) : null;
 const challenger = require(path.join(ROOT, "backtester", "lib", "usd_layer1_backtester", "challenger"));
 const challengerV1 = require(path.join(ROOT, "backtester", "lib", "usd_layer1_backtester", "challenger_v1"));
 const EXECUTION_FILES = {
@@ -57,8 +60,14 @@ function decisionSummary(entry) {
   const validation = decision.validation || {};
   const inputs = validation.inputs || {};
   const receipted = validation.receipted || {};
+  const registered = registry.getModel(decision.model) || {};
   return {
     identity: entry.identity,
+    label: entry.label || registered.label || null,
+    role: entry.role || registered.role || null,
+    kind: entry.kind || registered.kind || null,
+    fixture: entry.fixture === true || (entry.kind || registered.kind) === "fixture",
+    source: entry.source || registered.source || null,
     workflow_id: entry.workflow_id,
     workflow_name: entry.workflow_name,
     workflow_url: `${BASE_URL}/workflow/${entry.workflow_id}`,
@@ -103,9 +112,12 @@ function decisionSummary(entry) {
 
 function caseSummary(name, file) {
   const response = readJson(file);
-  const v0 = decisionSummary(response.models.challenger);
-  const v1 = decisionSummary(response.models.challenger_v1);
-  const statuses = [v0.status, v1.status];
+  const models = Object.keys(response.models || {}).reduce((map, key) => {
+    map[key] = decisionSummary(response.models[key]);
+    return map;
+  }, {});
+  const keys = Object.keys(models);
+  const statuses = keys.map((key) => models[key].status);
   const outcome = statuses.every((status) => status === "blocked")
     ? "blocked"
     : statuses.every((status) => status === "abstained")
@@ -129,7 +141,7 @@ function caseSummary(name, file) {
     },
     input_availability: response.input_availability,
     input_availability_by_model: response.input_availability_by_model,
-    models: { challenger: v0, challenger_v1: v1 },
+    models,
     comparison: response.comparison,
     labels: response.labels,
     raw_evidence: path.relative(ROOT, file).replace(/\\/g, "/")
@@ -149,8 +161,8 @@ function scanRun() {
   return { lateRows, missingRows };
 }
 
-function rulesFor(model) {
-  return model.MECHANISMS.map((mechanism) => ({
+function rulesFor(mechanisms) {
+  return (mechanisms || []).map((mechanism) => ({
     id: mechanism.id,
     label: mechanism.label,
     factor: mechanism.factor,
@@ -167,6 +179,106 @@ const challengerReport = compare.reports.challenger.summary;
 const currentReport = compare.reports.current.summary;
 const v1Report = compare.reports.challenger_v1.summary;
 
+/** The models the ledger actually ran, with the registry's role and kind. */
+function selectedIdentities() {
+  const rows = (ledger && ledger.records) || [];
+  const keys = [];
+  for (const row of rows) {
+    for (const key of Object.keys(row.calls || {})) if (!keys.includes(key)) keys.push(key);
+  }
+  const chosen = keys.length > 0 ? keys : registry.DEFAULT_SELECTION.slice();
+  return chosen.map((key) => {
+    const entry = registry.requireModel(key);
+    const child = manifest.children.find((candidate) => candidate.model === key) || null;
+    return {
+      key,
+      id: entry.identity,
+      label: entry.label,
+      role: entry.role,
+      kind: entry.kind,
+      fixture: entry.fixtures === true,
+      source: entry.source,
+      workflow_id: child ? child.workflow_id : null,
+      workflow_name: child ? child.name : null,
+      workflow_url: child && child.workflow_id ? `${BASE_URL}/workflow/${child.workflow_id}` : null
+    };
+  });
+}
+
+/** A compact per-morning index from the ledger, so the map can show every recorded date. */
+function executionIndex() {
+  const rows = (ledger && ledger.records) || [];
+  return rows.map((row) => {
+    const models = {};
+    for (const key of Object.keys(row.calls || {})) {
+      const call = row.calls[key];
+      const registered = registry.getModel(key) || {};
+      const child = manifest.children.find((candidate) => candidate.model === key) || null;
+      models[key] = {
+        identity: call.identity,
+        label: call.label,
+        role: call.role,
+        fixture: call.fixture === true,
+        source: registered.source || null,
+        status: call.status,
+        direction: call.direction,
+        conviction: call.conviction,
+        execution_id: row.executions[key] ? row.executions[key].id : null,
+        execution_url: row.executions[key] ? row.executions[key].url : null,
+        workflow_name: child ? child.name : null,
+        workflow_url: child && child.workflow_id ? `${BASE_URL}/workflow/${child.workflow_id}` : null
+      };
+    }
+    return {
+      id: row.key,
+      key: row.key,
+      date: row.date,
+      validation_mode: row.validation_mode,
+      outcome: row.outcome,
+      configuration: row.configuration ? row.configuration.fingerprint : null,
+      coexistence: row.coexistence === true,
+      verified: Boolean(row.verification && row.verification.verified),
+      parent_execution: {
+        id: row.executions.parent.id,
+        url: row.executions.parent.url,
+        workflow_name: manifest.parent.name,
+        status: "success"
+      },
+      raw_evidence: row.evidence || "data/usd-layer1-backtester/n8n/run-ledger-v1.json",
+      models
+    };
+  });
+}
+
+/** Run summaries kept apart from the four tests and from reproduction. */
+function ledgerClaims() {
+  const summary = ledger ? ledgerLib.summarise(ledger) : null;
+  const rows = (ledger && ledger.records) || [];
+  return {
+    consistency: {
+      status: rows.length > 0 && rows.every((row) => row.verification && row.verification.verified) ? "established" : "not_established",
+      statement: "Each stored call reproduces in the local controller, and its hit/miss/flat arithmetic recomputes from the committed outcomes.",
+      rows: rows.length,
+      failures: rows.filter((row) => !row.verification || row.verification.verified !== true).length
+    },
+    historical_availability: {
+      status: "not_established",
+      statement: "The children replayed the committed panel. No retrieval receipt or source archive is recorded, so nothing here shows the values were available at the cutoff.",
+      receipted_rows: rows.filter((row) => row.validation_mode === "receipted" && row.gate && row.gate.accepted).length
+    },
+    model_logic: {
+      status: "not_established",
+      statement: "Parity compares the frozen rules with themselves. No independent adjudication exists, so correct logic is not demonstrated.",
+      oracle: null
+    },
+    coverage: {
+      status: "not_established",
+      statement: "The panel is a research artefact; it is not proven to equal what a live 05:00 run would have offered on each date."
+    }
+  };
+}
+
+
 const evidence = {
   schema_version: "usd-l1-n8n-execution-evidence-v1",
   generated_at: new Date().toISOString(),
@@ -178,26 +290,7 @@ const evidence = {
   instance: { base_url: BASE_URL, project_url: PROJECT_URL },
   bundle: manifest,
   identities: {
-    selected: [
-      {
-        key: "challenger",
-        id: "usd-layer1-challenger-v0",
-        label: "Challenger v0",
-        source: "backtester/lib/usd_layer1_backtester/challenger.js",
-        workflow_id: manifest.children[0].workflow_id,
-        workflow_name: manifest.children[0].name,
-        workflow_url: `${BASE_URL}/workflow/${manifest.children[0].workflow_id}`
-      },
-      {
-        key: "challenger_v1",
-        id: "usd-layer1-challenger-v1",
-        label: "Challenger v1",
-        source: "backtester/lib/usd_layer1_backtester/challenger_v1.js",
-        workflow_id: manifest.children[1].workflow_id,
-        workflow_name: manifest.children[1].name,
-        workflow_url: `${BASE_URL}/workflow/${manifest.children[1].workflow_id}`
-      }
-    ],
+    selected: selectedIdentities(),
     not_invoked: [
       {
         key: "current",
@@ -226,9 +319,10 @@ const evidence = {
       trigger: "manual plus header-authenticated webhook; no schedule",
       webhook_deactivated_after_evidence: true
     },
-    children: manifest.children.map((child) => ({
+    children: manifest.children.filter((child) => /^[A-Za-z0-9]{16}$/.test(String(child.workflow_id))).map((child) => ({
       model: child.model,
       identity: child.identity,
+      kind: child.kind,
       id: child.workflow_id,
       name: child.name,
       url: `${BASE_URL}/workflow/${child.workflow_id}`,
@@ -242,6 +336,16 @@ const evidence = {
     caseSummary("missing-date", EXECUTION_FILES["missing-date"]),
     caseSummary("missing-inputs", EXECUTION_FILES["missing-inputs"])
   ],
+  execution_index: executionIndex(),
+  claims: ledgerClaims(),
+  sweep: ledger ? {
+    ledger: "data/usd-layer1-backtester/n8n/run-ledger-v1.json",
+    summary: ledgerLib.summarise(ledger),
+    report: ledgerLib.sweepReport(ledger, {
+      dates: Array.from(new Set(((ledger && ledger.records) || []).map((row) => row.date))).sort(),
+      validation_mode: "structural"
+    })
+  } : null,
   source_dataset: {
     path: "data/usd-layer1-backtester/run-v1.json",
     schema_version: run.schema_version,
@@ -302,10 +406,12 @@ const evidence = {
     counts: test.counts,
     h1_readiness: test.h1_readiness
   })),
-  model_rules: {
-    challenger: rulesFor(challenger),
-    challenger_v1: rulesFor(challengerV1)
-  },
+  model_rules: registry.ENTRIES
+    .filter((modelEntry) => modelEntry.kind === "research" && Array.isArray(modelEntry.mechanisms))
+    .reduce((map, modelEntry) => {
+      map[modelEntry.key] = rulesFor(modelEntry.mechanisms);
+      return map;
+    }, {}),
   limitations: [
     "n8n Cloud does not provide Execute Command, so the original host-command workflows cannot run there; the Cloud workflows bundle the controller instead.",
     "The production-control adapter is not in the Cloud runtime; only the two frozen challengers are.",

@@ -11,6 +11,9 @@ const test = require("node:test");
 const { chromium } = require("playwright");
 
 const rootDir = path.resolve(__dirname, "..");
+const ledger = JSON.parse(fs.readFileSync(path.join(rootDir, "data/usd-layer1-backtester/n8n/run-ledger-v1.json"), "utf8").replace(/^\uFEFF/, ""));
+const ledgerRecords = ledger.records.length;
+const duplicatesPrevented = (ledger.runs || []).reduce((total, run) => total + (run.duplicate_keys || []).length, 0);
 
 function contentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -72,10 +75,11 @@ test("the Layer 1 map is visible, filterable and linked to the recorded n8n exec
 
     const model = page.locator(".n8n-head select").nth(0);
     const recordedCase = page.locator(".n8n-head select").nth(1);
-    assert.equal(await model.locator("option").count(), 2);
+    assert.ok(await model.locator("option").count() >= 2);
     assert.equal(await recordedCase.locator("option").count(), 4);
-    assert.match(await model.locator("option").nth(0).textContent(), /usd-layer1-challenger-v0/);
-    assert.match(await model.locator("option").nth(1).textContent(), /usd-layer1-challenger-v1/);
+    const modelTexts = await model.locator("option").allTextContents();
+    assert.equal(modelTexts.some((text) => /usd-layer1-challenger-v0/.test(text)), true);
+    assert.equal(modelTexts.some((text) => /usd-layer1-challenger-v1/.test(text)), true);
 
     const child = page.locator(".map-node").filter({ hasText: "Challenger v0" }).first();
     assert.match(await child.textContent(), /usd-layer1-challenger-v0/);
@@ -103,11 +107,13 @@ test("the Layer 1 map is visible, filterable and linked to the recorded n8n exec
     assert.match(await page.locator(".map-detail").first().textContent(), /USD-L1-25F-H1-v0.1.0/);
     assert.match(await page.locator(".map-detail").first().textContent(), /Never substitute/);
     await page.waitForSelector("text=Batch runs, restart recovery and independent checks", { timeout: 30000 });
-    await page.waitForFunction(() => document.querySelector("#view").textContent.includes("persisted mornings"), { timeout: 30000 });
-    assert.equal(await page.locator(".map-stat").filter({ hasText: "9" }).count() >= 1, true);
-    assert.equal(await page.locator(".map-stat").filter({ hasText: "9 / 9" }).count(), 1);
-    assert.equal(await page.locator(".map-stat").filter({ hasText: "3" }).filter({ hasText: "duplicate results prevented" }).count(), 1);
+    await page.waitForFunction(() => document.querySelector("#view").textContent.includes("persisted records"), { timeout: 30000 });
+    assert.equal(await page.locator(".map-stat").filter({ hasText: `${ledgerRecords} / ${ledgerRecords}` }).count(), 1);
+    assert.equal(await page.locator(".map-stat").filter({ hasText: String(duplicatesPrevented) }).filter({ hasText: "duplicate results prevented" }).count(), 1);
     assert.match(await page.locator("#view").textContent(), /Run history/);
+    assert.match(await page.locator("#view").textContent(), /Historical input availability/);
+    assert.match(await page.locator("#view").textContent(), /not established/);
+    assert.match(await page.locator("#view").textContent(), /Execution map - every recorded morning/);
     const ledgerLinks = await page.locator(".map-links a").evaluateAll((nodes) => nodes.map((node) => node.href));
     assert.equal(ledgerLinks.some((href) => /\/execution\/5512$/.test(href)), true);
     assert.equal(ledgerLinks.some((href) => /\/execution\/5525$/.test(href)), true);

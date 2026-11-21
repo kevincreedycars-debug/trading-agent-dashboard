@@ -68,7 +68,13 @@ function readCapture(filePath) {
 
 function readLedger(filePath) {
   if (!fs.existsSync(filePath)) return null;
-  return readJson(filePath);
+  const ledger = readJson(filePath);
+  if (ledger && ledger.schema_version !== ledgerLib.RUN_LEDGER_VERSION) {
+    throw new Error(
+      `ledger schema ${ledger.schema_version} cannot be extended in place; re-persist the committed captures with --rebuild to write ${ledgerLib.RUN_LEDGER_VERSION}`
+    );
+  }
+  return ledger;
 }
 
 function writeLedger(filePath, ledger) {
@@ -106,6 +112,8 @@ function usage() {
     "  --from / --to          plan range for --status",
     "  --dates <a,b>          explicit plan dates for --status",
     "  --validation <mode>    structural (default) | receipted",
+    "  --rebuild              ignore the committed ledger and rebuild it from the captures (schema migration)",
+    "  --compact              rewrite every row in its lean persisted form (drops detail held in captures)",
     "  --check                re-merge the captures and fail if the committed ledger differs",
     "  --write                write the ledger (default when a capture is given and --check is absent)"
   ].join("\n");
@@ -122,7 +130,7 @@ function main(argv = process.argv) {
   const ledgerPath = resolvePath(args.ledger || DEFAULT_LEDGER);
   const datasetPath = resolvePath(args.dataset || DEFAULT_DATASET);
   const dataset = readJson(datasetPath);
-  const existing = readLedger(ledgerPath);
+  const existing = args.rebuild ? null : readLedger(ledgerPath);
   const validationMode = args.validation || "structural";
   const dates = planDates(args, existing);
 
@@ -134,6 +142,36 @@ function main(argv = process.argv) {
       exists: Boolean(existing),
       summary,
       plan
+    }, null, 2));
+    return 0;
+  }
+
+  if (args.compact) {
+    if (!existing) throw new Error("no ledger to compact");
+    const compacted = Object.assign({}, existing, {
+      records: existing.records.map((row) => {
+        // The snapshot digest needs the panel; recomputing it here keeps the fingerprint identical to the
+        // one a fresh merge of the same capture would produce.
+        const dates = row.identity && row.identity.input && Array.isArray(row.identity.input.dates) && row.identity.input.dates.length > 0
+          ? row.identity.input.dates
+          : [row.date];
+        const withDigest = Object.assign({}, row, {
+          input_snapshot_digest: row.input_snapshot_digest || ledgerLib.inputSnapshotDigest(dataset, dates)
+        });
+        return ledgerLib.compactRow(withDigest);
+      })
+    });
+    const before = fs.statSync(ledgerPath).size;
+    const text = `${JSON.stringify(compacted, null, 2)}\n`;
+    const unchanged = text === fs.readFileSync(ledgerPath, "utf8").replace(/^\uFEFF/, "");
+    if (!unchanged) writeLedger(ledgerPath, compacted);
+    console.log(JSON.stringify({
+      ledger: displayPath(ledgerPath),
+      compacted: !unchanged,
+      records: compacted.records.length,
+      bytes_before: before,
+      bytes_after: Buffer.byteLength(text),
+      verification_failures: compacted.records.filter((row) => !row.verification || row.verification.verified !== true).length
     }, null, 2));
     return 0;
   }
@@ -166,6 +204,13 @@ function main(argv = process.argv) {
 
   const report = {
     ledger: displayPath(ledgerPath),
+    rebuilt: Boolean(args.rebuild),
+    configurations: Array.from(new Set(merged.ledger.records.map((row) => (row.configuration ? row.configuration.fingerprint : null)))),
+    claims: {
+      consistency_verified: merged.ledger.records.filter((row) => row.verification && row.verification.consistency_verified === true).length,
+      availability_established: merged.ledger.records.filter((row) => row.verification && row.verification.claims && row.verification.claims.availability.status === "established").length,
+      logic_established: merged.ledger.records.filter((row) => row.verification && row.verification.claims && row.verification.claims.logic.status === "established").length
+    },
     captures: captures.map((capture) => ({ file: capture.file, records: capture.records.length })),
     added: merged.added,
     duplicates: merged.duplicates,

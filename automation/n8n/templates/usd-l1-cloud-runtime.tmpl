@@ -45,6 +45,7 @@ __MODULES__
   }
 
   const controller = __load("__CONTROLLER_ID__");
+  const registry = __load("__REGISTRY_ID__");
 
   function evaluateOne(input) {
     const payload = input && typeof input === "object" ? input : {};
@@ -56,8 +57,12 @@ __MODULES__
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) {
       throw new Error("date must be YYYY-MM-DD");
     }
-    if (model !== "challenger" && model !== "challenger_v1") {
-      throw new Error("the Cloud runtime only exposes challenger and challenger_v1");
+    const modelEntry = registry.getModel(model);
+    if (!modelEntry) {
+      throw new Error("model is not in the generated registry: " + String(model));
+    }
+    if (!modelEntry.cloud) {
+      throw new Error("model is registered but not available in the n8n Cloud runtime: " + String(model));
     }
     if (validation !== "structural" && validation !== "receipted") {
       throw new Error("validation must be structural or receipted");
@@ -83,6 +88,17 @@ __MODULES__
       source_files: SOURCE_FILES,
       date,
       model,
+      model_entry: {
+        key: modelEntry.key,
+        identity: modelEntry.identity,
+        label: modelEntry.label,
+        role: modelEntry.role,
+        kind: modelEntry.kind,
+        version: modelEntry.version,
+        source: modelEntry.source,
+        fixture: modelEntry.fixtures === true,
+        input_contract: modelEntry.input_contract
+      },
       layer1: result.layer1,
       controller_version: result.controller_version,
       validation_mode: result.validation_mode,

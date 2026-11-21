@@ -1,18 +1,28 @@
 {
-  "schema_version": "usd-l1-cloud-workflows-v1",
-  "bundle_version": "usd-l1-cloud-runtime-v1",
+  "schema_version": "usd-l1-cloud-workflows-v2",
+  "bundle_version": "usd-l1-cloud-runtime-v2",
   "bundle_path": "automation/n8n/usd-l1-cloud-runtime.js",
-  "bundle_sha256": "e1e7ecb001e627b2ed803e910d0433e1c8cfca048ace0741ca7dce2338360e26",
-  "bundle_bytes": 90011,
+  "bundle_sha256": "666f2e8af53b0bbc946bda361fa7d3c0950ab514e2dab1fe9d6edcb293dfddbd",
+  "bundle_bytes": 104866,
   "source_files": [
     {
       "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
-      "sha256": "c3d753db92ee3780355089d4cbd310f32b735715d89a6a2624075e90818dfce3",
+      "sha256": "014957205ec5fb54535161a5d569d8a7755fe2fdd252ccc1febbcff4dbf4ab95",
       "stub": false
     },
     {
       "path": "backtester/lib/usd_layer1_backtester/contracts.js",
       "sha256": "dbc8ffdf386ef593b8a28d5893576afddbe1d81a3bee0852686c96bdeb437628",
+      "stub": false
+    },
+    {
+      "path": "backtester/lib/usd_layer1_backtester/model_registry.js",
+      "sha256": "d7174aaa42122351462bce1d22ef655010f6c0e61856ab71ed798c29de92113f",
+      "stub": false
+    },
+    {
+      "path": "backtester/lib/usd_layer1_backtester/fixture_constant.js",
+      "sha256": "c5dfa5d2c8edc014bdec89e1f68df6950d5f131c0e57e85df9995aabc5f5cdd4",
       "stub": false
     },
     {
@@ -41,31 +51,517 @@
       "stub": true
     }
   ],
+  "registry": {
+    "schema_version": "usd-l1-model-registry-v1",
+    "max_selection": 4,
+    "default_selection": [
+      "challenger",
+      "challenger_v1"
+    ],
+    "cloud_selection": [
+      "challenger",
+      "challenger_v1",
+      "fixture_constant"
+    ],
+    "models": [
+      {
+        "key": "current",
+        "identity": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+        "label": "Current USD model",
+        "role": "control",
+        "kind": "research",
+        "version": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+        "source": "backtester/lib/usd_layer1_backtester/current_model.js",
+        "cloud": false,
+        "score_field": "conviction_raw",
+        "minimum_inputs": 1,
+        "input_keys": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps",
+          "broad_dollar_d5_pct",
+          "gold_d5_pct",
+          "nasdaq100_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct",
+          "usdjpy_d1_pct",
+          "usdchf_d1_pct",
+          "us_2y_yield",
+          "de_2y_yield",
+          "us_de_2y_spread",
+          "us_de_2y_spread_d5_bps",
+          "us_2y_d20_bps",
+          "us_10y_real_yield",
+          "us_10y_real_d20_bps",
+          "us_10y_yield",
+          "us_10y_d5_bps",
+          "vix_d1_chg",
+          "broad_dollar",
+          "broad_dollar_d1_pct",
+          "broad_dollar_d20_pct",
+          "gold_price",
+          "gold_d1_pct",
+          "gold_d20_pct",
+          "nasdaq100_price",
+          "nasdaq100_d1_pct",
+          "nasdaq100_d20_pct"
+        ],
+        "input_contract": {
+          "contract_version": "usd-l1-model-input-contract-v1",
+          "retrieval": "saved_panel_replay",
+          "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+          "missing_input_policy": "abstain_or_block",
+          "fill_policy": "the controller never fills a missing value and never estimates one",
+          "keys": [
+            {
+              "key": "vix_level",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "vix_d5_chg",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_2y_d5_bps",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_10y_real_d5_bps",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "broad_dollar_d5_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "gold_d5_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "nasdaq100_d5_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "eurusd_d5_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "usdjpy_d5_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "usdjpy_d1_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "usdchf_d1_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_2y_yield",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "de_2y_yield",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_de_2y_spread",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_de_2y_spread_d5_bps",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_2y_d20_bps",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_10y_real_yield",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_10y_real_d20_bps",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_10y_yield",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "us_10y_d5_bps",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "vix_d1_chg",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "broad_dollar",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "broad_dollar_d1_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "broad_dollar_d20_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "gold_price",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "gold_d1_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "gold_d20_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "nasdaq100_price",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "nasdaq100_d1_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            },
+            {
+              "key": "nasdaq100_d20_pct",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            }
+          ]
+        },
+        "fixture": false,
+        "fixture_statement": null,
+        "cloud_note": "The production-control adapter reads local files and warehouse helpers, so it is deliberately not bundled into the n8n Cloud runtime."
+      },
+      {
+        "key": "challenger",
+        "identity": "usd-layer1-challenger-v0",
+        "label": "Challenger v0",
+        "role": "challenger",
+        "kind": "research",
+        "version": "usd-layer1-challenger-v0",
+        "source": "backtester/lib/usd_layer1_backtester/challenger.js",
+        "cloud": true,
+        "score_field": "raw_score",
+        "minimum_inputs": 6,
+        "input_keys": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps",
+          "broad_dollar_d5_pct",
+          "gold_d5_pct",
+          "nasdaq100_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ],
+        "input_contract": {
+          "contract_version": "usd-l1-model-input-contract-v1",
+          "retrieval": "saved_panel_replay",
+          "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+          "missing_input_policy": "abstain_or_block",
+          "fill_policy": "the controller never fills a missing value and never estimates one",
+          "keys": [
+            {
+              "key": "vix_level",
+              "factor": "live.f1-vix-level",
+              "rule": "VIX above 25 is safe-haven USD demand; below 16 is risk-on pressure",
+              "threshold": "25 / 16"
+            },
+            {
+              "key": "vix_d5_chg",
+              "factor": "live.f1-vix-level",
+              "rule": "a 5-day VIX rise of more than one index point bids USD; a fall of the same size releases it",
+              "threshold": "1 index point"
+            },
+            {
+              "key": "us_2y_d5_bps",
+              "factor": "live.f2-us-2y-delta",
+              "rule": "front-end yields up more than 5bp support USD; down more than 5bp oppose it",
+              "threshold": "5 bp"
+            },
+            {
+              "key": "us_10y_real_d5_bps",
+              "factor": "live.f4-real-yield-delta",
+              "rule": "real yields up more than 5bp support USD; down more than 5bp oppose it",
+              "threshold": "5 bp"
+            },
+            {
+              "key": "broad_dollar_d5_pct",
+              "factor": "live.f5-dxy-delta",
+              "rule": "the dollar's own 5-day move continues: a rise above 0.15% is read as USD strength and a fall as weakness; FRED DTWEXBGS stands in for ICE DXY and is labelled as such everywhere",
+              "threshold": "0.15%"
+            },
+            {
+              "key": "gold_d5_pct",
+              "factor": "live.f6-gold-delta",
+              "rule": "gold up more than 0.5% is a hedge bid against USD; down more than 0.5% is the reverse",
+              "threshold": "0.5%"
+            },
+            {
+              "key": "nasdaq100_d5_pct",
+              "factor": "live.f10-equity-versus-usd",
+              "rule": "equities up more than 0.5% is risk-on and reads against USD; down more than 0.5% reads for it",
+              "threshold": "0.5%"
+            },
+            {
+              "key": "eurusd_d5_pct",
+              "factor": "live.f3-us-de-2y-spread-delta",
+              "rule": "EUR/USD is USD inverted: a rise above 0.15% is read as USD weakness and a fall as USD strength; it stands in for the German 2-year leg the current model cannot reconstruct, and says so",
+              "threshold": "0.15%"
+            },
+            {
+              "key": "usdjpy_d5_pct",
+              "factor": "live.f9-dollar-smile",
+              "rule": "USD/JPY is USD direct: a rise above 0.15% is read as USD strength and a fall as weakness",
+              "threshold": "0.15%"
+            }
+          ]
+        },
+        "fixture": false,
+        "fixture_statement": null,
+        "cloud_note": null
+      },
+      {
+        "key": "challenger_v1",
+        "identity": "usd-layer1-challenger-v1",
+        "label": "Challenger v1",
+        "role": "challenger",
+        "kind": "research",
+        "version": "usd-layer1-challenger-v1",
+        "source": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+        "cloud": true,
+        "score_field": "raw_score",
+        "minimum_inputs": 6,
+        "input_keys": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps",
+          "broad_dollar_d5_pct",
+          "gold_d5_pct",
+          "nasdaq100_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ],
+        "input_contract": {
+          "contract_version": "usd-l1-model-input-contract-v1",
+          "retrieval": "saved_panel_replay",
+          "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+          "missing_input_policy": "abstain_or_block",
+          "fill_policy": "the controller never fills a missing value and never estimates one",
+          "keys": [
+            {
+              "key": "vix_level",
+              "factor": "live.f1-vix-level",
+              "rule": "VIX above 25 is safe-haven USD demand; below 16 is risk-on pressure",
+              "threshold": "25 / 16"
+            },
+            {
+              "key": "vix_d5_chg",
+              "factor": "live.f1-vix-level",
+              "rule": "a 5-day VIX rise of more than one index point bids USD; a fall of the same size releases it",
+              "threshold": "1 index point"
+            },
+            {
+              "key": "us_2y_d5_bps",
+              "factor": "live.f2-us-2y-delta",
+              "rule": "front-end yields up more than 5bp support USD; down more than 5bp oppose it",
+              "threshold": "5 bp"
+            },
+            {
+              "key": "us_10y_real_d5_bps",
+              "factor": "live.f4-real-yield-delta",
+              "rule": "real yields up more than 5bp support USD; down more than 5bp oppose it",
+              "threshold": "5 bp"
+            },
+            {
+              "key": "broad_dollar_d5_pct",
+              "factor": "live.f5-dxy-delta",
+              "rule": "the dollar's own 5-day move continues: a rise above 0.15% is read as USD strength and a fall as weakness; FRED DTWEXBGS stands in for ICE DXY and is labelled as such everywhere",
+              "threshold": "0.15%"
+            },
+            {
+              "key": "gold_d5_pct",
+              "factor": "live.f6-gold-delta",
+              "rule": "gold up more than 0.5% is a hedge bid against USD; down more than 0.5% is the reverse",
+              "threshold": "0.5%"
+            },
+            {
+              "key": "nasdaq100_d5_pct",
+              "factor": "live.f10-equity-versus-usd",
+              "rule": "equities up more than 0.5% is risk-on and reads against USD; down more than 0.5% reads for it",
+              "threshold": "0.5%"
+            },
+            {
+              "key": "eurusd_d5_pct",
+              "factor": "fx.usd-session-momentum",
+              "rule": "EUR/USD is USD inverted: a rise above 0.15% is read as USD weakness and a fall as USD strength; it stands in for the German 2-year leg the current model cannot reconstruct, and says so",
+              "threshold": "0.15%"
+            },
+            {
+              "key": "usdjpy_d5_pct",
+              "factor": "fx.usd-session-momentum",
+              "rule": "USD/JPY is USD direct: a rise above 0.15% is read as USD strength and a fall as weakness",
+              "threshold": "0.15%"
+            }
+          ]
+        },
+        "fixture": false,
+        "fixture_statement": null,
+        "cloud_note": null
+      },
+      {
+        "key": "fixture_constant",
+        "identity": "usd-layer1-fixture-constant-v0",
+        "label": "Fixture - constant USD bullish (not a research model)",
+        "role": "fixture",
+        "kind": "fixture",
+        "version": "usd-layer1-fixture-constant-v0",
+        "source": "backtester/lib/usd_layer1_backtester/fixture_constant.js",
+        "cloud": true,
+        "score_field": "raw_score",
+        "minimum_inputs": 1,
+        "input_keys": [
+          "vix_level"
+        ],
+        "input_contract": {
+          "contract_version": "usd-l1-model-input-contract-v1",
+          "retrieval": "saved_panel_replay",
+          "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+          "missing_input_policy": "abstain_or_block",
+          "fill_policy": "the controller never fills a missing value and never estimates one",
+          "keys": [
+            {
+              "key": "vix_level",
+              "factor": null,
+              "rule": null,
+              "threshold": null
+            }
+          ]
+        },
+        "fixture": true,
+        "fixture_statement": "FIXTURE - a test double registered to prove arbitrary model sets work. It is not a research model, its calls are never pooled with a book, and no performance figure may include it.",
+        "cloud_note": null
+      }
+    ],
+    "fingerprint": "c06a73d68453f78884773ce7acd8a5b65d808c9cb54d399b5620c38e8f52ce01",
+    "file": "backtester/lib/usd_layer1_backtester/model_registry.js"
+  },
   "children": [
     {
-      "file": "automation/n8n/usd-l1-challenger-v0.cloud.workflow.json",
-      "name": "USD Layer 1 - challenger v0 (Cloud adapter)",
+      "file": "automation/n8n/usd-l1-challenger.cloud.workflow.json",
+      "name": "USD Layer 1 - Challenger v0 (Cloud adapter)",
       "model": "challenger",
       "identity": "usd-layer1-challenger-v0",
+      "role": "challenger",
+      "kind": "research",
+      "version": "usd-layer1-challenger-v0",
       "workflow_id": "giGJKNQw5WLh1xbX"
     },
     {
       "file": "automation/n8n/usd-l1-challenger-v1.cloud.workflow.json",
-      "name": "USD Layer 1 - challenger v1 (Cloud adapter)",
+      "name": "USD Layer 1 - Challenger v1 (Cloud adapter)",
       "model": "challenger_v1",
       "identity": "usd-layer1-challenger-v1",
+      "role": "challenger",
+      "kind": "research",
+      "version": "usd-layer1-challenger-v1",
       "workflow_id": "42sxXHScRvE3qSTX"
+    },
+    {
+      "file": "automation/n8n/usd-l1-fixture-constant.cloud.workflow.json",
+      "name": "USD Layer 1 - Fixture - constant USD bullish (not a research model) (Cloud adapter)",
+      "model": "fixture_constant",
+      "identity": "usd-layer1-fixture-constant-v0",
+      "role": "fixture",
+      "kind": "fixture",
+      "version": "usd-layer1-fixture-constant-v0",
+      "workflow_id": "kaWqy2iYIz8UzPRS"
     }
   ],
   "parent": {
     "file": "automation/n8n/usd-l1-paired-controller.cloud.workflow.json",
     "name": "USD Layer 1 - paired controller (Cloud)",
     "webhook_path": "usd-l1-paired-controller",
-    "webhook_authentication": "headerAuth"
+    "webhook_authentication": "headerAuth",
+    "default_selection": [
+      "challenger",
+      "challenger_v1"
+    ]
   },
   "notes": [
     "Generated workflows contain no Execute Command node and no host command path.",
     "The production-control adapter is deliberately not bundled because its replay core reads local files and Supabase helpers.",
+    "Children are generated from backtester/lib/usd_layer1_backtester/model_registry.js; adding a registered model needs no edit here.",
+    "A registered fixture is a test double, is labelled a fixture in every artefact, and is never pooled with a research model.",
     "USD-L1-25F-H1-v0.1.0 is not one of these adapters and is never substituted for one."
   ]
 }

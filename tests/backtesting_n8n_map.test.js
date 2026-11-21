@@ -16,9 +16,11 @@ function caseById(id) {
   return map.selectCase(evidence, id);
 }
 
-test("the two selected identities are the frozen challengers, not H1", () => {
-  assert.deepEqual(map.modelOptions(evidence).map((entry) => entry.id), ["usd-layer1-challenger-v0", "usd-layer1-challenger-v1"]);
-  assert.equal(evidence.identities.selected.length, 2);
+test("the selected identities are the registered models, never H1", () => {
+  const options = map.modelOptions(evidence);
+  assert.deepEqual(options.map((entry) => entry.id), ["usd-layer1-challenger-v0", "usd-layer1-challenger-v1", "usd-layer1-fixture-constant-v0"]);
+  assert.equal(evidence.identities.selected.length, 3);
+  assert.equal(evidence.identities.selected.find((entry) => entry.key === "fixture_constant").role, "fixture");
   assert.equal(evidence.identities.not_invoked.find((entry) => entry.key === "h1").version, "USD-L1-25F-H1-v0.1.0");
   assert.equal(evidence.identities.selected.some((entry) => /H1/i.test(entry.id)), false);
   assert.match(evidence.identities.not_invoked.find((entry) => entry.key === "current").reason, /replay core reads local files/);
@@ -126,7 +128,11 @@ test("every raw evidence path and real n8n identity is present", () => {
     assert.equal(fs.existsSync(path.join(ROOT, entry.raw_evidence)), true, entry.raw_evidence);
   }
   assert.deepEqual(evidence.workflows.parent.id, "89uk5JnPbWPL5lGD");
-  assert.deepEqual(evidence.workflows.children.map((child) => child.id), ["giGJKNQw5WLh1xbX", "42sxXHScRvE3qSTX"]);
+  const childIds = evidence.workflows.children.map((child) => child.id);
+  assert.ok(childIds.includes("giGJKNQw5WLh1xbX"));
+  assert.ok(childIds.includes("42sxXHScRvE3qSTX"));
+  const fixture = evidence.workflows.children.find((child) => child.kind === "fixture");
+  if (fixture) assert.match(fixture.url, /^https:\/\/silver17\.app\.n8n\.cloud\/workflow\//);
   assert.equal(evidence.workflows.parent.active, false);
   assert.equal(evidence.workflows.children.every((child) => child.trigger.includes("cannot self-start")), true);
 });
