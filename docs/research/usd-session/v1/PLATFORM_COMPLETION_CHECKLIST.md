@@ -107,12 +107,12 @@ historical equity curve needs the missing data, not more code.
 
 ## 8. Coverage, per model, mode and configuration
 
-| Model | Panel mornings | Covered | Completed rows | Completed mornings | Refused | Receipted refusals | Scored mornings |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| current | 725 | 0 | 0 | 0 | 0 | 0 | 0 |
-| challenger | 725 | 725 | 726 | 725 | 3 | 2 | 725 |
-| challenger_v1 | 725 | 725 | 726 | 725 | 3 | 2 | 725 |
-| fixture_constant | 725 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Model | Panel mornings | Covered | Completed rows | Completed mornings | Refused | Receipted refusals | Scored mornings | Scored market results |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| current | 725 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| challenger | 725 | 725 | 726 | 725 | 3 | 2 | 508 | 1,726 |
+| challenger_v1 | 725 | 725 | 726 | 725 | 3 | 2 | 508 | 1,726 |
+| fixture_constant | 725 | 1 | 1 | 1 | 0 | 0 | 1 | 4 |
 
 - The 726 completed rows against 725 mornings are the coexisting configuration on 2024-01-10, not a duplicate
   morning.
@@ -121,6 +121,8 @@ historical equity curve needs the missing data, not more code.
 - The sweep is grouped into four configuration signatures: 719 rows in the main sweep, 7 in the earlier
   configuration, 2 absent-date refusals and 1 coexisting row. The full per-mode and per-configuration table is
   in `data/usd-layer1-backtester/coverage-v1.json` and on the dashboard.
+- 508 of the 725 mornings produced at least one scored market result; the rest abstained or were refused, so
+  1,726 is a count of market results, not of mornings.
 
 ## 9. Product surface
 
