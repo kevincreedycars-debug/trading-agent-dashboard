@@ -114,6 +114,7 @@ function usage() {
     "  --validation <mode>    structural (default) | receipted",
     "  --rebuild              ignore the committed ledger and rebuild it from the captures (schema migration)",
     "  --compact              rewrite every row in its lean persisted form (drops detail held in captures)",
+    "  --link-evidence        attach each row to the capture file that contains its parent execution",
     "  --check                re-merge the captures and fail if the committed ledger differs",
     "  --write                write the ledger (default when a capture is given and --check is absent)"
   ].join("\n");
@@ -142,6 +143,49 @@ function main(argv = process.argv) {
       exists: Boolean(existing),
       summary,
       plan
+    }, null, 2));
+    return 0;
+  }
+
+  if (args["link-evidence"]) {
+    if (!existing) throw new Error("no ledger to link");
+    // Every captured response is on disk. Matching by parent execution id is exact, so no row is linked to
+    // a file that does not contain it.
+    const files = fs.readdirSync(path.join(ROOT, "data", "usd-layer1-backtester", "n8n"))
+      .filter((name) => name.endsWith(".json") && (name.startsWith("sweep-") || name.startsWith("batch-") || name.startsWith("execution-")))
+      .sort();
+    const byExecution = new Map();
+    for (const name of files) {
+      const relative = `data/usd-layer1-backtester/n8n/${name}`;
+      let records;
+      try {
+        records = readCapture(resolvePath(relative));
+      } catch {
+        continue;
+      }
+      for (const record of records) {
+        const id = record && record.n8n && record.n8n.execution_id ? String(record.n8n.execution_id) : null;
+        if (id && !byExecution.has(id)) byExecution.set(id, relative);
+      }
+    }
+    let linked = 0;
+    const records = existing.records.map((row) => {
+      const id = row.executions && row.executions.parent ? row.executions.parent.id : null;
+      const evidence = id ? byExecution.get(String(id)) : null;
+      if (evidence && row.evidence !== evidence) {
+        linked += 1;
+        return Object.assign({}, row, { evidence });
+      }
+      return row;
+    });
+    const next = Object.assign({}, existing, { records });
+    if (linked > 0) writeLedger(ledgerPath, next);
+    console.log(JSON.stringify({
+      ledger: displayPath(ledgerPath),
+      linked,
+      captured_executions: byExecution.size,
+      rows: records.length,
+      rows_without_evidence: records.filter((row) => !row.evidence).length
     }, null, 2));
     return 0;
   }

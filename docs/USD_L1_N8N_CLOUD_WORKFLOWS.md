@@ -17,20 +17,21 @@ scoring rules.
 
 | Artifact | Path | What it is |
 | --- | --- | --- |
-| Build manifest | `automation/n8n/usd-l1-cloud-workflows.manifest.json` | Schema `usd-l1-cloud-workflows-v1`; pins every bundled source file by sha256, the source-set hash (`bundle_sha256`) and the bundle byte size, and the two child workflow ids. |
-| Runtime bundle | `automation/n8n/usd-l1-cloud-runtime.js` | Deterministic concatenation of the controller, contracts, both challengers, `lib/usd_l1_votes.js` and the session engine interface. No host filesystem, no `process`, no network client. |
-| Child v0 | `automation/n8n/usd-l1-challenger-v0.cloud.workflow.json` | One model (`challenger`, identity `usd-layer1-challenger-v0`), triggered only by `executeWorkflow`. |
-| Child v1 | `automation/n8n/usd-l1-challenger-v1.cloud.workflow.json` | One model (`challenger_v1`, identity `usd-layer1-challenger-v1`), triggered only by `executeWorkflow`. |
-| Parent | `automation/n8n/usd-l1-paired-controller.cloud.workflow.json` | Manual trigger plus header-authenticated webhook, two `executeWorkflow` calls bound to the child ids, then one combine node. No schedule, no provider node, no Supabase node. |
-| Templates | `automation/n8n/templates/` | `usd-l1-parent-select.js`, `usd-l1-parent-config.js`, `usd-l1-child-wrapper.js`, `usd-l1-parent-combine.js`, `usd-l1-cloud-runtime.tmpl`. The builder owns the workflow JSON; the templates own the node code. |
-| Builders | `scripts/build_usd_l1_n8n_cloud_workflows.js`, `scripts/build_usd_l1_n8n_evidence.js` | The first regenerates the three workflow JSONs and the bundle from the manifest; the second assembles the evidence file from captured artifacts only and never calls n8n. |
-| Evidence | `data/usd-layer1-backtester/n8n-execution-evidence-v1.json` | What ran, where, and what it returned. |
-| Raw transcripts | `data/usd-layer1-backtester/n8n/execution-*.json`, `executions-index-20261119.json` | The stored n8n executions the evidence is assembled from. |
-| Map | `lib/backtesting_n8n_map.js`, `backtesting.html#n8nmap` | Model-swap map, the tab's default view, rendered from the evidence file. Published, and read back from the live site on 2026-11-19 (see Boundaries). |
-| Run ledger module | `lib/backtesting_n8n_run_ledger.js` | Pure ledger: key `validation_mode\|date`, independent re-verification against the panel and the local controller, idempotent merge, restart plan. |
-| Run ledger | `data/usd-layer1-backtester/n8n/run-ledger-v1.json` | The durable results of the recorded batch runs: 9 rows (7 structural, 2 receipted), 4 runs, every row carrying its parent and child execution links. |
-| Ledger CLI | `scripts/persist_usd_l1_n8n_runs.js` (`npm run persist:usd-l1-n8n`, `npm run status:usd-l1-n8n`) | Ingests captured paired records, verifies them, and appends only unseen mornings; `--check` proves the committed ledger is the merge of the committed captures. |
-| Batch captures | `data/usd-layer1-backtester/n8n/batch-20261120-*.json` | The stored executions 5505, 5512, 5525, 5530 and 5534, extracted from the execution data rather than retyped. |
+| Model registry | `backtester/lib/usd_layer1_backtester/model_registry.js` | The single list of Layer 1 models: key, identity, label, role (`control`/`challenger`/`fixture`), kind, version, source, score field and the model-owned input contract. The controller, the workflows, the ledger, the comparisons and the map read this list. |
+| Build manifest | `automation/n8n/usd-l1-cloud-workflows.manifest.json` | Schema `usd-l1-cloud-workflows-v2`; pins every bundled source file by sha256, the source-set hash (`bundle_sha256`), the bundle byte size, the registry document with its fingerprint, and every child workflow id. |
+| Runtime bundle | `automation/n8n/usd-l1-cloud-runtime.js` | Deterministic concatenation of the controller, contracts, registry, fixture, both challengers, `lib/usd_l1_votes.js` and the session engine interface. No host filesystem, no `process`, no network client. |
+| Child (per registered Cloud model) | `automation/n8n/usd-l1-<model>.cloud.workflow.json` | One model per child, pinned by the wrapper; `challenger`, `challenger_v1` and `fixture_constant` today. Triggered only by `executeWorkflow`. |
+| Parent | `automation/n8n/usd-l1-paired-controller.cloud.workflow.json` | Manual trigger plus header-authenticated webhook; one bind/run pair per registered Cloud model, chained in registry order; then the combine node and a Respond node that returns the whole batch. No schedule, no provider node, no Supabase node. |
+| Templates | `automation/n8n/templates/` | `usd-l1-parent-config.js`, `usd-l1-parent-select.js`, `usd-l1-parent-bind.js`, `usd-l1-child-wrapper.js`, `usd-l1-parent-combine.js`, `usd-l1-cloud-runtime.tmpl`. The builder owns the workflow JSON; the templates own the node code. |
+| Builders | `scripts/build_usd_l1_n8n_cloud_workflows.js`, `scripts/build_usd_l1_n8n_evidence.js`, `scripts/build_usd_l1_model_comparison.js` | Regenerate the workflows and bundle from the registry, assemble the evidence from captured artifacts only, and build the aggregate model comparison. None of them calls n8n. |
+| Evidence | `data/usd-layer1-backtester/n8n-execution-evidence-v1.json` | What ran, where, what it returned, the selected identities, the per-morning execution index and the four separate claims. |
+| Raw transcripts | `data/usd-layer1-backtester/n8n/execution-*.json`, `batch-*.json`, `sweep-*.json` | The stored responses the evidence and the ledger are assembled from; every ledger row names the file that contains its parent execution. |
+| Map | `lib/backtesting_n8n_map.js`, `backtesting.html#n8nmap` | Model-swap map plus a 3D execution map (one node per recorded morning and per model call) rendered from the evidence file. |
+| Run ledger module | `lib/backtesting_n8n_run_ledger.js` | Key `validation_mode\|date` (+ a configuration suffix when a different experiment shares the morning), independent re-verification, separated claims, idempotent merge, restart plan, retained attempts. |
+| Run ledger | `data/usd-layer1-backtester/n8n/run-ledger-v1.json` | Schema `usd-l1-n8n-run-ledger-v2`: 729 records over 726 unique mornings, 43 runs, 43 retained attempts, every row carrying its configuration fingerprint, verification and execution links. |
+| Ledger CLI | `scripts/persist_usd_l1_n8n_runs.js` (`npm run persist:usd-l1-n8n`, `npm run status:usd-l1-n8n`) | Ingests captures, verifies them, appends only unseen configurations; `--check` proves the ledger is the merge of the committed captures; `--compact` and `--link-evidence` keep it reviewable. |
+| Sweep runner | `scripts/run_usd_l1_n8n_sweep.js` | Plans from the ledger, posts bounded batches, persists each response atomically under a lock, retains failed and partial attempts, and restores the webhook credential from the encrypted local store. |
+
 
 `backtester/lib/usd_layer1_backtester/current_model.js` is listed in the manifest as a stub and is
 deliberately **not** bundled: the production-control adapter's replay core reads local files and Supabase

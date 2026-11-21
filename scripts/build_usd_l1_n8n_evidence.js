@@ -37,6 +37,8 @@ const index = readJson(path.join(N8N, "executions-index-20261119.json"));
 const registry = require(path.join(ROOT, "backtester", "lib", "usd_layer1_backtester", "model_registry"));
 const ledgerLib = require(path.join(ROOT, "lib", "backtesting_n8n_run_ledger"));
 const ledger = fs.existsSync(path.join(N8N, "run-ledger-v1.json")) ? readJson(path.join(N8N, "run-ledger-v1.json")) : null;
+const comparisonPath = path.join(DATA, "model-comparison-v1.json");
+const modelComparison = fs.existsSync(comparisonPath) ? readJson(comparisonPath) : null;
 const challenger = require(path.join(ROOT, "backtester", "lib", "usd_layer1_backtester", "challenger"));
 const challengerV1 = require(path.join(ROOT, "backtester", "lib", "usd_layer1_backtester", "challenger_v1"));
 const EXECUTION_FILES = {
@@ -337,6 +339,27 @@ const evidence = {
     caseSummary("missing-inputs", EXECUTION_FILES["missing-inputs"])
   ],
   execution_index: executionIndex(),
+  model_comparison: modelComparison ? {
+    path: "data/usd-layer1-backtester/model-comparison-v1.json",
+    validation_mode: modelComparison.validation_mode,
+    models: modelComparison.models.map((entry) => ({
+      model: entry.model,
+      identity: entry.identity,
+      label: entry.label,
+      role: entry.role,
+      fixture: entry.fixture,
+      included_in_research_comparison: entry.included_in_research_comparison,
+      scored: entry.pooled ? entry.pooled.scored : null,
+      accuracy: entry.pooled ? entry.pooled.accuracy : null,
+      wilson_lower_95: entry.pooled ? entry.pooled.wilson_lower_95 : null,
+      hit: entry.pooled ? entry.pooled.hit : null,
+      miss: entry.pooled ? entry.pooled.miss : null,
+      flat: entry.pooled ? entry.pooled.flat : null,
+      no_call: entry.pooled ? entry.pooled.no_call : null
+    })),
+    agreement: modelComparison.agreement,
+    labels: modelComparison.labels
+  } : null,
   claims: ledgerClaims(),
   sweep: ledger ? {
     ledger: "data/usd-layer1-backtester/n8n/run-ledger-v1.json",
@@ -401,9 +424,12 @@ const evidence = {
     label: test.label,
     question: test.question,
     status: test.status,
+    status_label: test.status_label,
     usable_sessions: test.usable_sessions,
     outcome_source: test.outcome_source,
     counts: test.counts,
+    simulation: test.simulation || null,
+    blocked_on: test.blocked_on || null,
     h1_readiness: test.h1_readiness
   })),
   model_rules: registry.ENTRIES

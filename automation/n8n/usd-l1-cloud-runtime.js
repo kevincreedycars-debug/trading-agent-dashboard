@@ -8,11 +8,11 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   const BUNDLE_VERSION = "usd-l1-cloud-runtime-v2";
-  const BUNDLE_SHA256 = "666f2e8af53b0bbc946bda361fa7d3c0950ab514e2dab1fe9d6edcb293dfddbd";
+  const BUNDLE_SHA256 = "5fbc87f2568007cdb7a4fa5340cd88f878d7c639b4b47de55028fb446076219e";
   const SOURCE_FILES = [
   {
     "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
-    "sha256": "014957205ec5fb54535161a5d569d8a7755fe2fdd252ccc1febbcff4dbf4ab95",
+    "sha256": "6639111429c81da3c96ce499b12ff65d977d6e6249844e4790ac6d4875533d38",
     "stub": false
   },
   {
@@ -149,7 +149,7 @@
       function assertLayer1Adapter(adapter) {
         const missing = [];
         if (typeof adapter.id !== "string" || !adapter.id.trim()) missing.push("id");
-        if (typeof adapter.label !== "string" || !adapter.label.trim()) missing.push("version");
+        if (typeof adapter.label !== "string" || !adapter.label.trim()) missing.push("label");
         if (typeof adapter.version !== "string" || !adapter.version.trim()) missing.push("version");
         if (typeof adapter.evaluate !== "function") missing.push("evaluate()");
         if (!Array.isArray(adapter.inputKeys) || adapter.inputKeys.some((key) => typeof key !== "string")) missing.push("inputKeys[]");

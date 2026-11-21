@@ -43,7 +43,7 @@
     "shadow:usd-l1": "node backtester/scripts/run_usd_l1_shadow_decision.js",
     "build:usd-l1-n8n": "node scripts/build_usd_l1_n8n_cloud_workflows.js",
     "evidence:usd-l1-n8n": "node scripts/build_usd_l1_n8n_evidence.js",
-    "test:usd-l1-n8n": "node --test tests/usd_l1_n8n_cloud_workflows.test.js tests/backtesting_n8n_map.test.js tests/backtesting_n8n_run_ledger.test.js",
+    "test:usd-l1-n8n": "node --test tests/usd_l1_n8n_cloud_workflows.test.js tests/backtesting_n8n_map.test.js tests/backtesting_n8n_run_ledger.test.js tests/backtesting_n8n_sweep.test.js",
     "persist:usd-l1-n8n": "node scripts/persist_usd_l1_n8n_runs.js",
     "status:usd-l1-n8n": "node scripts/persist_usd_l1_n8n_runs.js --status",
     "checker:corpus": "node scripts/fetch-checker-corpus.js",
@@ -51,7 +51,9 @@
     "test:refresh-browser:watch": "node --test --watch tests/refresh_progress.browser.test.js",
     "playwright:install": "npx playwright install chromium",
     "test:unit": "node scripts/test-local.js unit",
-    "test:browser": "node scripts/test-local.js browser"
+    "test:browser": "node scripts/test-local.js browser",
+    "compare:usd-l1-models": "node scripts/build_usd_l1_model_comparison.js",
+    "test:l2l-simulation": "node --test tests/l2l_simulation.test.js tests/model_comparison.test.js"
   },
   "devDependencies": {
     "playwright": "^1.62.1"

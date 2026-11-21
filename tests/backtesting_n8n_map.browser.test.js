@@ -117,6 +117,19 @@ test("the Layer 1 map is visible, filterable and linked to the recorded n8n exec
     const ledgerLinks = await page.locator(".map-links a").evaluateAll((nodes) => nodes.map((node) => node.href));
     assert.equal(ledgerLinks.some((href) => /\/execution\/5512$/.test(href)), true);
     assert.equal(ledgerLinks.some((href) => /\/execution\/5525$/.test(href)), true);
+    await page.evaluate(() => { location.hash = "#tests"; });
+    await page.waitForSelector("text=One row per scheduled morning", { timeout: 30000 });
+    assert.ok(await page.locator("input[type=checkbox]").count() >= 4, "every test module has a checkbox");
+    const moduleChips = page.locator(".chips button").filter({ hasText: "Original Layer 2 levels" }).first();
+    assert.ok(await moduleChips.count() >= 1);
+    await moduleChips.click();
+    await page.waitForFunction(() => document.querySelector("#view").textContent.includes("Simulation:"), { timeout: 10000 });
+    const testText = await page.locator("#view").textContent();
+    assert.match(testText, /implemented and tested/);
+    assert.match(testText, /historical inputs: absent/);
+    assert.match(testText, /7 unit cases/);
+    await page.evaluate(() => { location.hash = "#n8nmap"; });
+    await page.waitForSelector(".map-board", { timeout: 30000 });
     assert.deepEqual(pageErrors, []);
   } finally {
     await browser.close();

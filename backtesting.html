@@ -149,7 +149,7 @@ const payloadUrl="data/usd-layer1-backtester/backtesting-screen-v1.json";
 const n8nEvidenceUrl="data/usd-layer1-backtester/n8n-execution-evidence-v1.json";
 const n8nLedgerUrl="data/usd-layer1-backtester/n8n/run-ledger-v1.json";
 const tabs={n8nmap:"Layer 1 map",overview:"Overview",architecture:"Architecture",tests:"Tests",morning:"Morning run",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
-const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all",n8nEvidence:null,n8nError:null,n8nLoading:null,mapCase:null,mapModel:"challenger",mapNode:"child"};
+const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all",testSelection:null,n8nEvidence:null,n8nError:null,n8nLoading:null,mapCase:null,mapModel:"challenger",mapNode:"child"};
 function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=text;if(cls)n.className=cls;if(parent)parent.append(n);return n}
 function pill(status,parent){return el("span",status,parent,"pill "+status)}
 function pct(value){return value===null||value===undefined?"—":value+"%"}
@@ -731,9 +731,28 @@ function renderTests(v,s){
   const chips=el("div",null,v,"chips");
   const detail=el("div",null,v);
   const tableHost=el("div",null,v,"scroll");
-  const testId=state.test&&s.tests.rows[state.test]?state.test:s.tests.definitions[0].id;
-  state.test=testId;
+  // Test modules are selectable: the four committed definitions stay the source, and the view can carry
+  // any subset. The selection is a view choice here; a run records its own selection in the experiment
+  // identity so two different test configurations are two different experiments.
+  const selection=Array.isArray(state.testSelection)&&state.testSelection.length?state.testSelection:s.tests.definitions.map(t=>t.id);
+  const modules=el("div",null,v,"chips");
+  el("span","Modules in view",modules,"caption");
   for(const test of s.tests.definitions){
+    const label=el("label",null,modules,"caption");
+    const box=el("input",null,label);box.type="checkbox";box.checked=selection.includes(test.id);
+    box.onchange=()=>{
+      const next=s.tests.definitions.map(t=>t.id).filter(id=>id===test.id?box.checked:selection.includes(id));
+      state.testSelection=next;
+      if(!next.includes(state.test))state.test=next[0]||null;
+      state.rowKey=null;state.filter="all";render();
+    };
+    el("span"," "+test.ordinal+". "+test.label,label);
+  }
+  const visible=s.tests.definitions.filter(test=>selection.includes(test.id));
+  if(!visible.length){el("p","No test module is selected.",v,"caption");return}
+  const testId=state.test&&s.tests.rows[state.test]?state.test:visible[0].id;
+  state.test=testId;
+  for(const test of visible){
     const b=el("button",test.ordinal+". "+test.label,chips);b.setAttribute("aria-pressed",test.id===testId?"true":"false");
     b.onclick=()=>{state.test=test.id;state.filter="all";state.rowKey=null;render()};
   }
@@ -742,6 +761,9 @@ function renderTests(v,s){
   el("p",def.question,v);
   const meta=el("p",null,v,"caption");
   meta.textContent="Status: "+def.status+" · usable "+(def.usable_sessions??0)+" of "+s.summary.sessions+" · rows "+def.counts.rows;
+  if(def.simulation){
+    el("p","Simulation: "+String(def.simulation.status).replace(/_/g," ")+" · "+def.simulation.cases+" unit cases in "+def.simulation.tests+" · historical inputs: "+((def.usable_sessions||0)===0?"absent, so the rule is unmeasured":"present")+". "+def.simulation.statement,v,"caption");
+  }
   if(def.id==="dxy_direction_broker_cfd")el("p","Test 1 is the agreed direction test on the named broker DXY.cash series. The official ICE cash DXY series is a separate supplementary evaluation lane; it is never substituted for the broker series or required by test 1.",v,"caption");
 
   const filters=el("div",null,v,"chips");
@@ -1195,7 +1217,22 @@ function renderN8nMap(v){
   table(v,["Mechanism","Input","Threshold","Rule","Weight"],api.ruleRows(ev,state.mapModel).map(rule=>[rule.label,rule.input,rule.threshold,rule.rule,String(rule.weight)]));
   el("h3","The four backtests",v);
   table(v,["#","Test","Status","Usable","Outcome source"],api.testRows(ev).map(row=>[String(row.ordinal),row.label,row.status,String(row.usable_sessions??"—"),row.outcome_source]));
-  el("p","Tests 3 and 4 are blocked on history; test 1 is a broker proxy. None of these rows is an edge claim.",v,"caption");
+  el("p","Tests 3 and 4 are blocked on history; test 1 is a broker proxy. Their path rule engine is implemented and unit-tested separately, so 'blocked' means the data is missing, not that the simulator is missing. None of these rows is an edge claim.",v,"caption");
+  const moduleRows=(ev.four_backtests||[]).filter(test=>test.simulation);
+  if(moduleRows.length){
+    el("h3","Simulation status for tests 3 and 4",v);
+    table(v,["Test","Simulation","Rule","Unit cases","Historical inputs"],moduleRows.map(test=>[String(test.ordinal),String(test.simulation.status).replace(/_/g," "),test.simulation.rules,test.simulation.cases+" in "+test.simulation.tests,(test.usable_sessions||0)===0?"absent - the rule is unmeasured":"present"]));
+    el("p",moduleRows[0].simulation.statement,v,"caption");
+  }
+  if(ev.model_comparison){
+    const mc=ev.model_comparison;
+    el("h3","Aggregate model comparison",v);
+    el("p","Every registered research model replayed over the same committed mornings. A registered fixture is shown for the plumbing and excluded from every research figure.",v,"caption");
+    table(v,["Model","Role","Scored","Hit","Miss","Flat","No call","Accuracy","Wilson lower 95%"],
+      mc.models.map(m=>[m.label||m.model,m.role+(m.fixture?" (excluded from research)":""),String(m.scored??"—"),String(m.hit??"—"),String(m.miss??"—"),String(m.flat??"—"),String(m.no_call??"—"),m.accuracy===null?"—":(m.accuracy*100).toFixed(2)+"%",m.wilson_lower_95===null?"—":(m.wilson_lower_95*100).toFixed(2)+"%"]));
+    table(v,["Pair","Common directional mornings","Same direction","Share"],mc.agreement.map(a=>[a.left+" / "+a.right,String(a.common_directional_mornings),String(a.same_direction),a.share===null?"—":(a.share*100).toFixed(1)+"%"]));
+    el("p","A zero disagreement rate between the two challengers is a coverage finding: on this panel the reweighting changed conviction and participation but never the sign when both books called. Coverage is printed beside every figure.",v,"caption");
+  }
   el("h3","Execution map - every recorded morning",v);
   el("p","Each larger sphere is one recorded morning; the smaller spheres are the models that answered it. Click a node for its execution links. Drag to rotate. This map is evidence of what ran; it never places an order.",v);
   const mapWrap=el("div",null,v,"split");
