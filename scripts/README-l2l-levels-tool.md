@@ -224,3 +224,29 @@ marked is an empty list rather than a missing entry. A pair that starts publishi
 `KNOWN_INSTRUMENTS` in `lib/l2l_levels_store.js` plus the feed's own change; the validator, the
 dashboard and the tests all read that list, so nothing else has to be edited twice. A symbol the list
 does not carry is refused (`unknown symbol`).
+
+## The coverage writer (added 2026-11-21)
+
+`scripts/ensure-l2l-coverage.js` keeps the ladder at least ten full levels above the current price and ten
+below, for every instrument the file carries; `lib/l2l_coverage.js` is the arithmetic. It reads prices from a
+snapshot - the live mid, else the bid, else the last, else the newest M5 close - extends each ladder from its
+own anchors and spacing, never moves or removes an existing level, and writes only when something changed. It
+is the third writer of the file, and `MARKED_BY.coverage` names it.
+
+```
+node scripts/ensure-l2l-coverage.js                      report, write nothing
+node scripts/ensure-l2l-coverage.js --write              extend the file where a side is short
+node scripts/ensure-l2l-coverage.js --prices BTCUSD=60012.5,EURUSD=1.0965
+node scripts/l2l-levels-tool.js --check data/l2l-levels.json
+```
+
+The scheduled publisher runs the same plan on every run, against every lane's snapshot, and carries the
+extended file in the same commit as the snapshots (`publish.levels` in `config/live-trading-lanes.json` is the
+switch). That is the deployment: the ladder every lane's trader reads is the one the publisher just checked,
+so no lane can be armed on a grid that stops short of its own price. A run with no change writes the same
+bytes and the publish reports `unchanged`. Each generated line carries `available_at_utc`, the instant it
+became tradable, so a later reader can tell a line that existed from one that arrived after a candle closed.
+
+The full decision, the arithmetic, the caps and the deployment record are in
+`docs/live-trading/L2L_COVERAGE_PUBLISH_20261121.md`. `tests/l2l_coverage.test.js` holds the rule and
+`tests/live_trading_lanes_publish.test.js` holds the publish step.

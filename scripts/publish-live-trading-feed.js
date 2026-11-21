@@ -384,9 +384,9 @@ function buildCommitMessage(feed, { publishedAtUtc, targets = [FEED_RELATIVE], e
   }
   if (extras.length) {
     body.push(
-      `It also carries the lanes document and each lane's trader heartbeat (${extras.join(", ")}), copied beside ` +
-        "the snapshots so the page can say which accounts exist, which of them are deployed, and whether a loop is " +
-        "alive behind each account it draws."
+      `It also carries the lanes document, each lane's trader heartbeat and the L2L ladder (${extras.join(", ")}), ` +
+        "copied beside the snapshots so the page can say which accounts exist, which of them are deployed, whether a " +
+        "loop is alive behind each account it draws, and how far the ladder reaches either side of price."
     );
   }
   return `${finalSubject}\n\n${body.join("\n")}\n`;

@@ -134,8 +134,68 @@ function gitCalls(calls) {
   return calls.map((call) => call.args.join(" "));
 }
 
-// main() reports through stdout and stderr; the assertions below care about the exit code, so the streams are
-// borrowed and put back rather than left noisy in the test log.
+// The ladder the lanes read is extended by the run that commits it, for every lane's price, and it travels in
+// the same commit as the snapshots. The base document here is the committed ladder stripped back to its two
+// hand-marked seeds per instrument, so the test proves the publisher adds lines and never redraws the ones the
+// user marked. The working file is named under the repository's own tmp/, because the configured path is
+// resolved against the checkout the publisher runs in, and this test does not own that checkout.
+test("the ladder is extended for each lane's price and rides in the same commit", () => {
+  const space = workspace();
+  const committed = JSON.parse(fs.readFileSync(path.join(root, "data", "l2l-levels.json"), "utf8"));
+  const seedsOnly = {
+    ...committed,
+    instruments: committed.instruments.map(instrument => ({
+      ...instrument,
+      levels: instrument.levels.filter(level => level.role === "seed").map(level => ({ ...level }))
+    }))
+  };
+  const relative = "tmp/l2l-levels.publish-test.json";
+  const ladderPath = path.join(root, ...relative.split("/"));
+  fs.mkdirSync(path.dirname(ladderPath), { recursive: true });
+  fs.writeFileSync(ladderPath, JSON.stringify(seedsOnly, null, 2));
+  space.config.publish.levels = relative;
+  fs.writeFileSync(space.configPath, JSON.stringify(space.config, null, 2));
+
+  const seedPrices = seedsOnly.instruments.map(instrument => instrument.levels.map(level => Number(level.price)));
+  let result = null;
+  try {
+    result = lanes.publishLanes(optionsFor(space), { exec: fakeGit().exec, now: () => NOW_MS });
+  } finally {
+    fs.rmSync(ladderPath, { force: true });
+  }
+
+  assert.equal(result.action, "published");
+  assert.equal(result.levels.target, relative);
+  assert.ok(
+    result.extras.some(extra => extra.target === relative),
+    "the ladder travels in the same commit as the snapshots"
+  );
+  // One row per lane and instrument, and every one covered: the ladder now reaches ten full lines above and
+  // below both lanes' prices, not just the first lane's.
+  assert.equal(result.levels.coverage.length, 2);
+  for (const entry of result.levels.coverage) {
+    assert.equal(entry.rows.length, committed.instruments.length);
+    for (const row of entry.rows) {
+      assert.equal(row.covered, true, `${entry.lane} ${row.symbol} is covered: ${row.reason || ""}`);
+      assert.ok(row.above >= row.min_per_side && row.below >= row.min_per_side);
+    }
+  }
+  assert.deepEqual(result.levels.failures, []);
+
+  // What was written keeps every seed at its own price and adds only lines on the same grid.
+  const written = JSON.parse(fs.readFileSync(path.join(root, "tmp", "l2l-levels.publish.json"), "utf8"));
+  written.instruments.forEach((instrument, index) => {
+    const prices = instrument.levels.map(level => Number(level.price));
+    for (const seed of seedPrices[index]) {
+      assert.ok(prices.includes(seed), `${instrument.symbol} keeps its hand-marked ${seed}`);
+    }
+    assert.ok(prices.length > seedPrices[index].length, `${instrument.symbol} was extended rather than left short`);
+    assert.equal(new Set(prices).size, prices.length, `${instrument.symbol} has no duplicated line`);
+  });
+  assert.equal(written.marked_by, "automatic L2L coverage");
+});
+
+
 function captureStdio(fn) {
   const original = { out: process.stdout.write, err: process.stderr.write };
   let out = "";

@@ -123,8 +123,9 @@ test("the committed artifact carries every published symbol and only seeds or th
     KNOWN_INSTRUMENTS.map(entry => entry.symbol)
   );
   assert.ok(
-    state.marked_by === MARKED_BY.tool || state.marked_by === MARKED_BY.dashboard,
-    `${state.marked_by} must name one of the two writers`
+    state.marked_by === MARKED_BY.tool || state.marked_by === MARKED_BY.dashboard
+      || state.marked_by === MARKED_BY.coverage,
+    `${state.marked_by} must name one of the writers`
   );
   state.instruments.forEach(instrument => {
     assert.ok(Array.isArray(instrument.levels), `${instrument.symbol} needs a levels array`);

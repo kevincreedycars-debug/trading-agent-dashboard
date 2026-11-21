@@ -26,6 +26,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const publisher = require("./publish-live-trading-feed.js");
+// The coverage arithmetic and the runner that applies it to a levels document: the same two files the feed
+// cadence and the trader use, so a publish, a tick and a test cannot disagree about what "covered" means.
+const coverageRunner = require("./ensure-l2l-coverage.js");
+const levelsStore = require("../lib/l2l_levels_store.js");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_CONFIG = "config/live-trading-lanes.json";
@@ -262,6 +266,12 @@ function loadLanes(configPath) {
       typeof parsed?.publish?.summary === "string" && parsed.publish.summary.trim()
         ? parsed.publish.summary.trim()
         : "data/live-trading-lanes.json",
+    // The ladder the page draws and every lane's trader reads. Optional: a checkout that has not moved the
+    // ladder to a covered one simply publishes no ladder here, and nothing else about the run changes.
+    levels:
+      typeof parsed?.publish?.levels === "string" && parsed.publish.levels.trim()
+        ? parsed.publish.levels.trim()
+        : null,
     lanes: checked
   };
 }
@@ -477,6 +487,112 @@ function publishLanes(options, deps = {}) {
     };
   }
 
+  // The ladder is extended inside the run that commits it, and against every lane's price rather than one.
+  //
+  // Two facts decide the shape of this block. The first is that the publisher resets its checkout to the
+  // published branch before it copies anything in, so an extension written into the working tree earlier in
+  // the run would be thrown away: the extended document is written to tmp/ and handed over as an extra, which
+  // the publisher copies into the commit after that reset. The second is that the three terminals quote
+  // slightly different prices for the same instrument, and the generator only ever adds lines, so the plan is
+  // run once per lane in turn: the last lane's plan covers whatever the earlier ones did not, and no lane is
+  // served a grid that stops short of its own price. A ladder that is already covered comes back unchanged,
+  // which is why a quiet cycle writes the same bytes and the publish ends as `unchanged`.
+  let levelsPublished = null;
+  if (lanesFile.levels) {
+    const levelsSource = path.resolve(REPO_ROOT, lanesFile.levels);
+    if (!fs.existsSync(levelsSource)) {
+      return {
+        action: "refuse",
+        reason: `the lanes file names a ladder at ${levelsSource} that does not exist`,
+        lanes
+      };
+    }
+    let levelsState = null;
+    try {
+      levelsState = JSON.parse(fs.readFileSync(levelsSource, "utf8"));
+    } catch (error) {
+      return {
+        action: "refuse",
+        reason: `the ladder at ${levelsSource} is not readable JSON: ${String(
+          error.message || error
+        ).slice(0, 120)}`,
+        lanes
+      };
+    }
+    // The same validator a hand edit has to pass. A ladder the chart cannot read is refused rather than
+    // published, because publishing it would put a broken grid in front of every lane and every reader.
+    const problems = levelsStore.validateLevelsState(levelsState);
+    if (problems.length) {
+      return {
+        action: "refuse",
+        reason: `the ladder at ${levelsSource} fails the levels validator (${problems.length} problem(s)): ${
+          problems[0]
+        }`,
+        lanes
+      };
+    }
+
+    const nowUtc = new Date((deps.now || Date.now)()).toISOString();
+    const coverage = [];
+    const failures = [];
+    for (const artifact of artifacts) {
+      let feed = null;
+      try {
+        feed = JSON.parse(fs.readFileSync(artifact.source, "utf8"));
+      } catch (error) {
+        // The artifact was readable a moment ago; it is being rewritten by its lane's feed. The plan simply
+        // skips this lane's prices for this cycle rather than refusing the other lanes' reads.
+        coverage.push({
+          lane: artifact.label ?? null,
+          rows: [],
+          reason: `${artifact.source} could not be read for coverage: ${String(
+            error.message || error
+          ).slice(0, 120)}`
+        });
+        continue;
+      }
+      const plan = coverageRunner.planCoverage({ state: levelsState, feed, nowUtc, lane: artifact.label ?? null });
+      levelsState = plan.changed ? plan.state : levelsState;
+      coverage.push({
+        lane: artifact.label ?? null,
+        rows: plan.rows.map(row => ({
+          symbol: row.symbol,
+          asset: row.asset,
+          status: row.status,
+          price: row.price,
+          above: row.above,
+          below: row.below,
+          min_per_side: row.min_per_side,
+          covered: row.covered,
+          added_above: row.added_above,
+          added_below: row.added_below,
+          next_above: row.next_above,
+          next_below: row.next_below,
+          reason: row.reason
+        }))
+      });
+      failures.push(...plan.failures);
+    }
+
+    // Written beside the state file rather than in the checkout: the publisher copies it into the commit
+    // after the checkout has been reset, and a crash halfway through writing it cannot leave a half-extended
+    // ladder anywhere a reader or a lane can see.
+    const staged = path.join(REPO_ROOT, "tmp", "l2l-levels.publish.json");
+    fs.mkdirSync(path.dirname(staged), { recursive: true });
+    const temporary = `${staged}.${process.pid}.tmp`;
+    fs.writeFileSync(temporary, levelsStore.serialiseState(levelsState), "utf8");
+    fs.renameSync(temporary, staged);
+
+    extras.push({ label: "levels", source: staged, target: lanesFile.levels });
+    levelsPublished = {
+      target: lanesFile.levels,
+      checked_at_utc: nowUtc,
+      generated_at_utc: levelsState.generated_at_utc ?? null,
+      coverage,
+      failures
+    };
+  }
+
   // The lanes document the page reads: which accounts exist, which of them are deployed, where each one's
   // snapshot and heartbeat live, and what each lane's own publisher run made of it. It is written to tmp/ and
   // copied into the publish checkout by the one publisher, so the page is told about a lane in the same commit
@@ -531,7 +647,7 @@ function publishLanes(options, deps = {}) {
     deps
   );
 
-  return { ...result, lanes };
+  return { ...result, lanes, levels: levelsPublished };
 }
 
 function main(argv = process.argv.slice(2), deps = {}) {
