@@ -379,3 +379,28 @@ test("a failed request is retained without becoming a morning result", () => {
   assert.equal(report.failed_attempts, 1);
   assert.deepEqual(report.plan.missing, ["2024-01-02", "2024-01-03"]);
 });
+
+test("coverage is counted per model, validation mode and configuration, and a receipted refusal is not a completed run", () => {
+  const committed = readJson("data/usd-layer1-backtester/n8n/run-ledger-v1.json");
+  const coverage = ledger.coverageReport(committed, { panelDates: dataset.sessions.map((session) => session.date) });
+  assert.equal(coverage.panel_mornings, 725);
+  const challenger = coverage.by_model.challenger;
+  assert.equal(challenger.panel_mornings_available, 725);
+  assert.equal(challenger.panel_mornings, 725);
+  assert.equal(challenger.completed_dates, 725);
+  assert.equal(challenger.by_validation_mode.receipted.completed, 0);
+  assert.equal(challenger.by_validation_mode.receipted.receipted_refusals, challenger.by_validation_mode.receipted.refused);
+  assert.equal(challenger.by_validation_mode.structural.refused, 1);
+  assert.equal(challenger.by_validation_mode.structural.refused_absent, 1);
+  const configurations = Object.values(challenger.by_configuration);
+  assert.ok(configurations.length >= 3);
+  const sweep = configurations.find((entry) => entry.records === 719);
+  assert.ok(sweep, "the 725-morning sweep rows share one configuration signature");
+  assert.equal(sweep.completed, 719);
+  assert.match(sweep.date_from, /^\d{4}-\d{2}-\d{2}$/);
+  assert.ok(configurations.every((entry) => entry.receipted_refusals <= entry.records));
+  assert.match(challenger.statement, /per-morning rows of one sweep share a signature/);
+  const fixture = coverage.by_model.fixture_constant;
+  assert.equal(fixture.panel_mornings, 1);
+  assert.equal(fixture.completed, 1);
+});

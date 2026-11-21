@@ -26,7 +26,8 @@ const currentModel = require("./current_model");
 const fixtureConstant = require("./fixture_constant");
 
 const REGISTRY_VERSION = "usd-l1-model-registry-v1";
-const INPUT_CONTRACT_VERSION = "usd-l1-model-input-contract-v1";
+const INPUT_CONTRACT_VERSION = "usd-l1-model-input-contract-v2";
+const SOURCE_CATALOGUE = "lib/layer1_backtesting/input_sources.js";
 const MAX_SELECTED_MODELS = 4;
 
 /** Every key the current model can read from a saved morning. */
@@ -80,9 +81,12 @@ function contractKeys(keys, mechanisms) {
 function inputContract(keys, mechanisms) {
   return Object.freeze({
     contract_version: INPUT_CONTRACT_VERSION,
-    retrieval: "saved_panel_replay",
+    retrieval: "declared_sources_with_reconstruction_disclosure",
     retrieval_statement:
-      "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+      "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+    source_catalogue: SOURCE_CATALOGUE,
+    source_clock_policy:
+      "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
     missing_input_policy: "abstain_or_block",
     fill_policy: "the controller never fills a missing value and never estimates one",
     keys: contractKeys(keys, mechanisms)

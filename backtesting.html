@@ -148,8 +148,9 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0d1922;border:1px sol
 const payloadUrl="data/usd-layer1-backtester/backtesting-screen-v1.json";
 const n8nEvidenceUrl="data/usd-layer1-backtester/n8n-execution-evidence-v1.json";
 const n8nLedgerUrl="data/usd-layer1-backtester/n8n/run-ledger-v1.json";
+const platformUrls={spec_check:"data/usd-layer1-backtester/spec-check-v1.json",input_retrieval:"data/usd-layer1-backtester/input-retrieval-v1.json",coverage:"data/usd-layer1-backtester/coverage-v1.json",traces:"data/usd-layer1-backtester/morning-traces-v1.json"};
 const tabs={n8nmap:"Layer 1 map",overview:"Overview",architecture:"Architecture",tests:"Tests",morning:"Morning run",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
-const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all",testSelection:null,n8nEvidence:null,n8nError:null,n8nLoading:null,mapCase:null,mapModel:"challenger",mapNode:"child"};
+const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all",testSelection:null,n8nEvidence:null,n8nError:null,n8nLoading:null,mapCase:null,mapModel:"challenger",mapNode:"child",platform:null,platformError:null,platformLoading:null,traceKey:null};
 function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=text;if(cls)n.className=cls;if(parent)parent.append(n);return n}
 function pill(status,parent){return el("span",status,parent,"pill "+status)}
 function pct(value){return value===null||value===undefined?"—":value+"%"}
@@ -732,8 +733,8 @@ function renderTests(v,s){
   const detail=el("div",null,v);
   const tableHost=el("div",null,v,"scroll");
   // Test modules are selectable: the four committed definitions stay the source, and the view can carry
-  // any subset. The selection is a view choice here; a run records its own selection in the experiment
-  // identity so two different test configurations are two different experiments.
+  // any subset. The selection is executed by the controller on a run - it decides which markets are scored
+  // and which modules are recorded not_run or blocked_on_history - and recorded in the experiment identity.
   const selection=Array.isArray(state.testSelection)&&state.testSelection.length?state.testSelection:s.tests.definitions.map(t=>t.id);
   const modules=el("div",null,v,"chips");
   el("span","Modules in view",modules,"caption");
@@ -1011,6 +1012,15 @@ function loadN8nEvidence(){
   state.n8nError=null;
   state.n8nLoading=fetch(n8nEvidenceUrl).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(json=>{state.n8nEvidence=json}).catch(error=>{state.n8nError=error.message}).finally(()=>{state.n8nLoading=null;if(location.hash==="#n8nmap")render()});
 }
+function loadPlatformEvidence(){
+  if(state.platform||state.platformLoading)return;
+  state.platformError=null;
+  const names=Object.keys(platformUrls);
+  state.platformLoading=Promise.all(names.map(name=>fetch(platformUrls[name]).then(r=>{if(!r.ok)throw new Error(name+": HTTP "+r.status);return r.json()})))
+    .then(json=>{state.platform=names.reduce((map,name,index)=>{map[name]=json[index];return map},{})})
+    .catch(error=>{state.platformError=error.message})
+    .finally(()=>{state.platformLoading=null;if(location.hash==="#n8nmap")render()});
+}
 function mapDetailRows(node,model,caseEntry,ev,api){
   if(node.id==="validation")return api.validationRows(model);
   if(node.id==="outcomes")return api.resultRows(model).map(row=>({label:row.market+" · "+row.direction+" "+row.move,value:row.result,status:row.status}));
@@ -1135,12 +1145,107 @@ function renderN8nLedger(v){
   el("p","Ledger schema "+l.schema_version+" \u00b7 updated "+(l.updated_at||"-")+" \u00b7 dataset run "+(l.dataset.run_version||"-"),v,"caption mono");
 }
 
+function renderPlatformChecks(v){
+  const platform=state.platform;
+  if(!platform){el("p","Loading the platform checks…",v);loadPlatformEvidence();return}
+  const spec=platform.spec_check;
+  el("h3","Independent specification check",v);
+  const badge=el("p",null,v,"caption");
+  el("strong","Verdict: "+spec.verdict.toUpperCase()+" · ",badge);
+  el("span",`${spec.hand_examples.passed}/${spec.hand_examples.cases} hand-calculated examples, ${spec.corrupted_calls.detected}/${spec.corrupted_calls.cases} corrupted calls caught, ${spec.corrupted_tables.detected}/${spec.corrupted_tables.cases} corrupted rule tables caught, ${spec.corrupted_inputs.detected}/${spec.corrupted_inputs.cases} corrupted inputs caught, ${spec.gate.detected}/${spec.gate.cases} bad clocks or dropped inputs caught`,badge);
+  table(v,["Case","Expected","Hand arithmetic"],spec.hand_examples.failures.length
+    ? spec.hand_examples.failures.map(f=>[f.id,f.mismatches.map(m=>m.field+" "+m.hand+" != "+m.model).join("; "),f.arithmetic])
+    : [["all five","reproduced by the model","the arithmetic is written out in lib/layer1_backtesting/spec_check.js"]]);
+  el("p",spec.statement,v,"caption");
+  el("h3","Historical input retrieval",v);
+  table(v,["Model","Keys","Values replayed","Contemporaneous receipts","Reconstructed","Conflicts","Availability claim"],
+    Object.entries(platform.input_retrieval.models).map(([key,model])=>[key,String(model.keys.length),String(model.totals.key_values_present),String(model.totals.contemporaneous),String(model.totals.reconstructed),String(model.totals.conflicts),model.availability_claim]));
+  el("p","Every key is resolved through its declared source (provider, series, transform and publication lag). A receipt exists only when a capture taken at or before the cutoff matches the replayed value; the capture corpus is "+(platform.input_retrieval.capture_corpus.files.length?platform.input_retrieval.capture_corpus.files.length+" file(s)":"empty")+".",v,"caption");
+}
+
+function renderPlatformCoverage(v){
+  const platform=state.platform;
+  if(!platform){el("p","Loading the coverage report…",v);loadPlatformEvidence();return}
+  const coverage=platform.coverage;
+  el("h3","Coverage, per model, validation mode and configuration",v);
+  el("p","A morning is covered by a model only when the model executed on it in the committed panel. A receipted refusal is a refusal, not a completed run, and is counted in its own mode.",v,"caption");
+  table(v,["Model","Panel mornings","Covered","Completed rows","Completed mornings","Refused","Receipted refusals","Scored mornings"],
+    Object.values(coverage.by_model).map(m=>[m.model,String(m.panel_mornings_available),String(m.panel_mornings),String(m.completed),String(m.completed_dates),String(m.refused),String(m.receipted_refusals),String(m.scored_mornings)]));
+  table(v,["Model","Validation mode","Records","Completed","Refused","Of which absent dates","Receipted refusals"],
+    Object.entries(coverage.by_model).flatMap(([model,m])=>Object.entries(m.by_validation_mode).map(([mode,row])=>[model,mode,String(row.records),String(row.completed),String(row.refused),String(row.refused_absent),String(row.receipted_refusals)])));
+  table(v,["Model","Configuration","Rows","Covered mornings","Completed","From","To"],
+    Object.entries(coverage.by_model).flatMap(([model,m])=>Object.entries(m.by_configuration).map(([key,row])=>[model,key,String(row.records),String(row.panel_mornings),String(row.completed),row.date_from,row.date_to])));
+}
+
+function renderMorningExplainer(v){
+  const platform=state.platform;
+  el("h3","One morning, end to end",v);
+  if(!platform){el("p","Loading the morning traces…",v);loadPlatformEvidence();return}
+  const mornings=platform.traces.mornings||[];
+  if(!mornings.length){el("p","No morning trace is published.",v);return}
+  const keyOf=m=>m.date+"|"+m.model;
+  if(!state.traceKey||!mornings.some(m=>keyOf(m)===state.traceKey))state.traceKey=keyOf(mornings[0]);
+  const head=el("div",null,v,"n8n-head");
+  const label=el("label",null,head);el("span","Recorded morning",label);
+  const select=el("select",null,label);
+  for(const morning of mornings){
+    const option=el("option",morning.date+" · "+morning.model+" · "+morning.why,select);
+    option.value=keyOf(morning);option.selected=keyOf(morning)===state.traceKey;
+  }
+  select.onchange=()=>{state.traceKey=select.value;render()};
+  const chosen=mornings.find(m=>keyOf(m)===state.traceKey);
+  el("p",chosen.why+" · "+chosen.model_entry.identity+" · reproduced in the local controller: "+(chosen.reproduced?"yes":"no")+" · "+chosen.source_summary.contemporaneous+" of "+chosen.source_summary.keys+" keys carry a contemporaneous receipt",v,"caption");
+  for(const step of chosen.steps){
+    const card=el("div",null,v,"card");
+    el("strong",step.title,card);
+    el("p",step.summary||"",card,"caption");
+    if(step.id==="sources"||step.id==="inputs"){
+      table(card,["Input","Value","Source","Clock","Acquisition"],
+        step.items.slice(0,12).map(row=>[row.key,row.value===null?"missing":String(row.value),(row.provider||"?")+" "+(row.series||""),row.clock,(row.acquisition||"").replace(/_/g," ")]));
+    }else if(step.id==="rules"){
+      table(card,["Mechanism","Input","Value","Vote","Weight"],
+        step.items.map(row=>[row.id,row.input,row.value===null?"missing":String(row.value),row.vote===null?"—":String(row.vote),String(row.weight)]));
+      if(step.totals)el("p",`net ${step.totals.net} over ${step.totals.usable} usable mechanisms (${step.totals.agreement} agreement, ${step.totals.participation} participation)`,card,"caption mono");
+    }else if(step.id==="validation"){
+      if(step.items.length)table(card,["Code","Message"],step.items.map(row=>[row.code||"",row.message||""]));
+      else el("p","No gate reason or warning.",card,"caption");
+      if(step.receipted)el("p",`receipted: ${step.receipted.complete_inputs} of ${step.receipted.required_inputs} consumed inputs stamped before the cutoff`,card,"caption mono");
+    }else if(step.id==="call"){
+      const call=step.items[0];
+      if(call)table(card,["Direction","Conviction","Raw score","Agreement","Participation","Reason"],
+        [[call.direction,call.conviction===null?"—":String(call.conviction),call.raw_score===null?"—":String(call.raw_score),call.agreement===null?"—":String(call.agreement),call.participation===null?"—":String(call.participation),call.reason||""]]);
+    }else if(step.id==="execution"){
+      table(card,["Link","Value"],step.items.flatMap(row=>[
+        ["parent execution",row.parent&&row.parent.url?"open":"id "+(row.parent&&row.parent.id||"none")],
+        ["child execution",row.child&&row.child.url?"open":"id "+(row.child&&row.child.id||"none")],
+        ["configuration",row.configuration||"none"]
+      ]));
+      const links=el("div",null,card,"map-links");
+      for(const row of step.items){
+        for(const entry of [row.parent,row.child]){
+          if(!entry||!entry.url)continue;
+          const a=el("a","n8n execution "+entry.id,links);a.href=entry.url;a.target="_blank";a.rel="noopener";
+        }
+      }
+    }else if(step.id==="outcome"){
+      table(card,["Market","Result","Session direction","Move %","Flat band %"],
+        step.items.map(row=>[row.market,row.result,row.direction||"—",row.move_pct===null?"—":String(row.move_pct),row.flat_band_pct===null?"—":String(row.flat_band_pct)]));
+    }else if(step.id==="verification"){
+      table(card,["Check","Result","Detail"],step.items.map(row=>[row.name,row.ok?"pass":"fail",row.detail||""]));
+    }
+  }
+  el("p",chosen.statement,v,"caption");
+}
+
 function renderN8nMap(v){
   v.replaceChildren();
   el("h2","USD Layer 1 n8n map",v);
   el("p","Recorded n8n executions over the committed morning panel. Choose a model and a recorded case; click any node to inspect its evidence. This map never places an order and never publishes a live call.",v);
   if(state.n8nError){const b=el("div",null,v,"banner bad");el("strong","The n8n evidence could not be loaded: "+state.n8nError,b);return}
   if(!state.n8nEvidence){el("p","Loading the recorded n8n evidence…",v);loadN8nEvidence();return}
+  loadPlatformEvidence();
+  if(state.platformError){const b=el("div",null,v,"banner bad");el("strong","The platform evidence could not be loaded: "+state.platformError,b)}
+
   const api=window.BacktestingN8nMap;
   if(!api){const b=el("div",null,v,"banner bad");el("strong","The map view model did not load.",b);return}
   const ev=state.n8nEvidence;
@@ -1233,6 +1338,10 @@ function renderN8nMap(v){
     table(v,["Pair","Common directional mornings","Same direction","Share"],mc.agreement.map(a=>[a.left+" / "+a.right,String(a.common_directional_mornings),String(a.same_direction),a.share===null?"—":(a.share*100).toFixed(1)+"%"]));
     el("p","A zero disagreement rate between the two challengers is a coverage finding: on this panel the reweighting changed conviction and participation but never the sign when both books called. Coverage is printed beside every figure.",v,"caption");
   }
+  renderPlatformChecks(v);
+  renderPlatformCoverage(v);
+  renderMorningExplainer(v);
+
   el("h3","Execution map - every recorded morning",v);
   el("p","Each larger sphere is one recorded morning; the smaller spheres are the models that answered it. Click a node for its execution links. Drag to rotate. This map is evidence of what ran; it never places an order.",v);
   const mapWrap=el("div",null,v,"split");

@@ -1,0 +1,38 @@
+{
+  "schema_version": "usd-l1-execution-accounting-fixture-v1",
+  "fixture": true,
+  "label": "FIXTURE - a labelled demonstration of sizing, costs, equity and drawdown. It is not a trade result, not a broker schedule and not a performance figure.",
+  "purpose": "Exercise the account arithmetic from contracts.ACCOUNT (GBP 100,000, 1% of the running balance per filled trade) and the labelled cost schedule, so a reader can recompute every row by hand.",
+  "sizing": "lib/layer1_backtesting/execution_accounting.js#SIZING, derived from backtester/lib/usd_layer1_backtester/contracts.js#ACCOUNT",
+  "cost_model": "fixture_costs",
+  "cost_schedule_note": "declared inside lib/layer1_backtesting/execution_accounting.js and marked as a fixture; no broker schedule is committed in this checkout",
+  "trades": [
+    { "id": "fx-1", "market": "EURUSD", "direction": "long", "entry": 1.1, "stop": 1.095, "exit": 1.125, "contract_size": 100000 },
+    { "id": "au-1", "market": "XAUUSD", "direction": "short", "entry": 2000, "stop": 2005, "exit": 1975, "contract_size": 100 },
+    { "id": "fx-2", "market": "EURUSD", "direction": "long", "entry": 1.1, "stop": 1.095, "exit": 1.095, "contract_size": 100000 },
+    { "id": "btc-no-stop", "market": "BTCUSD", "direction": "long", "entry": 50000, "stop": 50000, "exit": 51000, "contract_size": 1 }
+  ],
+  "expected": {
+    "starting_balance": 100000,
+    "final_equity": 108961.62,
+    "return_pct": 8.96,
+    "peak_equity": 110101.22,
+    "max_drawdown": 1139.6,
+    "max_drawdown_pct": 1.04,
+    "taken": 3,
+    "skipped": 1,
+    "wins": 2,
+    "losses": 1,
+    "expectancy_r": 2.948,
+    "profit_factor": 8.86,
+    "gross_total": 9125,
+    "cost_total": 163.38,
+    "cost_drag_pct": 1.79,
+    "rows": [
+      { "id": "fx-1", "lots": 2, "risk_amount": 1000, "gross": 5000, "cost": 36, "net": 4964, "r_net": 4.964, "equity_after": 104964, "drawdown": 0 },
+      { "id": "au-1", "lots": 2.09, "risk_amount": 1045, "gross": 5225, "cost": 87.78, "net": 5137.22, "r_net": 4.916, "equity_after": 110101.22, "drawdown": 0 },
+      { "id": "fx-2", "lots": 2.2, "risk_amount": 1100, "gross": -1100, "cost": 39.6, "net": -1139.6, "r_net": -1.036, "equity_after": 108961.62, "drawdown": 1139.6 }
+    ]
+  },
+  "hand_check": "fx-1: 100000*1% = 1000 risk; stop 0.0050 * 100000 = 500 per lot; 1000/500 = 2.00 lots. Gross 0.0250*100000*2 = 5000. Cost (0.00012+0.00002)*100000*2 = 28 plus 4*2 = 8 commission, so 36. Net 4964, 4.964R. au-1: 104964*1% = 1049.64; 5*100 = 500 per lot; 2.09928 raw lots floored to 2.09 (risk 1045). Gross 25*100*2.09 = 5225; cost (0.30+0.05)*100*2.09 = 73.15 plus 7*2.09 = 14.63, so 87.78. fx-2: 110101.22*1% = 1101.01; 2.20202 raw lots floored to 2.20 (risk 1100); gross -1100; cost 30.80+8.80 = 39.60; net -1139.60, the drawdown from 110101.22."
+}

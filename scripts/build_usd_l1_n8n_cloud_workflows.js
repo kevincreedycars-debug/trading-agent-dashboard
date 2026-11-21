@@ -29,11 +29,12 @@ const IDS = {
   fixture: "backtester/lib/usd_layer1_backtester/fixture_constant.js",
   challenger: "backtester/lib/usd_layer1_backtester/challenger.js",
   challenger_v1: "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+  test_modules: "lib/layer1_backtesting/test_modules.js",
   votes: "lib/usd_l1_votes.js",
   session: "backtester/lib/usd_session_engine_interface.js",
   current: "backtester/lib/usd_layer1_backtester/current_model.js"
 };
-const BUNDLE_VERSION = "usd-l1-cloud-runtime-v2";
+const BUNDLE_VERSION = "usd-l1-cloud-runtime-v3";
 /** Stable hash of the registry document that is injected into the parent workflow. */
 function registryDocument() {
   const doc = registry.publicRegistry();
@@ -94,6 +95,7 @@ const MODULES = [
   [IDS.fixture, read(IDS.fixture)],
   [IDS.challenger, read(IDS.challenger)],
   [IDS.challenger_v1, read(IDS.challenger_v1)],
+  [IDS.test_modules, read(IDS.test_modules)],
   [IDS.votes, read(IDS.votes)],
   [IDS.session, read(IDS.session)],
   [IDS.current, CURRENT_STUB, true]

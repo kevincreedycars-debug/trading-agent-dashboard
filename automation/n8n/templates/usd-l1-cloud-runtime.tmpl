@@ -80,6 +80,7 @@ __MODULES__
       model,
       dates: [date],
       validationMode: validation,
+      testModules: Array.isArray(payload.tests) && payload.tests.length > 0 ? payload.tests : null,
       includeDecisions: true
     });
     return {
@@ -102,6 +103,7 @@ __MODULES__
       layer1: result.layer1,
       controller_version: result.controller_version,
       validation_mode: result.validation_mode,
+      test_configuration: result.test_configuration,
       dataset: result.dataset,
       summary: result.summary,
       decision: result.decisions[0]

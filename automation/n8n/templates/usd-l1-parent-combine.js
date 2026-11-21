@@ -65,7 +65,8 @@ function comparison(calls) {
     note: "Agreement across the selected research models is a reproduction observation, not a performance claim. Fixtures are excluded from the research agreement figure."
   };
 }
-function experimentIdentity(firstDecision, code, recordDate) {
+function experimentIdentity(first, code, recordDate) {
+  const firstDecision = first.decision || {};
   const validation = firstDecision.validation || {};
   return {
     schema_version: "usd-l1-experiment-identity-v1",
@@ -105,11 +106,23 @@ function experimentIdentity(firstDecision, code, recordDate) {
       mode: config.validation,
       gate: "structural accepts an internally consistent morning whose stamped prints do not sit after the cutoff; receipted additionally requires a full timestamp before the cutoff on every input the model reads"
     },
-    test_configuration: {
-      tests: Array.isArray(config.tests) ? config.tests.slice() : null,
-      default: "all four committed test definitions when the request names none",
-      scoring: "outcome arithmetic is recomputed at ingest against the committed panel; no test is scored inside n8n"
-    }
+    test_configuration: first.test_configuration
+      ? {
+        schema_version: "usd-l1-test-configuration-v1",
+        modules: first.test_configuration.modules,
+        requested: Array.isArray(config.tests) ? config.tests.slice() : null,
+        defaulted: first.test_configuration.defaulted === true,
+        scored_markets: first.test_configuration.scored_markets,
+        simulations: first.test_configuration.simulations,
+        applied_by: "the controller that evaluated the morning",
+        statement:
+          "The selection is executed, not annotated: only the markets the selected modules consume are scored, and a selected module this record cannot carry is recorded as not_run or blocked_on_history."
+      }
+      : {
+        tests: Array.isArray(config.tests) ? config.tests.slice() : null,
+        default: "all four committed test definitions when the request names none",
+        scoring: "outcome arithmetic is recomputed at ingest against the committed panel; no test is scored inside n8n"
+      }
   };
 }
 function modelRecord(key, v) {
@@ -160,7 +173,7 @@ function pairedRecord(date, perModel) {
       return map;
     }, {}),
     comparison: comparison(calls),
-    identity: experimentIdentity(d0, code, date),
+    identity: experimentIdentity(first, code, date),
     n8n: {
       execution_id: $execution.id,
       execution_url: "https://silver17.app.n8n.cloud/execution/" + $execution.id,

@@ -1,13 +1,13 @@
 {
   "schema_version": "usd-l1-cloud-workflows-v2",
-  "bundle_version": "usd-l1-cloud-runtime-v2",
+  "bundle_version": "usd-l1-cloud-runtime-v3",
   "bundle_path": "automation/n8n/usd-l1-cloud-runtime.js",
-  "bundle_sha256": "5fbc87f2568007cdb7a4fa5340cd88f878d7c639b4b47de55028fb446076219e",
-  "bundle_bytes": 104864,
+  "bundle_sha256": "bb92e002976270d9016b9d584599c9bb01d2e6fee61d2b59205699bc6b7fd69b",
+  "bundle_bytes": 117074,
   "source_files": [
     {
       "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
-      "sha256": "6639111429c81da3c96ce499b12ff65d977d6e6249844e4790ac6d4875533d38",
+      "sha256": "99659c4c29abbf9db9d05a759919ab1a6b94396bb3ecd25ba9f2dffbcb579d4e",
       "stub": false
     },
     {
@@ -17,7 +17,7 @@
     },
     {
       "path": "backtester/lib/usd_layer1_backtester/model_registry.js",
-      "sha256": "d7174aaa42122351462bce1d22ef655010f6c0e61856ab71ed798c29de92113f",
+      "sha256": "cf210ac68321e93a53b7ddfdd0e65fa5bb7e8ec62e59cf26708d9459205fdffb",
       "stub": false
     },
     {
@@ -33,6 +33,11 @@
     {
       "path": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
       "sha256": "269bfdf4e1649456d89863718e1bd1c25440de24296a81d190af594a1b8d154f",
+      "stub": false
+    },
+    {
+      "path": "lib/layer1_backtesting/test_modules.js",
+      "sha256": "bdc617d3266c6cea1a4fc9c8a4a048174e9e6dd3ab9a51c54cb9e2477d009716",
       "stub": false
     },
     {
@@ -108,9 +113,11 @@
           "nasdaq100_d20_pct"
         ],
         "input_contract": {
-          "contract_version": "usd-l1-model-input-contract-v1",
-          "retrieval": "saved_panel_replay",
-          "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+          "contract_version": "usd-l1-model-input-contract-v2",
+          "retrieval": "declared_sources_with_reconstruction_disclosure",
+          "retrieval_statement": "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+          "source_catalogue": "lib/layer1_backtesting/input_sources.js",
+          "source_clock_policy": "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
           "missing_input_policy": "abstain_or_block",
           "fill_policy": "the controller never fills a missing value and never estimates one",
           "keys": [
@@ -323,9 +330,11 @@
           "usdjpy_d5_pct"
         ],
         "input_contract": {
-          "contract_version": "usd-l1-model-input-contract-v1",
-          "retrieval": "saved_panel_replay",
-          "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+          "contract_version": "usd-l1-model-input-contract-v2",
+          "retrieval": "declared_sources_with_reconstruction_disclosure",
+          "retrieval_statement": "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+          "source_catalogue": "lib/layer1_backtesting/input_sources.js",
+          "source_clock_policy": "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
           "missing_input_policy": "abstain_or_block",
           "fill_policy": "the controller never fills a missing value and never estimates one",
           "keys": [
@@ -412,9 +421,11 @@
           "usdjpy_d5_pct"
         ],
         "input_contract": {
-          "contract_version": "usd-l1-model-input-contract-v1",
-          "retrieval": "saved_panel_replay",
-          "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+          "contract_version": "usd-l1-model-input-contract-v2",
+          "retrieval": "declared_sources_with_reconstruction_disclosure",
+          "retrieval_statement": "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+          "source_catalogue": "lib/layer1_backtesting/input_sources.js",
+          "source_clock_policy": "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
           "missing_input_policy": "abstain_or_block",
           "fill_policy": "the controller never fills a missing value and never estimates one",
           "keys": [
@@ -493,9 +504,11 @@
           "vix_level"
         ],
         "input_contract": {
-          "contract_version": "usd-l1-model-input-contract-v1",
-          "retrieval": "saved_panel_replay",
-          "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+          "contract_version": "usd-l1-model-input-contract-v2",
+          "retrieval": "declared_sources_with_reconstruction_disclosure",
+          "retrieval_statement": "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+          "source_catalogue": "lib/layer1_backtesting/input_sources.js",
+          "source_clock_policy": "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
           "missing_input_policy": "abstain_or_block",
           "fill_policy": "the controller never fills a missing value and never estimates one",
           "keys": [
@@ -512,7 +525,7 @@
         "cloud_note": null
       }
     ],
-    "fingerprint": "c06a73d68453f78884773ce7acd8a5b65d808c9cb54d399b5620c38e8f52ce01",
+    "fingerprint": "a8ed771c975c9cd02b3b880b34e73448bafdd997700c387e448f10a43a343719",
     "file": "backtester/lib/usd_layer1_backtester/model_registry.js"
   },
   "children": [

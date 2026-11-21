@@ -1,129 +1,164 @@
 # Reusable USD Layer 1 n8n backtester — completion checklist
 
 Research only. No workflow is scheduled, no webhook is left authenticated, and no order, stop, size, feed or
-runtime table is read or written by anything in this lane. This file is the durable checklist: it is the
-place to look to answer "what works, what is evidenced, and what is next" without reading the code.
+runtime table is read or written by anything in this lane. This file answers "what works, what is evidenced,
+and what is next" without reading the code.
 
-Last measured: 2026-11-21, after the configurable-model, durable-execution, identity, claim-separation and
-725-morning sweep work. Supersedes the 2026-11-20 edition (that edition described a two-model, nine-record
-ledger; the differences are recorded in section 6).
+Last measured: 2026-11-21, after the retrieval, independent-validation, accounting, test-selection and
+coverage work. This edition corrects the previous one in a specific way: historical retrieval, independent
+rule validation and costs/sizing/equity were described as "what remains" and are now **implementation work
+that is done**; what remains on those axes is the historical data they need, which is a separate dependency.
+Receipted refusals are no longer counted anywhere as completed structural runs.
+
+## 0. Three statuses, kept apart
+
+| Status | Verdict | Why |
+| --- | --- | --- |
+| **Platform completion** | complete for the scope below | registry-driven models, durable sweep, experiment identity, declared-source retrieval, independent specification checks, configurable costs/sizing/equity, executed test-module selection, per-model/mode/configuration coverage, and a one-morning explainer are implemented and verified |
+| **Historical data readiness** | not ready | there is no contemporaneous capture corpus (0 receipts), no M5 tape or level ladder for tests 3/4, no licensed ICE DXY, and H1's gold/calendar inputs are unresolved. These are missing datasets, not missing code |
+| **Research validity** | not established | replay consistency is established for the stored calls; no edge, calibration or historical availability is claimed. The rules are frozen but not validated as profitable |
+
+A reader should never trade one status for another. "Platform complete" does not mean "data ready", and
+"data ready" would not mean "edge established".
 
 ## 1. Model selection is configuration, not code
 
 | Criterion | Status | Evidence |
 | --- | --- | --- |
-| One registry owns the model list | **works** | `backtester/lib/usd_layer1_backtester/model_registry.js`; entries carry key, identity, label, role (`control`/`challenger`/`fixture`), kind, version, source, score field and the model-owned input contract |
-| Controller accepts any registered set | **works** | `MODEL_IDS` = `current, challenger, challenger_v1, fixture_constant`; `resolveLayer1` delegates to the registry; a caller-supplied adapter is still accepted (`backtester/tests/usd_l1_backtest_controller.test.js`) |
-| Output schema, ledger, comparisons and map accept any set | **works** | record schema `usd-l1-n8n-cloud-execution-v2` carries `selection` and per-model role; `lib/backtesting_n8n_run_ledger.js` keys on the record's own selection; `lib/backtesting_n8n_map.js` derives its options from the evidence; `scripts/build_usd_l1_model_comparison.js` iterates the registry |
-| A third model added by registration | **works** | `fixture_constant` registered, bundled, generated, imported (`kaWqy2iYIz8UzPRS`) and run (parent execution `5557`) with no edit to the controller, schema, ledger, comparison or map |
-| A fixture is labelled a fixture, not a research model | **works** | registry `kind: "fixture"`; record `models.fixture_constant.fixture: true`; ledger cell `· FIXTURE`; map option `· FIXTURE (not a research model)`; comparison row `(excluded from research)` |
-| Selection is validated at the edge | **works** | the Cloud config node refuses an unknown key, refuses `current` (registered but not bundled) with its reason, de-duplicates, caps at 4, and defaults to the two frozen research challengers |
+| One registry owns the model list | **works** | `backtester/lib/usd_layer1_backtester/model_registry.js`; entries carry key, identity, label, role, kind, version, source, score field and a model-owned input contract v2 |
+| Any registered set runs | **works** | controller delegates to the registry; `fixture_constant` was added by registration and labelled |
+| A fixture is labelled, never pooled | **works** | record `fixture: true`, ledger `· FIXTURE`, map option, comparison row |
+| The input contract declares sources and clocks | **works** | contract v2 names `lib/layer1_backtesting/input_sources.js` and the policy "a value is contemporaneous only when a capture at or before the cutoff matches it" |
+| Selection is validated at the edge | **works** | unknown key, unclouded model, duplicates and over-long selections are refused with a reason |
 
 ## 2. Durable execution and recovery
 
 | Criterion | Status | Evidence |
 | --- | --- | --- |
-| Execution capture is automated | **works** | `scripts/run_usd_l1_n8n_sweep.js` posts, parses, persists and reports; no manual response copying |
-| Validation and atomic persistence | **works** | every response is merged through `lib/backtesting_n8n_run_ledger.js` (local replay + outcome arithmetic) and written with a temp-file rename |
-| Resume from stored progress | **works** | the plan is recomputed from the ledger before every request; an identical retry of a complete configuration sends **0** requests |
-| Failed attempts retained | **works** | `ledger.attempts` holds 43 attempts, 4 failed; the four are the deployment defects described in section 5 |
-| Concurrent duplicate writes prevented | **works** | `data/usd-layer1-backtester/n8n/.sweep.lock` (exclusive create, pid + time); a second sweep refuses instead of writing |
-| Authenticated execution restored | **works** | `scripts/bootstrap_usd_l1_webhook_credential.ps1` creates the n8n header credential (`1qsqdki9dxqbm4Zx`, header `X-USD-L1-Token`), stores the token only in the encrypted local CLIXML store, and reports only the id |
-| No secret in the repository or the dashboard | **works** | the token is never printed or written under the repo; `scripts/secrets/` and `**/credentials-*.clixml` are now ignored; the dashboard shows the credential id, never the value |
+| Execution capture is automated | **works** | `scripts/run_usd_l1_n8n_sweep.js` posts, parses, persists and reports |
+| Validation and atomic persistence | **works** | merged through `lib/backtesting_n8n_run_ledger.js`, written with a temp-file rename |
+| Resume from stored progress | **works** | the plan is recomputed before every request; an identical retry sends 0 |
+| Failed attempts retained | **works** | 43 attempts, 4 failed, kept as evidence |
+| Concurrent duplicate writes prevented | **works** | exclusive `.sweep.lock` with pid and time |
+| No secret in the repository | **works** | see `CREDENTIAL_EXPOSURE_CHECK_20261121.md`: no ref, object or unreachable blob carries the value; no rotation needed |
+| The webhook is not left listening | **works** | the parent is deactivated; the verification script activates it only for its two calls and deactivates it in a `finally` block |
 
-## 3. Experiment identity
+## 3. Experiment identity and claims
 
 | Criterion | Status | Evidence |
 | --- | --- | --- |
-| Identity includes model and code versions | **works** | `identity.models[*]` (identity, version, role, kind, source, input-contract version) and `identity.code` (bundle version + `bundle_sha256`, controller version) |
-| Identity includes the input snapshot | **works** | `identity.input` (dataset path, run version, per-morning date) plus `input_snapshot_digest`, a hash of the replayed values and outcomes for that morning |
-| Identity includes cutoff, validation policy and test configuration | **works** | `identity.cutoff`, `identity.validation_policy`, `identity.test_configuration` |
-| Identical retries deduplicate | **works** | re-requesting the three-model configuration for 2024-01-10 sent 0 requests; the earlier retry of the 2-model batch added 0 and skipped 3 duplicates |
-| Changed configurations coexist | **works** | 2024-01-10 holds `structural\|2024-01-10` (3 models) and `structural\|2024-01-10#7314df5a` (2 models), both consistency-verified, the second marked `coexistence: true` |
+| Each record names its code, panel, cutoff and gate | **works** | `identity` with bundle hash, controller version, registry fingerprint, snapshot digest, validation policy |
+| Test selection is part of the identity | **works** | `identity.test_configuration` records the modules the controller executed, their scored markets and their simulations |
+| Identical retry adds nothing | **works** | configuration fingerprint match returns `sent: 0` |
+| A changed configuration coexists | **works** | `structural|2024-01-10#…` suffixed row |
+| Claims are separated | **works** | replay consistency 729/729; availability, model logic and panel-live equality each carry their own status |
 
-## 4. Validation claims are separate
+## 4. Historical input retrieval
 
-| Claim | Status | Basis |
+| Criterion | Status | Evidence |
 | --- | --- | --- |
-| Replay consistency | **established** for 729 of 729 rows | each stored call reproduces in the local controller and its hit/miss/flat arithmetic recomputes from the committed outcomes |
-| Historical input availability | **not established** | the children replay the committed panel; no retrieval receipt or source archive exists, so availability at the cutoff is not demonstrated |
-| Model logic correctness | **not established** | parity compares the frozen rules with themselves; there is no independent adjudication |
-| Panel equals a live morning | **not established** | the panel is a research artefact |
+| Retrieval runs through the declared contract | **works** | `lib/layer1_backtesting/input_retrieval.js`; each key resolves provider, series, transform and publication lag |
+| Source, vintage and clock are preserved | **works** | per key: observed date, clock (`timestamp`/`date_only`/`none`), staleness, panel legend and the declared publication rule |
+| Retrieval evidence is recorded | **works** | a capture receipt only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise a reconstruction digest with `receipt: null` |
+| Reconstructed availability is distinguished | **works** | `mode: reconstructed_panel` against `mode: contemporaneous_capture`; conflicts and late captures are named, never resolved silently |
+| No receipt is fabricated | **works** | the committed corpus is empty, so the artefact reports 0 receipts and `availability_claim: not_established` for every model |
+| Coverage of the retrieval artefact | **works** | current: 30 keys, 20,775 values; challenger and challenger_v1: 9 keys, 6,224 values each; fixture: 1 key, 717 values; all reconstructed, 0 conflicts |
 
-Each model also declares its own input contract (`input_contract.retrieval: "saved_panel_replay"`,
-`missing_input_policy`, and the key list with its factor and rule), so the "it replays, it does not
-retrieve" statement travels with the model instead of living in a caption. The dashboard renders the four
-claims as four rows and never as one badge.
+The implementation is complete; the historical data is not. Archiving a 05:00 capture set is the dependency
+that would turn any of those rows into `contemporaneous_capture`.
 
+## 5. Independent rule validation
 
-## 5. The 725-morning sweep
-
-| Figure | Value | Where |
+| Criterion | Status | Evidence |
 | --- | --- | --- |
-| Panel sessions | 725 (2024-01-02 → 2026-10-12) | `data/usd-layer1-backtester/run-v1.json` |
-| Requested mornings | 725, in 43 controlled webhook requests (20 per request, except the last) | `data/usd-layer1-backtester/n8n/sweep-0NN-*.json` |
-| Unique recorded mornings | 726 (725 panel mornings plus the absent-date refusal 2024-01-06) | ledger `records[].date` |
-| Records | 729 (725 structural two-model + 2 receipted + 1 three-model config + 1 two-model coexisting config) | ledger `records[].key` |
-| Model calls | 1,459 | ledger `calls` |
-| Consistency verified | 729 / 729 | ledger `verification.verified` |
-| Failed attempts retained | 4 (all during deployment; see below) | ledger `attempts` |
-| Compatible records reused | 8 mornings were already complete and were never re-requested | `resumePlan` |
+| A second transcription of the approved specification | **works** | `lib/layer1_backtesting/spec_check.js#SPEC`, written as `above`/`below` rules, not a copy of the model's `vote_spec` |
+| Hand-calculated examples | **works** | 5 cases with the arithmetic written out; 5/5 reproduced, including the deadband, the six-mechanism minimum and the participation boundary between conviction 4 and 5 |
+| Corrupted calculations are caught | **works** | 5/5: flipped direction, inflated conviction, dropped vote, inflated usable count, removed abstention |
+| Corrupted rule tables are caught | **works** | 3/3: threshold moved 25→20, VIX family double-counted, weight sum not equal to 7 |
+| Corrupted inputs are refused or named | **works** | 3/3: NaN is missing not zero, a numeric string is not coerced, a value exactly on a threshold casts no vote |
+| Bad clocks and dropped inputs are gated | **works** | 3/3: post-cutoff print blocks, date-only clock is not receipted, a removed value is named as missing |
+| The model's table still matches the transcription | **works** | `compareModelTable()` has no differences |
 
-Requested dates, unique dates, records and model calls are reported separately on purpose: a record can
-outnumber a morning when two configurations ran on it, and a model call outnumbers a record when several
-models ran on it.
+The verdict is `pass` for implementation fidelity. That is not a statement that the rules predict anything.
 
-The sweep also found two real defects, both now guarded:
+## 6. Costs, sizing, equity and drawdown
 
-1. The webhook's default `lastNode` response returned **only the first item**. A 20-morning request
-   produced 20 records in the execution but one record in the response (`sweep-007`, execution `5574`).
-   Fixed with a Respond node (`respondWith: allIncomingItems`), and the runner now records a partial
-   response as a failed attempt so the uncovered mornings are re-requested instead of silently lost.
-2. Service workers aside, the first version of the chained parent stopped at an unselected model: a bind
-   node that returned zero items ended the chain and the webhook answered `No item to return was found`.
-   Fixed with a one-item skip marker that the child returns immediately (no decision spent), which keeps
-   the chain reachable without executing an unselected model.
+| Criterion | Status | Evidence |
+| --- | --- | --- |
+| Sizing is the contract's own rule | **works** | `lib/layer1_backtesting/execution_accounting.js#SIZING` reads `contracts.ACCOUNT`: GBP 100,000, 1% of the running balance at fill |
+| Costs are configurable and labelled | **works** | `zero` (gross, labelled) and `fixture_costs` (spread, slippage, round-turn commission per market; labelled a fixture, not a broker schedule) |
+| Equity and drawdown are computed | **works** | per-trade equity, running peak, drawdown amount and percentage, expectancy in R, profit factor and cost drag |
+| A trade that cannot be sized is skipped with its reason | **works** | no stop, non-positive balance or below-minimum lot each produce a reason, not a forced minimum |
+| A blown account stops | **works** | remaining trades are not compounded from a negative balance |
+| Demonstrated on a labelled fixture | **works** | `data/usd-layer1-backtester/fixtures/execution-accounting-v1.json`; final GBP 108,961.62, max drawdown GBP 1,139.60 (1.04%), expectancy 2.948R, costs GBP 163.38 (1.79% of gross), every row hand-checked |
 
-The four retained failures are the two defects above: one combine-node syntax error caught by n8n at run
-time (now caught earlier by the parse guard in `tests/usd_l1_n8n_cloud_workflows.test.js`) and three
-"No item to return" responses.
+The path simulator still has no historical tape to consume. The accounting is demonstrated on the fixture; a
+historical equity curve needs the missing data, not more code.
 
-## 6. Product requirements
+## 7. Test-module selection changes execution
+
+| Criterion | Status | Evidence |
+| --- | --- | --- |
+| The selection is applied by the controller | **works** | only the markets the selected modules consume are scored; a module the record cannot carry is recorded `not_run` or `blocked_on_history` |
+| The children execute the selection | **works** | the Cloud bundle (`usd-l1-cloud-runtime-v3`) passes `tests` into `runBacktest` |
+| The parent records what executed | **works** | `identity.test_configuration` carries modules, scored markets, simulations and `applied_by: the controller` |
+| Remote proof, same morning, two selections | **works** | executions `7138`/`7140` (four markets: EURUSD, XAUUSD, BTCUSD, NAS100) and `7142`/`7144` (tests 3 and 4: 0 market results, both modules `blocked_on_history`), recorded in `data/usd-layer1-backtester/n8n/test-selection-verification-20261121.json` |
+| The ledger verifies the selection on replay | **works** | `test_selection_<model>` check compares modules, scored markets and per-module states |
+
+## 8. Coverage, per model, mode and configuration
+
+| Model | Panel mornings | Covered | Completed rows | Completed mornings | Refused | Receipted refusals | Scored mornings |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| current | 725 | 0 | 0 | 0 | 0 | 0 | 0 |
+| challenger | 725 | 725 | 726 | 725 | 3 | 2 | 725 |
+| challenger_v1 | 725 | 725 | 726 | 725 | 3 | 2 | 725 |
+| fixture_constant | 725 | 1 | 1 | 1 | 0 | 0 | 0 |
+
+- The 726 completed rows against 725 mornings are the coexisting configuration on 2024-01-10, not a duplicate
+  morning.
+- The three refusals are one structural refusal on an absent date and two receipted refusals. Neither is
+  counted as a completed structural run.
+- The sweep is grouped into four configuration signatures: 719 rows in the main sweep, 7 in the earlier
+  configuration, 2 absent-date refusals and 1 coexisting row. The full per-mode and per-configuration table is
+  in `data/usd-layer1-backtester/coverage-v1.json` and on the dashboard.
+
+## 9. Product surface
 
 | Requirement | Status | Evidence |
 | --- | --- | --- |
-| Selectable test modules | **works** | the Tests tab carries a module selector over the four committed definitions; a run's selection is recorded in `identity.test_configuration`, so two test configurations are two experiments |
-| Aggregate model comparisons | **works** | `data/usd-layer1-backtester/model-comparison-v1.json` (all registered models, fixture excluded from research figures) rendered in `backtesting.html#n8nmap` → "Aggregate model comparison"; agreement pair `challenger/challenger_v1` = 481 of 481 common directional mornings |
-| Execution-test data integration | **works** | `evidence.execution_index` links each recorded morning to its configuration, verification and both child executions; the map inspector opens the execution evidence from the node |
-| Evidence-linked visual map | **works** | `backtesting.html#n8nmap` → "Execution map - every recorded morning": a Three.js canvas with one node per recorded morning and one per model call, click-through to the parent and child executions and the capture file; material sharing keeps 2,188 nodes usable |
-| Tests 3/4: simulation vs data | **separated** | `lib/layer1_backtesting/l2l_simulation.js` implements the frozen 5R and midpoint/3R paths and is unit-tested on synthetic tapes (`tests/l2l_simulation.test.js`, 7 cases); the test definitions carry `simulation.status: implemented_and_tested` and `blocked_on: history`, and the dashboard prints both facts |
+| Selectable test modules | **works** | the Tests tab filters the committed definitions; a run's selection is executed and recorded (section 7) |
+| Aggregate model comparisons | **works** | `model-comparison-v1.json`; challenger/challenger_v1 agreement 481 of 481 common directional mornings |
+| Evidence-linked map | **works** | Three.js execution map, one node per recorded morning and model call, click-through to parent and child executions |
+| One morning explained end to end | **works** | "One morning, end to end" on the map tab: sources → inputs → rules → validation → call → execution → outcome, with a selector over traced mornings and execution links |
+| Coverage and checks on the dashboard | **works** | coverage tables, the specification-check verdict and the retrieval table are rendered from the committed artefacts |
+| Fixture is excluded from research figures | **works** | comparison row and coverage row are labelled and excluded |
 
-## 7. Reproduce
+## 10. Reproduce
 
 ```
-npm run build:usd-l1-n8n            # regenerate bundle + three children + parent from the registry
-npm run test:usd-l1-n8n             # bundle, children, parent wiring, map, ledger, sweep planner
-npm run test:l2l-simulation         # the frozen path rule engine + the aggregate comparison
-npm run screen:backtesting:check    # the screen payload, including the test-module status
-npm run compare:usd-l1-models       # rewrite the aggregate comparison artefact
-node scripts/run_usd_l1_n8n_sweep.js --plan          # the remaining plan from the ledger; no network
-node scripts/run_usd_l1_n8n_sweep.js --report        # requested / unique / records / model calls
-npm run persist:usd-l1-n8n -- --capture ... --check  # the ledger is the merge of the committed captures
+npm run build:usd-l1-n8n                    # regenerate bundle + children + parent from the registry
+npm run build:usd-l1-platform               # rewrite the four platform artefacts
+npm run check:usd-l1-platform               # recompute them and compare without writing
+npm run test:usd-l1-n8n                     # bundle, wiring, map, ledger, sweep planner
+npm run test:usd-l1-platform                # modules, retrieval, spec check, accounting, morning traces
+npm run test:l2l-simulation                 # the frozen path engine + the aggregate comparison
+npm run check:usd-l1-ledger                 # re-merge every record capture and compare with the ledger
+node scripts/verify_usd_l1_test_selection.js --upload   # upload, run both selections, deactivate
 ```
 
-The runner reads `N8N_BASE_URL` and `USD_L1_WEBHOOK_TOKEN` from the environment or from the encrypted
-local store (`scripts/local-credentials/get-secret.ps1`). It refuses to start if another sweep holds the
-lock. On 2026-11-21 `--check` reported `ledger reproduces`, 0 added, 0 verification failures.
+`npm run check:usd-l1-platform` reported `reproduces` for all four artefacts on 2026-11-21, and
+`npm run check:usd-l1-ledger` reported `ledger reproduces` with 0 added rows and 0 verification failures. The
+verification script printed `verdict: pass` and left the parent deactivated.
 
-## 8. What remains
+## 11. What remains
 
-| Item | Why it is not done | Next step |
-| --- | --- | --- |
-| H1 eligibility | 0 of 725; gold (identity/licence) and calendar (no vintage-stamped schedule) remain the only movable inputs | owner decisions D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md` |
-| Tests 3 and 4 on history | the simulator exists and is tested; no contemporaneous level ladder and no actionable bid/ask M5 tape | acquire the ladder and tape; do not relax the readiness rule |
-| Historical input availability | the children replay the committed panel and no retrieval receipt exists | archive a 05:00 receipt set for the inputs each model declares |
-| Costs, equity and drawdown | tests 1 and 2 are gross directional replays | add cost and sizing as a labelled module, then publish the curve |
-| Official ICE DXY | series absent from the checkout | ICE sample/licence; the broker proxy stays labelled |
+| Item | Kind | Why it is not done | Next step |
+| --- | --- | --- | --- |
+| Contemporaneous input captures | **data dependency** | the retrieval path is implemented, but no capture corpus exists, so every value is a reconstruction | archive a 05:00 receipt set for each declared key; the code already accepts it |
+| Tests 3 and 4 on history | **data dependency** | the simulator and the account are implemented and tested; there is no contemporaneous level ladder and no actionable bid/ask M5 tape | acquire the ladder and tape; do not relax the readiness rule |
+| ICE DXY for test 1 | **data dependency** | the official series is not licensed in this checkout | ICE sample/licence; the broker proxy stays labelled |
+| H1 eligibility | **owner decision** | 0 of 725; gold identity/licence and calendar vintage are the movable inputs | D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md` |
+| Broker cost schedule | **data dependency** | the accounting runs on a labelled fixture schedule | commit a broker schedule with a source and date |
+| Rule validation as edge | **research work** | the specification check proves fidelity, not profitability | pre-registered tests on unseen mornings |
 
-H1 gold/calendar blockers and the pending H1-A02 amendment are tracked in the H1 checklist, not here. They
-are not prerequisites for the platform work above.
+Nothing in the first column is blocked by the platform. The platform can consume each of them unchanged.
