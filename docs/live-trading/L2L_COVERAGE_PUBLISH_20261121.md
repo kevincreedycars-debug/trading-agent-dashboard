@@ -197,6 +197,12 @@ and published without the ladder extra. That is ordinary behaviour for a change 
 publisher is mid-cadence: the run that started before the push used the bytes it started with, and the next
 cycle ran the new code. Nothing was lost - the committed ladder was already on `main` and already covered.
 
+**A refused publish still checks the ladder.** The 22:10:56Z run was refused by the ten-minute gate
+(`too_soon`, 578s since the last publish) and still reported `levels.checked_at_utc 22:10:56.492Z`, every asset
+covered on every lane, no failures - because the coverage plan is computed before the cadence gate is read.
+What it does not do is commit an extension from a run that publishes nothing; that waits for the next
+publishing cycle, one interval later.
+
 ## 7. Open items
 
 - Lane code revisions unchanged, so the trader's in-memory coverage plan, the heartbeat `coverage` block, the
