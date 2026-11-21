@@ -19,47 +19,14 @@
  */
 
 const contracts = require("./contracts");
-const challenger = require("./challenger");
-const challengerV1 = require("./challenger_v1");
-const currentModel = require("./current_model");
+const registry = require("./model_registry");
 const { resolveSession } = require("../usd_session_engine_interface");
 
 const CONTROLLER_VERSION = "usd-l1-backtest-controller-v1";
 const VALIDATION_MODES = Object.freeze(["structural", "receipted"]);
 
 /** Every key the current model can read from a saved morning. */
-const CURRENT_INPUT_KEYS = Object.freeze([
-  "vix_level",
-  "vix_d5_chg",
-  "us_2y_d5_bps",
-  "us_10y_real_d5_bps",
-  "broad_dollar_d5_pct",
-  "gold_d5_pct",
-  "nasdaq100_d5_pct",
-  "eurusd_d5_pct",
-  "usdjpy_d5_pct",
-  "usdjpy_d1_pct",
-  "usdchf_d1_pct",
-  "us_2y_yield",
-  "de_2y_yield",
-  "us_de_2y_spread",
-  "us_de_2y_spread_d5_bps",
-  "us_2y_d20_bps",
-  "us_10y_real_yield",
-  "us_10y_real_d20_bps",
-  "us_10y_yield",
-  "us_10y_d5_bps",
-  "vix_d1_chg",
-  "broad_dollar",
-  "broad_dollar_d1_pct",
-  "broad_dollar_d20_pct",
-  "gold_price",
-  "gold_d1_pct",
-  "gold_d20_pct",
-  "nasdaq100_price",
-  "nasdaq100_d1_pct",
-  "nasdaq100_d20_pct"
-]);
+const CURRENT_INPUT_KEYS = registry.CURRENT_INPUT_KEYS;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value === undefined ? null : value));
@@ -76,54 +43,46 @@ function round(value, decimals = 4) {
 }
 
 /**
- * The three frozen Layer 1 adapters.
+ * The adapter view of a registry entry.
  *
- * `inputKeys` is what the adapter reads from the saved morning; it is used for the receipted label and the
- * coverage count, never to fill a missing value. `minimumInputs` is descriptive only: the models themselves
- * decide whether to abstain, and the controller keeps that decision rather than duplicating it.
+ * The controller only needs this shape: an id, a label, a version, the keys it reads and an `evaluate`
+ * function. Everything model-specific - the frozen rules, the score field, the input contract and the
+ * fixture label - is owned by the registry entry and carried through unchanged.
  */
-const LAYER1_ADAPTERS = Object.freeze({
-  current: Object.freeze({
-    id: "current",
-    label: "Current USD model",
-    version: contracts.CURRENT_MODEL_VERSION,
-    source: "backtester/lib/usd_layer1_backtester/current_model.js",
-    minimumInputs: 1,
-    inputKeys: CURRENT_INPUT_KEYS,
-    evaluate: (payload) => currentModel.evaluate({ date: payload.date, values: clone(payload.values) })
-  }),
-  challenger: Object.freeze({
-    id: "challenger",
-    label: "Challenger v0",
-    version: challenger.VERSION,
-    source: "backtester/lib/usd_layer1_backtester/challenger.js",
-    minimumInputs: 6,
-    inputKeys: Object.freeze(challenger.MECHANISMS.map((mechanism) => mechanism.input)),
-    evaluate: (payload) => challenger.evaluate({ values: clone(payload.values) })
-  }),
-  challenger_v1: Object.freeze({
-    id: "challenger_v1",
-    label: "Challenger v1",
-    version: challengerV1.VERSION,
-    source: "backtester/lib/usd_layer1_backtester/challenger_v1.js",
-    minimumInputs: 6,
-    inputKeys: Object.freeze(challengerV1.MECHANISMS.map((mechanism) => mechanism.input)),
-    evaluate: (payload) => challengerV1.evaluate({ values: clone(payload.values) })
-  })
-});
+function adapterFor(modelEntry) {
+  return Object.freeze({
+    id: modelEntry.key,
+    identity: modelEntry.identity,
+    label: modelEntry.label,
+    role: modelEntry.role,
+    kind: modelEntry.kind,
+    version: modelEntry.version,
+    source: modelEntry.source,
+    score_field: modelEntry.score_field,
+    score_basis: modelEntry.score_basis,
+    minimumInputs: modelEntry.minimum_inputs,
+    inputKeys: modelEntry.input_keys,
+    input_contract: modelEntry.input_contract,
+    cloud: modelEntry.cloud,
+    fixtures: modelEntry.fixtures,
+    evaluate: modelEntry.evaluate
+  });
+}
 
-const MODEL_IDS = Object.freeze(Object.keys(LAYER1_ADAPTERS));
+/** The registered adapters, keyed by registry key. Callers may still pass their own adapter object. */
+const LAYER1_ADAPTERS = Object.freeze(Object.fromEntries(
+  registry.ENTRIES.map((modelEntry) => [modelEntry.key, adapterFor(modelEntry)])
+));
+
+const MODEL_IDS = registry.MODEL_IDS;
 
 function resolveLayer1(modelOrAdapter = "current") {
   if (modelOrAdapter && typeof modelOrAdapter === "object") {
     assertLayer1Adapter(modelOrAdapter);
     return modelOrAdapter;
   }
-  const adapter = LAYER1_ADAPTERS[modelOrAdapter];
-  if (!adapter) {
-    throw new Error(`unknown Layer 1 model "${modelOrAdapter}"; expected one of ${MODEL_IDS.join(", ")} or an adapter object`);
-  }
-  return adapter;
+  const modelEntry = registry.requireModel(modelOrAdapter);
+  return LAYER1_ADAPTERS[modelEntry.key];
 }
 
 /** A caller may pass its own adapter; the controller only needs this shape and never fills a value for it. */
@@ -139,6 +98,28 @@ function assertLayer1Adapter(adapter) {
   }
   return adapter;
 }
+
+
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value === undefined ? null : value));
+}
+
+function finite(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function round(value, decimals = 4) {
+  const factor = 10 ** decimals;
+  const rounded = Math.round(value * factor) / factor;
+  return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+/**
+ * The registered Layer 1 adapters live in model_registry.js; nothing model-specific is defined here.
+ * minimumInputs is descriptive only: the models themselves decide whether to abstain, and the controller
+ * keeps that decision rather than duplicating it.
+ */
 
 
 function parseIsoDate(text) {
@@ -170,15 +151,19 @@ function normaliseCall(adapter, fresh) {
     : finite(fresh.factors_live)
       ? fresh.factors_live
       : null;
-  const rawScore = adapter.id === "current"
+  const usesConviction = adapter.score_field === "conviction_raw"
+    || (!adapter.score_field && adapter.id === "current");
+  const rawScore = usesConviction
     ? (finite(fresh.conviction_raw) ? fresh.conviction_raw : null)
     : (finite(fresh.raw_score) ? fresh.raw_score : null);
+
   return {
     direction: fresh.direction === "BULLISH" || fresh.direction === "BEARISH" ? fresh.direction : "NO_CALL",
     direction_label: fresh.direction_label || fresh.direction || null,
     conviction: finite(fresh.conviction) ? fresh.conviction : null,
     raw_score: rawScore,
-    score_basis: adapter.id === "current" ? "conviction_raw (0-100 model scale)" : "raw_score (net mechanism score)",
+    score_basis: adapter.score_basis
+      || (usesConviction ? "conviction_raw (0-100 model scale)" : "raw_score (net mechanism score)"),
     raw_score_detail: fresh.raw_score && typeof fresh.raw_score === "object" ? fresh.raw_score : null,
     factors_live: factorsLive,
     usable_mechanisms: finite(fresh.usable_mechanisms) ? fresh.usable_mechanisms : null,
@@ -617,10 +602,15 @@ function runBacktest({
     dataset: normalised.dataset,
     layer1: {
       id: layer1.id,
+      identity: layer1.identity || layer1.version,
       label: layer1.label,
       version: layer1.version,
+      role: layer1.role || null,
+      kind: layer1.kind || null,
+      fixture: layer1.fixtures === true,
       source: layer1.source || null,
-      minimum_inputs: finite(layer1.minimumInputs) ? layer1.minimumInputs : null
+      minimum_inputs: finite(layer1.minimumInputs) ? layer1.minimumInputs : null,
+      input_contract: layer1.input_contract || null
     },
     validation_mode: validationMode,
     window: sessionWindow(decisions),
@@ -638,7 +628,7 @@ function accuracyDelta(candidate, baseline) {
 function compareBacktests({
   dataset,
   datasetPath = null,
-  models = MODEL_IDS,
+  models = registry.DEFAULT_SELECTION,
   dates = null,
   from = null,
   to = null,
@@ -699,7 +689,11 @@ function compareBacktests({
 function checkParity(dataset) {
   const normalised = normaliseDataset(dataset);
   const perModel = {};
-  for (const model of MODEL_IDS) {
+  // A registered model the committed panel does not carry (for example a fixture) is reported as not
+  // covered instead of being scored as a mismatch against a call that was never stored.
+  const checkedModels = MODEL_IDS.filter((model) => normalised.sessions.some((session) => session.models && session.models[model]));
+  const notCovered = MODEL_IDS.filter((model) => !checkedModels.includes(model));
+  for (const model of checkedModels) {
     const adapter = resolveLayer1(model);
     const mismatches = [];
     const resultMismatches = [];
@@ -780,7 +774,8 @@ function checkParity(dataset) {
     results_checked: totalResultChecks,
     result_matches: totalResultMatches,
     result_mismatches: totalResultChecks - totalResultMatches,
-    per_model: perModel
+    per_model: perModel,
+    not_covered: notCovered
   };
 }
 

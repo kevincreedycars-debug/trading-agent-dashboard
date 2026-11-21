@@ -53,11 +53,17 @@ test("the controller replays every stored decision and every stored market resul
   assert.equal(parity.result_mismatches, 0);
   for (const model of controller.MODEL_IDS) {
     const entry = parity.per_model[model];
+    if (!entry) {
+      // A registered model the committed panel does not carry is reported as not covered, never scored.
+      assert.ok(parity.not_covered.includes(model), `${model} is either checked or explicitly not covered`);
+      continue;
+    }
     assert.equal(entry.checked, 725, `${model} mornings`);
     assert.equal(entry.decision_mismatches, 0, `${model} direction/conviction/raw/weight`);
     assert.equal(entry.result_mismatches, 0, `${model} market results`);
     assert.deepEqual(entry.mismatch_samples, []);
   }
+  assert.deepEqual(parity.not_covered, ["fixture_constant"]);
 });
 
 test("the committed panel is structurally accepted on every morning and receipted on none", () => {

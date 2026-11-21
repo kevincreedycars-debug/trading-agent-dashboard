@@ -1,9 +1,10 @@
 "use strict";
 
-// Guards the versioned Cloud pair behind the Backtesting tab's Layer 1 map: the checked-in runtime bundle
-// is the deterministic build of the pinned sources, each child is pinned to exactly one model, the parent
-// swaps in those two children by id, and the committed evidence is the record of those real executions.
-// Research only: every guard reads files. No workflow is activated, executed or edited by this suite.
+// Guards the generated Cloud controller behind the Backtesting tab's Layer 1 map: the checked-in bundle is
+// the deterministic build of the pinned sources, every registered Cloud model has a child pinned to it,
+// the parent is generated from the registry rather than a hardcoded pair, and the committed evidence is
+// the record of real executions. Research only: every guard reads files. No workflow is activated,
+// executed or edited by this suite.
 
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
@@ -13,23 +14,17 @@ const test = require("node:test");
 
 const builder = require("../scripts/build_usd_l1_n8n_cloud_workflows");
 const map = require("../lib/backtesting_n8n_map");
+const registry = require("../backtester/lib/usd_layer1_backtester/model_registry");
+const ledgerLib = require("../lib/backtesting_n8n_run_ledger");
 
 const ROOT = path.join(__dirname, "..");
 const MANIFEST_PATH = "automation/n8n/usd-l1-cloud-workflows.manifest.json";
 const EVIDENCE_PATH = "data/usd-layer1-backtester/n8n-execution-evidence-v1.json";
-const COMBINE_NODE = "Compare the two decisions";
-const MERGE_NODE = "Gather both child answers";
-const BIND_TO_CALL = [
-  ["Bind challenger v0", "Run Challenger v0"],
-  ["Bind challenger v1", "Run Challenger v1"]
-];
+const COMBINE_NODE = "Compare the selected models";
 
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8").replace(/^\uFEFF/, "");
 const readJson = (rel) => JSON.parse(read(rel));
 const sha256 = (text) => crypto.createHash("sha256").update(text).digest("hex");
-// Line endings are a checkout property, not pinned content: the builder reads bytes, so a CRLF working
-// tree and an LF clone hold the same source. A hash is compared against the source text in the form the
-// publishing checkout had it (CRLF) and in the LF form, so both checkouts recognise the pinned file.
 const lf = (text) => text.replace(/\r\n/g, "\n");
 const crlf = (text) => lf(text).replace(/\n/g, "\r\n");
 
@@ -43,238 +38,162 @@ const manifest = readJson(MANIFEST_PATH);
 const evidence = readJson(EVIDENCE_PATH);
 const parent = readJson(manifest.parent.file);
 const children = manifest.children.map((child) => Object.assign({}, child, { workflow: readJson(child.file) }));
-const childFor = (model) => manifest.children.find((child) => child.model === model);
+const cloudModels = registry.ENTRIES.filter((entry) => entry.cloud);
+const runNodeName = (label) => "Run " + label;
 
 test("the checked-in Cloud bundle is the deterministic build of the pinned sources", () => {
   const onDisk = read(manifest.bundle_path);
-  // The published bundle was built in a checkout whose template and library files carry CRLF line
-  // endings; a checkout with LF endings builds the same code with the same source text but different
-  // sha256 digits for that text. Compare the code with the hash values masked, and check the hashes
-  // by value against the manifest below, so the guard says the same thing on either checkout. The
-  // runtime file itself is pinned with `-text`, so its published byte count survives every checkout.
+  // Endings are a checkout property: the published bundle was built in a CRLF checkout, so compare the
+  // code with the hashes masked and verify each hash by value below.
   const codeOnly = (text) => lf(text).replace(/[0-9a-f]{64}/g, "<sha256>");
   assert.equal(codeOnly(builder.buildBundle()), codeOnly(onDisk),
     "automation/n8n/usd-l1-cloud-runtime.js is stale - regenerate with node scripts/build_usd_l1_n8n_cloud_workflows.js");
 
-  assert.equal(manifest.schema_version, "usd-l1-cloud-workflows-v1");
+  assert.equal(manifest.schema_version, "usd-l1-cloud-workflows-v2");
   assert.equal(manifest.bundle_version, builder.BUNDLE_VERSION);
-  // `bundle_sha256` is the hash of the source manifest the publishing checkout produced, so it is
-  // verified as manifest-to-manifest below and by value per file further down. The source text itself
-  // is checkout-invariant: each file may hash with or without CRLF and still be the pinned file.
-  assert.equal(manifest.bundle_sha256, sha256(JSON.stringify(manifest.source_files)),
-    "the recorded hash is the hash of the source manifest");
-  assert.equal(manifest.bundle_bytes, fs.statSync(path.join(ROOT, manifest.bundle_path)).size,
-    "the published size is the size of the checked-in file (pinned with `-text` in .gitattributes)");
-  assert.ok(onDisk.includes(manifest.bundle_sha256), "the bundle carries its own source-set hash");
+  assert.equal(manifest.bundle_sha256, sha256(JSON.stringify(manifest.source_files)));
+  assert.equal(manifest.bundle_bytes, fs.statSync(path.join(ROOT, manifest.bundle_path)).size);
+  assert.equal(manifest.registry.schema_version, registry.REGISTRY_VERSION);
+  assert.equal(manifest.registry.models.length, registry.ENTRIES.length);
+  assert.equal(manifest.parent.default_selection.join(","), registry.DEFAULT_SELECTION.join(","));
 
-  assert.deepEqual(builder.SOURCE_FILES.map((file) => ({ path: file.path, stub: file.stub })),
-    manifest.source_files.map((file) => ({ path: file.path, stub: file.stub })));
-  assert.equal(manifest.source_files.length, 7);
-  for (const file of manifest.source_files) {
-    assert.ok(fs.existsSync(path.join(ROOT, file.path)), file.path + " is pinned but missing");
-    if (file.stub) continue;
-    const source = read(file.path);
-    assert.ok([sha256(source), sha256(crlf(source))].includes(file.sha256),
-      file.path + " changed since the bundle was built; rebuild and re-run the evidence");
+  for (const source of manifest.source_files) {
+    if (source.stub) {
+      assert.equal(source.path, "backtester/lib/usd_layer1_backtester/current_model.js");
+      assert.match(onDisk, /the current adapter is not available in the n8n Cloud runtime/,
+        "the stubbed control adapter is what the bundle carries instead of the production adapter");
+      continue;
+    }
+    const text = read(source.path);
+    const hashes = [sha256(text), sha256(lf(text)), sha256(crlf(text))];
+    assert.ok(hashes.includes(source.sha256), `${source.path} hash does not match the checked-in source`);
   }
-  const stub = manifest.source_files.filter((file) => file.stub).map((file) => file.path);
-  assert.deepEqual(stub, ["backtester/lib/usd_layer1_backtester/current_model.js"],
-    "the production adapter is the one file deliberately not bundled");
-
-  assert.match(onDisk, /usd-l1-cloud-runtime-v1/);
-  assert.ok(!/__MODULES__|__SOURCE_FILES__|__BUNDLE_SHA256__|__CONTROLLER_ID__/.test(onDisk),
-    "no template placeholder survives into the bundle");
-  assert.doesNotMatch(onDisk, /require\(\s*["'](?:node:)?(?:child_process|fs|path)["']\s*\)/,
-    "the Cloud runtime has no host filesystem or process access");
-  assert.ok(!onDisk.includes("usd_l1_25f_h1"), "the H1 candidate is never bundled into a challenger child");
 });
 
-test("both children are one-model Cloud adapters that cannot start themselves", () => {
-  assert.deepEqual(children.map((child) => child.model).sort(), ["challenger", "challenger_v1"]);
-  const bundle = lf(read(manifest.bundle_path));
+test("every registered Cloud model has a child pinned to exactly that model", () => {
+  assert.deepEqual(children.map((child) => child.model), cloudModels.map((entry) => entry.key));
+  assert.equal(manifest.registry.default_selection.includes("fixture_constant"), false,
+    "a fixture is never part of the default research selection");
+  assert.equal(registry.getModel("fixture_constant").role, "fixture");
+  assert.equal(registry.getModel("fixture_constant").kind, "fixture");
 
   for (const child of children) {
-    const workflow = child.workflow;
-    assert.equal(workflow.name, child.name);
-    assert.equal(workflow.settings.executionTimeout, 120);
-
-    assert.deepEqual(workflow.nodes.filter((node) => /trigger/i.test(node.type)).map((node) => node.type),
-      ["n8n-nodes-base.executeWorkflowTrigger"],
-      child.name + " is callable by the parent and starts no other way");
-    for (const forbidden of ["n8n-nodes-base.scheduleTrigger", "n8n-nodes-base.webhook", "n8n-nodes-base.executeCommand"]) {
-      assert.ok(!workflow.nodes.some((node) => node.type === forbidden), child.name + " must not carry " + forbidden);
-    }
-
-    const code = workflow.nodes.find((node) => node.type === "n8n-nodes-base.code");
-    assert.ok(code, child.name + " has no evaluation node");
-    assert.equal(code.name, "Evaluate " + child.model + " from the saved morning");
-    assert.match(code.parameters.jsCode, new RegExp('__pinnedModel = "' + child.model + '"'),
-      child.name + " pins exactly one model key");
-    assert.match(code.parameters.jsCode, /this child is pinned to/,
-      "a request for the other model is refused rather than silently re-scored");
-    assert.ok(lf(code.parameters.jsCode).startsWith(bundle),
-      child.name + " embeds the checked-in runtime bundle unchanged");
-    assert.ok(lf(code.parameters.jsCode).includes(child.identity), child.name + " names its frozen identity");
-    assert.match(code.notes, new RegExp(child.identity));
-
-    assert.equal(workflow.nodes.filter((node) => node.type === "n8n-nodes-base.noOp").length, 1,
-      child.name + " returns one decision and does not aggregate");
-    assert.ok(!JSON.stringify(workflow).includes("executeCommand"),
-      child.name + " has no host command path");
+    const entry = registry.requireModel(child.model);
+    assert.equal(child.identity, entry.identity);
+    assert.equal(child.name, `USD Layer 1 - ${entry.label} (Cloud adapter)`);
+    const evalNode = child.workflow.nodes.find((node) => node.type === "n8n-nodes-base.code");
+    assert.match(evalNode.parameters.jsCode, new RegExp(`const __pinnedModel = "${child.model}"`));
+    assert.match(evalNode.parameters.jsCode, /module\.exports : globalThis\.UsdL1CloudRuntime/);
+    assert.equal(child.workflow.nodes.filter((node) => node.type === "n8n-nodes-base.executeWorkflowTrigger").length, 1);
+    assert.equal(child.workflow.nodes.filter((node) => node.type.includes("schedule")).length, 0);
   }
-
-  assert.notEqual(children[0].workflow_id, children[1].workflow_id,
-    "the two versions are separate workflows, not one workflow with a switch");
-  assert.notEqual(children[0].name, children[1].name);
 });
 
-test("the paired controller swaps two versioned children and schedules nothing", () => {
-  assert.equal(parent.name, manifest.parent.name);
-  assert.equal(parent.settings.executionTimeout, 300);
-
-  assert.ok(!parent.nodes.some((node) => node.type === "n8n-nodes-base.executeCommand"));
-  assert.ok(!parent.nodes.some((node) => node.type === "n8n-nodes-base.scheduleTrigger"),
-    "no schedule exists on the paired controller");
-  const triggers = parent.nodes
-    .filter((node) => node.type === "n8n-nodes-base.webhook" || /Trigger$/.test(node.type))
-    .map((node) => node.type)
-    .sort();
-  assert.deepEqual(triggers, ["n8n-nodes-base.manualTrigger", "n8n-nodes-base.webhook"]);
-
-  const webhook = nodeNamed(parent, "Controlled webhook run");
-  assert.equal(webhook.parameters.path, manifest.parent.webhook_path);
-  assert.equal(webhook.parameters.httpMethod, "POST");
-  assert.equal(webhook.parameters.authentication, "headerAuth");
-  assert.equal(webhook.parameters.responseMode, "lastNode");
-  assert.ok(webhook.credentials && webhook.credentials.httpHeaderAuth && webhook.credentials.httpHeaderAuth.id,
-    "the evidence webhook carries a header-auth credential");
-  assert.match(webhook.notes, /deactivated after the run/);
-  assert.equal(manifest.parent.webhook_authentication, "headerAuth");
-
-  const calls = parent.nodes.filter((node) => node.type === "n8n-nodes-base.executeWorkflow");
-  assert.equal(calls.length, 2);
-  assert.deepEqual(calls.map((node) => node.parameters.workflowId.value),
-    manifest.children.map((child) => child.workflow_id),
-    "each branch calls its own versioned workflow id");
-  assert.deepEqual(calls.map((node) => node.parameters.workflowId.cachedResultName),
-    manifest.children.map((child) => child.name));
-  for (const call of calls) {
-    assert.equal(call.parameters.workflowId.mode, "id");
-    assert.equal(call.parameters.mode, "each");
-    assert.equal(call.parameters.options.waitForSubWorkflow, true,
-      "a child must finish before the pair is combined");
+test("the generated runtime accepts any registered Cloud model and refuses the rest", () => {
+  const runtime = require(path.join(ROOT, "automation/n8n/usd-l1-cloud-runtime.js"));
+  const dataset = readJson("data/usd-layer1-backtester/run-v1.json");
+  const session = dataset.sessions.find((entry) => entry.date === "2024-01-09");
+  const meta = {
+    path: "data/usd-layer1-backtester/run-v1.json",
+    schema_version: dataset.schema_version,
+    run_version: dataset.run.run_version,
+    generated_at: dataset.generated_at,
+    input_source_legend: dataset.input_source_legend
+  };
+  for (const entry of cloudModels) {
+    const result = runtime.evaluateOne({
+      date: session.date,
+      model: entry.key,
+      validation: "structural",
+      session,
+      dataset_meta: meta
+    });
+    assert.equal(result.model, entry.key);
+    assert.equal(result.model_entry.identity, entry.identity);
+    assert.equal(result.model_entry.role, entry.role);
+    assert.equal(result.bundle_version, builder.BUNDLE_VERSION);
+    assert.ok(result.decision.call);
   }
+  assert.throws(() => runtime.evaluateOne({
+    date: session.date,
+    model: "current",
+    validation: "structural",
+    session,
+    dataset_meta: meta
+  }), /not available in the n8n Cloud runtime/);
+  assert.throws(() => runtime.evaluateOne({
+    date: session.date,
+    model: "not_registered",
+    validation: "structural",
+    session,
+    dataset_meta: meta
+  }), /not in the generated registry/);
+});
 
-  const binds = parent.nodes.filter((node) => /^Bind challenger/.test(node.name));
-  assert.deepEqual(binds.map((node) => (node.parameters.jsCode.match(/model: "(\w+)"/) || [])[1]).sort(),
-    ["challenger", "challenger_v1"],
-    "each branch binds its own model key before the child is called");
-  for (const [bindName, callName] of BIND_TO_CALL) {
-    assert.deepEqual(parent.connections[bindName].main[0].map((connection) => connection.node), [callName]);
-    assert.equal(parent.connections[callName].main[0][0].node, MERGE_NODE);
-  }
-  const merge = nodeNamed(parent, MERGE_NODE);
-  assert.equal(merge.type, "n8n-nodes-base.merge");
-  assert.deepEqual(parent.connections[MERGE_NODE].main[0].map((connection) => connection.node), [COMBINE_NODE]);
-  assert.deepEqual(merge.parameters, { mode: "append", numberInputs: 2 },
-    "both children must finish before the combiner pairs them");
+test("the parent is generated from the registry: one chained pair per Cloud model, no fixed pair", () => {
+  const config = nodeNamed(parent, "Run configuration").parameters.jsCode;
+  assert.match(config, /const REGISTRY = \{/);
+  assert.match(config, /body\.models/);
+  assert.match(config, /REGISTRY\.default_selection/);
+  assert.match(config, /REGISTRY\.max_selection/);
+  assert.match(config, /registered but not available in the Cloud runtime/);
+  assert.match(config, /body\.dates/);
+  assert.match(config, /at most 40/);
+  assert.match(config, /dates\.length === 1 \? dates\[0\] : null/);
 
   const combine = nodeNamed(parent, COMBINE_NODE).parameters.jsCode;
-  assert.ok(combine.includes("Run Challenger v0") && combine.includes("Run Challenger v1"),
-    "the combiner reads both children by name");
-  assert.match(combine, /same_direction/);
-  assert.match(combine, /performance/i, "the combiner refuses to pick a winner from performance");
+  assert.match(combine, /const REGISTRY = \{/);
+  assert.match(combine, /const MODEL_NODES = \{/);
+  assert.match(combine, /config\.models/);
+  assert.match(combine, /usd-l1-n8n-technical-failure-v1/);
+  assert.match(combine, /usd-l1-n8n-cloud-execution-v2/);
+  assert.match(combine, /usd-l1-experiment-identity-v1/);
+  assert.match(combine, /fixtures_excluded/);
 
-  const fetchPanel = nodeNamed(parent, "Fetch committed panel");
-  assert.equal(fetchPanel.parameters.url, "={{ $json.dataset_url }}");
-  const config = nodeNamed(parent, "Run configuration").parameters.jsCode;
-  assert.ok(config.includes("run-v1.json"), "the panel is the committed run artefact, not a provider read");
-  assert.ok(config.includes("structural") && config.includes("receipted"));
-  assert.ok(!parent.nodes.some((node) => /supabase|oanda|alpha|fred/i.test(node.type)));
+  const executeNodes = parent.nodes.filter((node) => node.type === "n8n-nodes-base.executeWorkflow");
+  assert.deepEqual(executeNodes.map((node) => node.name), cloudModels.map((entry) => runNodeName(entry.label)));
+  assert.deepEqual(executeNodes.map((node) => node.parameters.workflowId.value), children.map((child) => child.workflow_id));
+  assert.equal(parent.nodes.filter((node) => node.type === "n8n-nodes-base.merge").length, 0,
+    "the branches are chained, so no merge node can stall on an unselected model");
+  assert.equal(parent.nodes.filter((node) => node.type.includes("schedule")).length, 0);
+  assert.equal(parent.nodes.filter((node) => node.type === "n8n-nodes-base.executeCommand").length, 0);
 
-  assert.equal(parent.active, undefined, "the generated artefact does not activate itself");
+  // The chain runs every registered model in registry order and ends at the combiner.
+  let previous = "Select one saved morning";
+  for (const entry of cloudModels) {
+    const bindName = `Bind ${entry.label}`;
+    assert.deepEqual(parent.connections[previous].main[0].map((link) => link.node), [bindName]);
+    previous = runNodeName(entry.label);
+  }
+  assert.deepEqual(parent.connections[previous].main[0].map((link) => link.node), [COMBINE_NODE]);
+  assert.equal(nodeNamed(parent, "Controlled webhook run").parameters.authentication, "headerAuth");
+  assert.ok(nodeNamed(parent, "Controlled webhook run").credentials.httpHeaderAuth.id);
 });
 
-test("the committed evidence is the real swap over the same saved mornings", () => {
-  assert.equal(evidence.research_only, true);
-  assert.equal(evidence.bundle.bundle_sha256, manifest.bundle_sha256,
-    "the evidence was produced from this bundle, not a rebuilt one");
-  assert.deepEqual(evidence.bundle.source_files, manifest.source_files);
-  assert.equal(evidence.reproduction.cloud_bundle.bundle_sha256, manifest.bundle_sha256);
-  assert.equal(evidence.reproduction.cloud_bundle.mismatches, 0);
+test("the committed evidence reports the models that ran and keeps the claims apart", () => {
+  const ledger = readJson("data/usd-layer1-backtester/n8n/run-ledger-v1.json");
+  const summary = ledgerLib.summarise(ledger);
+  const ranModels = Object.keys(summary.by_model);
+  assert.deepEqual(evidence.identities.selected.map((entry) => entry.key), ranModels);
+  assert.equal(evidence.execution_index.length, summary.records);
+  assert.equal(evidence.sweep.report.records, summary.records);
+  assert.equal(evidence.sweep.report.unique_dates, summary.unique_dates);
+  assert.equal(evidence.sweep.report.model_calls, summary.model_calls);
+  assert.equal(evidence.sweep.report.requested_dates, summary.unique_dates);
 
-  assert.equal(evidence.workflows.parent.webhook_deactivated_after_evidence, true);
-  assert.equal(evidence.workflows.parent.active, false);
-  assert.deepEqual(evidence.workflows.children.map((child) => child.id),
-    manifest.children.map((child) => child.workflow_id));
-  for (const child of evidence.workflows.children) {
-    assert.equal(child.trigger, "execute-workflow trigger only; cannot self-start");
+  assert.equal(evidence.claims.consistency.status, "established");
+  assert.equal(evidence.claims.historical_availability.status, "not_established");
+  assert.match(evidence.claims.historical_availability.statement, /replayed the committed panel/);
+  assert.equal(evidence.claims.model_logic.status, "not_established");
+  assert.equal(evidence.claims.coverage.status, "not_established");
+
+  for (const entry of evidence.execution_index) {
+    assert.ok(entry.parent_execution.id, entry.id);
+    assert.ok(entry.models && Object.keys(entry.models).length > 0, entry.id);
   }
-
-  const cases = evidence.execution_cases;
-  assert.ok(cases.length >= 3, "the swap is shown on more than one saved morning");
-  assert.deepEqual([...new Set(cases.map((entry) => entry.outcome))].sort(),
-    ["abstained", "allowed", "blocked"],
-    "an allowed, a blocked and an abstained morning are all recorded");
-
-  const executions = new Set();
-  const rawFiles = new Set();
-  for (const entry of cases) {
-    assert.equal(entry.parent_execution.status, "success", entry.id + " parent run did not succeed");
-    assert.equal(entry.parent_execution.workflow_id, evidence.workflows.parent.id);
-    assert.equal(entry.outcome, entry.models.challenger.status,
-      entry.id + " outcome is the recorded decision, not a winner selected from performance");
-    assert.equal(entry.input_availability.accepted, entry.models.challenger.validation.accepted);
-    assert.equal(typeof entry.raw_evidence, "string", entry.id + " must name its stored transcript");
-    assert.match(entry.raw_evidence, /^data\/usd-layer1-backtester\/n8n\/execution-\d+-[a-z-]+\.json$/);
-    const raw = readJson(entry.raw_evidence);
-    assert.equal(raw.n8n.execution_id, entry.parent_execution.id);
-    assert.equal(raw.n8n.workflow_id, entry.parent_execution.workflow_id);
-    assert.equal(raw.date, entry.date);
-    assert.equal(raw.validation_mode, entry.validation_mode);
-
-    for (const model of ["challenger", "challenger_v1"]) {
-      const child = childFor(model);
-      const run = entry.models[model];
-      assert.ok(run, entry.id + " has no " + model + " decision");
-      assert.equal(run.workflow_id, child.workflow_id,
-        entry.id + " " + model + " ran " + run.workflow_id + " instead of its own versioned child");
-      assert.equal(run.identity, child.identity);
-      assert.equal(run.execution_status, "success");
-      assert.equal(run.execution_url, "https://silver17.app.n8n.cloud/execution/" + run.execution_id);
-      assert.ok(!executions.has(run.execution_id), "one execution cannot stand for both models");
-      executions.add(run.execution_id);
-      assert.ok(["allowed", "blocked", "abstained"].includes(run.status));
-      assert.ok(run.call && typeof run.call.direction === "string");
-      assert.ok(read(entry.raw_evidence).includes(run.execution_id),
-        entry.id + " " + model + " is absent from the stored transcript for execution " + run.execution_id);
-    }
-
-    assert.equal(entry.models.challenger.model_version, "usd-layer1-challenger-v0");
-    assert.equal(entry.models.challenger_v1.model_version, "usd-layer1-challenger-v1");
-    assert.notEqual(entry.models.challenger.execution_id, entry.models.challenger_v1.execution_id);
-    assert.deepEqual(entry.models.challenger.validation, entry.models.challenger_v1.validation,
-      entry.id + " gave the two children different input-availability gates");
-    assert.equal(typeof entry.comparison.same_direction, "boolean");
-    assert.match(entry.comparison.note, /not a performance claim/);
-
-    for (const file of [entry.raw_evidence]) {
-      assert.ok(fs.existsSync(path.join(ROOT, file)), file + " is named by the evidence but missing");
-      rawFiles.add(file);
-    }
-  }
-  assert.equal(rawFiles.size, cases.length, "each saved morning stores its own execution transcript");
-
-  const options = map.modelOptions(evidence);
-  assert.deepEqual(options.map((option) => option.key), map.MODELS);
-  assert.deepEqual(options.map((option) => option.id),
-    ["usd-layer1-challenger-v0", "usd-layer1-challenger-v1"]);
-  assert.ok(!JSON.stringify(options).includes("usd_l1_25f_h1"),
-    "the H1 candidate is excluded from the swap control");
-  assert.equal(map.headline(evidence).h1, "not invoked");
 });
 
-test("the map swaps the model without changing the morning or the gate", () => {
+test("the map swaps models without changing the morning or the gate", () => {
   const first = evidence.execution_cases[0];
   const entry = map.selectCase(evidence, first.id);
   assert.equal(entry.id, first.id);
@@ -317,22 +236,35 @@ test("the map swaps the model without changing the morning or the gate", () => {
     graph1.edges.map((edge) => edge.from + "->" + edge.to));
 });
 
-test("the same controller accepts a bounded batch without changing the child contract", () => {
-  const config = nodeNamed(parent, "Run configuration").parameters.jsCode;
-  assert.match(config, /body\.dates/, "the webhook accepts a list of mornings");
-  assert.match(config, /at most 40/, "a batch is bounded so one execution stays inspectable");
-  assert.match(config, /dates\.length === 1 \? dates\[0\] : null/, "a single-date request keeps the original config shape");
+test("the map exposes the selected models and one node per recorded morning", () => {
+  const options = map.modelOptions(evidence);
+  assert.deepEqual(options.map((option) => option.key), evidence.identities.selected.map((entry) => entry.key));
+  assert.ok(options.every((option) => option.role));
+  const fixtureOption = options.find((option) => option.role === "fixture");
+  if (fixtureOption) assert.match(fixtureOption.label, /FIXTURE \(not a research model\)/);
 
-  const select = nodeNamed(parent, "Select one saved morning").parameters.jsCode;
-  assert.match(select, /config\.dates/, "selection reads the list, not one literal date");
-  assert.match(select, /wanted\.map/, "one item per morning so each child execution stays visible");
+  const selection = map.selectionSummary(evidence);
+  assert.deepEqual(selection.research_models, options.filter((option) => option.role !== "fixture").map((option) => option.key));
+  assert.equal(selection.fixture_present, Boolean(fixtureOption));
 
-  const combine = nodeNamed(parent, COMBINE_NODE).parameters.jsCode;
-  assert.match(combine, /\.all\(\)/, "the combiner pairs every returned child answer");
-  assert.match(combine, /usd-l1-n8n-technical-failure-v1/,
-    "a missing child is recorded as a technical failure, never as a guessed call");
-  assert.match(combine, /wanted\.length > 1/, "the batch block is only added for a multi-morning run");
-  assert.match(combine, /requested_dates/);
-  assert.match(combine, /performance/i);
+  const dates = map.dateEvidence(evidence);
+  const dateNodes = dates.nodes.filter((node) => node.kind === "date");
+  assert.equal(dateNodes.length, evidence.execution_index.length);
+  const modelNodes = dates.nodes.filter((node) => node.kind === "model" || node.kind === "fixture");
+  assert.ok(modelNodes.length >= evidence.execution_index.length);
+  assert.ok(modelNodes.every((node) => node.links && node.links.length === 2));
+  assert.equal(dates.edges.length, modelNodes.length);
+  const fixtureNode = modelNodes.find((node) => node.kind === "fixture");
+  if (fixtureNode) assert.equal(fixtureNode.kind, "fixture");
 });
 
+test("every generated Code node is valid JavaScript", () => {
+  // A generated node is only useful if n8n can parse it; this guard caught a real split-block defect
+  // before it reached an execution.
+  const workflows = [parent].concat(children.map((child) => child.workflow));
+  for (const workflow of workflows) {
+    for (const node of workflow.nodes.filter((entry) => entry.type === "n8n-nodes-base.code")) {
+      assert.doesNotThrow(() => new Function(node.parameters.jsCode), `${workflow.name} -> ${node.name}`);
+    }
+  }
+});

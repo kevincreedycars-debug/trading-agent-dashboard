@@ -149,7 +149,7 @@ const payloadUrl="data/usd-layer1-backtester/backtesting-screen-v1.json";
 const n8nEvidenceUrl="data/usd-layer1-backtester/n8n-execution-evidence-v1.json";
 const n8nLedgerUrl="data/usd-layer1-backtester/n8n/run-ledger-v1.json";
 const tabs={n8nmap:"Layer 1 map",overview:"Overview",architecture:"Architecture",tests:"Tests",morning:"Morning run",ledger:"Decision ledger",audit:"Run audit",decisions:"Decisions",h1:"H1 candidate"};
-const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all",n8nEvidence:null,n8nError:null,n8nLoading:null,mapCase:null,mapModel:"challenger",mapNode:"child"};
+const state={screen:null,error:null,test:null,rowKey:null,node:null,filter:"all",testSelection:null,n8nEvidence:null,n8nError:null,n8nLoading:null,mapCase:null,mapModel:"challenger",mapNode:"child"};
 function el(tag,text,parent,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=text;if(cls)n.className=cls;if(parent)parent.append(n);return n}
 function pill(status,parent){return el("span",status,parent,"pill "+status)}
 function pct(value){return value===null||value===undefined?"—":value+"%"}
@@ -525,7 +525,7 @@ function renderH1(v,s){
   el("p","Open findings carried into the contract: "+(sc.open_discrepancies.map(d=>d.id).join(", ")||"none")+".",v,"caption");
 }
 
-let disposeMap=null,mapApi=null;
+let disposeMap=null,mapApi=null,disposeEvidenceMap=null;
 function evidenceTable(parent,node){
   const rows=(node.evidence||[]).map(item=>[item.path,item.date||"undated",item.sha256?item.sha256.slice(0,16)+"…":"—",item.note||""]);
   const t=table(parent,["Evidence","Date","sha256","Role"],rows);
@@ -636,15 +636,123 @@ function drawArchitectureMap(canvas,nodes,edges,onSelect){
   disposeMap=()=>{resize.disconnect();meshes.forEach(m=>{m.geometry.dispose();m.material.dispose()});renderer.dispose();disposeMap=null};
   return {focus:id=>{const m=meshes.find(x=>x.userData.id===id);if(m){group.rotation.y=-(m.position.x-1)*0.08;draw()}}};
 }
+function drawEvidenceMap(canvas,nodes,edges,onSelect){
+  if(!window.THREE||!canvas)return null;
+  const T=window.THREE;
+  let renderer;
+  try{renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true})}catch{canvas.hidden=true;return null}
+  const scene=new T.Scene();
+  const camera=new T.PerspectiveCamera(45,1,0.1,200);camera.position.set(0,2,26);camera.lookAt(0,0,0);
+  const group=new T.Group();scene.add(group);
+  const dates=nodes.filter(node=>node.kind==="date");
+  const total=Math.max(dates.length,1);
+  const positions=new Map();
+  const dateIndex=new Map();
+  dates.forEach((node,index)=>{
+    dateIndex.set(node.id,index);
+    const angle=(index/total)*Math.PI*2;
+    const radius=8.4;
+    positions.set(node.id,new T.Vector3(Math.cos(angle)*radius,-2.6+5.2*(index/total),Math.sin(angle)*radius));
+  });
+  const perDateModels=new Map();
+  for(const node of nodes){
+    if(node.kind==="date")continue;
+    const parentId=String(node.id).split(":").slice(0,2).join(":");
+    const bucket=perDateModels.get(parentId)||[];
+    bucket.push(node);
+    perDateModels.set(parentId,bucket);
+  }
+  for(const [parentId,bucket] of perDateModels){
+    const base=positions.get(parentId);
+    if(!base)continue;
+    bucket.forEach((node,index)=>{
+      positions.set(node.id,new T.Vector3(base.x,base.y+0.42+(index-(bucket.length-1)/2)*0.34,base.z+0.35+index*0.12));
+    });
+  }
+  const colour={allowed:0x7fd6b0,abstained:0xe3c36b,blocked:0xc96f6f,verified:0x8fb7d6,partial:0xe3a35c,fixture:0xb08bd6};
+  // One material per colour: a 725-morning map holds thousands of spheres and must not allocate a material
+  // (and therefore a shader program) per sphere.
+  const materials=new Map();
+  const materialFor=status=>{
+    if(!materials.has(status))materials.set(status,new T.MeshStandardMaterial({color:colour[status]||0x9fd6ff,roughness:.5,metalness:.15}));
+    return materials.get(status);
+  };
+  const geometry=new T.IcosahedronGeometry(1,1);
+  const meshes=[];
+  for(const node of nodes){
+    const p=positions.get(node.id);
+    if(!p)continue;
+    const mesh=new T.Mesh(geometry,materialFor(node.status));
+    const size=node.kind==="date"?0.26:0.16;
+    mesh.position.copy(p);
+    mesh.scale.setScalar(size);
+    mesh.userData.id=node.id;
+    group.add(mesh);meshes.push(mesh);
+  }
+  scene.add(new T.AmbientLight(0xffffff,1.15));
+  const key=new T.DirectionalLight(0xffffff,1.3);key.position.set(4,6,9);scene.add(key);
+  const lineMaterial=new T.LineBasicMaterial({color:0x46636f,transparent:true,opacity:.5});
+  for(const edge of edges){
+    const from=positions.get(edge.from),to=positions.get(edge.to);
+    if(!from||!to)continue;
+    const geom=new T.BufferGeometry().setFromPoints([from.clone(),to.clone()]);
+    group.add(new T.Line(geom,lineMaterial));
+  }
+  const draw=()=>{
+    const w=canvas.clientWidth||640,h=canvas.clientHeight||360;
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);
+  };
+  const resize=new ResizeObserver(draw);resize.observe(canvas);
+  let dragging=false,moved=0,lastX=0,lastY=0;
+  canvas.addEventListener("pointerdown",e=>{dragging=true;moved=0;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId);canvas.style.cursor="grabbing"});
+  canvas.addEventListener("pointermove",e=>{
+    if(!dragging)return;
+    const dx=e.clientX-lastX,dy=e.clientY-lastY;moved+=Math.abs(dx)+Math.abs(dy);
+    group.rotation.y+=dx*0.006;group.rotation.x=Math.max(-0.6,Math.min(0.6,group.rotation.x+dy*0.004));
+    lastX=e.clientX;lastY=e.clientY;draw();
+  });
+  const end=e=>{
+    if(!dragging)return;dragging=false;canvas.style.cursor="grab";
+    if(moved>5)return;
+    const rect=canvas.getBoundingClientRect(),ray=new T.Raycaster();
+    ray.setFromCamera(new T.Vector2(2*(e.clientX-rect.left)/rect.width-1,1-2*(e.clientY-rect.top)/rect.height),camera);
+    const hit=ray.intersectObjects(meshes)[0];
+    if(hit)onSelect(nodes.find(node=>node.id===hit.object.userData.id));
+  };
+  canvas.addEventListener("pointerup",end);
+  canvas.addEventListener("pointercancel",()=>{dragging=false;canvas.style.cursor="grab"});
+  canvas.style.cursor="grab";
+  draw();
+  return ()=>{resize.disconnect();materials.forEach(m=>m.dispose());geometry.dispose();renderer.dispose()};
+}
 function renderTests(v,s){
   el("h2","One row per scheduled morning",v);
   el("p","Choose a test, then a row. A blocked row opens the missing instrument or observation, the 05:00 evidence requirement, the affected dates and the action that would unblock it. A valid abstention is a separate status: the book had the evidence and chose not to call.",v);
   const chips=el("div",null,v,"chips");
   const detail=el("div",null,v);
   const tableHost=el("div",null,v,"scroll");
-  const testId=state.test&&s.tests.rows[state.test]?state.test:s.tests.definitions[0].id;
-  state.test=testId;
+  // Test modules are selectable: the four committed definitions stay the source, and the view can carry
+  // any subset. The selection is a view choice here; a run records its own selection in the experiment
+  // identity so two different test configurations are two different experiments.
+  const selection=Array.isArray(state.testSelection)&&state.testSelection.length?state.testSelection:s.tests.definitions.map(t=>t.id);
+  const modules=el("div",null,v,"chips");
+  el("span","Modules in view",modules,"caption");
   for(const test of s.tests.definitions){
+    const label=el("label",null,modules,"caption");
+    const box=el("input",null,label);box.type="checkbox";box.checked=selection.includes(test.id);
+    box.onchange=()=>{
+      const next=s.tests.definitions.map(t=>t.id).filter(id=>id===test.id?box.checked:selection.includes(id));
+      state.testSelection=next;
+      if(!next.includes(state.test))state.test=next[0]||null;
+      state.rowKey=null;state.filter="all";render();
+    };
+    el("span"," "+test.ordinal+". "+test.label,label);
+  }
+  const visible=s.tests.definitions.filter(test=>selection.includes(test.id));
+  if(!visible.length){el("p","No test module is selected.",v,"caption");return}
+  const testId=state.test&&s.tests.rows[state.test]?state.test:visible[0].id;
+  state.test=testId;
+  for(const test of visible){
     const b=el("button",test.ordinal+". "+test.label,chips);b.setAttribute("aria-pressed",test.id===testId?"true":"false");
     b.onclick=()=>{state.test=test.id;state.filter="all";state.rowKey=null;render()};
   }
@@ -653,6 +761,9 @@ function renderTests(v,s){
   el("p",def.question,v);
   const meta=el("p",null,v,"caption");
   meta.textContent="Status: "+def.status+" · usable "+(def.usable_sessions??0)+" of "+s.summary.sessions+" · rows "+def.counts.rows;
+  if(def.simulation){
+    el("p","Simulation: "+String(def.simulation.status).replace(/_/g," ")+" · "+def.simulation.cases+" unit cases in "+def.simulation.tests+" · historical inputs: "+((def.usable_sessions||0)===0?"absent, so the rule is unmeasured":"present")+". "+def.simulation.statement,v,"caption");
+  }
   if(def.id==="dxy_direction_broker_cfd")el("p","Test 1 is the agreed direction test on the named broker DXY.cash series. The official ICE cash DXY series is a separate supplementary evaluation lane; it is never substituted for the broker series or required by test 1.",v,"caption");
 
   const filters=el("div",null,v,"chips");
@@ -945,34 +1056,72 @@ function loadN8nLedger(){
 }
 function renderN8nLedger(v){
   el("h3","Batch runs, restart recovery and independent checks",v);
-  el("p","The ledger is built from stored n8n executions only. Each morning is keyed by validation mode and date, so re-running a range or resuming after an interruption cannot add a second result. Every row is re-checked against the committed panel and the local controller before it is saved; a failed check stays visible instead of being dropped.",v);
+  el("p","The ledger is built from stored n8n executions only. Each morning is keyed by validation mode, date and experiment configuration, so re-running a range or resuming after an interruption cannot add a second result for the same experiment; a changed configuration is stored beside the original instead of overwriting it. Every row is re-checked against the committed panel and the local controller before it is saved, and the consistency, availability and logic claims are reported separately below.",v);
   if(state.n8nLedgerError){const b=el("div",null,v,"banner bad");el("strong","The run ledger could not be loaded: "+state.n8nLedgerError,b);return}
-  if(!state.n8nLedger){el("p","Loading the persisted run ledgerâ€¦",v);loadN8nLedger();return}
+  if(!state.n8nLedger){el("p","Loading the persisted run ledger…",v);loadN8nLedger();return}
   const l=state.n8nLedger;
   const rows=l.records||[];
   const structural=rows.filter(row=>row.validation_mode==="structural");
   const receipted=rows.filter(row=>row.validation_mode==="receipted");
+  const modelKeys=Array.from(new Set(rows.reduce((keys,row)=>keys.concat(Object.keys(row.calls||{})),[])));
   const verified=rows.filter(row=>row.verification&&row.verification.verified===true).length;
   const duplicates=(l.runs||[]).reduce((total,run)=>total+(run.duplicate_keys||[]).length,0);
+  const attempts=l.attempts||[];
+  const failedAttempts=attempts.filter(entry=>entry.ok!==true).length;
+  const uniqueDates=new Set(rows.map(row=>row.date)).size;
+  const modelCalls=rows.reduce((total,row)=>total+Object.keys(row.calls||{}).length,0);
+  const configurations=new Set(rows.map(row=>(row.configuration?row.configuration.fingerprint:null))).size;
   const stats=el("div",null,v,"map-stats");
-  for(const [value,label] of [[String(rows.length),"persisted mornings"],[verified+" / "+rows.length,"independently verified"],[String(duplicates),"duplicate results prevented"],[String((l.runs||[]).length),"recorded runs"],[String(receipted.filter(row=>row.outcome==="blocked").length),"receipted gate refusals"]]){
+  for(const [value,label] of [
+    [String(uniqueDates),"unique mornings"],
+    [String(rows.length),"persisted records"],
+    [String(modelCalls),"model calls"],
+    [String(configurations),"experiment configurations"],
+    [verified+" / "+rows.length,"consistency verified"],
+    [String(duplicates),"duplicate results prevented"],
+    [String(failedAttempts),"failed requests retained"]
+  ]){
     const s=el("div",null,stats,"map-stat");el("b",value,s);el("small",label,s);
   }
+  const labelFor=key=>{
+    const any=rows.find(row=>row.calls&&row.calls[key]);const call=any?any.calls[key]:null;
+    const name=(call&&call.label)||key;return call&&call.fixture?name+" (fixture)":name;
+  };
+  const header=["Date","Outcome","Config"].concat(modelKeys.map(labelFor)).concat(["Verified","Parent execution"]);
+  const cellFor=(row,key)=>{
+    const call=row.calls?row.calls[key]:null;
+    if(!call)return "—";
+    const base=(call.direction||"—")+" · cv "+(call.conviction===null||call.conviction===undefined?"—":call.conviction);
+    return call.fixture?base+" · FIXTURE":base;
+  };
+  const rowCells=row=>[row.date,row.outcome,(row.configuration?row.configuration.fingerprint.slice(0,8):"—")+(row.coexistence?" (coexisting config)":"")]
+    .concat(modelKeys.map(key=>cellFor(row,key)))
+    .concat([row.verification&&row.verification.verified?"yes":"NO",row.executions.parent.id||"—"]);
   el("h3","Structural batch",v);
-  table(v,["Date","Outcome","v0 call","v1 call","Agree","Hit / scored","Verified","Parent execution"],
-    structural.map(row=>[row.date,row.outcome,row.calls.challenger.direction||"â€”",row.calls.challenger_v1.direction||"â€”",row.calls.challenger.direction===row.calls.challenger_v1.direction?"yes":"no",(row.calls.challenger.results?Object.values(row.calls.challenger.results).filter(r=>r==="hit").length+" / "+Object.values(row.calls.challenger.results).filter(r=>["hit","miss","flat"].includes(r)).length:"â€”"),row.verification&&row.verification.verified?"yes":"NO",row.executions.parent.id||"â€”"]));
-  el("p","A blocked or abstained row shows the direction the model computed but is never counted as a hit. Hit / scored counts the four comparison markets and includes flat and no-outcome results in the denominator only when they were scored.",v,"caption");
+  table(v,header,structural.map(rowCells));
+  el("p","A blocked or abstained row shows the direction the model computed but is never counted as a hit. A fixture is labelled wherever it appears and is excluded from every research comparison. A row marked 'coexisting config' shares its morning with a different model set, code version or validation policy; it is a second experiment, not a duplicate.",v,"caption");
   if(receipted.length){
     el("h3","Receipted gate",v);
-    table(v,["Date","Outcome","v0 call","v1 call","Result stored","Verified","Parent execution"],
-      receipted.map(row=>[row.date,row.outcome,row.calls.challenger.direction||"â€”",row.calls.challenger_v1.direction||"â€”",row.calls.challenger.results?"yes":"no",row.verification&&row.verification.verified?"yes":"NO",row.executions.parent.id||"â€”"]));
+    table(v,header,receipted.map(rowCells));
     el("p","The receipted gate refuses a morning whose consumed inputs do not all carry a full timestamp before 05:00 London. The refusal is stored with the same morning key as the structural call, not merged into it.",v,"caption");
   }
+  el("h3","What each check establishes",v);
+  const claimRows=[
+    ["Replay consistency",verified+" / "+rows.length+" rows",verified===rows.length&&rows.length>0?"established":"failed","The stored call reproduces in the local controller and the hit/miss arithmetic recomputes from the committed outcomes."],
+    ["Historical input availability","0 / "+rows.length+" rows","not established","The children replayed the committed panel. No retrieval receipt or source archive is recorded, so availability at the cutoff is not demonstrated."],
+    ["Model logic correctness","0 / "+rows.length+" rows","not established","Parity compares the frozen rules with themselves; there is no independent adjudication to check the rules against."],
+    ["Panel equals a live morning","0 / "+rows.length+" rows","not established","The committed panel is a research artefact and is not proven to equal what a live 05:00 run would have offered."]
+  ];
+  table(v,["Claim","Evidence","Status","Basis"],claimRows);
   const withRuns=l.runs||[];
   if(withRuns.length){
     el("h3","Run history (resume and duplicate handling)",v);
-    table(v,["Run","Label","Parent execution","Added","Already held"],
-      withRuns.map(run=>[run.run_id,run.label||"â€”",run.execution_id||"â€”",String((run.added_keys||[]).length),String((run.duplicate_keys||[]).length)]));
+    table(v,["Run","Label","Parent execution","Added","Already held"],withRuns.map(run=>[run.run_id,run.label||"-",run.execution_id||"-",String((run.added_keys||[]).length),String((run.duplicate_keys||[]).length)]));
+  }
+  if(attempts.length){
+    el("h3","Failed requests retained",v);
+    table(v,["When","Label","Requested","HTTP","Error"],attempts.slice(-20).map(entry=>[entry.at,entry.label||"-",String((entry.requested||[]).length),entry.http_status===null?"-":String(entry.http_status),entry.error||"none"]));
+    el("p","A failed request is not a morning result: it never becomes a ledger row. It is kept so a resumed run can say how many requests failed and why.",v,"caption");
   }
   const links=el("div",null,v,"map-links");
   const seen=new Set();
@@ -983,7 +1132,7 @@ function renderN8nLedger(v){
     const a=el("a","n8n execution "+row.executions.parent.id,links);
     a.href=url;a.target="_blank";a.rel="noopener";
   }
-  el("p","Ledger schema "+l.schema_version+" Â· updated "+l.updated_at+" Â· dataset run "+(l.dataset.run_version||"â€”"),v,"caption mono");
+  el("p","Ledger schema "+l.schema_version+" \u00b7 updated "+(l.updated_at||"-")+" \u00b7 dataset run "+(l.dataset.run_version||"-"),v,"caption mono");
 }
 
 function renderN8nMap(v){
@@ -1001,12 +1150,19 @@ function renderN8nMap(v){
   if(!state.mapCase||!cases.some(c=>c.id===state.mapCase))state.mapCase=cases[0].id;
   if(!models.some(m=>m.key===state.mapModel))state.mapModel=models[0].key;
   const caseEntry=api.selectCase(ev,state.mapCase);
-  const model=api.selectedCaseModel(caseEntry,state.mapModel);
+  let model=api.selectedCaseModel(caseEntry,state.mapModel);
+  const selection=api.selectionSummary(ev);
+  // A curated case may predate a newly registered model. The select still lists every selected model, so
+  // fall back to a model that this case actually returned instead of rendering an empty panel.
+  if(!model){
+    const present=api.caseModels(caseEntry);
+    if(present.length){state.mapModel=present[0].key;model=api.selectedCaseModel(caseEntry,state.mapModel)}
+  }
   const h=api.headline(ev);
 
   const warn=el("div",null,v,"n8n-warning");
-  el("strong","Four controlled n8n cases, not a full batch.",warn);
-  el("p","Structural validation is a gate; receipted validity requires full timestamps. Parity is reproduction only. H1 is a separate unscored identity and is not invoked here.",warn);
+  el("strong","Curated cases plus every persisted ledger morning.",warn);
+  el("p","Structural validation is a gate; receipted validity requires full timestamps. Parity is reproduction only. A registered fixture is labelled a fixture and excluded from every research comparison. H1 is a separate unscored identity and is not invoked here.",warn);
   const stats=el("div",null,v,"map-stats");
   for(const [value,label] of [[h.structural,"structural accepted"],[h.receipted,"receipted complete"],[String(h.late),"late stamps in panel"],[h.parity,"parity decisions reproduced"],[h.performance,"performance / edge"],[h.h1,"H1 candidate"]]){
     const s=el("div",null,stats,"map-stat");el("b",value,s);el("small",label,s);
@@ -1021,7 +1177,7 @@ function renderN8nMap(v){
   const caseSelect=el("select",null,caseLabel);
   for(const option of cases){const o=el("option",option.label,caseSelect);o.value=option.id;o.selected=option.id===state.mapCase}
   caseSelect.onchange=()=>{state.mapCase=caseSelect.value;state.mapNode="child";render()};
-  el("p","Selected: "+model.identity+" · "+caseEntry.date+" · "+caseEntry.label+" · execution "+caseEntry.parent_execution.id,v,"caption");
+  el("p","Selected: "+(model?model.identity:"not present in this curated case")+" · "+caseEntry.date+" · "+caseEntry.label+" · execution "+caseEntry.parent_execution.id+" · selection: "+selection.models.map(m=>m.key+(m.role==="fixture"?" (fixture)":"")).join(", "),v,"caption");
 
   const graph=api.graph(ev,state.mapCase,state.mapModel);
   const byId=new Map(graph.nodes.map(node=>[node.id,node]));
@@ -1061,16 +1217,61 @@ function renderN8nMap(v){
   table(v,["Mechanism","Input","Threshold","Rule","Weight"],api.ruleRows(ev,state.mapModel).map(rule=>[rule.label,rule.input,rule.threshold,rule.rule,String(rule.weight)]));
   el("h3","The four backtests",v);
   table(v,["#","Test","Status","Usable","Outcome source"],api.testRows(ev).map(row=>[String(row.ordinal),row.label,row.status,String(row.usable_sessions??"—"),row.outcome_source]));
-  el("p","Tests 3 and 4 are blocked on history; test 1 is a broker proxy. None of these rows is an edge claim.",v,"caption");
+  el("p","Tests 3 and 4 are blocked on history; test 1 is a broker proxy. Their path rule engine is implemented and unit-tested separately, so 'blocked' means the data is missing, not that the simulator is missing. None of these rows is an edge claim.",v,"caption");
+  const moduleRows=(ev.four_backtests||[]).filter(test=>test.simulation);
+  if(moduleRows.length){
+    el("h3","Simulation status for tests 3 and 4",v);
+    table(v,["Test","Simulation","Rule","Unit cases","Historical inputs"],moduleRows.map(test=>[String(test.ordinal),String(test.simulation.status).replace(/_/g," "),test.simulation.rules,test.simulation.cases+" in "+test.simulation.tests,(test.usable_sessions||0)===0?"absent - the rule is unmeasured":"present"]));
+    el("p",moduleRows[0].simulation.statement,v,"caption");
+  }
+  if(ev.model_comparison){
+    const mc=ev.model_comparison;
+    el("h3","Aggregate model comparison",v);
+    el("p","Every registered research model replayed over the same committed mornings. A registered fixture is shown for the plumbing and excluded from every research figure.",v,"caption");
+    table(v,["Model","Role","Scored","Hit","Miss","Flat","No call","Accuracy","Wilson lower 95%"],
+      mc.models.map(m=>[m.label||m.model,m.role+(m.fixture?" (excluded from research)":""),String(m.scored??"—"),String(m.hit??"—"),String(m.miss??"—"),String(m.flat??"—"),String(m.no_call??"—"),m.accuracy===null?"—":(m.accuracy*100).toFixed(2)+"%",m.wilson_lower_95===null?"—":(m.wilson_lower_95*100).toFixed(2)+"%"]));
+    table(v,["Pair","Common directional mornings","Same direction","Share"],mc.agreement.map(a=>[a.left+" / "+a.right,String(a.common_directional_mornings),String(a.same_direction),a.share===null?"—":(a.share*100).toFixed(1)+"%"]));
+    el("p","A zero disagreement rate between the two challengers is a coverage finding: on this panel the reweighting changed conviction and participation but never the sign when both books called. Coverage is printed beside every figure.",v,"caption");
+  }
+  el("h3","Execution map - every recorded morning",v);
+  el("p","Each larger sphere is one recorded morning; the smaller spheres are the models that answered it. Click a node for its execution links. Drag to rotate. This map is evidence of what ran; it never places an order.",v);
+  const mapWrap=el("div",null,v,"split");
+  const evidenceCanvas=el("canvas",null,mapWrap);
+  evidenceCanvas.id="n8n-evidence-map";
+  evidenceCanvas.setAttribute("aria-label","3D execution map; the ledger table below is the accessible equivalent");
+  const evidenceInspector=el("div",null,mapWrap,"card");
+  const evidenceGraph=api.dateEvidence(ev);
+  const dateNodes=evidenceGraph.nodes.filter(node=>node.kind==="date");
+  const modelNodes=evidenceGraph.nodes.filter(node=>node.kind!=="date");
+  if(dateNodes.length){
+    disposeEvidenceMap=drawEvidenceMap(evidenceCanvas,evidenceGraph.nodes,evidenceGraph.edges,node=>{
+      evidenceInspector.replaceChildren();
+      const heading=el("h3",node.label,evidenceInspector);pill(node.status,heading);
+      el("p",node.summary,evidenceInspector);
+      if(node.date)el("p","Morning "+node.date,evidenceInspector,"caption mono");
+      if(node.files&&node.files.length){
+        el("p","Evidence",evidenceInspector,"caption");
+        const list=el("ul",null,evidenceInspector);
+        for(const file of node.files)el("li",file,list,"map-files");
+      }
+      if(node.links&&node.links.length){
+        const links=el("div",null,evidenceInspector,"map-links");
+        for(const link of node.links){if(!link.href)continue;const a=el("a",link.label,links);a.href=link.href;a.target="_blank";a.rel="noopener"}
+      }
+      el("p","A node is a recorded execution, not a live call.",evidenceInspector,"caption");
+    });
+  }
+  el("p","Showing "+dateNodes.length+" recorded mornings and "+modelNodes.length+" model calls; the ledger table below lists every row.",v,"caption mono");
   renderN8nLedger(v);
   const excluded=el("div",null,v,"n8n-excluded");
   el("strong","H1 is not in this map's selected models.",excluded);
-  el("p","The two children are usd-layer1-challenger-v0 and usd-layer1-challenger-v1. USD-L1-25F-H1-v0.1.0 is unscored and separate. Current is not bundled in the Cloud runtime; the local controller still runs it.",excluded);
+  el("p","Selected models: "+selection.models.map(m=>m.identity+(m.role==="fixture"?" (fixture, never pooled with a book)":"")).join(", ")+". USD-L1-25F-H1-v0.1.0 is unscored and separate. Current is not bundled in the Cloud runtime; the local controller still runs it.",excluded);
 }
 
 function render(){
   const host=document.querySelector("#view");host.replaceChildren();
   if(disposeMap){disposeMap();mapApi=null}
+  if(disposeEvidenceMap){disposeEvidenceMap();disposeEvidenceMap=null}
   const s=state.screen;
   if(!s){el("p",state.error?"The screen payload could not be loaded: "+state.error:"Loading the screen payload…",host);return}
   const keyName=Object.hasOwn(tabs,location.hash.slice(1))?location.hash.slice(1):"overview";
