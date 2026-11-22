@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-22T08:40:21.044Z",
+  "generated_at_utc": "2026-11-22T08:50:20.657Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,7 +12,7 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-22T08:39:20.612008Z",
+    "probed_at_utc": "2026-11-22T08:49:20.771336Z",
     "positions_seen": 0
   },
   "destination": {
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-22T08:40:20.632Z",
+    "read_at_utc": "2026-11-22T08:50:20.325Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -45,16 +45,16 @@
       "state": "ok",
       "label": "OK",
       "age_seconds": 60,
-      "last_poll_utc": "2026-11-22T08:39:20.783Z",
-      "last_success_utc": "2026-11-22T08:39:20.783Z",
+      "last_poll_utc": "2026-11-22T08:49:20.977Z",
+      "last_success_utc": "2026-11-22T08:49:20.977Z",
       "detail": "the last poll finished 60s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-22T08:39:20.783Z",
-    "last_success_utc": "2026-11-22T08:39:20.783Z",
+    "last_poll_utc": "2026-11-22T08:49:20.977Z",
+    "last_success_utc": "2026-11-22T08:49:20.977Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-22T08:39:19.911Z",
-      "finished_utc": "2026-11-22T08:39:20.783Z",
+      "started_utc": "2026-11-22T08:49:20.059Z",
+      "finished_utc": "2026-11-22T08:49:20.977Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -66,7 +66,7 @@
         "positions": 0,
         "rows": [],
         "cause": null,
-        "probed_at_utc": "2026-11-22T08:39:20.612008Z",
+        "probed_at_utc": "2026-11-22T08:49:20.771336Z",
         "orders": [
           {
             "ticket": "309523915",
@@ -78,21 +78,38 @@
             "stop": 3582.97,
             "target": 3497.19,
             "expiry_utc": null
+          },
+          {
+            "ticket": "309642625",
+            "symbol": "BTCUSD",
+            "side": "sell",
+            "kind": "limit",
+            "volume": 0.01,
+            "price": 59835.74,
+            "stop": 60126.71,
+            "target": 58380.87,
+            "expiry_utc": null
           }
         ]
       },
       "destination": {
         "account_id": "42585819",
         "symbols": [
-          "XAUUSD"
+          "XAUUSD",
+          "BTCUSD"
         ],
         "references": {
-          "XAUUSD": 3533.2
+          "XAUUSD": 3533.2,
+          "BTCUSD": 59674.35
         },
         "exposure": {
           "XAUUSD": {
             "positions": 0,
             "orders": 1
+          },
+          "BTCUSD": {
+            "positions": 0,
+            "orders": 0
           }
         },
         "spec_summary": {
@@ -102,6 +119,17 @@
             "volumeScale": 10000,
             "minVolume": 0.01,
             "maxVolume": 100000,
+            "volumeStep": 0.01,
+            "tradeMode": "full",
+            "minStopDistance": 0,
+            "minStopPercent": null
+          },
+          "BTCUSD": {
+            "digits": 2,
+            "lotSizeBtc": 1,
+            "volumeScale": 100,
+            "minVolume": 0.01,
+            "maxVolume": 5,
             "volumeStep": 0.01,
             "tradeMode": "full",
             "minStopDistance": 0,
@@ -116,7 +144,13 @@
         "dropped": 0,
         "filled": 0
       },
-      "refusals": [],
+      "refusals": [
+        {
+          "code": "max_open_reached",
+          "ticket": "309642625",
+          "detail": 4
+        }
+      ],
       "actions": [],
       "closes": [
         {
@@ -177,12 +211,12 @@
     "open_positions": 0,
     "pending_orders": 1,
     "closed_trades": 17,
-    "read_at_utc": "2026-11-22T08:40:20.632Z"
+    "read_at_utc": "2026-11-22T08:50:20.325Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-23T08:40:20.632Z",
-    "to_utc": "2026-11-22T08:40:20.632Z"
+    "from_utc": "2026-10-23T08:50:20.325Z",
+    "to_utc": "2026-11-22T08:50:20.325Z"
   },
   "closed_trades": [
     {
@@ -922,25 +956,32 @@
   },
   "rejections": [
     {
+      "kind": "refusal",
+      "code": "max_open_reached",
+      "ticket": "309642625",
+      "detail": 4,
+      "at_utc": "2026-11-22T08:49:20.977Z"
+    },
+    {
       "kind": "close",
       "code": null,
       "ticket": "309462132",
       "detail": null,
-      "at_utc": "2026-11-22T08:39:20.783Z"
+      "at_utc": "2026-11-22T08:49:20.977Z"
     },
     {
       "kind": "close",
       "code": null,
       "ticket": "309464502",
       "detail": null,
-      "at_utc": "2026-11-22T08:39:20.783Z"
+      "at_utc": "2026-11-22T08:49:20.977Z"
     },
     {
       "kind": "close",
       "code": null,
       "ticket": "309640315",
       "detail": null,
-      "at_utc": "2026-11-22T08:39:20.783Z"
+      "at_utc": "2026-11-22T08:49:20.977Z"
     }
   ],
   "verification": [
