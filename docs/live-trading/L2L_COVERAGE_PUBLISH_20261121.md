@@ -203,6 +203,14 @@ covered on every lane, no failures - because the coverage plan is computed befor
 What it does not do is commit an extension from a run that publishes nothing; that waits for the next
 publishing cycle, one interval later.
 
+**Overnight, unattended.** The next cycle that found something to add was 2026-11-22T02:40:55.736Z: the writer
+appended exactly one BTCUSD line below (low 46,741.91 -> 43,832.17) and stamped it `available_at_utc` with that
+instant. At 09:20:56Z BTCUSD stood at 26 above / 11 below on lanes 1 and 3 and 27 / 10 on lane 2's own price,
+and all three lanes' ticks at 09:26 read `levels_generated_at_utc 2026-11-22T02:40:55.736Z` - the loops picked
+the new line up without being restarted. Nothing else moved because nothing else needed to: 21 November 2026
+was a Saturday and the four prices were where they had closed.
+
+
 ## 7. Open items
 
 - Lane code revisions unchanged, so the trader's in-memory coverage plan, the heartbeat `coverage` block, the
