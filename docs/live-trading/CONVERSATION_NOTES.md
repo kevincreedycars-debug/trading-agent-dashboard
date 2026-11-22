@@ -3242,3 +3242,41 @@ state, not this change; the four calibration cases are 4/4 with the cache and sk
 
 **Ten full L2L levels each side of price, maintained by the publisher, 21 November 2026.** The ladder the three lanes and the page read is now extended by the run that publishes it: `scripts/publish-live-trading-lanes.js` reads `data/l2l-levels.json` from the publisher checkout, runs `lib/l2l_coverage.js` over every enabled lane's own snapshot, and hands the extended file to `publish-live-trading-feed.js` as an extra, which copies it into the commit after the checkout has been reset to `origin/main`. Generation therefore happens before publication, and what a lane reads on a tick is a grid the publisher had already extended for its own price. The measurement is the ladder's own: the anchor pair and spacing come from the published lines' provenance, missing steps are appended beyond the outermost line on the short side, every existing level keeps its price and provenance, and a second run adds nothing; a line exactly at price counts for neither side; the cap is 60 steps a side and an impossible one is reported, not invented. Committed as `376fd834` and pushed to `main`; the first cycle on it, `e39b21b3` at 22:01:04Z, carried `data/l2l-levels.json` beside the three snapshots and reported every asset covered on every lane - EURUSD 18 up/10 down, XAUUSD 20/10, US100.cash 30/10, BTCUSD 26/10 - with no level removed and both seeds kept on all four (EURUSD +6, XAUUSD +8, US100.cash +18, BTCUSD +14 lines). Lane 3 was reading `C:\live-trading\runtime\data\l2l-levels.json`, a copy from 2 November that nothing wrote; its wrapper now passes `--published C:\live-trading\publisher` like the other two lanes, backed up first, and its 22:06:30Z tick says so in `sources.levels`. Lane code revisions were deliberately not moved (`c5abd0ac`, `f14f2ac7`, `441c308f`), so the trader-side coverage plan, the heartbeat block, the dashboard chip and the `lib/l2l_strategy.js` freshness refusal are still undeployed and recorded as open; generated lines do carry `available_at_utc`. FTMO 2's midpoints stay derived at read time (55/59/79/71 half-grid lines) and its open XAUUSD trade entered at the midpoint 3532.93, filled 3533.14, taking profit at the full line 3497.19; every live order and position is 0.01 lots. The full record, including the large-move report, the restart case and the send_failed notes on lanes 1 and 2, is `L2L_COVERAGE_PUBLISH_20261121.md`.
 
+
+**The trader's own coverage floor, and no daily cap on any lane, 22 November 2026.** The publisher has maintained ten
+full L2L levels each side of price since 21 November; what it did not do was hold a lane's own tick to that floor, and
+the 21 November record was explicit that the trader-side plan, the heartbeat block and the freshness refusal were *not*
+deployed because the branch carrying them had drifted behind `main`. This session closed that, and settled the one
+number that was still wrong on two accounts. It started from the finding that the three checkouts were on three
+different revisions - `c5abd0ac` (plus a 227-line patch applied by hand on the host), `f14f2ac7` and `441c308f` - and
+that none of them was `main`: `main` had dropped the blind-lane work in an earlier history rewrite, and the cap removal
+the owner approved on 2026-11-14 lived only on that dropped line. So the lines were reconciled rather than the work
+being ported twice. `441c308f` (a descendant of both lane-1 and lane-2 revisions) was merged into `main` as `981b81cf`,
+bringing `--blind`, `--magic`, `--expect-identity`, the ordered three-leg reclaim checks and `DEFAULT_MAX_PER_DAY =
+null` with `--max-per-day` accepting unlimited/none/off/0; the two big files merged without conflict and five conflicts
+(lanes file, its test, the publisher's blind flag, two session documents, and `script.js`'s third-lane note) were
+resolved by keeping whichever side was newer. One more merge mattered: lane 3 was *already running* a 21-line ordering
+fix to the deviation's legs as an uncommitted file, committed as `6b408c2f`; without merging it (`e75757f4`) the deploy
+would have silently reverted a rule change account 3 has traded since 19 November. The trader hook itself: before
+evaluating a single entry, `runOnce` calls the publisher's own `planCoverage` over the ladder it read and this lane's
+own snapshot, uses that in-memory grid for the readings, records `coverage {status, checked_at_utc, extended,
+levels_available_at_utc, min_per_side, rows, failures, entries_withheld}` in the run and the heartbeat, withholds an
+instrument's entries when it cannot be brought to the floor (still managing what the account holds), and writes no
+levels - the publisher remains the one writer. `lib/l2l_strategy.js` now refuses a crossing whose confirming candle
+closed before the line existed (`available_at_utc`, `retrospective: true`) and states `ladderCoverage` on every reading,
+counted on full lines only so FTMO 2's midpoints are judged on the same minimum. The deploy moved all three checkouts to
+`e3406286` (backups under each lane's `tmp\deploy-backup-coverage-20261122`), re-registered lanes 1 and 2 so both now
+carry `--max-per-day unlimited`, left lane 3's registration alone (it already carried it), and caught one regression in
+the act: lane 1 re-registered without `-Elevated` ran on the filtered token, which cannot write the order tool's journal
+(ACL: Administrators and SYSTEM only), and refused two ticks at 18:16:30Z and 18:21:30Z before reading the terminal;
+`-Elevated` restored it and the 18:26:30Z tick was normal. At 18:36:3xZ - published in `65d95d58` at 18:40:20Z - every
+lane read `armed: true`, `max_per_day: null`, `capped: false`, `coverage: covered`, `min_per_side: 10`, `short: []`,
+with EURUSD 18 up/10 down, XAUUSD 20/10, US100.cash 30/10 and BTCUSD 26/11 at its own price; lane 1 holds an XAUUSD sell
+limit 3568.67 (tp 3497.19), lane 2 an XAUUSD position from 3533.14 (tp 3497.19) and lane 3 a EURUSD sell limit 1.09782
+(tp 1.09361), each 0.01 lots, unchanged by the deploy. The `send_failed` on lanes 1 and 2 is the same pre-existing
+condition the 18:11Z heartbeats already stated (a removal and an exit that did not land). Tests: live-trading and L2L
+suites 627, 626 pass (the one failure is a browser case that fails on `origin/main` too), full local suite 1,283 with 16
+failures, every one present on `origin/main`'s own run. Still open: the dashboard chip that would render the coverage
+block, lane 1's `-Elevated` requirement on any future re-registration, and lane 3's `-Published` requirement. Full
+record: `TRADER_COVERAGE_NO_DAILY_CAP_20261122.md`.
+

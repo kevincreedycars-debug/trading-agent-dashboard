@@ -1,5 +1,24 @@
 # Session Notes
 
+2026-11-22, live-trading trader lane - the trader half of the L2L coverage work shipped to all three FTMO accounts, and
+the daily entry cap came off the two lanes still carrying it. The three checkouts were on three different revisions
+(`c5abd0ac`, `f14f2ac7`, `441c308f`) and none of them was `main`; the blind lane's line was merged into `main`
+(`981b81cf`) and the ordered three-leg reclaim fix that lane 3 was running as an uncommitted file came with it
+(`6b408c2f`, merged as `e75757f4`), so one revision, `e3406286`, now carries the blind rule, the cap removal and the
+coverage work together. On that revision the tick plans the publisher's own coverage extension in memory against the
+lane's own snapshot prices before evaluating an entry, withholds an asset's entries when it cannot reach ten full lines
+a side, states the floor and failures in the heartbeat's `coverage` block, and refuses a generated line as a crossing
+when the confirming candle closed before the line existed (`retrospective: true`); it writes no levels. All three lanes
+were moved to it with backups, lanes 1 and 2 were re-registered (`--max-per-day unlimited`), lane 3 was left alone
+because its wrapper already carried every flag. At the 18:36:3xZ ticks every lane read `armed: true`,
+`max_per_day: null`, `capped: false`, `coverage: covered`, `min_per_side: 10`, `short: []`, with EURUSD 18 up/10 down,
+XAUUSD 20/10, US100.cash 30/10 and BTCUSD 26/11 at each lane's own price, and every ticket and position at 0.01 lots.
+One regression was caught in the deploy itself and fixed within the hour: lane 1 re-registered without `-Elevated` ran on
+the filtered token, could not append to the order tool's journal (ACL: Administrators and SYSTEM only) and refused two
+ticks before reading the terminal; `-Elevated` restored it. Tests: live-trading and L2L 627/626 with the one
+`origin/main` browser failure; full suite 1,283 with 16 failures, all present on `origin/main`. Record:
+`docs/live-trading/TRADER_COVERAGE_NO_DAILY_CAP_20261122.md`.
+
 2026-11-19, USD Layer 1 lane (branch `backtesting/usd-l1-screen-20261117`) - the backtest now exists as
 versioned n8n Cloud workflows, and the four recorded mornings are drawn as a model-swap map on the Backtesting
 tab. n8n Cloud has no `Execute Command`, so the two existing wrappers could not run there; the new lane bundles
