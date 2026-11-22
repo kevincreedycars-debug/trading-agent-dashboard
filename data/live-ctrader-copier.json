@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-22T23:10:22.252Z",
+  "generated_at_utc": "2026-11-22T23:20:21.448Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,7 +12,7 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-22T23:09:21.621559Z",
+    "probed_at_utc": "2026-11-22T23:19:22.709217Z",
     "positions_seen": 0
   },
   "destination": {
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-22T23:10:21.617Z",
+    "read_at_utc": "2026-11-22T23:20:20.942Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -44,17 +44,17 @@
     "heartbeat": {
       "state": "ok",
       "label": "OK",
-      "age_seconds": 60,
-      "last_poll_utc": "2026-11-22T23:09:21.806Z",
-      "last_success_utc": "2026-11-22T23:09:21.806Z",
-      "detail": "the last poll finished 60s ago and reported ok"
+      "age_seconds": 58,
+      "last_poll_utc": "2026-11-22T23:19:22.957Z",
+      "last_success_utc": "2026-11-22T23:19:22.957Z",
+      "detail": "the last poll finished 58s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-22T23:09:21.806Z",
-    "last_success_utc": "2026-11-22T23:09:21.806Z",
+    "last_poll_utc": "2026-11-22T23:19:22.957Z",
+    "last_success_utc": "2026-11-22T23:19:22.957Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-22T23:09:20.657Z",
-      "finished_utc": "2026-11-22T23:09:21.806Z",
+      "started_utc": "2026-11-22T23:19:21.598Z",
+      "finished_utc": "2026-11-22T23:19:22.957Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -66,15 +66,48 @@
         "positions": 0,
         "rows": [],
         "cause": null,
-        "probed_at_utc": "2026-11-22T23:09:21.621559Z",
-        "orders": []
+        "probed_at_utc": "2026-11-22T23:19:22.709217Z",
+        "orders": [
+          {
+            "ticket": "309663598",
+            "symbol": "XAUUSD",
+            "side": "buy",
+            "kind": "limit",
+            "volume": 0.01,
+            "price": 3568.67,
+            "stop": 3554.37,
+            "target": 3640.15,
+            "expiry_utc": null
+          }
+        ]
       },
       "destination": {
         "account_id": "42585819",
-        "symbols": [],
-        "references": {},
-        "exposure": {},
-        "spec_summary": {},
+        "symbols": [
+          "XAUUSD"
+        ],
+        "references": {
+          "XAUUSD": 3577.05
+        },
+        "exposure": {
+          "XAUUSD": {
+            "positions": 0,
+            "orders": 1
+          }
+        },
+        "spec_summary": {
+          "XAUUSD": {
+            "digits": 2,
+            "lotSizeBtc": 100,
+            "volumeScale": 10000,
+            "minVolume": 0.01,
+            "maxVolume": 100000,
+            "volumeStep": 0.01,
+            "tradeMode": "full",
+            "minStopDistance": 0,
+            "minStopPercent": null
+          }
+        },
         "spec_refusals": []
       },
       "reconcile": {
@@ -142,14 +175,14 @@
     "leverage": 100,
     "money_digits": 2,
     "open_positions": 0,
-    "pending_orders": 0,
+    "pending_orders": 1,
     "closed_trades": 18,
-    "read_at_utc": "2026-11-22T23:10:21.617Z"
+    "read_at_utc": "2026-11-22T23:20:20.942Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-23T23:10:21.617Z",
-    "to_utc": "2026-11-22T23:10:21.617Z"
+    "from_utc": "2026-10-23T23:20:20.942Z",
+    "to_utc": "2026-11-22T23:20:20.942Z"
   },
   "closed_trades": [
     {
@@ -882,10 +915,34 @@
       "request_id": "lim-309640315",
       "copied_utc": "2026-11-22T06:22:20.631Z",
       "reconciled": false
+    },
+    {
+      "source_ticket": "309663598",
+      "target_position_id": null,
+      "source_symbol": "XAUUSD",
+      "symbol": "XAUUSD",
+      "side": "buy",
+      "status": "not_open",
+      "status_detail": "the mapping store holds this copy but the broker read no open position for it",
+      "volume_lots": 0.01,
+      "protocol_units": 100,
+      "base_units": 1,
+      "entry_price": null,
+      "stop_price": 3554.37,
+      "target_price": null,
+      "expiry_utc": null,
+      "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
+      "order_kind": "limit",
+      "target_order_id": "178464128",
+      "sltp_utc": null,
+      "last_partial_utc": null,
+      "request_id": "lim-309663598",
+      "copied_utc": "2026-11-22T23:17:22.723Z",
+      "reconciled": false
     }
   ],
   "differences": {
-    "count": 3,
+    "count": 4,
     "missing_copies": [],
     "orphaned_mappings": [
       {
@@ -905,6 +962,12 @@
         "target_position_id": "62352837",
         "symbol": "BTCUSD",
         "detail": "the source no longer holds the ticket; the close is due on the next poll"
+      },
+      {
+        "source_ticket": "309663598",
+        "target_position_id": null,
+        "symbol": "XAUUSD",
+        "detail": "the source no longer holds the ticket; the close is due on the next poll"
       }
     ],
     "unresolved_pending": [],
@@ -916,21 +979,21 @@
       "code": null,
       "ticket": "309462132",
       "detail": null,
-      "at_utc": "2026-11-22T23:09:21.806Z"
+      "at_utc": "2026-11-22T23:19:22.957Z"
     },
     {
       "kind": "close",
       "code": null,
       "ticket": "309464502",
       "detail": null,
-      "at_utc": "2026-11-22T23:09:21.806Z"
+      "at_utc": "2026-11-22T23:19:22.957Z"
     },
     {
       "kind": "close",
       "code": null,
       "ticket": "309640315",
       "detail": null,
-      "at_utc": "2026-11-22T23:09:21.806Z"
+      "at_utc": "2026-11-22T23:19:22.957Z"
     }
   ],
   "verification": [
@@ -957,7 +1020,7 @@
     {
       "behaviour": "Copying a resting source order",
       "state": "broker_observed",
-      "detail": "the mapping for order 178348935 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178349950 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178453658 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178454788 BTCUSD limit records a broker order the copier placed, no longer working"
+      "detail": "the mapping for order 178348935 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178349950 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178453658 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178454788 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178464128 XAUUSD limit records a broker order the copier placed, no longer working"
     },
     {
       "behaviour": "Cancelling a resting source order",
