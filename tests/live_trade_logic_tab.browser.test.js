@@ -190,19 +190,21 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
   assert.equal(strategy.REWARD_R_MULTIPLE, 5, "the target is five times the risk, which is what 'one fifth of the distance' means");
   // The loop's own defaults and the registration script's, read from those two files whenever the tree this runs
   // on carries them, which the lane does. The tab is page work and can be released on a tree that has no live loop
-  // yet, so there the page is held to the rule's published numbers - four new trades a day, one per market - and to
+  // yet, so there the page is held to the rule's published numbers - no daily entry cap, one trade per market - and to
   // the module's geometry above; a tree that carries the loop must match it exactly.
   const hasLoop = fs.existsSync(loopPath) && fs.existsSync(registerPath);
-  let perDay = 4;
+  let perDay = null;
   let breakeven = 2;
   let trailFrom = 3;
   let trailBehind = 3;
   if (hasLoop) {
     const loop = fs.readFileSync(loopPath, "utf8");
-    perDay = Number((loop.match(/const DEFAULT_MAX_PER_DAY = (\d+);/) || [])[1]);
+    // The owner removed the strategy-imposed daily entry limit on all three accounts on 2026-11-14. The loop states
+    // that as `null` - no cap of its own - and still counts the day, so the page must not promise a number.
+    perDay = (loop.match(/const DEFAULT_MAX_PER_DAY = (null|\d+);/) || [])[1];
     const maxOpen = (loop.match(/const DEFAULT_MAX_OPEN = (null|\d+);/) || [])[1];
     const expiry = (loop.match(/const DEFAULT_EXPIRE_MINUTES = (null|\d+);/) || [])[1];
-    assert.ok(Number.isInteger(perDay) && perDay > 0, "the loop states a daily count of new trades");
+    assert.equal(perDay, "null", "the loop states no daily entry cap of its own");
     assert.equal(maxOpen, "null", "and passes no cap of its own across markets: the one-trade-per-market hold is the cap");
     assert.equal(expiry, "null", "and no expiry, because the marked levels are permanent");
     // The rungs the loop adds to a position it already holds, read the same way: the page states where the stop
@@ -214,12 +216,14 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
     trailBehind = Number((loop.match(/const TRAIL_BEHIND_R = (\d+);/) || [])[1]);
     assert.equal(trailFrom, 3, "and the trail's own rung, where the stop stops sitting at the entry");
     assert.equal(trailBehind, 3, "and the distance it keeps behind the furthest price is the trade's own risk");
-    // And the registration script's own defaults, which are what the rule asks a fresh task to be armed with.
+    // And the registration script's own defaults, which are what the rule asks a fresh task to be armed with: no cap
+    // across markets, and an explicit `--max-per-day unlimited`, so a re-registration cannot bring four a day back.
     const register = fs.readFileSync(registerPath, "utf8");
     assert.match(register, /\[int\] \$MaxOpen = 0,/, "a freshly registered task passes no cap across markets");
-    assert.match(register, new RegExp(`\\[int\\] \\$MaxPerDay = ${perDay},`), "and the same daily count the loop defaults to");
+    assert.match(register, /\[int\] \$MaxPerDay = 0,/, "and no daily entry cap either");
+    assert.match(register, /--max-per-day \$maxPerDayValue/, "and writes the no-cap word into the task it registers");
   } else {
-    assert.equal(perDay, 4, "with no loop in this tree to read it from, the count is the rule's own: four, one per market");
+    assert.equal(perDay, null, "with no loop in this tree to read it from, the page states the rule's own no-cap");
   }
 
   const server = await startServer();
@@ -254,9 +258,10 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
     assert.match(logic.stepsText, new RegExp(`${WORDS[trailFrom]} times its risk up is held at its entry`));
     assert.match(logic.stepsText, new RegExp(`${WORDS[trailFrom + 1]} times up at entry plus ${WORDS[trailBehind - trailFrom + 1]} R`));
     assert.match(logic.stepsText, /The target is never moved|No page can change either price/);
-    // The day's count, in the words the page uses, held to the loop's own number rather than to a remembered one.
-    assert.match(logic.gatesText, new RegExp(`${WORDS[perDay]} a day by default`, "i"));
-    assert.match(logic.gatesText, /one per market/);
+    // The day's count, in the words the page uses, held to the loop's own state rather than to a remembered number:
+    // no cap of the strategy's own, and the count still kept.
+    assert.match(logic.gatesText, /No daily entry cap of the strategy's own/i);
+    assert.match(logic.gatesText, /one entry per market|one per market/i);
     // The endings are the loop's endings: the stop leaving the level active, the target spending it, the call
     // taking the ticket out, and a put-back being the same trade.
     assert.equal(logic.endings.length, 5);

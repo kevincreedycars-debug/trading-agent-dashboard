@@ -18,6 +18,8 @@ const {
   LANE_MAGIC,
   STAGES,
   SIDES,
+  MIN_LEVELS_PER_SIDE,
+  ladderCoverage,
   normaliseDirection,
   sideForDirection,
   readLevels,
@@ -954,3 +956,86 @@ test("a sell stop sits one fifth of its own entry-to-target distance above the l
   assert.equal(geometry.r_multiple, 5);
   assert.equal(geometry.entry + geometry.risk, geometry.stop);
 });
+
+// The coverage floor that came with the automatic ladder: a reading states how much ladder stands either side of the
+// price, counted on full lines only. FTMO 2's half grid is derived from those lines at read time, so its floor is the
+// same as the other two accounts' and a midpoint may never make a short side look covered.
+test("a reading states how much ladder stands each side of the price, on full lines only", () => {
+  const levels = [];
+  for (let step = 1; step <= 12; step += 1) levels.push({ price: 84500 + step * 100, role: "derived" });
+  for (let step = 1; step <= 9; step += 1) levels.push({ price: 84500 - step * 100, role: "derived" });
+  // A half-grid line between two full ones: drawn, and never counted as part of a side.
+  levels.push({ price: 84450, role: "midpoint" });
+
+  const coverage = ladderCoverage(levels, 84500);
+  assert.equal(MIN_LEVELS_PER_SIDE, 10);
+  assert.equal(coverage.levels, 21, "twenty-one full lines; the midpoint is not one of them");
+  assert.equal(coverage.above, 12);
+  assert.equal(coverage.below, 9);
+  assert.equal(coverage.min_per_side, 10);
+  assert.equal(coverage.covered, false, "nine below is short of the floor even with twelve above");
+  assert.equal(coverage.next_above, 84600);
+  assert.equal(coverage.next_below, 84400);
+  // A price exactly on a line is neither above it nor below it, which is the strictness the floor is stated with.
+  const onLine = ladderCoverage(levels, 84500);
+  assert.equal(onLine.above + onLine.below, 21);
+
+  const plan = buildPlan({
+    symbol: "BTCUSD",
+    direction: "BULLISH",
+    levels: LEVELS,
+    bars: barsEndingAt(84700),
+    point: 0.01,
+    rMultiple: 5
+  });
+  assert.equal(plan.ladder.min_per_side, 10, "every reading carries the floor it was read against");
+  assert.equal(plan.ladder.price, 84700);
+});
+
+// The freshness rule that came with the automatic ladder. A generated line records the instant it became available, so
+// a five-minute close that happened before that instant is not a crossing of it: the rule waits for a close made while
+// the line was there, rather than turning a reclaim from before the line existed into a retrospective order.
+test("a generated line cannot be crossed by a candle that closed before it existed", () => {
+  const stamped = stamp => [
+    { price: 85500.0, role: "derived", label: "derived 85500" },
+    { price: 84500.0, role: "derived", label: "derived 84500", available_at_utc: stamp },
+    { price: 83500.0, role: "derived", label: "derived 83500" }
+  ];
+  const read = stamp => buildPlan({
+    symbol: "BTCUSD",
+    direction: "BULLISH",
+    levels: stamped(stamp),
+    bars: barsEndingAt(84700),
+    point: 0.01,
+    rMultiple: 5
+  });
+
+  // Available before the confirming candle closed at 15:10: the crossing is a crossing of a line that existed.
+  const existed = read("2026-10-04T15:00:00Z");
+  assert.equal(existed.stage, "confirmed", existed.reason);
+  assert.equal(existed.plan.entry, 84500);
+
+  // Written after it: the close came first, so this close is not the deviation the rule prices.
+  const tooLate = read("2026-10-04T17:00:00Z");
+  assert.equal(tooLate.stage, "waiting");
+  assert.equal(tooLate.retrospective, true);
+  assert.match(tooLate.reason, /only became available at 2026-10-04T17:00:00Z/);
+  assert.match(tooLate.reason, /before the line existed/);
+  assert.equal(tooLate.plan, null, "a retrospective crossing states no ticket");
+});
+
+// A hand-marked line carries no generated stamp at all, and one no stamp can prove newer than a candle is read as
+// always having been there: the rule must not start refusing the marked ladder it has traded since the beginning.
+test("a line with no stamp of its own is not refused as retrospective", () => {
+  const plan = buildPlan({
+    symbol: "BTCUSD",
+    direction: "BULLISH",
+    levels: LEVELS,
+    bars: barsEndingAt(84700),
+    point: 0.01,
+    rMultiple: 5
+  });
+  assert.equal(plan.stage, "confirmed", plan.reason);
+  assert.equal(plan.retrospective, undefined);
+});
+

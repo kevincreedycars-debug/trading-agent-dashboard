@@ -115,6 +115,11 @@ const strategy = require("../lib/l2l_strategy.js");
 // and what "this snapshot is still fresh" means. Reading them from one place is what stops the loop and the
 // page drifting on either.
 const feedPublisher = require("./publish-live-trading-feed.js");
+// The coverage plan the ladder is held to, and the writer that produces it. The loop plans the same extension in
+// memory before it reads a single entry, so a lane judges its own snapshot's price against a ladder that reaches ten
+// full lines either side of it - independently of when the publisher's cadence last ran. The tick writes no levels:
+// the publisher remains the one writer.
+const coverage = require("./ensure-l2l-coverage.js");
 // The dashboard's own close request: the one document the page's Open positions table writes, and the rules
 // that decide whether a row in it may be acted on at all. The loop reads the rules rather than restating
 // them, so the file the page writes and the file this tick reads cannot drift apart.
@@ -218,7 +223,16 @@ const DEFAULT_EXPIRE_MINUTES = null;
 // deliberate hand cap when a run passes one. `null` is what "no cap of its own" means, the way a `null` expiry
 // means no expiry.
 const DEFAULT_MAX_OPEN = null;
-const DEFAULT_MAX_PER_DAY = 4;
+// No daily entry cap of its own. The owner removed it on 2026-11-14 in the same terms the per-pair hold is stated
+// in: "There is no strategy-imposed daily entry limit on FTMO 1, FTMO 2 or FTMO 3." Four a day was one per pair of
+// the four the feed publishes, and it was never the rule - it was a count kept beside the rule, and a count that
+// could refuse a fifth valid setup on a day the ladder offered five. The day is still counted and still printed,
+// because "how many entries today" is reporting rather than a gate; `null` is what "no cap" means here, the same
+// way it means no expiry and no hand cap across pairs.
+const DEFAULT_MAX_PER_DAY = null;
+// The words that state the same thing, so a registration can say "no cap" in the agent's own language rather than
+// remembering that zero is the number for it. They are matched case-insensitively and nothing else is accepted.
+const NO_CAP_WORDS = Object.freeze(["unlimited", "none", "off", "no-cap", "nocap"]);
 // The rungs this loop adds to a position, and the user's own instruction for them: a trade that has run to twice the
 // risk it was placed with has its stop taken to breakeven at the entry it was placed with, and a trade that has run
 // to three times that risk has the stop follow the market rather than sit at the entry. The trail keeps the trade's
@@ -285,12 +299,14 @@ const USAGE = [
   "  --max-open <n>             hand cap only: working tickets this loop allows at once, across all pairs. The",
   "                             rule's own hold is the cap and it is per pair - one ticket per pair at a time -",
   "                             so this is left out unless a run asks for one (default: none)",
-  "  --max-per-day <n>          trades this loop opens in one Europe/Prague day (default 4): the clock FTMO's",
+  "  --max-per-day <n>          hand cap only: placements this loop allows in one Europe/Prague day (default:",
+  "                             no cap - the owner removed the count on 2026-11-14). The clock is the one FTMO's",
   "                             own day and loss limits roll on, where 00:00-02:00 Prague is still the previous",
   "                             UTC day and both clock changes are read in the named zone rather than as a",
-  "                             fixed offset. This counts placements; it is not a loss-limit guard. A ticket put",
+  "                             fixed offset. `unlimited`, `none`, `off` and `0` all state no cap. A ticket put",
   "                             back at the level a standing trade was triggered on is that same trade rather",
-  "                             than a new one, so it does not count against this",
+  "                             than a new one, so it does not count either way. The count is printed in the",
+  "                             heartbeat whether or not a cap is in force, because it is reporting",
   "  --r-multiple <n>           the target's multiple of the risk (default 5, lane 1's own). The stop is the",
   "                             entry-to-target distance divided by this, so the second account's lane passes 3",
   "  --grid <full|half>         which ladder the rule reads (default full, the marked one). `half` inserts one",
@@ -302,6 +318,25 @@ const USAGE = [
   "                             deviating at them again, so a put-back after a stop-out that no candle has",
   "                             re-crossed is new exposure rather than the same trade. Without it, a standing",
   "                             trade's level is put back whatever the candles are doing (lane 1's rule)",
+  "  --require-deviation        read a close back across a level as a reclaim only if price had already both held",
+  "                             and left that level: a close on the trade's side of it, a close at least a point",
+  "                             beyond the far side, and then the newest close back across. 102 -> 99 -> 100 ->",
+  "                             101 leaves one buy limit at 100; 102 -> 100 -> 101 leaves none, because nothing",
+  "                             left the line, and 99 -> 98 -> 101 leaves none, because nothing had held it. All",
+  "                             three legs have to be closes in one symbol, at one fixed level, in one trading",
+  "                             session (Europe/Prague, the loop's own day). Applies to the fresh path and to a",
+  "                             put-back alike, and a put-back reads the newest completed candle once - this flag",
+  "                             therefore reads the crossing on a standing trade too, as --reentry-crossing does",
+  "                             (owner, 2026-11-13). Off unless named, so a lane that does not ask cannot move",
+  "  --blind                    the blind lane's rule: no Layer 1 call is read at all. Each pair watches the",
+  "                             nearest original full L2L above price and the nearest below, both fixed while",
+  "                             waiting, and either watched line may produce a bullish or bearish setup - the",
+  "                             first qualifying deviation sets the direction. The three-leg deviation of",
+  "                             --require-deviation is always on, the target is the next original L2L in the",
+  "                             trade's direction and the stop a fifth of that distance. A working limit is",
+  "                             cancelled only when its target is reached before entry or its entry line",
+  "                             leaves the marked set; there is no timed expiry. Requires a lane whose row in",
+  "                             config/live-trading-lanes.json carries `strategy.blind: true`",
   "  --magic <n>                the ownership number this lane's tickets carry (default 20261004). A lane with its",
   "                             own number is required to pass --expect-identity as well: a magic says which path",
   "                             placed a ticket, not which account the terminal is logged into",
@@ -406,6 +441,20 @@ function checkLaneCommandLine(options, record) {
       `--lane ${options.lane} trades ${declaredR} to one in ${LANES_RELATIVE}, but this run would place ${options.rMultiple} to one: pass --r-multiple ${declaredR}. Nothing is sent.`
     );
   }
+  // The rule itself, not only its numbers: the blind lane reads no Layer 1 call, so a run that keeps the called
+  // lane's reading would place tickets its own row does not describe, and a run that reads blind against a called
+  // lane's row would ignore the call that lane exists to follow. Both are refusals at the command line.
+  const declaredBlind = record?.strategy?.blind === true;
+  if (declaredBlind && options.blind !== true) {
+    throw new UsageError(
+      `--lane ${options.lane} trades the blind rule (${LANES_RELATIVE} carries strategy.blind), but this run would read a Layer 1 call: pass --blind. Nothing is sent.`
+    );
+  }
+  if (!declaredBlind && options.blind === true) {
+    throw new UsageError(
+      `--lane ${options.lane} trades a rule built on the Layer 1 call in ${LANES_RELATIVE}, and --blind reads no call at all: name the lane whose row carries strategy.blind. Nothing is sent.`
+    );
+  }
 }
 
 function parseArgs(argv) {
@@ -430,6 +479,14 @@ function parseArgs(argv) {
     // answers no - the level is its entry level until the call or the take-profit ends the trade - and lane 2
     // answers yes since 2026-11-11, which is why this is a flag rather than a value.
     reentryCrossing: false,
+    // Whether a close back across a level is read as a reclaim of it: the level must have been left earlier in the
+    // published bars. Off by default - it narrows the rule - and asked for by a lane that wants it, so the
+    // behaviour of a lane that names no flag cannot move under it.
+    requireDeviation: false,
+    // The blind lane: no Layer 1 call is read, the pair watches two original rungs, and either line may arm
+    // either side. It implies the three-leg deviation and a re-selection of the pair after every exit, which is
+    // why it is a mode rather than another switch on top of the two lanes' rule.
+    blind: false,
     magic: ORDER_MAGIC,
     expectIdentity: null,
     pauseEntries: false,
@@ -491,7 +548,7 @@ function parseArgs(argv) {
         options.maxOpen = positiveInteger(token, next());
         break;
       case "--max-per-day":
-        options.maxPerDay = positiveInteger(token, next());
+        options.maxPerDay = perDayCap(token, next());
         break;
       case "--r-multiple":
         options.rMultiple = positiveNumber(token, next());
@@ -515,6 +572,12 @@ function parseArgs(argv) {
         break;
       case "--reentry-crossing":
         options.reentryCrossing = true;
+        break;
+      case "--require-deviation":
+        options.requireDeviation = true;
+        break;
+      case "--blind":
+        options.blind = true;
         break;
       case "--close-ticket":
         options.closeTicket = positiveInteger(token, next());
@@ -592,6 +655,18 @@ function parseArgs(argv) {
     throw new UsageError(
       `--magic ${options.magic} is not lane 1's own (${ORDER_MAGIC}), so this run trades a second account: pass --expect-identity <path> naming the private file the terminal must match. See docs/live-trading/SECOND_LANE_HALF_L2L.md.`
     );
+  }
+  // The blind lane and the two called lanes are separate rules, and a command line that mixes them is a run nobody
+  // signed off: the blind lane reads no call, so a deviation flag on it states a reading it does not take, and one
+  // of the called lanes passing --blind would trade a rule its row in the lanes file does not describe.
+  if (options.blind) {
+    if (options.expireMinutes !== null) {
+      throw new UsageError("--blind carries no timed expiry (owner, 2026-11-14): pass no --expire-minutes; the limit leaves when its target is reached or its entry line leaves the marked set.");
+    }
+    if (options.reentryCrossing) {
+      throw new UsageError("--blind re-arms a level with the three-leg deviation after every exit, which --reentry-crossing is not: pass --blind alone rather than both.");
+    }
+    options.requireDeviation = true;
   }
   return options;
 }
@@ -775,6 +850,13 @@ function tradeCycles({
   grid = DEFAULT_GRID,
   rMultiple = DEFAULT_R_MULTIPLE,
   reentryCrossing = false,
+  requireDeviation = false,
+  blind = false,
+  // The account's own working orders and positions as this run read them, tickets of every magic: the blind lane
+  // asks which of its tickets are still on the account, so a trade whose level the market has left behind and whose
+  // ticket the account no longer carries is read as ended rather than as still standing. Null when the caller made
+  // no such read, and then nothing about the account is inferred.
+  accountRows = null,
   callSealedMs = {},
   nowMs = null
 } = {}) {
@@ -822,6 +904,13 @@ function tradeCycles({
       // for it reads the bars here, and `nowMs` is what keeps a candle still forming out of that read. The
       // instants the window can open on travel beside it: the seal of the call now published for the pair.
       reentryCrossing,
+      // And whether that crossing has to be a reclaim of the level rather than the first crossing of it.
+      requireDeviation,
+      // This lane reads no Layer 1 call, so a call that has gone or turned is not one of the ways its trades end.
+      blind,
+      // Which tickets the account itself still carries, so a trade the record no longer covers is not left standing
+      // on a level the market has already left.
+      ours: accountRows,
       withdrawnByCall,
       callSealedMs,
       nowMs
@@ -846,6 +935,7 @@ function tradeSummary(cycle) {
     target_reached: cycle.target_reached,
     ended: cycle.ended,
     ended_by: cycle.ended_by,
+    blind: cycle.blind === true,
     // Which call answer ended it - a call that turned or one whose limit was withdrawn unfilled - and the limit
     // that came out, because the owner asked for the withdrawal to be its own event in the log rather than a
     // second kind of exit.
@@ -865,7 +955,35 @@ function tradeSummary(cycle) {
 // that are the user's own has happened. The words are this lane's own, so the log reads the same way when a trade
 // is standing, when its call has gone, when its target has been taken and when its target has been reached by a
 // market that never touched the entry.
-function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, exitPrice, withdrawn } = {}) {
+function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, stopExit, ticketNumber, exitPrice, withdrawn, blind } = {}) {
+  if (blind) {
+    // The blind lane's own words: no call is read, so nothing here can be said in terms of one. The level stands
+    // until the trade it belongs to is over; the pair is re-selected on that event rather than the next day.
+    if (!endedBy) {
+      return `The blind lane's trade ${symbol} was triggered at ${trigger} and is still the pair's own: its target sits at ${target}, the level is permanent, and no Layer 1 call is read on this lane, so the trade stands until that target is taken, its own stop is filled or a hand ends it. The entry stays at that same level until a fresh three-leg deviation re-arms it.`;
+    }
+    if (endedBy === "target-fill") {
+      return `The blind lane's trade at ${trigger} has taken its target: the account's own record shows ${symbol} closing at ${settled?.price_close}, its own take-profit, so this pair's turn on these two lines is over and the next two lines are selected again.`;
+    }
+    // A stop is the other price the account can answer a trade at, and on this lane it is an ending rather than a
+    // level to stand on: the pair's turn at that line is over, so the two lines are selected again and the next
+    // three-leg deviation - on either of them - is what opens the next ticket. Left standing instead, the stopped
+    // rung was handed back to the entry path run after run (EURUSD and US100.cash from 2026-11-16, XAUUSD from
+    // 2026-11-18) and every deviation confirmed on the pair's new lines was refused against that old level.
+    if (endedBy === "stop-fill") {
+      return `The blind lane's trade at ${trigger} was closed at its own stop: the account's own record shows ${symbol} closing at ${stopExit?.price_close}, away from its take-profit at ${target}, so this trade is over and the two lines are selected again - the next three-leg deviation on either of them opens the next ticket rather than the level being put back as it stood.`;
+    }
+    // The same ending read off the account when the record no longer carries the trade: a limit whose level the
+    // market has left behind, with no working order or position of this loop's own behind it, is an entry that has
+    // been and gone. Nothing about it is on the account, so nothing of it is put back.
+    if (endedBy === "entry-gone") {
+      return `The blind lane's trade at ${trigger} is no longer on the account: ticket ${ticketNumber ?? "it was placed with"} is neither a working order nor an open position of this loop's, and ${side === "long" ? "the ask" : "the bid"} at ${exitPrice} is already past ${trigger}, so a limit there would not be a limit. Nothing filled and nothing stands, so this trade is over and the pair is selected again for its next deviation.`;
+    }
+    if (endedBy === "target-touched") {
+      return `The blind lane's trade at ${trigger} has had its target reached without its entry filling: ${side === "long" ? "the bid" : "the ask"} is ${exitPrice} and the target this ticket was aiming at is ${target}, so the move the level was waiting for has happened without this entry and the pair is selected again for the next deviation.`;
+    }
+    return `The blind lane's trade at ${trigger} was taken out by hand, and a ticket a person closed is not one this loop puts back: the level waits for a fresh three-leg deviation at a new candle rather than reopening the trade someone chose to end.`;
+  }
   if (!endedBy) {
     return `The trade ${symbol} was triggered at ${trigger} is still the pair's own: the call it was left for reads ${direction ? `"${direction}"` : "no direction"} and stands as a ${side} call, and the level is permanent, so it goes on standing with its target at ${target} until that target is taken or the call changes direction. The entry stays at that same level.`;
   }
@@ -896,6 +1014,13 @@ function tradeCycle(symbol, row, {
   grid = DEFAULT_GRID,
   rMultiple = DEFAULT_R_MULTIPLE,
   reentryCrossing = false,
+  requireDeviation = false,
+  blind = false,
+  // The account's own working orders and positions for this loop, when the run made that read: the blind lane asks
+  // it which tickets are still standing, because a limit whose level the market has left behind and whose ticket
+  // the account no longer carries is an entry that has been and gone. Left null by a caller that made no such read,
+  // and then nothing on the account is inferred.
+  ours = null,
   withdrawnByCall = [],
   callSealedMs = {},
   nowMs = null
@@ -971,6 +1096,46 @@ function tradeCycle(symbol, row, {
       ? trigger < market
       : trigger > market
     : null;
+  // The account's own record of this ticket's trade ending at its stop. A stop is not one of the endings the two
+  // called lanes read - their level goes back while the call stands - but on the blind lane it is the market's own
+  // answer to the level, and the pair's turn there is over. What standing on a stop cost, from the pulled window:
+  // EURUSD's ticket 200695485 stopped at 1.10115 and US100.cash's 200695492 at 27697.63 on 2026-11-16, XAUUSD's
+  // 201323839 at 3840.21 on the 18th - and every run after them read the old level and the old side as still the
+  // pair's own, so the deviations confirmed on the pair's *new* lines (EURUSD's long at 1.09782, XAUUSD's short at
+  // 3783.11 on the 18th) were answered with a ticket at the old level and refused as resting on the wrong side of
+  // the market. The trade is the level's, so it ends where the level's own stop is filled.
+  const stopExit = blind
+    ? closedTrades.reduce((latest, entry) => {
+        if (placedAtMs === null || entry?.symbol !== symbol) return latest;
+        if ((Date.parse(entry?.opened?.time_utc || "") || 0) < placedAtMs) return latest;
+        if (exitEnding(entry) !== "stop") return latest;
+        const closedAt = Date.parse(entry?.closed?.time_utc || "");
+        if (!Number.isFinite(closedAt)) return latest;
+        const latestAt = latest ? Date.parse(latest?.closed?.time_utc || "") || 0 : null;
+        return latestAt === null || closedAt > latestAt ? entry : latest;
+      }, null)
+    : null;
+  // And the same ending read off the account rather than off its history, for a stop older than the closed-trade
+  // window the feed states: the ticket this trade was placed with is not among this loop's own working orders or
+  // positions, and the market is on the far side of its level, so a limit there would be a market order and no
+  // position carries it. Either the entry filled and the trade left, or it never filled at all - in both cases
+  // nothing of this trade is on the account. `ours` is null when the run made no read, and then nothing is inferred.
+  const ownTickets = Array.isArray(ours)
+    ? new Set(ours.map(entry => Number(entry?.ticket)).filter(value => Number.isFinite(value)))
+    : null;
+  const heldByAccount = ownTickets !== null && placedTicket !== null && ownTickets.has(placedTicket);
+  const entryGone = blind
+    && ownTickets !== null
+    && placedTicket !== null
+    && resting === false
+    && !heldByAccount;
+  // The instant the trade ended, for a record that no longer carries it: the run that first saw the account without
+  // it is the only witness left, and the pair's re-selection reads a time rather than a boolean.
+  const stopExitMs = stopExit
+    ? Date.parse(stopExit?.closed?.time_utc || "") || null
+    : entryGone
+      ? (Number.isFinite(Number(nowMs)) ? Number(nowMs) : null)
+      : null;
   // The user's endings: a call that has gone or turned, the account's own record of the take-profit being taken,
   // and - added on 2026-10-06 - a market that has reached this trade's target while its entry is still only a
   // working limit. That last one is the invalidation the user stated ("wait for it to be hit or invalidated either
@@ -980,17 +1145,28 @@ function tradeCycle(symbol, row, {
   // is the price the target sits at being reached, not a bar's close.
   const targetReached = marketHasReached(side, target, instrument, placedAtMs) === true;
   const exitPrice = exitPriceFor(side, instrument);
-  const endedBy = !callSide || callSide !== side
+  // On the blind lane there is no call to end a trade with: the two live lanes read a call that has gone or turned
+  // as the end of the set-up, and this lane never had one. Its trades end where the owner said they do - the target
+  // taken, the target reached without a fill, or a hand - and, since 2026-11-19, at the trade's own stop as well
+  // (`stopExit`, and `entryGone` for a ticket the account no longer carries): a stop is the market answering the
+  // level, so the pair's turn at that line is over and the level is re-armed by the next three-leg deviation rather
+  // than by a put-back at the price the market has already left.
+  const callEnded = !blind && (!callSide || callSide !== side);
+  const endedBy = callEnded
     ? "call"
-    : withdrawn
+    : !blind && withdrawn
       ? "call"
       : askedByHand || closedByHand
         ? "hand-close"
         : settled
           ? "target-fill"
-          : targetReached
-            ? "target-touched"
-            : null;
+          : stopExit
+            ? "stop-fill"
+            : entryGone
+              ? "entry-gone"
+              : targetReached
+                ? "target-touched"
+                : null;
   // The exit that ended the previous attempt on this level: the account's own close of the position the newest
   // ticket produced. A ticket that never filled has no such close, and a trade with no exit on it asks the
   // candles nothing - there is nothing the level would be re-armed after.
@@ -1001,6 +1177,9 @@ function tradeCycle(symbol, row, {
     if (!Number.isFinite(closedAt)) return latest;
     return latest === null || closedAt > latest ? closedAt : latest;
   }, null);
+  // The same instant as a trade whose exit the record no longer carries: the run that found its ticket gone from the
+  // account is the window's own witness, and the pair's re-selection has to read a time.
+  const exitMs = stopExitMs === null || (lastExitMs !== null && lastExitMs >= stopExitMs) ? lastExitMs : stopExitMs;
   // Lane 2's correction of 2026-11-11, tightened on 2026-11-12 and asked for with --reentry-crossing: the newest
   // two completed M5 candles have to straddle the level - the one before the newest at or on the near side of it,
   // the newest at least a point beyond it - and the newest of the two has to *close* after the window opens. The
@@ -1010,14 +1189,21 @@ function tradeCycle(symbol, row, {
   // that happened under the call before it cannot re-arm the level under this one. Read from the same bars the
   // fresh path reads; a lane that does not ask for it reads nothing here and puts its level back whatever the
   // candles are doing.
+  //
+  // --require-deviation asks for the same read, because that rule can only be answered from the newest completed
+  // candle: the deviation is a close at least a point beyond the line before the reclaiming close, so a put-back
+  // that replayed an older bar could not state which candle it was judging and the owner's "use the newest
+  // completed M5 reclaim candle once" would have no meaning on this path. Asking for the deviation therefore asks
+  // for the crossing, and the 13:46Z put-back of 2026-11-13 - which replayed a 06:40 close - is refused by it.
+  const crossingRequired = reentryCrossing === true || requireDeviation === true;
   const sealedMs = Number.isFinite(Number(callSealedMs?.[asset])) ? Number(callSealedMs[asset]) : null;
-  const windowStart = lastExitMs === null ? sealedMs : sealedMs === null ? lastExitMs : Math.max(lastExitMs, sealedMs);
-  const windowBasis = lastExitMs === null
+  const windowStart = exitMs === null ? sealedMs : sealedMs === null ? exitMs : Math.max(exitMs, sealedMs);
+  const windowBasis = exitMs === null
     ? (sealedMs === null ? null : "call")
-    : sealedMs !== null && sealedMs > lastExitMs
+    : sealedMs !== null && sealedMs > exitMs
       ? "call"
       : "exit";
-  const crossing = reentryCrossing && !endedBy
+  const crossing = crossingRequired && !endedBy
     ? windowStart === null
       // No exit on the ticket and no readable seal on the call: the two candles can still be read, but nothing says
       // which crossing re-arms the level, so the level waits rather than being put back on a window that is missing.
@@ -1038,7 +1224,9 @@ function tradeCycle(symbol, row, {
           bars: instrument?.m5?.bars,
           sinceMs: windowStart,
           point,
-          nowMs
+          nowMs,
+          requireDeviation,
+          symbol
         })
     : null;
   // The ticket a standing trade is put back with, priced from the level it was triggered on. The level is handed
@@ -1064,6 +1252,9 @@ function tradeCycle(symbol, row, {
     order_ticket: row?.order_ticket ?? null,
     ended: Boolean(endedBy),
     ended_by: endedBy,
+    // Which rule ended it: on the blind lane no Layer 1 call is read, so "the call has ended" is not an ending this
+    // trade can have and the log says so rather than leaving a reader to infer it from a null direction.
+    blind: blind === true,
     // Which ending the call answer is: a call that has turned or gone is `turned`, and a limit withdrawn unfilled
     // because its call ended while a new call reads the same direction is `withdrawn`. Both end the set-up; the log
     // says which one it was, because the owner asked for the withdrawal to be kept separate from an exit.
@@ -1080,7 +1271,7 @@ function tradeCycle(symbol, row, {
       : null,
     target_reached: targetReached,
     exit_price: exitPrice,
-    reason: tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, exitPrice, withdrawn }),
+    reason: tradeReason({ symbol, asset, side, trigger, target, direction, endedBy, settled, stopExit, ticketNumber: placedTicket, exitPrice, withdrawn, blind }),
     // The ticket this loop would put back, and the module's own words for why it is not a ticket at all when the
     // ladder cannot price one - no line marked beyond the level, or a stop the instrument's grid cannot hold.
     ticket: ticket && ticket.stage === "confirmed" ? ticket.plan : null,
@@ -1089,7 +1280,7 @@ function tradeCycle(symbol, row, {
     // Which candle re-armed the level, or the instant the window opened rather than a ticket: the log line is read
     // by the owner to check the set-up in front of the ticket, so the exit time it is measured from travels with
     // the crossing itself rather than only inside it.
-    last_exit_utc: lastExitMs === null ? null : new Date(lastExitMs).toISOString(),
+    last_exit_utc: exitMs === null ? null : new Date(exitMs).toISOString(),
     call_sealed_utc: sealedMs === null ? null : new Date(sealedMs).toISOString(),
     // The crossing the put-back waited for, when the lane asks for one: the two newest completed candles the gate
     // compares - the one on the near side and the one beyond - the instant the window opened and which of the two
@@ -1232,7 +1423,7 @@ function rowDirection(row) {
 // that finished past a line - a limit the terminal still reports as working has not filled, so a market at its
 // target has made the move the entry was left for without the entry, and that is exactly what "invalidated" means
 // here. The reading is the same one the trade below ends a level's turn on, through the same helper.
-function reviewPendings({ live, joined, calls = {}, cycles = new Map(), magic = ORDER_MAGIC } = {}) {
+function reviewPendings({ live, joined, calls = {}, cycles = new Map(), magic = ORDER_MAGIC, blind = false } = {}) {
   const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
   const directions = calls?.directions && typeof calls.directions === "object" ? calls.directions : {};
   const orders = (Array.isArray(live?.orders) ? live.orders : []).filter(row => Number(row?.magic) === magic);
@@ -1263,6 +1454,42 @@ function reviewPendings({ live, joined, calls = {}, cycles = new Map(), magic = 
     if (!instrument) {
       return keep(
         `The snapshot carries no ${row?.symbol} pair, so neither its call nor its ladder can be read for this entry: it is left where it is rather than removed on a reading that is missing.`
+      );
+    }
+    // The blind lane's two endings, and they are the owner's own list of 2026-11-14: "Cancel it if its target is
+    // reached before entry or its entry line is removed." There is no call on this lane, so the two reasons below
+    // the call reading in the other lanes - a call that has ended or turned - are reasons this lane cannot have,
+    // and a limit whose target is taken or whose line has been unmarked is the whole of its removal.
+    if (blind) {
+      const ladder = strategy.readLevels(instrument?.levels);
+      const point = Number(instrument?.point) > 0 ? Number(instrument.point) : 0.00001;
+      const decimals = Math.max(0, Math.ceil(-Math.log10(point)));
+      const stillMarked = ladder.some(level => Number(Number(level.price).toFixed(decimals)) === Number(entry.toFixed(decimals)));
+      if (!stillMarked) {
+        return drop(
+          `The line this limit sits at has been removed from the marked ladder: no original L2L at ${entry} is marked for ${row?.symbol} any more, so the entry line this ticket was left against is gone and the ${side} limit is taken back out. The pair is re-selected on the next run, and a fresh three-leg deviation at the new pair is what leaves the next ticket.`,
+          { entry_removed: true, event: "withdrawn-line-removed" }
+        );
+      }
+      const cycle = cycles instanceof Map ? cycles.get(row?.symbol) || null : null;
+      if (cycle && cycle.ended_by === "target-fill") {
+        return drop(
+          `The trade this entry was left for has taken its target: the account's own record shows ${row?.symbol} closing at its own take-profit, so the move the limit was waiting on has happened and the ${side} limit at ${entry} is taken back out. The pair is re-selected and the next deviation opens the next trade, which is the cycle this lane repeats through the day.`,
+          { target_line: cycle.target }
+        );
+      }
+      const statedTarget = Number(row?.take_profit);
+      const missingTarget = row?.take_profit === null || row?.take_profit === undefined || row?.take_profit === "";
+      const targetPrice = missingTarget || !Number.isFinite(statedTarget) ? (cycle?.target ?? null) : statedTarget;
+      const leftAtMs = cycle?.placed_at_utc ? Date.parse(cycle.placed_at_utc) : null;
+      if (marketHasReached(side, targetPrice, instrument, leftAtMs) === true) {
+        return drop(
+          `The target this entry was left for has been reached without the entry filling: ${side === "long" ? "the bid" : "the ask"} is ${exitPriceFor(side, instrument)}, at or past the take-profit ${targetPrice} this working limit carries, so the move the deviation was left for has already happened without this entry and the ${side} limit at ${entry} is taken back out.`,
+          { target_line: targetPrice, target_reached: true }
+        );
+      }
+      return keep(
+        `The ${side} limit at ${entry} sits on a line that is still marked, its target at ${targetPrice ?? "no stated price"} is still in front of the market, and this lane's limits carry no timed expiry: it stands until that target is reached before the entry or the line itself leaves the marked set.`
       );
     }
     const callSide = strategy.sideForDirection(directions[asset]);
@@ -1584,6 +1811,21 @@ function positiveInteger(flag, raw) {
   return value;
 }
 
+// The daily count's cap, or `null` for none. The owner removed the limit on 2026-11-14, so the default and the
+// explicit words all mean the same thing; a positive whole number is a hand cap a registration asked for
+// deliberately, and a number that is neither is a refusal rather than a number the loop quietly rounds.
+function perDayCap(flag, raw) {
+  const word = String(raw === null || raw === undefined ? "" : raw).trim().toLowerCase();
+  if (word === "0" || NO_CAP_WORDS.includes(word)) return null;
+  const value = Number(word);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new UsageError(
+      `${flag} needs a positive whole number, or unlimited/none/off/0 for no cap, got ${JSON.stringify(raw)}`
+    );
+  }
+  return value;
+}
+
 
 
 // Every invocation of the order tool is built here, so the one place that names the tool is one place. A read
@@ -1666,6 +1908,10 @@ function readState(statePath) {
       cancellations: Array.isArray(parsed?.cancellations) ? parsed.cancellations : [],
       closes: Array.isArray(parsed?.closes) ? parsed.closes : [],
       moves: Array.isArray(parsed?.moves) ? parsed.moves : [],
+      // The blind lane's state: the pair of rungs each symbol is watching, when it was selected and why. It is
+      // state rather than a reading, because the pair has to outlive a restart and stay fixed under a working
+      // limit - a run that re-selected on every tick would move its own entry line between the send and the fill.
+      blind: parsed?.blind && typeof parsed.blind === "object" && !Array.isArray(parsed.blind) ? parsed.blind : {},
       // Every ask from the dashboard's Open positions table this loop has already answered, whether it acted
       // on it or left it alone. It is what makes a request a one-shot: the page's log is append-only, so the
       // only place a request can be marked as dealt with is here.
@@ -1673,7 +1919,7 @@ function readState(statePath) {
     };
   } catch {
     // No readable state is an empty state: a fresh machine's first run is not a reason to refuse.
-    return { placements: [], cancellations: [], closes: [], moves: [], close_requests: [] };
+    return { placements: [], cancellations: [], closes: [], moves: [], close_requests: [], blind: {} };
   }
 }
 
@@ -1685,6 +1931,7 @@ function writeState(statePath, state) {
   const closes = (state.closes || []).slice(-STATE_HISTORY);
   const moves = (state.moves || []).slice(-STATE_HISTORY);
   const closeRequestsAnswered = (state.close_requests || []).slice(-STATE_HISTORY);
+  const blindPairs = state.blind && typeof state.blind === "object" ? state.blind : {};
   // The cancellations, closes, moves and answered requests are written only when there is one, so a file that
   // has never had a removal, an exit, a stop moved or an ask from the page keeps the shape it has always had.
   const payload = { placements };
@@ -1692,6 +1939,10 @@ function writeState(statePath, state) {
   if (closes.length) payload.closes = closes;
   if (moves.length) payload.moves = moves;
   if (closeRequestsAnswered.length) payload.close_requests = closeRequestsAnswered;
+  // The watched pairs are written whenever the lane has any, and a lane that never selects one keeps a file
+  // without the block - the blind lane's state is its own, and the two called lanes do not grow a key they do
+  // not use.
+  if (Object.keys(blindPairs).length) payload.blind = blindPairs;
   fs.writeFileSync(resolved, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   return resolved;
 }
@@ -2107,6 +2358,91 @@ function todayPlacements(state, nowMs) {
   );
 }
 
+// The pair the blind lane is watching on each instrument, and why it is the pair it is. The owner's rule of
+// 2026-11-14: "At startup and after a trade exits, select the nearest original full L2L above price and the nearest
+// below. Keep those two levels fixed while waiting." So the pair is state, selected once and written down, and it is
+// replaced on exactly the events he named: a run that finds no pair, a pair whose rung has left the marked set (its
+// entry line is removed), and a pair whose trade has ended - by its target, its stop or a confirmed cancellation.
+// Everything else keeps the rungs where they are, including price walking away from them, which is the whole point
+// of fixing them.
+//
+// A pair selected before a restart is read back rather than re-selected: the state file is the memory, and a working
+// limit placed against those two lines stays the ticket the account holds. `events` is what the log states, one row
+// per instrument, so a reader can tell a pair that is still the first one from a pair that has just been replaced.
+function blindWatchPairs({ state, joined, cycles = new Map(), nowMs = null } = {}) {
+  const instruments = Array.isArray(joined?.instruments) ? joined.instruments : [];
+  const stored = state?.blind && typeof state.blind === "object" ? state.blind : {};
+  const pairs = {};
+  const events = [];
+  instruments.forEach(instrument => {
+    const symbol = instrument?.symbol || null;
+    if (!symbol || instrument?.available === false) return;
+    const levels = Array.isArray(instrument?.levels) ? instrument.levels : [];
+    if (!levels.length) return;
+    const point = Number(instrument?.point);
+    const previous = stored[symbol] && typeof stored[symbol] === "object" ? stored[symbol] : null;
+    const standing = previous ? strategy.pairStanding({ pair: previous, levels, point }) : { ok: false, missing: [] };
+    const cycle = cycles instanceof Map ? cycles.get(symbol) || null : null;
+    // When the pair's trade ended, by either of the two endings that are an event on this lane: the account's own
+    // close of the position (its stop or its target) and the withdrawal of a limit that never filled. A hand close
+    // lands in the same record, and it is an exit the owner named too, so it re-selects as well.
+    const endedAt = cycle ? (cycle.last_exit_utc || cycle.withdrawn?.cancelled_at_utc || cycle.withdrawn?.decided_at_utc || null) : null;
+    const endedMs = endedAt ? Date.parse(endedAt) : Number.NaN;
+    const selectedMs = previous?.selected_at_utc ? Date.parse(previous.selected_at_utc) : Number.NaN;
+    const exitedSince = Number.isFinite(endedMs) && (!Number.isFinite(selectedMs) || endedMs >= selectedMs);
+    // The first run of a new Prague day is the lane's startup: the pair is re-selected around the price the new day
+    // opens at rather than carried over from yesterday. Inside the day it stands, which is what "fixed while it waits"
+    // means - a restart between two ticks reads the pair back instead of moving it under a working limit.
+    const selectedDay = previous?.selected_at_utc ? tradeDayKey(previous.selected_at_utc) : null;
+    const today = tradeDayKey(nowMs);
+    const newDay = Boolean(previous) && selectedDay !== null && today !== null && selectedDay !== today;
+    const reason = !previous
+      ? "no pair was written down for this instrument, so this run selects one"
+      : !standing.ok
+        ? `the pair's rung${standing.missing.length === 1 ? "" : "s"} ${standing.missing.join(", ")} left the marked set, so the pair is re-selected`
+        : exitedSince
+          ? `the pair's trade ended at ${endedAt}, so the next two lines are selected again`
+          : newDay
+            ? `the pair was selected on ${selectedDay} and this is the first run of ${today}, so the two lines are selected again`
+            : null;
+    if (!reason) {
+      pairs[symbol] = previous;
+      events.push({ symbol, action: "kept", lower: previous.lower?.price ?? null, upper: previous.upper?.price ?? null, selected_at_utc: previous.selected_at_utc ?? null, reason: "the pair is still the one this lane selected, and its two levels stay fixed while it waits" });
+      return;
+    }
+    const bars = Array.isArray(instrument?.m5?.bars) ? instrument.m5.bars : [];
+    const newestClose = bars.length ? Number(bars[bars.length - 1]?.close) : Number.NaN;
+    const price = Number.isFinite(newestClose) ? newestClose : null;
+    const pair = strategy.watchPair({ levels, price });
+    if (!pair) {
+      events.push({ symbol, action: "none", reason: `${reason}, and no original L2L line stands on either side of ${price ?? "an unreadable price"}, so no pair can be selected` });
+      return;
+    }
+    const selectedAt = Number.isFinite(Number(nowMs)) ? new Date(Number(nowMs)).toISOString() : new Date().toISOString();
+    pairs[symbol] = {
+      price: pair.price,
+      lower: pair.lower,
+      upper: pair.upper,
+      selected_at_utc: selectedAt,
+      reason
+    };
+    events.push({
+      symbol,
+      action: previous ? "reselect" : "select",
+      price: pair.price,
+      lower: pair.lower?.price ?? null,
+      upper: pair.upper?.price ?? null,
+      selected_at_utc: selectedAt,
+      replacing: previous
+        ? { lower: previous.lower?.price ?? null, upper: previous.upper?.price ?? null, selected_at_utc: previous.selected_at_utc ?? null }
+        : null,
+      reason
+    });
+  });
+  return { pairs, events };
+}
+
+
 // One reading per pair, and for a confirmed row one decision. The module's stages come back unchanged -
 // `blocked` is its one-trade-per-pair, `no-call` a call with no live direction, `waiting` a live reading that
 // has crossed nothing - and only `confirmed` can become a ticket. Every other row is kept with the reason it
@@ -2151,6 +2487,11 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map(), cal
       risk: ticket?.risk ?? null,
       r_multiple: ticket?.r_multiple ?? null,
       trade: cycle ? tradeSummary(cycle) : null,
+      // The lines this pair is watching, on the lane that watches two of them: the pair is what the row is about,
+      // and a reader comparing a ticket to the lines it came from should not have to open the state file.
+      pair: reading.pair ?? null,
+      probes: Array.isArray(reading.probes) ? reading.probes : [],
+      blind: reading.blind === true,
       decision: "none",
       reason: reading.reason
     };
@@ -2202,9 +2543,13 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map(), cal
     // The fresh path's half of the owner's ruling of 2026-11-12: a crossing belongs to the call that was standing
     // when it closed. A call is sealed between two closes often - the 06:11Z pair of the day before was exactly
     // that, a new call read eleven minutes after the newest candle had finished - so a confirming candle that
-    // closed before the seal is the *previous* call's crossing, and this call waits for one of its own. Lane 1
-    // names no crossing gate and is not asked; the instant is only read on a lane that asks for it.
-    const sealMs = options.reentryCrossing === true ? readNumber(callSealedMs?.[reading.asset]) : Number.NaN;
+    // closed before the seal is the *previous* call's crossing, and this call waits for one of its own. A lane that
+    // names no crossing gate and no deviation rule is not asked; the instant is only read on a lane that asks.
+    const sealMs = options.blind === true
+      ? Number.NaN
+      : options.reentryCrossing === true || options.requireDeviation === true
+        ? readNumber(callSealedMs?.[reading.asset])
+        : Number.NaN;
     const confirmedCloseMs = signalTime ? Date.parse(signalTime) + 5 * 60 * 1000 : Number.NaN;
     if (Number.isFinite(sealMs) && !(confirmedCloseMs > sealMs)) {
       return {
@@ -2238,7 +2583,7 @@ function decide({ readings, state, live, options, nowMs, cycles = new Map(), cal
         reason: `${openTickets} ticket(s) from this loop are already working and the hand cap --max-open is ${options.maxOpen}.`
       };
     }
-    if (used >= options.maxPerDay) {
+    if (options.maxPerDay !== null && used >= options.maxPerDay) {
       return {
         ...base,
         decision: "skip",
@@ -2355,7 +2700,44 @@ function traderStatus(record, { nowMs } = {}) {
     // The caps this run actually carried, so the page can print the cap in force rather than one it keeps for
     // itself. `max_per_day` is the number the operator set on the registration; the trade day beside it says
     // which day that count belongs to and on whose clock.
-    caps: record?.caps ?? null,
+    caps: record?.caps
+      ? {
+        ...record.caps,
+        // How many entries the day has carried, whether or not a cap is in force: the owner removed the limit and
+        // kept the count as reporting, so the page can print "5 today" beside "no cap".
+        entries_today: record?.rule?.taken_today ?? null,
+        // And whether a number is a cap at all. `max_per_day: null` is no cap; reading it as zero would print
+        // "0 a day - entries stop at the cap", which is the opposite of what the run was told.
+        capped: record?.caps?.max_per_day !== null && record?.caps?.max_per_day !== undefined
+      }
+      : null,
+    // The ladder's coverage as this run read it, per instrument: whether the floor held, what was extended, and -
+    // when it did not hold - the asset, the lane and the reason. The page states this beside the lane so a missing
+    // next target is reported as a ladder fact rather than read as an absence of signals.
+    coverage: record?.coverage
+      ? {
+          status: record.coverage.status ?? null,
+          checked_at_utc: record.coverage.checked_at_utc ?? null,
+          extended: record.coverage.extended === true,
+          levels_available_at_utc: record.coverage.levels_available_at_utc ?? null,
+          min_per_side: record.coverage.min_per_side ?? null,
+          // A row is "short" when it has lines and still does not reach the floor. An instrument with no marked lines
+          // at all is a different fact, stated by the pair's own reading, and is not reported here as a short ladder.
+          short: (Array.isArray(record.coverage.rows) ? record.coverage.rows : [])
+            .filter(row => row.covered === false && ((row.above ?? 0) + (row.below ?? 0)) > 0)
+            .map(row => ({
+              symbol: row.symbol ?? null,
+              asset: row.asset ?? null,
+              above: row.above ?? null,
+              below: row.below ?? null,
+              next_above: row.next_above ?? null,
+              next_below: row.next_below ?? null,
+              reason: row.reason ?? null
+            })),
+          failures: Array.isArray(record.coverage.failures) ? record.coverage.failures : [],
+          entries_withheld: Array.isArray(record.coverage.entries_withheld) ? record.coverage.entries_withheld : []
+        }
+      : null,
     duration_seconds: record?.duration_seconds ?? null
   };
 }
@@ -2453,7 +2835,19 @@ function runOnce(options, deps = {}) {
       // Which rule the put-back follows: `crossed` when the level has to be crossed afresh before a ticket
       // goes back on it, `level` when the level itself is the entry until the call or the take-profit ends the
       // trade. Stated here so the page and the log can tell which rule ran without the task's command line.
-      reentry: options.reentryCrossing === true ? "crossed" : "level"
+      reentry: options.reentryCrossing === true ? "crossed" : "level",
+      // And whether that crossing, and a fresh entry alike, has to be a reclaim of a level price had already
+      // left rather than the first crossing of it.
+      require_deviation: options.requireDeviation === true,
+      // And which of the three rules this lane trades. `blind` is the lane that reads no call at all: the page
+      // prints it, so an account whose strip says Blind cannot be one whose heartbeat ran the called rule.
+      rule: options.blind === true
+        ? "blind"
+        : options.requireDeviation === true
+          ? "deviation"
+          : options.reentryCrossing === true ? "crossing" : "call",
+      blind: options.blind === true,
+      call_read: options.blind === true ? "none" : "layer1"
     },
     sources: {
       published: relativePath(published),
@@ -2566,14 +2960,19 @@ function runOnce(options, deps = {}) {
 
 
     // Gate 1: the three artifacts, each read by name. A file that is not there or does not parse is a
-    // refusal, and the reason names the path rather than saying "an artifact".
+    // refusal, and the reason names the path rather than saying "an artifact". The blind lane reads two of them:
+    // its rule takes no Layer 1 direction at all, so the calls artifact is not opened and nothing in the run can
+    // depend on it - a lane that stated a call in its heartbeat while claiming to be blind would be the exact
+    // confusion this build exists to avoid.
     let callsJson = null;
     let levelsJson = null;
     let feed = null;
-    try {
-      callsJson = readJson(callsPath);
-    } catch (error) {
-      return refuse("refused", `the Layer 1 calls could not be read from ${relativePath(callsPath)}: ${error.message}`);
+    if (!options.blind) {
+      try {
+        callsJson = readJson(callsPath);
+      } catch (error) {
+        return refuse("refused", `the Layer 1 calls could not be read from ${relativePath(callsPath)}: ${error.message}`);
+      }
     }
     try {
       levelsJson = readJson(levelsPath);
@@ -2590,18 +2989,82 @@ function runOnce(options, deps = {}) {
     // from the publisher rather than restated here. A stale snapshot is not a reading of the market, so
     // nothing is placed from it.
     const freshness = feedPublisher.feedFreshnessOk(feed, startedMs);
-    const calls = readCalls(callsJson, startedMs);
-    const joined = joinLevels(feed, levelsJson);
+    // The blind lane has no call, so the artifact it would have read is stated as absent rather than read: an
+    // empty directions map is what every reading downstream already answers safely, and `calls_generated_at_utc`
+    // says null so the heartbeat cannot claim a call the rule never consulted.
+    const calls = options.blind
+      ? { directions: {}, rows: [], generated_at_utc: null }
+      : readCalls(callsJson, startedMs);
+    const joinedRaw = joinLevels(feed, levelsJson);
     record.snapshot = {
       generated_at_utc: feed?.generated_at_utc ?? null,
       age_seconds: freshness.ageSeconds,
       stale_after_seconds: feed?.stale_after_seconds ?? null,
-      instruments: joined.instruments.length
+      instruments: joinedRaw.instruments.length
     };
-    record.levels_generated_at_utc = joined.levels_generated_at_utc;
     record.calls_generated_at_utc = calls.generated_at_utc;
-    record.calls = calls.rows;
+    // `null` on the blind lane rather than an empty list: the artifact was not opened, and a log line that said
+    // "no calls" would be a different fact from "this lane reads no calls".
+    record.calls = options.blind ? null : calls.rows;
     if (!freshness.ok) return refuse("refused", `the snapshot is not fresh: ${freshness.reason}`);
+
+    // Coverage, before anything is evaluated: every instrument is planned up to at least ten full lines above the
+    // price and ten below, from its own anchors and spacing, at this lane's own snapshot price. The plan is the same
+    // arithmetic the publisher runs before it publishes, applied in memory: deterministic, so every lane and retry
+    // arrives at the same prices, and additive, so an existing line is never moved - a working order, a position or a
+    // recorded signal keeps the level it was placed from. Nothing is written here; the publisher stays the one writer.
+    const coverageAt = new Date(startedMs).toISOString();
+    let coveragePlan;
+    try {
+      coveragePlan = (deps.coveragePlan || coverage.planCoverage)({
+        state: levelsJson,
+        feed,
+        lane: options.lane ?? null,
+        nowUtc: coverageAt
+      });
+    } catch (error) {
+      return refuse("refused", `the ladder's coverage could not be planned: ${error.message}`);
+    }
+    // How many full lines the file marks per instrument. An instrument the ladder says nothing about is not a coverage
+    // shortfall - "no line is marked" is the reading's own answer, and the page already states it per pair - so the
+    // distinction is made once here and used for both the status and the withholding below.
+    const markedCount = new Map();
+    (Array.isArray(levelsJson?.instruments) ? levelsJson.instruments : []).forEach(entry => {
+      if (!entry || typeof entry.symbol !== "string") return;
+      const lines = (Array.isArray(entry.levels) ? entry.levels : [])
+        .filter(level => Number.isFinite(Number(level?.price)) && Number(level.price) > 0)
+        .filter(level => level?.role !== "midpoint");
+      markedCount.set(entry.symbol, lines.length);
+    });
+    const coverageFailures = (Array.isArray(coveragePlan.failures) ? coveragePlan.failures : [])
+      .filter(failure => !failure.symbol || (markedCount.get(failure.symbol) || 0) > 0);
+    record.coverage = {
+      checked_at_utc: coverageAt,
+      lane: options.lane ?? null,
+      status: coverageFailures.length ? "failed" : (coveragePlan.changed ? "extended" : "covered"),
+      extended: coveragePlan.changed === true,
+      // When the lines this run planned became available. A confirmation from before this instant cannot be a
+      // crossing of one of them, which is the freshness rule the readings below apply.
+      levels_available_at_utc: coveragePlan.changed ? coverageAt : null,
+      min_per_side: coverage.MIN_LEVELS_PER_SIDE,
+      rows: coveragePlan.rows,
+      failures: coverageFailures
+    };
+    // A ladder that cannot be brought to the floor - a sixty-step cap, an unreadable measurement - withholds that
+    // asset's entries rather than letting a lane read a grid that stops short of its own price. Existing positions,
+    // stops and targets are managed either way this run: a coverage problem must never be a reason to stop protecting
+    // an account.
+    const uncoveredSymbols = new Set(
+      coverageFailures
+        .map(failure => failure.symbol)
+        .filter(symbol => typeof symbol === "string" && symbol)
+    );
+    record.coverage.entries_withheld = Array.from(uncoveredSymbols);
+    const joined = joinLevels(feed, coveragePlan.state);
+    // The instant the published ladder this run read was generated. The plan's own extension is a memory fact and is
+    // stated in the coverage block above, so this stamp stays the file's: a reader can still tell which commit of the
+    // ladder the lane saw.
+    record.levels_generated_at_utc = joinedRaw.levels_generated_at_utc;
 
     // Gate 3: the terminal itself, read read-only through the tool before anything is decided. This is where
     // the one-trade-per-pair and one-ticket-per-pair facts come from, read live rather than from a snapshot
@@ -2638,25 +3101,8 @@ function runOnce(options, deps = {}) {
     joined.instruments.forEach(instrument => {
       if (instrument?.symbol) assetBySymbol[instrument.symbol] = instrument.dashboard_asset || null;
     });
-    const readings = strategy
-      .strategyReadings({
-        instruments: joined.instruments
-          .filter(instrument => instrument?.available === true)
-          .map(instrument => ({
-            symbol: instrument.symbol,
-            dashboard_asset: instrument.dashboard_asset,
-            levels: instrument.levels,
-            m5: instrument.m5,
-            point: instrument.point
-          })),
-        positions: live.positions,
-        calls: calls.directions,
-        nowMs: startedMs,
-        rMultiple: options.rMultiple,
-        grid: options.grid
-      })
-      .map(row => ({ ...row, asset: assetBySymbol[row.symbol] ?? null }));
-
+    // The state is read before the readings, because the blind lane's pair of watched lines lives in it: the lines
+    // a run arms on are the lines an earlier run wrote down, not the ones this run's price would choose.
     const state = deps.state || readState(statePath);
 
     // The instant each pair's call was sealed, keyed by the dashboard's asset code. A lane that asks the candles
@@ -2685,16 +3131,65 @@ function runOnce(options, deps = {}) {
       grid: options.grid,
       rMultiple: options.rMultiple,
       reentryCrossing: options.reentryCrossing === true,
+      requireDeviation: options.requireDeviation === true,
+      // The blind lane's trades end where its own rule says they do, never on a call it does not read.
+      blind: options.blind === true,
+      // And, on that lane, where the account says they ended: the positions and working orders are already read for
+      // this run, and a ticket missing from both is the account's own statement that nothing of that trade stands.
+      accountRows: (Array.isArray(live.positions) ? live.positions : []).concat(Array.isArray(live.orders) ? live.orders : []),
       callSealedMs,
       nowMs: startedMs
     });
+
+    // The blind lane's two watched lines per instrument, selected at startup and after a trade ends, kept while it
+    // waits. They are written back into the state before anything is placed, so a restart reads the same pair and a
+    // limit already working against those lines is never left on a pair the state file no longer states.
+    let watch = null;
+    if (options.blind) {
+      watch = blindWatchPairs({ state, joined, cycles, nowMs: startedMs });
+      state.blind = watch.pairs;
+      record.blind = { pairs: watch.pairs, events: watch.events };
+    }
+
+    // The reading this lane takes: two watched lines and both sides of each on the blind lane, and the Layer 1
+    // call's direction on the two lanes that trade one. Only the instruments whose ladder the plan brought to the
+    // floor are evaluated: a symbol that is short a side is stated in the heartbeat's coverage block and takes no new
+    // entry this run, while everything already working on the account is still reviewed and managed below.
+    const evaluable = joined.instruments
+      .filter(instrument => instrument?.available === true && !uncoveredSymbols.has(instrument.symbol))
+      .map(instrument => ({
+        symbol: instrument.symbol,
+        dashboard_asset: instrument.dashboard_asset,
+        levels: instrument.levels,
+        m5: instrument.m5,
+        point: instrument.point
+      }));
+    const readings = (options.blind
+      ? strategy.blindReadings({
+        instruments: evaluable,
+        positions: live.positions,
+        pairs: watch?.pairs || state.blind,
+        nowMs: startedMs,
+        rMultiple: options.rMultiple
+      })
+      : strategy.strategyReadings({
+        instruments: evaluable,
+        positions: live.positions,
+        calls: calls.directions,
+        nowMs: startedMs,
+        rMultiple: options.rMultiple,
+        grid: options.grid,
+        // A lane that asks for it reads a close back across a level as a reclaim only if the level was left first.
+        requireDeviation: options.requireDeviation === true
+      }))
+      .map(row => ({ ...row, asset: assetBySymbol[row.symbol] ?? null }));
 
     // What this loop already has working, judged before anything new is placed: the entry stands while the call it
     // was left for stands and its target is still in front of the market, and a call that has ended or turned, a
     // target the account has answered, or a target the market has already reached with the entry still working are
     // the reasons to take it back out rather than leave it waiting on something that is gone. A plan-only run
     // reviews them too and sends nothing, so looking still cannot spend a signal bar.
-    const pendings = reviewPendings({ live, joined, calls, cycles, magic: options.magic });
+    const pendings = reviewPendings({ live, joined, calls, cycles, magic: options.magic, blind: options.blind === true });
     const cancellations = [];
     for (const row of pendings.filter(entry => entry.decision === "cancel")) {
       const comment = `${COMMENT_PREFIX}${String(row.asset || row.symbol).toLowerCase()}`;
@@ -2845,8 +3340,12 @@ function runOnce(options, deps = {}) {
       ...strategy.strategySummary(readings),
       grid: options.grid,
       r_multiple: options.rMultiple,
+      blind: options.blind === true,
       entries_paused: decision.entries_paused === true,
+      // The count is kept either way. The owner removed the limit, not the record: a reader can still see how many
+      // entries a day carried without the number being able to refuse the fifth valid one.
       taken_today: decision.taken_today,
+      max_per_day: options.maxPerDay,
       reentries_today: decision.reentries_today,
       open_tickets: decision.open_tickets,
       ours: decision.ours,
@@ -3122,6 +3621,8 @@ module.exports = {
   DEFAULT_EXPIRE_MINUTES,
   DEFAULT_MAX_OPEN,
   DEFAULT_MAX_PER_DAY,
+  NO_CAP_WORDS,
+  perDayCap,
   BREAKEVEN_R_MULTIPLE,
   TRAIL_FROM_R_MULTIPLE,
   TRAIL_BEHIND_R,
@@ -3167,6 +3668,7 @@ module.exports = {
   tradeDayKey,
   placementsToday,
   reentriesToday,
+  blindWatchPairs,
   decide,
   formatRunRecord,
   appendLog,

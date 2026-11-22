@@ -15,9 +15,12 @@ const trader = require("../scripts/run-live-trading-trader.js");
 
 const NOW = Date.parse("2026-11-07T12:05:00Z");
 const LEVELS = [
-  { price: 120, role: "derived", label: "derived 120" },
+  // Provenance on the generated lines, as the published file carries it: the coverage plan measures its step from
+  // these anchors, so a fixture without them is a ladder the run cannot extend. The step is two points, which is a
+  // grid that can still reach ten lines below 101 without going non-positive.
+  { price: 120, role: "derived", label: "derived 120", anchor_high: 120, anchor_low: 100, spacing_price: 2 },
   { price: 110, role: "seed", label: "seed 110" },
-  { price: 100, role: "derived", label: "derived 100" }
+  { price: 100, role: "derived", label: "derived 100", anchor_high: 120, anchor_low: 100, spacing_price: 2 }
 ];
 
 function bar(time, open, high, low, close) {
@@ -741,7 +744,8 @@ test("after a take-profit the same day can take a fresh crossing, and the spent 
   assert.equal(replayed.candidates.length, 0);
   assert.match(replayed.rows[0].reason, /already been taken/);
 
-  // And the day's cap still counts what it says it counts: four placements, and the fifth waits for tomorrow.
+  // The day's count is reporting now, not a gate: four placements of the day and the fifth still places, because the
+  // owner removed the strategy-imposed limit on 2026-11-14. A lane that names a number still answers to it.
   const fourToday = {
     ...empty,
     placements: [0, 1, 2, 3].map(index => ({
@@ -751,7 +755,15 @@ test("after a take-profit the same day can take a fresh crossing, and the spent 
       placed_at_utc: `2026-11-07T0${index}:05:00Z`
     }))
   };
-  const capped = trader.decide({ readings, state: fourToday, live, options, nowMs: NOW, cycles: new Map() });
+  const uncapped = trader.decide({ readings, state: fourToday, live, options, nowMs: NOW, cycles: new Map() });
+  assert.equal(uncapped.taken_today, 4);
+  assert.equal(uncapped.candidates.length, 1, "no strategy-imposed daily limit: the fifth valid entry is placed");
+
+  const cappedOptions = trader.parseArgs([
+    "--once", "--grid", "half", "--r-multiple", "3", "--magic", String(trader.HALF_LANE_MAGIC),
+    "--expect-identity", "tmp/lane2-identity.json", "--max-per-day", "4"
+  ]);
+  const capped = trader.decide({ readings, state: fourToday, live, options: cappedOptions, nowMs: NOW, cycles: new Map() });
   assert.equal(capped.candidates.length, 0);
   assert.match(capped.rows[0].reason, /--max-per-day is 4/);
 });

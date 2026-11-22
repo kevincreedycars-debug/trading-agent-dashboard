@@ -16387,9 +16387,16 @@ function liveTradingLaneStatus(view = liveTradingLaneView(), options = {}) {
   const mismatched = accountDiffs.length > 0;
   const awaitingLogin = !mismatched && snapshot !== null && (!actualLogin || snapshot?.terminal?.connected === false);
   const entriesPaused = heartbeat.entriesPaused === true;
-  const capPerDay = heartbeat.caps && Number.isFinite(Number(heartbeat.caps.max_per_day))
-    ? Number(heartbeat.caps.max_per_day)
-    : null;
+  // The cap the last run carried. `max_per_day: null` is no cap - the state the owner asked for on 2026-11-14 and
+  // the one every registration now writes - so it is read as its own fact rather than through `Number`, which turns
+  // null into zero and prints "0 a day - entries stop at the cap": the opposite of what the loop was told.
+  const caps = heartbeat.caps && typeof heartbeat.caps === "object" ? heartbeat.caps : null;
+  const capStated = caps !== null && caps.max_per_day !== undefined;
+  const capUnlimited = capStated && (caps.max_per_day === null || String(caps.max_per_day).trim().toLowerCase() === "unlimited");
+  const capPerDay = !capStated || capUnlimited
+    ? null
+    : Number.isFinite(Number(caps.max_per_day)) ? Number(caps.max_per_day) : null;
+  const entriesToday = caps && Number.isFinite(Number(caps.entries_today)) ? Number(caps.entries_today) : null;
   const armed = heartbeat.armed === true && heartbeat.present === true;
   const tickFailed = LIVE_TRADING_STATUS_FAILED_RUNS.includes(String(heartbeat.status || "").toLowerCase());
   const feedFresh = view.state === "ok";
@@ -16400,6 +16407,9 @@ function liveTradingLaneStatus(view = liveTradingLaneView(), options = {}) {
     armed,
     entriesPaused,
     capPerDay,
+    capUnlimited,
+    capStated,
+    entriesToday,
     rules,
     permission,
     account: {
@@ -16498,9 +16508,20 @@ function liveTradingStatusRuleText(status) {
 }
 
 function liveTradingStatusCapText(status) {
-  if (status.capPerDay === null) return "not stated by the heartbeat";
-  if (status.capPerDay <= 0) return `0 a day - entries stop at the cap`;
-  return `${status.capPerDay} a day, as the last run recorded it`;
+  // A count is printed only when the heartbeat stated one. `null` is "this run did not count", not zero, and
+  // `Number(null)` is 0 - which is why the raw value is tested rather than a coercion of it.
+  const counted = typeof status.entriesToday === "number" && Number.isFinite(status.entriesToday)
+    ? status.entriesToday
+    : null;
+  const entries = counted === null ? null : `${counted} entr${counted === 1 ? "y" : "ies"} today`;
+  // No cap is a state of the run, not a missing number: the count is still printed beside it, because the owner
+  // removed the limit and kept the count as reporting.
+  if (status.capUnlimited) {
+    return `no daily entry cap${entries ? ` - ${entries}` : ""}: the strategy sets none`;
+  }
+  if (status.capPerDay === null) return status.capStated === true ? "not a number the page can read" : "not stated by the heartbeat";
+  if (status.capPerDay <= 0) return `0 a day - entries stop at the cap${entries ? ` (${entries})` : ""}`;
+  return `${status.capPerDay} a day${entries ? ` - ${entries}` : ""}, as the last run recorded it`;
 }
 
 function liveTradingStatusMarkup(status) {
@@ -16671,13 +16692,11 @@ const LIVE_TRADING_LANES = [
     name: "Live L2L Blind",
     account: "FTMO 3",
     rMultiple: 5,
-    note: "the marked ladder, five to one, unarmed"
+    note: "two watched lines, no call, five to one"
   }
 ];
-// The third name stays reserved here for the deploy window in which the lane's snapshot is published before the
-// page that draws it: when the blind lane's row appears in the lanes file the strip reads this constant, with no
-// further naming decision. No lanes-file row is required for a lane that is not deployed, and a name here draws
-// nothing on its own.
+// A lane's name is still reserved for a row this list does not carry: the strip draws the three accounts above,
+// and a fourth row in the lanes file is named from its own label rather than from a word invented here.
 const LIVE_TRADING_RESERVED_LANES = { "ftmo-3": "Live L2L Blind" };
 
 function liveTradingLaneName(id, fallback) {
@@ -16819,6 +16838,10 @@ function liveTradingLaneHeartbeat(lane) {
       account: null,
       strategy: null,
       entriesPaused: false,
+      capPerDay: null,
+      capUnlimited: false,
+      capStated: false,
+      entriesToday: null,
       caps: null
     };
   }
@@ -20946,7 +20969,8 @@ const LIVE_TRADE_LOGIC_GATES = [
   },
   {
     label: "The day's count of new trades",
-    detail: "Four a day by default, which is one per market. A trade put back at the level it was triggered on is not a new trade and does not count."
+    detail:
+      "No daily entry cap of the strategy's own: one entry per market, and a trade put back at the level it was triggered on is not a new trade and does not count. The loop still counts and prints the day's entries, because that is reporting rather than a gate."
   },
   {
     label: "The hand cap, if a run asked for one",

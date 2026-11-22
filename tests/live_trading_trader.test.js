@@ -64,9 +64,26 @@ const NOW = Date.parse("2026-10-05T06:00:00Z");
 // Three marked levels 1,000 apart, and three M5 bars ending at a close: the same shape the rule's own tests
 // use, so a ticket asserted here is the ticket asserted there.
 const LEVELS = [
-  { price: 85500.0, role: "derived", label: "derived 85500" },
+  // The two generated lines carry the provenance the file's own lines carry: without it the coverage plan cannot
+  // measure a step, and a ladder it cannot measure is one the run cannot extend. The anchors are the user's own
+  // pair and the step is the distance between them, so the fixture is a ladder a real publish could have produced.
+  {
+    price: 85500.0,
+    role: "derived",
+    label: "derived 85500",
+    anchor_high: 85500,
+    anchor_low: 83500,
+    spacing_price: 2000
+  },
   { price: 84500.0, role: "seed", label: "seed 84500" },
-  { price: 83500.0, role: "derived", label: "derived 83500" }
+  {
+    price: 83500.0,
+    role: "derived",
+    label: "derived 83500",
+    anchor_high: 85500,
+    anchor_low: 83500,
+    spacing_price: 2000
+  }
 ];
 
 function bar(minutes, open, high, low, close) {
@@ -127,6 +144,8 @@ function levelsFixture() {
 // and the other three are refusals the rule reaches by itself. `closedTrades` is the account's own record of
 // tickets this lane placed that have finished, which is the only artifact that says how one ended.
 function feedFixture({ generatedAtMs = NOW - 30000, close = 84700, previousClose = 84480, positions = [], closedTrades = [] } = {}) {
+  // Each instrument quotes at its own newest close. The coverage plan reads the quote before the bars, so a snapshot
+  // that quoted every pair at the one price would be stating a gold price of 84,700 against a 4,100 ladder.
   const instrument = (symbol, asset, point, bars) => ({
     symbol,
     dashboard_asset: asset,
@@ -138,8 +157,8 @@ function feedFixture({ generatedAtMs = NOW - 30000, close = 84700, previousClose
     lot_step: 0.01,
     stops_level: 0,
     quote: {
-      bid: close,
-      ask: close,
+      bid: bars[bars.length - 1].close,
+      ask: bars[bars.length - 1].close,
       spread_points: 1,
       time_server: "2026-10-05T06:00:00Z",
       time_utc: "2026-10-05T06:00:00Z",
@@ -1163,7 +1182,12 @@ test("a limit removed in a run frees its slot in that same run", () => {
   // GOLD is confirmed in this reading, and the BTC limit whose call has flipped is what comes out: the review runs
   // before the day's decisions, so the pair the limit was holding is judged on the account as it stands after the
   // removal - with the slot free in the same run rather than a bar later.
-  levels.instruments[1].levels = [{ price: 4105.0, role: "derived" }, { price: 4099.5, role: "seed" }];
+  levels.instruments[1].levels = [
+    // Provenance on the generated line, as the published file carries it, so the coverage plan can measure a step and
+    // extend this two-line ladder: a ladder it cannot measure is one the run will not trade.
+    { price: 4105.0, role: "derived", anchor_high: 4105.0, anchor_low: 4099.5, spacing_price: 5.5 },
+    { price: 4099.5, role: "seed" }
+  ];
   writeFixtures(dir, { calls: callsFixture({ btcDirection: "BEARISH_LEAN" }), levels });
   const spawn = fakeSpawn({
     status: { orders: [{ ticket: 278466201, symbol: "BTCUSD", type: "ORDER_TYPE_BUY_LIMIT", magic: ORDER_MAGIC, price_open: 84500 }] },
@@ -2440,7 +2464,9 @@ test("the run record states the trade day and the clock it was counted on", () =
   const result = runOnce(optionsFor(dir, {}), { spawn, now: () => NOW });
   assert.equal(result.record.caps.trade_day, "2026-10-05");
   assert.equal(result.record.caps.trade_day_timezone, "Europe/Prague");
-  assert.equal(result.record.caps.max_per_day, 4);
+  // The owner removed the daily entry limit on 2026-11-14, so the record says no cap rather than four: the day and
+  // its clock are still stated, because the count beside them is reporting rather than a gate.
+  assert.equal(result.record.caps.max_per_day, null);
 });
 
 // Arming belongs to the registration, not to the file's defaults. The script that registers the live task must not
@@ -2468,7 +2494,36 @@ test("the registration script rewrites the live wrapper only when it registers, 
   );
 });
 
-// The page can only tell one host from another if the heartbeat says which host wrote it. During a migration
+// A lane's private identity file is ACL'd to Administrators and SYSTEM, and a task registered at the engine's default
+// run level runs with the filtered token in which that group is deny-only: lane 3's first armed tick was refused with
+// identity_missing and sent nothing, and the journal shows the refusal rather than a placement. The run level is a
+// registration switch so that no existing lane's principal changes because this file did.
+test("a lane whose identity file admits Administrators only is registered elevated, and only when asked", () => {
+  const source = fs.readFileSync(path.join(repoRoot, "scripts", "register-live-trading-trader-task.ps1"), "utf8");
+  assert.match(source, /\[switch\] \$Elevated/, "the run level is a registration flag rather than a default");
+  assert.match(source, /run_level\s+=/, "the plan states the run level the registration would write");
+  const principalBranch = source.indexOf("$principalArgument = @{}");
+  assert.ok(principalBranch > 0, "one place builds the principal the registration carries");
+  const elevatedCall = source.indexOf("New-ScheduledTaskPrincipal");
+  assert.ok(elevatedCall > principalBranch, "the principal is built where the registration's switch decides it");
+  assert.match(
+    source.slice(elevatedCall, elevatedCall + 200),
+    /-UserId \$elevatedUser -LogonType Interactive -RunLevel Highest/,
+    "the elevated branch names the interactive user at Highest"
+  );
+  assert.equal(
+    /-RunLevel Highest/.test(source.slice(0, principalBranch)),
+    false,
+    "no earlier line asks for Highest, so a registration without the switch is the one it always was"
+  );
+  assert.match(
+    source,
+    /-Description \$description @principalArgument/,
+    "the task is registered with the principal the switch built, and with nothing when it did not"
+  );
+});
+
+
 // two machines can hold the same lane, each with its own lock, and a lock on one of them says nothing about the
 // other: the computer name in the heartbeat is the only evidence of which one actually ran. The absolute path
 // is deliberately left out, because it would name the operator's Windows profile on a public page.
@@ -2626,7 +2681,7 @@ test("a read-only -Show leaves the live wrapper and the checkout untouched", { s
   assert.equal(first.status, 0, first.stderr || first.stdout);
   assert.match(first.stdout, /armed\s+= false/, "-Show reports the registration it would make, which is unarmed");
   assert.match(first.stdout, /live_wrapper_armed\s+= true/, "-Show reads the arming out of the wrapper that exists");
-  assert.match(first.stdout, /max_per_day\s+= 4/, "-Show states the registration's own cap rather than a hidden default");
+  assert.match(first.stdout, /max_per_day\s+= unlimited/, "-Show states the registration's own answer - no cap - rather than a hidden default");
   // The wrapper's own flags are not in the plan - the plan is what a registration would write - so -Show names
   // the wrapper by hash instead, which is what the effective-config script reads back in full.
   assert.match(first.stdout, /wrapper_sha256\s+= [a-f0-9]{64}/, "-Show names the wrapper it read, by hash");
@@ -2640,5 +2695,70 @@ test("a read-only -Show leaves the live wrapper and the checkout untouched", { s
     first.stdout.replace(/\r\n/g, "\n"),
     "-Show must answer the same question the same way, with no state of its own"
   );
+});
+
+
+// The ladder's coverage, on the loop's own tick. The publisher maintains the published grid, but a lane must not read a
+// ladder that stops short of its own price just because the publisher's cadence has not run since the price moved, so
+// the tick plans the same extension in memory before it reads a single entry - and writes nothing, because the
+// publisher stays the one writer.
+test("the tick extends the ladder in memory to ten lines a side before it reads an entry, and writes no levels", () => {
+  const dir = tempDir();
+  const written = writeFixtures(dir);
+  const before = fs.readFileSync(written.levelsPath, "utf8");
+  const spawn = fakeSpawn();
+  const { code, record } = runOnce(optionsFor(dir), { spawn, now: () => NOW });
+
+  assert.equal(code, 0, record.reason);
+  assert.equal(record.coverage.status, "extended");
+  assert.equal(record.coverage.extended, true);
+  assert.equal(record.coverage.min_per_side, 10);
+  assert.equal(record.coverage.lane, null);
+  assert.deepEqual(record.coverage.failures, []);
+  assert.deepEqual(record.coverage.entries_withheld, []);
+
+  const btc = record.coverage.rows.find(row => row.symbol === "BTCUSD");
+  assert.equal(btc.covered, true);
+  assert.ok(btc.above >= 10 && btc.below >= 10, `ten each side, got ${btc.above} up and ${btc.below} down`);
+  assert.ok(btc.added_above > 0 && btc.added_below > 0, "the fixture's three lines were short on both sides");
+
+  // Nothing was written into the ladder: the plan is a reading of it, not an edit to it.
+  assert.equal(fs.readFileSync(written.levelsPath, "utf8"), before);
+
+  // And the heartbeat states the floor beside the lane, so the page can say the ladder was covered rather than infer it.
+  const heartbeat = JSON.parse(fs.readFileSync(path.join(dir, "trader-status.json"), "utf8"));
+  assert.equal(heartbeat.coverage.status, "extended");
+  assert.equal(heartbeat.coverage.min_per_side, 10);
+  assert.deepEqual(heartbeat.coverage.short, []);
+  assert.deepEqual(heartbeat.coverage.entries_withheld, []);
+});
+
+// The floor withholds entries rather than the whole run. An asset whose ladder cannot be measured and extended is not
+// entry-evaluated - it is short, and the rule says so in the heartbeat - while the account is still read and everything
+// this loop already has working is still managed. A coverage problem must never be a reason to stop protecting an
+// account.
+test("an asset whose ladder cannot reach ten lines a side takes no entry, and the account is still read", () => {
+  const dir = tempDir();
+  const levels = levelsFixture();
+  // One generated line with no provenance and no second seed: the plan has no step to repeat, so GOLD cannot be
+  // brought to the floor and is stated as short rather than traded on a grid that stops at its price.
+  levels.instruments[1].levels = [{ price: 4100.0, role: "derived", label: "derived 4100" }];
+  writeFixtures(dir, { levels });
+  const spawn = fakeSpawn();
+  const { code, record } = runOnce(optionsFor(dir), { spawn, now: () => NOW });
+
+  assert.equal(code, 0, record.reason);
+  assert.deepEqual(record.coverage.entries_withheld, ["XAUUSD"]);
+  assert.equal(record.coverage.status, "failed");
+  const gold = record.coverage.failures.find(failure => failure.symbol === "XAUUSD");
+  assert.ok(gold, "the failure names the asset");
+  assert.match(gold.reason, /seed/i);
+
+  // GOLD is not read at all this run; the pairs that are covered are, and BTC's ticket is still stated.
+  assert.equal(record.rule.rows.some(row => row.symbol === "XAUUSD"), false);
+  assert.equal(record.rule.rows.some(row => row.symbol === "BTCUSD"), true);
+  // The account was read: the terminal gate ran before any of this, and a short ladder did not skip it.
+  assert.equal(spawn.calls[0].args[1], "status");
+  assert.equal(record.terminal.account, "***614");
 });
 
