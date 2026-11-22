@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-22T06:00:21.059Z",
+  "generated_at_utc": "2026-11-22T06:10:20.528Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,7 +12,7 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-22T05:59:21.438671Z",
+    "probed_at_utc": "2026-11-22T06:09:20.271351Z",
     "positions_seen": 0
   },
   "destination": {
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-22T06:00:20.719Z",
+    "read_at_utc": "2026-11-22T06:10:20.224Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -44,17 +44,17 @@
     "heartbeat": {
       "state": "ok",
       "label": "OK",
-      "age_seconds": 59,
-      "last_poll_utc": "2026-11-22T05:59:21.643Z",
-      "last_success_utc": "2026-11-22T05:59:21.643Z",
-      "detail": "the last poll finished 59s ago and reported ok"
+      "age_seconds": 60,
+      "last_poll_utc": "2026-11-22T06:09:20.407Z",
+      "last_success_utc": "2026-11-22T06:09:20.407Z",
+      "detail": "the last poll finished 60s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-22T05:59:21.643Z",
-    "last_success_utc": "2026-11-22T05:59:21.643Z",
+    "last_poll_utc": "2026-11-22T06:09:20.407Z",
+    "last_success_utc": "2026-11-22T06:09:20.407Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-22T05:59:20.760Z",
-      "finished_utc": "2026-11-22T05:59:21.643Z",
+      "started_utc": "2026-11-22T06:09:19.620Z",
+      "finished_utc": "2026-11-22T06:09:20.407Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -66,7 +66,7 @@
         "positions": 0,
         "rows": [],
         "cause": null,
-        "probed_at_utc": "2026-11-22T05:59:21.438671Z",
+        "probed_at_utc": "2026-11-22T06:09:20.271351Z",
         "orders": [
           {
             "ticket": "309523915",
@@ -78,36 +78,19 @@
             "stop": 3582.97,
             "target": 3497.19,
             "expiry_utc": null
-          },
-          {
-            "ticket": "309636663",
-            "symbol": "BTCUSD",
-            "side": "sell",
-            "kind": "limit",
-            "volume": 0.01,
-            "price": 59835.74,
-            "stop": 60126.71,
-            "target": 58380.87,
-            "expiry_utc": null
           }
         ]
       },
       "destination": {
         "account_id": "42585819",
         "symbols": [
-          "XAUUSD",
-          "BTCUSD"
+          "XAUUSD"
         ],
         "references": {
-          "XAUUSD": 3533.2,
-          "BTCUSD": 58923.29
+          "XAUUSD": 3533.2
         },
         "exposure": {
           "XAUUSD": {
-            "positions": 0,
-            "orders": 1
-          },
-          "BTCUSD": {
             "positions": 0,
             "orders": 1
           }
@@ -119,17 +102,6 @@
             "volumeScale": 10000,
             "minVolume": 0.01,
             "maxVolume": 100000,
-            "volumeStep": 0.01,
-            "tradeMode": "full",
-            "minStopDistance": 0,
-            "minStopPercent": null
-          },
-          "BTCUSD": {
-            "digits": 2,
-            "lotSizeBtc": 1,
-            "volumeScale": 100,
-            "minVolume": 0.01,
-            "maxVolume": 5,
             "volumeStep": 0.01,
             "tradeMode": "full",
             "minStopDistance": 0,
@@ -193,14 +165,14 @@
     "leverage": 100,
     "money_digits": 2,
     "open_positions": 0,
-    "pending_orders": 2,
+    "pending_orders": 1,
     "closed_trades": 16,
-    "read_at_utc": "2026-11-22T06:00:20.719Z"
+    "read_at_utc": "2026-11-22T06:10:20.224Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-23T06:00:20.719Z",
-    "to_utc": "2026-11-22T06:00:20.719Z"
+    "from_utc": "2026-10-23T06:10:20.224Z",
+    "to_utc": "2026-11-22T06:10:20.224Z"
   },
   "closed_trades": [
     {
@@ -834,27 +806,28 @@
       "source_symbol": "BTCUSD",
       "symbol": "BTCUSD",
       "side": "sell",
-      "status": "not_open",
-      "status_detail": "the mapping store holds this copy but the broker read no open position for it",
+      "status": "closed",
+      "status_detail": "closed on the destination: cancelled",
       "volume_lots": 0.01,
       "protocol_units": 1,
       "base_units": 0.01,
       "entry_price": null,
-      "stop_price": 60126.71,
+      "stop_price": null,
       "target_price": null,
       "expiry_utc": null,
-      "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
+      "expiry_note": "market order: there was no expiry",
       "order_kind": "limit",
       "target_order_id": "178453658",
       "sltp_utc": null,
       "last_partial_utc": null,
       "request_id": "lim-309636663",
       "copied_utc": "2026-11-22T02:32:21.201Z",
+      "closed_utc": "2026-11-22T06:07:22.036Z",
       "reconciled": false
     }
   ],
   "differences": {
-    "count": 4,
+    "count": 3,
     "missing_copies": [],
     "orphaned_mappings": [
       {
@@ -874,12 +847,6 @@
         "target_position_id": null,
         "symbol": "XAUUSD",
         "detail": "the source no longer holds the ticket; the close is due on the next poll"
-      },
-      {
-        "source_ticket": "309636663",
-        "target_position_id": null,
-        "symbol": "BTCUSD",
-        "detail": "the source no longer holds the ticket; the close is due on the next poll"
       }
     ],
     "unresolved_pending": [],
@@ -891,14 +858,14 @@
       "code": null,
       "ticket": "309462132",
       "detail": null,
-      "at_utc": "2026-11-22T05:59:21.643Z"
+      "at_utc": "2026-11-22T06:09:20.407Z"
     },
     {
       "kind": "close",
       "code": null,
       "ticket": "309464502",
       "detail": null,
-      "at_utc": "2026-11-22T05:59:21.643Z"
+      "at_utc": "2026-11-22T06:09:20.407Z"
     }
   ],
   "verification": [
@@ -929,8 +896,8 @@
     },
     {
       "behaviour": "Cancelling a resting source order",
-      "state": "tested",
-      "detail": "a source cancellation withdraws the copy with a cancel, and a copy the destination cancels while the source still holds is re-placed once under a new client order id and recorded; exercised on fixtures through the adapter, and no cancellation has happened on this account yet"
+      "state": "broker_observed",
+      "detail": "order 178453658 BTCUSD was cancelled in the copier's own history for the source ticket"
     },
     {
       "behaviour": "Partial close on the source",
@@ -940,7 +907,7 @@
     {
       "behaviour": "Full close after a source exit",
       "state": "broker_observed",
-      "detail": "#62272218 XAUUSD closed at 3626.39 on 2026-11-19T21:42:26.546Z, net 40.77 in the account's own deals, from source 309101669; #62272219 EURUSD closed at 1.09847 on 2026-11-20T06:12:21.795Z, net -1 in the account's own deals, from source 309180633; #62322343 EURUSD closed at 1.09775 on 2026-11-20T17:42:24.582Z, net -0.16 in the account's own deals, from source 309523908"
+      "detail": "#62272218 XAUUSD closed at 3626.39 on 2026-11-19T21:42:26.546Z, net 40.77 in the account's own deals, from source 309101669; #62272219 EURUSD closed at 1.09847 on 2026-11-20T06:12:21.795Z, net -1 in the account's own deals, from source 309180633; #62322343 EURUSD closed at 1.09775 on 2026-11-20T17:42:24.582Z, net -0.16 in the account's own deals, from source 309523908; #null BTCUSD closed in the account's own deals, from source 309636663"
     }
   ],
   "symbols": [
