@@ -331,7 +331,18 @@ const CASES = [
   { id: "the mirror with no earlier close below: 101, 102, 99", closes: [101, 102, 99], direction: "BEARISH", side: null },
   { id: "a wick through 100 is not a close beyond it", closes: [102, 99, 98, 99.4], overrides: { 3: { high: 101.5 } }, direction: "BULLISH", side: null },
   { id: "a close on 100 confirms nothing: 102, 99, 100", closes: [102, 99, 100], direction: "BULLISH", side: null },
-  { id: "a return across 110 leaves nothing at 100", closes: [102, 99, 98, 111], direction: "BULLISH", side: null }
+  { id: "a return across 110 leaves nothing at 100", closes: [102, 99, 98, 111], direction: "BULLISH", side: null },
+  // The order of the legs is part of the rule: `99 -> 101 -> 101` is the line's first crossing with more closes on
+  // the same side, not a reclaim of it, and the helper refuses the pairing outright - the last excursion (99) has no
+  // close above 100 before it, so there is no held leg for it to have left. 2026-11-19: before this case the helper
+  // paired the newest close above 100 with the 99 that preceded the crossing and reported `left: true`.
+  { id: "a first crossing dressed as a reclaim: 99, 101, 101", closes: [99, 101, 101], direction: "BULLISH", side: null },
+  {
+    id: "the mirror of a first crossing dressed as a reclaim: 101, 99, 99",
+    closes: [101, 99, 99],
+    direction: "BEARISH",
+    side: null
+  }
 ];
 
 for (const lane of [LANE1, LANE2]) {
@@ -373,6 +384,8 @@ for (const lane of [LANE1, LANE2]) {
   test(`${lane.name} names the missing leg in its own words`, () => {
     const held = runCase({ lane, closes: [99, 98, 101], direction: "BULLISH" });
     assert.match(held.results[0].reason, /no earlier M5 candle in this session had finished above 100 first/);
+    const crossed = runCase({ lane, closes: [99, 101, 101], direction: "BULLISH" });
+    assertNothing(crossed.results[0]);
     const touched = runCase({ lane, closes: [102, 100, 101], direction: "BULLISH" });
     assert.match(touched.results[0].reason, /the level was approached and touched but never left/);
   });
@@ -458,6 +471,9 @@ test("levelWasLeft: three legs, one level, one session", () => {
   assert.equal(read([102, 100]).missing, "excursion");
   assert.equal(read([99, 98]).left, false, "no hold: price only ever approached from below");
   assert.equal(read([99, 98]).missing, "held");
+  assert.equal(read([99, 101, 101]).left, false, "the hold has to come before the excursion, not after it");
+  assert.equal(read([99, 101, 101]).missing, "held");
+  assert.equal(read([101, 99, 101, 102]).close, 101, "the close that held the level before it was left");
   assert.equal(read([102, 99, 98], { symbol: "US100.cash" }).missing, "symbol", "a named bar read without a named symbol");
   assert.equal(
     read([102, 99, 98], { symbol: "US100.cash", readAs: "US100.cash" }).left,

@@ -2,8 +2,9 @@
 
 Proposed ruleset for a third FTMO trader, **"Live L2L Blind"**, on EURUSD, XAUUSD, US100.cash and BTCUSD.
 
-Status: **approved by the owner on 2026-11-14, and built on branch `live-trading/l2l-blind-20261114` against
-`origin/main`. Not deployed, not registered, not funded, and no order has been sent.** The review settled the platform
+Status: **approved by the owner on 2026-11-14, built on branch `live-trading/l2l-blind-20261114` against
+`origin/main`, armed as lane `ftmo-3` on 2026-11-15, and running the stop-ending build since 2026-11-19**
+(`BLIND_STOP_OUT_DEPLOY_20261119.md` is that deploy). The review settled the platform
 (a third MT5 login, section 2), the watched levels (one fixed pair around the price rather than the whole ladder,
 sections 1 and 4), the deviation (all three legs, section 4), the ticket (a limit at the armed rung, the next original
 L2L in the trade's direction as its target, stop a fifth of that distance, section 5), the unfilled limit (no timed
