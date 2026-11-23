@@ -108,9 +108,14 @@ to resolve the two instants for a later implementation resolved something else.
 | The version records the correction | **works** | `engine_version` is `usd-session-engine-interface-v2` |
 | The bundled Cloud runtime carries it | **works** | `node scripts/build_usd_l1_n8n_cloud_workflows.js` rewrote all six files to identical bytes at `bundle_sha256` `73215c1e…d787`, 119,268 bytes, with the interface source at `73ba4fc1…c808`, the three child ids and the header-auth credential preserved |
 
-Nothing else moved. The 725 panel mornings, the four test definitions, the ledger, the coverage table and the
-published `run-v1.json` are unchanged, because they were already built on the contract's 05:00-to-05:00 day:
-this correction changes what a future implementation resolves, not any recorded result.
+No recorded result moved. The 725 panel mornings, the four test definitions, the ledger and the coverage table
+are identical, because they were already built on the contract's 05:00-to-05:00 day: this correction changes
+what a future implementation resolves, not any result it has already resolved. `run-v1.json` does change in the
+commit that lands this, but only in the provenance it records - the ladder source is named as the tracked
+`data/l2l-levels.json` rather than the ignored raw copy an earlier build read from `backtester/tmp/`, and two
+recorded input hashes are refreshed to `data/research-library/catalog.json` and
+`data/research/usd-session/macro-data-inventory.json` as they stand on `main` - with no number moving: the same
+ladder stamp (2026-10-04T16:14:19Z), the same 725 mornings behind the marks, the same lead numbers.
 
 ## 6. Costs, sizing, equity and drawdown
 
@@ -192,11 +197,16 @@ The artefact builder is the one step whose output depends on an input outside th
 2026-11-23. `node backtester/scripts/run_usd_layer1_backtest.js --generated-at 2026-11-14T00:00:00.000Z`
 reproduced `run-v1.json` byte for byte on 2026-11-22 (SHA-256 `0fea0347…61f3`); on 2026-11-23 the same command
 produces SHA-256 `390b6118…1af7`, and every one of the 51 differing leaves is inside
-`results.lead_numbers[1]` or `level_provenance`. The cause is upstream: `origin/main` published a re-marked
-L2L ladder (`a04cc73a`, stamped `2026-11-23T16:20:57Z`, marked by automatic coverage) over the 2026-10-04
-ladder the published artefact was built from, so the rebuild prices 6 sessions with original levels where the
-committed artefact records 0. The artefact was not republished here: moving the panel's lead number from 0 to
-6 is a statement about the new ladder, and it needs to be read before it is published.
+`results.lead_numbers[1]` or `level_provenance`. The cause is upstream, and the movement is a loss rather than
+a gain: `origin/main` published a re-marked L2L ladder (`a04cc73a`, stamped `2026-11-23T16:20:57.042Z`, marked
+by automatic coverage, 30 levels per asset against 22) over the 2026-10-04 hand-marked ladder the published
+artefact was built from, and the eligibility rule dates every session against the ladder stamp - so the six
+sessions from 2026-10-05 that the committed artefact prices with original levels become none: `first_eligible_session`
+null, `usable_sessions` empty, `sessions_before_the_marks` 725 of 725 and `lead_numbers[1]` 6 -> 0, with the
+headline moving from "6 sessions carry the original L2L levels on all four assets" to "no session carries an
+original L2L level". The artefact was not republished here: republishing today would move the panel's lead
+number from 6 to 0 and withdraw the only original-level coverage the lane has, which is a statement about the
+new ladder that has to be read before it is published.
 
 ## 11. What remains
 
@@ -207,7 +217,7 @@ committed artefact records 0. The artefact was not republished here: moving the 
 | ICE DXY for test 1 | **data dependency** | the official series is not licensed in this checkout | ICE sample/licence; the broker proxy stays labelled |
 | H1 eligibility | **owner decision** | 0 of 725; gold identity/licence and calendar vintage are the movable inputs | D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md` |
 | Broker cost schedule | **data dependency** | the accounting runs on a labelled fixture schedule | commit a broker schedule with a source and date |
-| Republish `run-v1.json` from the re-marked ladder | **owner decision** | the committed artefact records 0 sessions with original levels, built from the 2026-10-04 ladder; `data/l2l-levels.json` now carries a ladder stamped `2026-11-23T16:20:57Z` that prices 6 | decide whether the new ladder is accepted, then republish and re-read the 5R/3R line-to-line figures |
+| Republish `run-v1.json` from the re-marked ladder | **owner decision** | the committed artefact records 6 sessions with original L2L levels (2026-10-05 onward), built from the 2026-10-04 hand-marked ladder; `data/l2l-levels.json` now carries an automatically re-marked ladder stamped `2026-11-23T16:20:57.042Z`, which the stamp rule prices at 0, so a straight republish would withdraw that evidence | decide whether the new ladder is accepted, and whether the six sessions can be re-dated against it, then republish and re-read the 5R/3R line-to-line figures |
 | Rule validation as edge | **research work** | the specification check proves fidelity, not profitability | pre-registered tests on unseen mornings |
 
 Nothing in the first column is blocked by the platform. The platform can consume each of them unchanged.

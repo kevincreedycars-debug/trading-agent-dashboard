@@ -33,13 +33,17 @@ all four artefacts `reproduces` and `verdict: pass`, `test:usd-l1-platform` 29 o
 34, `test:usd-session` 117 of 117, `execution_accounting` 8 of 8, `check:usd-l1-ledger` `ledger reproduces`
 with no verification failures, `report:layer1:check`, `report:morning:check` and `screen:backtesting:check`
 each reproducing their artefact, and the four browser suites 23 of 23 (`site_nav_consistency` 6,
-`usd_layer1_logic_page` 6, `layer1_call_flow` 5, `usd_layer1_call_flow` 6). One thing was found and deliberately
-not acted on: re-running the artefact builder now yields SHA-256 `390b6118…1af7` instead of the committed
-`0fea0347…61f3`, and all 51 differing leaves sit in `results.lead_numbers[1]` and `level_provenance`, because
-`origin/main` published a re-marked L2L ladder today (`a04cc73a`, stamped `2026-11-23T16:20:57Z`, automatic
-coverage) over the 2026-10-04 ladder the artefact was built from - the rebuild prices 6 sessions with original
-levels where the committed artefact records 0. Republishing would move the panel's lead number from 0 to 6, so
-it is recorded as the owner decision it is in
+`usd_layer1_logic_page` 6, `layer1_call_flow` 5, `usd_layer1_call_flow` 6). The commit also refreshes
+`run-v1.json`'s recorded provenance - the ladder source is named as the tracked `data/l2l-levels.json` rather
+than the ignored raw copy, and two input hashes are updated to the catalogue and macro inventory as they stand
+on `main` - with no result moving. One thing was found and deliberately not acted on: re-running the artefact
+builder now yields SHA-256 `390b6118…1af7` instead of the committed `0fea0347…61f3`, with all 51 differing
+leaves in `results.lead_numbers[1]` and `level_provenance`, because `origin/main` published a re-marked L2L
+ladder today (`a04cc73a`, stamped `2026-11-23T16:20:57.042Z`, automatic coverage, 30 levels per asset against
+22) over the 2026-10-04 hand-marked ladder the artefact was built from. Every session is dated against the
+ladder stamp, so the rebuild prices 0 sessions with original levels where the committed artefact records 6
+(2026-10-05 onward): republishing would move the panel's lead number from 6 to 0 and withdraw the only
+original-level coverage there is, so it is recorded as the owner decision it is in
 `docs/research/usd-session/v1/PLATFORM_COMPLETION_CHECKLIST.md` section 11 rather than folded into this fix. No
 rule, weight, threshold, workflow, order, size, feed, lane or runtime table was touched, and nothing live moved.
 
