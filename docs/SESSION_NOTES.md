@@ -1,5 +1,28 @@
 # Session Notes
 
+2026-11-23, live-trading coverage row published and FTMO 2 audited - the `Ladder coverage` row the 21 November record
+asked for is live on the lane card and in the status panel (`main` `f30deafa`, buster
+`script.js?v=20261123-ladder-coverage-row`), and the published `script.js` is the committed file byte for byte (HTTP 200,
+1,215,467 bytes, sha256 `35BA4E6E…52E6`, equal to the worktree's copy after line-ending normalisation and to
+`raw.githubusercontent.com/…/main/script.js`). A read-only Playwright probe opened the hosted page at 20:56:30Z and read
+all three lanes: each card states `held at 10 full lines each side`, the status panel carries the row between
+`LOADED RULES` and `EFFECTIVE CAP` on every lane, and no page error was raised; the hosted heartbeats were read beside it
+and state exactly the fields the page reads, which closes the "schema not confirmed" risk, with `armed: true`,
+`max_per_day: null`, `capped: false` and `entries_today` 3 / 9 / 24. Tests: `node --check` clean, the two touched browser
+files 15 of 15, the ten trader/lane/L2L suites 330 of 330, the eleven other live-trading browser suites 36 of 37 with the
+chart-zoom failure, which fails identically in a clean worktree at `d9018198`. The audit then answered the FTMO 2
+question: all three lanes run the same two files (trader `74b0cd18…`, library `db164d85…`, checkouts on `e3406286`, both
+files unchanged up to `f30deafa`), so lane 2 *has* the session-expiry rule (`43c48316`) and the ordered three-leg reading
+(`e75757f4`) but runs neither, because both sit behind `requireDeviation` and its wrapper passes `--reentry-crossing` and
+no `--require-deviation`; only lane 3 (`--blind`) asks for it. The Blind day-boundary re-selection is blind-only and is a
+selection reset, and lane 2 keeps no pair state, so there is nothing of it to inherit. The record agrees: lane 2's 90
+placed tickets include 34 put-backs, every one re-armed within 24 h of its exit and quoting the newest completed candle
+(largest lag 1.6 min), and no lane placed a ticket on a shut market; the one weekend-spanning re-arm in the history is
+lane 1's EURUSD put-back at 2026-11-22T22:06Z from a window opened 2026-11-20T17:41Z, which lane 1's rule allows. Open risk
+recorded, not changed: the market-closure test is keyed on `requireDeviation`, so a lane trading ordinary crossings can
+state a limit from a pre-closure candle while a Layer 1 call is still live. Record:
+`docs/live-trading/TRADER_COVERAGE_NO_DAILY_CAP_20261122.md` sections 8 and 9.
+
 2026-11-22, live-trading trader lane - the trader half of the L2L coverage work shipped to all three FTMO accounts, and
 the daily entry cap came off the two lanes still carrying it. The three checkouts were on three different revisions
 (`c5abd0ac`, `f14f2ac7`, `441c308f`) and none of them was `main`; the blind lane's line was merged into `main`
