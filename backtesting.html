@@ -751,6 +751,31 @@ function renderTests(v,s){
   }
   const visible=s.tests.definitions.filter(test=>selection.includes(test.id));
   if(!visible.length){el("p","No test module is selected.",v,"caption");return}
+  // The configured market x test matrix: one primary market and the additional markets, each receiving the
+  // same three tests. Every cell is the status the run recorded, with the missing dataset as its tooltip, so
+  // a blocked combination cannot be read as a scored zero.
+  if(s.market_matrix){
+    const block=el("div",null,v);
+    el("h3","Market x test matrix",block);
+    el("p","Primary "+s.market_matrix.primary_market+" plus "+s.market_matrix.additional_markets.length+
+      " additional markets, each receiving the same "+s.market_matrix.test_count+" tests: "+
+      s.market_matrix.combination_count+" combinations per strategy. "+s.market_matrix.note,block,"caption");
+    const wrap=el("div",null,block,"scroll");
+    const table=el("table",null,wrap);
+    const head=el("tr",null,el("thead",null,table));
+    for(const heading of ["Market","Role","Directional accuracy","Original L2L 5R","0.5 L2L 3R"]){el("th",heading,head)}
+    const body=el("tbody",null,table);
+    for(const row of s.market_matrix.rows){
+      const tr=el("tr",null,body);
+      el("td",row.label,tr);
+      el("td",row.role,tr);
+      for(const id of ["direction","l2l_full_5r","l2l_half_3r"]){
+        const entry=(row.tests&&row.tests[id])||{};
+        const cell=el("td",(entry.status||"")+(entry.scored?" ("+entry.scored+")":""),tr);
+        if(entry.reason)cell.title=entry.reason;
+      }
+    }
+  }
   const testId=state.test&&s.tests.rows[state.test]?state.test:visible[0].id;
   state.test=testId;
   for(const test of visible){

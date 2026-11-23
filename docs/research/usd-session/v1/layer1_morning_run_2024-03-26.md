@@ -133,7 +133,7 @@ Report digest: `89a6a82b02905532d84aa198ecba5f8a2bc585a223e6ee556905251ae313c0d1
 
 | Input | Bytes | sha256 |
 | --- | ---: | --- |
-| `data/usd-layer1-backtester/run-v1.json` | 6583957 | `0fea034745c343610c441ffa3a0e35304222a73ea8034f9c78055ea9e1e861f3` |
+| `data/usd-layer1-backtester/run-v1.json` | 7056949 | `adad65fdc7976cd4b70ccfa56c2955e861fa398f06e66f6fa8d2bce275543dc7` |
 | `data/usd-layer1-backtester/engine-v1.json` | 927740 | `f4290bae4ff91a41727f717f0f7138dffedbf8b3e2a3dc824dcdceeb7aeab6c8` |
 | `data/usd-layer1-backtester/event-calendar-v1.json` | 13606 | `339579f057382c119aace8360a3c19ac13420b3747b07a974c6baae833117bd8` |
 | `backtester/packages/USD-L1-25F-H1-v0.1.0/inputs.json` | 1144 | `144ae500af5c9d4d1f37a7be2b34b5074f8a85c89269ff699895155f2db4a77f` |

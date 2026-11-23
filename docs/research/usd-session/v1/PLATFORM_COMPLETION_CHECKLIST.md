@@ -107,15 +107,46 @@ to resolve the two instants for a later implementation resolved something else.
 | The rule is stated, not just obeyed | **works** | `resolveSession()` returns `nominal_hours`, `window_hours` and `session_starts_weekday`; `SESSION_CONTRACT.session_start_rule` writes the rule out in words and carries it into the bundle |
 | The version records the correction | **works** | `engine_version` is `usd-session-engine-interface-v2` |
 | The bundled Cloud runtime carries it | **works** | `node scripts/build_usd_l1_n8n_cloud_workflows.js` rewrote all six files to identical bytes at `bundle_sha256` `73215c1e…d787`, 119,268 bytes, with the interface source at `73ba4fc1…c808`, the three child ids and the header-auth credential preserved |
+| Outcome pricing stops at the endpoint | **works** | `tests/l2l_session_horizon.test.js`: the close is the bar opening at the following 05:00 London, and a bar from the next session (500 against 90 in the fixture) is never read as this session's close |
+| Both execution simulations stop at the endpoint | **works** | `l2l_simulation.js#sessionTape` cuts a tape to `[cutoff, endpoint)` and `#simulateSessionPath` closes an open position at the last in-session close; a candle at the endpoint that would reach the target is dropped, counted, and cannot produce a target |
+| The clock-change cases are explicit | **works** | 2026-03-27/30, 2026-10-23/26, 2027-03-26/29 each measure 24 hours with both ends at 05:00 London; the Saturday starts measure 23 (2026-03-28) and 25 (2026-10-24) and are refused; 261 of 261 2026 weekday starts measure 24 |
+| What was recomputed is named, not implied | **works** | the run artefact became v2 (matrix + snapshot-pinned provenance) and the artefacts derived from it were rebuilt; the 725 calls, outcomes, flat bands and lead numbers did not move, and the tick sweep was not re-run because its ladder hash and its six sessions are unchanged |
 
 No recorded result moved. The 725 panel mornings, the four test definitions, the ledger and the coverage table
 are identical, because they were already built on the contract's 05:00-to-05:00 day: this correction changes
-what a future implementation resolves, not any result it has already resolved. `run-v1.json` does change in the
-commit that lands this, but only in the provenance it records - the ladder source is named as the tracked
-`data/l2l-levels.json` rather than the ignored raw copy an earlier build read from `backtester/tmp/`, and two
-recorded input hashes are refreshed to `data/research-library/catalog.json` and
-`data/research/usd-session/macro-data-inventory.json` as they stand on `main` - with no number moving: the same
-ladder stamp (2026-10-04T16:14:19Z), the same 725 mornings behind the marks, the same lead numbers.
+what a future implementation resolves, not any result it has already resolved.
+
+On 2026-11-23 the artefact was then rebuilt for two separate reasons, and the build became v2 rather than an
+edit to v1 (v1 is preserved byte for byte at `data/usd-layer1-backtester/run-v1-superseded-20261114.json`,
+sha256 `0fea0347…61f3`; the supersession record is `data/usd-layer1-backtester/run-v1-supersession.json`):
+
+- **the market x test matrix** replaced the fixed four-market arrangement. `run.markets` now lists one primary
+  market and seven additional markets, `market_matrix` carries the selection, its fingerprint and 24
+  combinations, and every market has a row per test with its own status and missing-data reason. Section 5b.
+- **level eligibility is pinned to a dated snapshot** instead of the live file. The six sessions are priced by
+  the archived `2026-10-04T16:14:19Z` snapshot (sha256 `a5dc10a3…`, git commit `5262f8d2` at `19:02:52Z`,
+  before the first session start); the automatically re-marked live file prices none of them. Section 5c.
+
+The published build is deterministic for a fixed `--generated-at`: sha256 `adad65fd…dc7`, 7,056,949 bytes.
+`data/usd-layer1-backtester/run-v1.json` therefore changes in this commit by design, and the direction figures,
+flat bands and 725 calls inside it do not.
+
+## 5b. The market x test matrix
+
+The engine reads `backtester/config/usd_layer1_market_matrix.json`: one primary market (`DXY`) and seven
+additional markets (`EURUSD`, `XAUUSD`, `XAGUSD`, `NAS100`, `BTCUSD`, `WTIUSD`, `GBPUSD`), each receiving
+directional accuracy, original L2L 5R and 0.5 L2L 3R — 24 combinations per strategy. Another asset set is
+another document, not a patch; a duplicate primary is refused. Readiness is 5 scored (DXY as a labelled proxy,
+plus the four markets with a cached series) and 19 blocked, each naming its missing dataset. The full table,
+the surfaces it travels through and the dependencies are in `MARKET_MATRIX_AND_READINESS.md`.
+
+## 5c. Level provenance: the snapshot, not the live file
+
+The live `data/l2l-levels.json` is re-marked in place, so it can no longer establish what existed before an old
+session. The archive at `data/usd-layer1-backtester/level-snapshots/` holds the dated copies; the index records
+each hash and its git commit, and the loader refuses an edited snapshot. `level_provenance.js` prices a session
+only with the latest snapshot that precedes its 05:00 London start, so re-marking cannot back-date history.
+The earlier result is preserved and bound to the snapshot that produced it, not withdrawn.
 
 ## 6. Costs, sizing, equity and drawdown
 
@@ -193,31 +224,41 @@ artefacts, `npm run check:usd-l1-ledger` reported `ledger reproduces` with 0 ver
 two and a half days, **0 bid/ask series and 0 pre-session ladders**: it proves the tape can reproduce a
 recorded execution, not that tests 3 or 4 have historical inputs.
 
-The artefact builder is the one step whose output depends on an input outside this commit, and it moved on
-2026-11-23. `node backtester/scripts/run_usd_layer1_backtest.js --generated-at 2026-11-14T00:00:00.000Z`
-reproduced `run-v1.json` byte for byte on 2026-11-22 (SHA-256 `0fea0347…61f3`); on 2026-11-23 the same command
-produces SHA-256 `390b6118…1af7`, and every one of the 51 differing leaves is inside
-`results.lead_numbers[1]` or `level_provenance`. The cause is upstream, and the movement is a loss rather than
-a gain: `origin/main` published a re-marked L2L ladder (`a04cc73a`, stamped `2026-11-23T16:20:57.042Z`, marked
-by automatic coverage, 30 levels per asset against 22) over the 2026-10-04 hand-marked ladder the published
-artefact was built from, and the eligibility rule dates every session against the ladder stamp - so the six
-sessions from 2026-10-05 that the committed artefact prices with original levels become none: `first_eligible_session`
-null, `usable_sessions` empty, `sessions_before_the_marks` 725 of 725 and `lead_numbers[1]` 6 -> 0, with the
-headline moving from "6 sessions carry the original L2L levels on all four assets" to "no session carries an
-original L2L level". The artefact was not republished here: republishing today would move the panel's lead
-number from 6 to 0 and withdraw the only original-level coverage the lane has, which is a statement about the
-new ladder that has to be read before it is published.
+The artefact builder's output depends on an input outside this commit (the live level ladder and the market
+matrix), and both moved on 2026-11-23. `node backtester/scripts/run_usd_layer1_backtest.js
+--generated-at 2026-11-14T00:00:00.000Z` reproduced the committed v1 artefact byte for byte on 2026-11-22
+(SHA-256 `0fea0347…61f3`). On 2026-11-23 the same command, before the changes below, produced `390b6118…1af7`
+because `origin/main` had published an automatically re-marked ladder (`a04cc73a`, stamped
+`2026-11-23T16:20:57.042Z`, 30 levels per asset against 22) and the stamp rule dates every session against it,
+so the six sessions priced by the old ladder became none.
+
+That was resolved rather than republished blindly. The 2026-10-04 ladder the six sessions were actually traded
+against was recovered intact (sha256 `a5dc10a3…`, matching the hash the published tick sweep recorded), its git
+commit `5262f8d2` and its commit time `2026-10-04T19:02:52Z` were verified to precede the first session start,
+and it is now committed under `data/usd-layer1-backtester/level-snapshots/` with an index that records the hash
+and the commit. `level_provenance.js` prices a session only from the latest archived snapshot that precedes it:
+the six sessions are priced from the archive, and the live re-marked file prices zero of them. A newly marked
+ladder therefore cannot establish historical eligibility, whoever approves it, and the earlier result is
+preserved and bound to its snapshot instead of being withdrawn or back-dated.
+
+The build that lands is v2: the market x test matrix plus the snapshot-pinned provenance. The v1 artefact is
+preserved byte for byte at `run-v1-superseded-20261114.json`, the supersession record is
+`run-v1-supersession.json`, the published v2 build is sha256 `adad65fd…dc7` (7,056,949 bytes), and the derived
+artefacts (platform four, layer 1 report and markdown, screen, morning run and markdown, model comparison) are
+rebuilt and reproduce.
 
 ## 11. What remains
 
 | Item | Kind | Why it is not done | Next step |
 | --- | --- | --- | --- |
 | Contemporaneous input captures | **data dependency** | the retrieval path is implemented, but no capture corpus exists, so every value is a reconstruction | archive a 05:00 receipt set for each declared key; the code already accepts it. The document shape and acquisition order are in `backtester/docs/usd_historical_data_acquisition_plan.md` |
-| Tests 3 and 4 on history | **data dependency** | the simulator and the account are implemented and tested; there is no contemporaneous level ladder and no actionable bid/ask M5 tape | acquire the ladder and tape; do not relax the readiness rule |
-| ICE DXY for test 1 | **data dependency** | the official series is not licensed in this checkout | ICE sample/licence; the broker proxy stays labelled |
-| H1 eligibility | **owner decision** | 0 of 725; gold identity/licence and calendar vintage are the movable inputs | D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md` |
+| Tests 3 and 4 on history | **data dependency** | the simulator (now session-bounded) and the account are implemented and tested; there is no contemporaneous level ladder and no actionable bid/ask M5 tape | acquire the ladder and tape; do not relax the readiness rule |
+| ICE DXY for test 1 | **licence / source decision** | the official series is not licensed in this checkout; the broker `DXY.cash` CFD is a separate, labelled lane and does not satisfy it | ICE sample or licence with 05:00 and next-05:00 London prints; the broker proxy stays labelled |
+| XAGUSD, WTIUSD and GBPUSD series | **data dependency** | the matrix now scores them in principle; no cached one-hour series exists, so their direction combinations are blocked | cache the three series; no code change |
+| H1 eligibility | **measured result, with two rule/source decisions behind it** | 0 of 725 is what the population measures today. It is not itself a decision: the inputs that could move it are the gold identity/licence and the calendar vintage | settle D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md`, then re-measure; if the inputs do not exist, the 0 stands |
 | Broker cost schedule | **data dependency** | the accounting runs on a labelled fixture schedule | commit a broker schedule with a source and date |
-| Republish `run-v1.json` from the re-marked ladder | **owner decision** | the committed artefact records 6 sessions with original L2L levels (2026-10-05 onward), built from the 2026-10-04 hand-marked ladder; `data/l2l-levels.json` now carries an automatically re-marked ladder stamped `2026-11-23T16:20:57.042Z`, which the stamp rule prices at 0, so a straight republish would withdraw that evidence | decide whether the new ladder is accepted, and whether the six sessions can be re-dated against it, then republish and re-read the 5R/3R line-to-line figures |
+| Level provenance and republish of the run | **done** | the six sessions are now priced from the archived snapshot, not from the live re-marked file, and the v1 build is preserved beside the v2 build | no decision outstanding: a change to the ladder going forward is a new snapshot, which the same rule dates automatically |
+| Test selection as a market matrix | **done** | primary + seven markets, 24 combinations, per-combination readiness, carried through the engine, artefact, identity, ledger, screen and n8n | a different asset set is a new config document |
 | Rule validation as edge | **research work** | the specification check proves fidelity, not profitability | pre-registered tests on unseen mornings |
 
 Nothing in the first column is blocked by the platform. The platform can consume each of them unchanged.

@@ -1,12 +1,15 @@
 "use strict";
 
 /**
- * Session outcomes for the four markets (research only).
+ * Session outcomes for the configured markets (research only).
  *
  * A session runs from its 05:00 London cutoff to 05:00 London the next local date. The open is the close
  * of the one-hour bar opening at the cutoff and the close is the close of the bar opening at the next
  * cutoff, so both endpoints resolve differently for each date and neither is inferred from a daily bar
  * (a daily bar closes at 17:00 New York, which is a different question).
+ *
+ * `markets` is the configured set from `market_matrix.js`; it defaults to the historical four so a caller
+ * that predates the matrix keeps its exact behaviour.
  *
  * The flat band is measured on the absolute move over development dates only, then frozen for the unseen
  * dates, so a model can never be credited for a session that barely moved.
@@ -14,6 +17,7 @@
 
 const { MARKETS, FLAT_BAND } = require("./contracts");
 const { priceAtHour } = require("./inputs");
+
 
 function percentile(values, share) {
   const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
@@ -37,13 +41,14 @@ function round(value, decimals) {
  * @param {object} options
  * @param {Array} options.sessions `{ date, cutoff_at_utc, endpoint_at_utc }`
  * @param {object} options.seriesByMarket `{ EURUSD: series, ... }` hourly series, any of which may be null.
+ * @param {Array} [options.markets] the configured markets; defaults to the historical four.
  * @returns {object} `{ date: { MARKET: { open, close, move_pct, present, reason } } }`
  */
-function readSessionMoves({ sessions, seriesByMarket }) {
+function readSessionMoves({ sessions, seriesByMarket, markets = MARKETS }) {
   const moves = {};
   for (const session of sessions) {
     const perMarket = {};
-    for (const market of MARKETS) {
+    for (const market of markets) {
       const series = seriesByMarket[market.key] || null;
       if (!series) {
         perMarket[market.key] = {
@@ -89,11 +94,12 @@ function readSessionMoves({ sessions, seriesByMarket }) {
  *
  * @param {object} moves the `readSessionMoves` map.
  * @param {string[]} developmentDates the dates declared as development.
+ * @param {Array} [markets] the configured markets; defaults to the historical four.
  * @returns {object} `{ MARKET: { flat_band_pct, sample, rule } }`
  */
-function freezeFlatBands(moves, developmentDates) {
+function freezeFlatBands(moves, developmentDates, markets = MARKETS) {
   const bands = {};
-  for (const market of MARKETS) {
+  for (const market of markets) {
     const magnitudes = developmentDates
       .map((date) => (moves[date] && moves[date][market.key] ? moves[date][market.key].move_pct : null))
       .filter((value) => Number.isFinite(value))
@@ -112,13 +118,16 @@ function freezeFlatBands(moves, developmentDates) {
 /**
  * Classify each session move as UP, DOWN or FLAT against the frozen band.
  *
+ * @param {object} moves the `readSessionMoves` map.
+ * @param {object} bands the `freezeFlatBands` map.
+ * @param {Array} [markets] the configured markets; defaults to the historical four.
  * @returns {object} the moves map with `direction` and `flat_band_pct` added per market.
  */
-function classifyMoves(moves, bands) {
+function classifyMoves(moves, bands, markets = MARKETS) {
   const classified = {};
   for (const [date, perMarket] of Object.entries(moves)) {
     classified[date] = {};
-    for (const market of MARKETS) {
+    for (const market of markets) {
       const entry = perMarket[market.key];
       const band = bands[market.key] ? bands[market.key].flat_band_pct : null;
       if (!entry || !entry.present || !Number.isFinite(entry.move_pct) || !Number.isFinite(band)) {
@@ -145,7 +154,8 @@ function classifyMoves(moves, bands) {
 
 /**
  * Did the market do what a USD call predicted? A USD-bullish call predicts the market falls, because the
- * call is a dollar call and the other four series are quoted against it.
+ * call is a dollar call and the other series are quoted against it. A market that is quoted in dollars per
+ * unit (the index itself) declares `usd_bullish_predicts: "UP"` in the matrix instead.
  */
 function callOutcome({ callDirection, marketDirection, market }) {
   if (!callDirection || callDirection === "NO_CALL" || !marketDirection) return "unscored";

@@ -185,7 +185,7 @@ Evidence:
 
 ### F7
 
-Four-market confirmation is published market by market, never as one aggregate: 1 of 8 market/model cells clear it (XAUUSD/control at 55.68% with a lower bound of 51.1%), and of the 4 candidate cells, 0 clear it.
+Four-market confirmation is published market by market, never as one aggregate: 1 of 8 market/model cells clear it (XAUUSD/control at 55.68% with a lower bound of 51.1%), and of the 7 candidate cells, 0 clear it.
 
 Numbers:
 
@@ -201,19 +201,37 @@ Numbers:
 - per_market.XAUUSD.candidate.scored: 344
 - per_market.XAUUSD.candidate.accuracy_pct: 51.16
 - per_market.XAUUSD.candidate.lower_bound_pct: 45.9
-- per_market.BTCUSD.control.scored: 536
-- per_market.BTCUSD.control.accuracy_pct: 50
-- per_market.BTCUSD.control.lower_bound_pct: 45.78
-- per_market.BTCUSD.candidate.scored: 385
-- per_market.BTCUSD.candidate.accuracy_pct: 48.57
-- per_market.BTCUSD.candidate.lower_bound_pct: 43.62
+- per_market.XAGUSD.control.scored: 0
+- per_market.XAGUSD.control.accuracy_pct: —
+- per_market.XAGUSD.control.lower_bound_pct: —
+- per_market.XAGUSD.candidate.scored: 0
+- per_market.XAGUSD.candidate.accuracy_pct: —
+- per_market.XAGUSD.candidate.lower_bound_pct: —
 - per_market.NAS100.control.scored: 454
 - per_market.NAS100.control.accuracy_pct: 52.86
 - per_market.NAS100.control.lower_bound_pct: 48.27
 - per_market.NAS100.candidate.scored: 331
 - per_market.NAS100.candidate.accuracy_pct: 51.96
 - per_market.NAS100.candidate.lower_bound_pct: 46.59
-- cells: 8
+- per_market.BTCUSD.control.scored: 536
+- per_market.BTCUSD.control.accuracy_pct: 50
+- per_market.BTCUSD.control.lower_bound_pct: 45.78
+- per_market.BTCUSD.candidate.scored: 385
+- per_market.BTCUSD.candidate.accuracy_pct: 48.57
+- per_market.BTCUSD.candidate.lower_bound_pct: 43.62
+- per_market.WTIUSD.control.scored: 0
+- per_market.WTIUSD.control.accuracy_pct: —
+- per_market.WTIUSD.control.lower_bound_pct: —
+- per_market.WTIUSD.candidate.scored: 0
+- per_market.WTIUSD.candidate.accuracy_pct: —
+- per_market.WTIUSD.candidate.lower_bound_pct: —
+- per_market.GBPUSD.control.scored: 0
+- per_market.GBPUSD.control.accuracy_pct: —
+- per_market.GBPUSD.control.lower_bound_pct: —
+- per_market.GBPUSD.candidate.scored: 0
+- per_market.GBPUSD.candidate.accuracy_pct: —
+- per_market.GBPUSD.candidate.lower_bound_pct: —
+- cells: 14
 - cells_with_lower_bound_at_or_above_50: XAUUSD/control
 - best_point_accuracy.market: XAUUSD
 - best_point_accuracy.label: control
@@ -338,12 +356,12 @@ Market XAUUSD:
 | control | 458 | 255 | 203 | 55.68% | 51.1% | flat window inside the flat band: 100; the model made no call: 11; no readable outcome: 156 |
 | candidate | 344 | 176 | 168 | 51.16% | 45.9% | flat window inside the flat band: 67; the model made no call: 210; no readable outcome: 104 |
 
-Market BTCUSD:
+Market XAGUSD:
 
 | Model | Scored | Hits | Misses | Accuracy | Lower bound | Exclusions |
 | --- | --- | --- | --- | --- | --- | --- |
-| control | 536 | 268 | 268 | 50% | 45.78% | flat window inside the flat band: 178; the model made no call: 11; no readable outcome: 0 |
-| candidate | 385 | 187 | 198 | 48.57% | 43.62% | flat window inside the flat band: 130; the model made no call: 210; no readable outcome: 0 |
+| control | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 11; no readable outcome: 714 |
+| candidate | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 210; no readable outcome: 515 |
 
 Market NAS100:
 
@@ -351,6 +369,27 @@ Market NAS100:
 | --- | --- | --- | --- | --- | --- | --- |
 | control | 454 | 240 | 214 | 52.86% | 48.27% | flat window inside the flat band: 104; the model made no call: 11; no readable outcome: 156 |
 | candidate | 331 | 172 | 159 | 51.96% | 46.59% | flat window inside the flat band: 80; the model made no call: 210; no readable outcome: 104 |
+
+Market BTCUSD:
+
+| Model | Scored | Hits | Misses | Accuracy | Lower bound | Exclusions |
+| --- | --- | --- | --- | --- | --- | --- |
+| control | 536 | 268 | 268 | 50% | 45.78% | flat window inside the flat band: 178; the model made no call: 11; no readable outcome: 0 |
+| candidate | 385 | 187 | 198 | 48.57% | 43.62% | flat window inside the flat band: 130; the model made no call: 210; no readable outcome: 0 |
+
+Market WTIUSD:
+
+| Model | Scored | Hits | Misses | Accuracy | Lower bound | Exclusions |
+| --- | --- | --- | --- | --- | --- | --- |
+| control | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 11; no readable outcome: 714 |
+| candidate | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 210; no readable outcome: 515 |
+
+Market GBPUSD:
+
+| Model | Scored | Hits | Misses | Accuracy | Lower bound | Exclusions |
+| --- | --- | --- | --- | --- | --- | --- |
+| control | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 11; no readable outcome: 714 |
+| candidate | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 210; no readable outcome: 515 |
 
 - This is the agreed test 2: one model call against four market outcomes, not a pair-combination measure.
 - Each market carries its own denominator; an aggregate across markets is not reported.
@@ -508,12 +547,12 @@ Does not license: It does not license treating reconstructed calls as valid call
 
 | Input | Bytes | sha256 |
 | --- | --- | --- |
-| `data/usd-layer1-backtester/run-v1.json` | 6583957 | `0fea034745c343610c441ffa3a0e35304222a73ea8034f9c78055ea9e1e861f3` |
+| `data/usd-layer1-backtester/run-v1.json` | 7056949 | `adad65fdc7976cd4b70ccfa56c2955e861fa398f06e66f6fa8d2bce275543dc7` |
 | `data/usd-layer1-backtester/engine-v1.json` | 927740 | `f4290bae4ff91a41727f717f0f7138dffedbf8b3e2a3dc824dcdceeb7aeab6c8` |
 | `config/usd_l1_factor_rulebook_v1.json` | 38281 | `1f12c64f019e38056330a8beb3ffb85314e2ff5a25c46af91c18bf078cf9f6a0` |
 | `config/usd_l1_decision_rules_v1.json` | 10240 | `015155d3092d8a6786ce5ce18c2150155bf13c01a37328cfb19336484b974cc8` |
 
-Report digest: `e73fb5c62b20e9fbc1fba2c11a8d215ad48e009233eec0101dd11cf323448f76`.
+Report digest: `98ca9495ff586382e2d0d8cc9e353c10e5ba92922c97a38b681736454cd70b39`.
 
 The digest is taken over the body before this block; rebuilding the report from the same artefacts reproduces it.
 

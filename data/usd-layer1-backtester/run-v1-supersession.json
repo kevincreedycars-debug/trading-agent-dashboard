@@ -1,0 +1,67 @@
+{
+  "schema_version": "usd-l1-run-supersession-v1",
+  "created_at": "2026-11-23",
+  "superseded": {
+    "artefact_version": "usd-l1-run-v1",
+    "path": "data/usd-layer1-backtester/run-v1-superseded-20261114.json",
+    "bytes": 6583957,
+    "sha256": "0fea034745c343610c441ffa3a0e35304222a73ea8034f9c78055ea9e1e861f3",
+    "generated_at": "2026-11-14T00:00:00.000Z",
+    "markets": ["EURUSD", "XAUUSD", "BTCUSD", "NAS100"],
+    "level_provenance": {
+      "mode": "single_ladder",
+      "ladder_stamp_utc": "2026-10-04T16:14:19Z",
+      "levels_per_asset": 22,
+      "sessions_with_original_levels": { "EURUSD": 6, "XAUUSD": 6, "NAS100": 6, "BTCUSD": 6 },
+      "sessions": ["2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-12"]
+    }
+  },
+  "current": {
+    "artefact_version": "usd-l1-run-v2",
+    "path": "data/usd-layer1-backtester/run-v1.json",
+    "bytes": 7056949,
+    "sha256": "adad65fdc7976cd4b70ccfa56c2955e861fa398f06e66f6fa8d2bce275543dc7",
+    "market_matrix": {
+      "id": "usd-l1-matrix-1f943a83989d",
+      "primary_market": "DXY",
+      "additional_markets": ["EURUSD", "XAUUSD", "XAGUSD", "NAS100", "BTCUSD", "WTIUSD", "GBPUSD"],
+      "combination_count": 24
+    },
+    "level_provenance": {
+      "mode": "snapshot_pinned",
+      "priced_by": "data/usd-layer1-backtester/level-snapshots/l2l-levels-2026-10-04T16-14-19Z.json",
+      "priced_by_sha256": "a5dc10a32e0ccb50a0eb816b649d1e6cb0dd35a647c04c1e6f03dfb4b4793704",
+      "priced_by_git_commit": "5262f8d28d87062897aa981eecb848e02bf1b6aa",
+      "priced_by_git_commit_at_utc": "2026-10-04T19:02:52Z",
+      "sessions_with_original_levels": { "EURUSD": 6, "XAUUSD": 6, "NAS100": 6, "BTCUSD": 6 },
+      "live_file_sessions_priced": 0
+    }
+  },
+  "why_a_new_version_instead_of_an_edit": "The v1 build is evidence of what the lane published on 2026-11-14 and is kept byte for byte. The v2 build changes two things a reader must be able to tell apart: the market x test matrix is configuration, and level eligibility is now resolved against the archived dated snapshot instead of whichever ladder file happens to be on disk. Editing v1 in place would have destroyed the ability to compare the two.",
+  "what_changed": [
+    "run.markets now lists the configured 8 markets (one primary, seven additional) instead of a fixed four",
+    "a top-level market_matrix block carries the selection, its fingerprint, 24 combinations and a readiness row per market per test",
+    "tests.four_markets became per-market across the configured additional markets and carries markets_configured, market_count and a generated question",
+    "tests.l2l_full_5r and tests.l2l_half_3r list every configured market with its own status and missing-data reason",
+    "level_provenance resolves each session against the latest archived snapshot that precedes it: 6 sessions priced by the 2026-10-04 snapshot, 0 by the live re-marked file",
+    "results.lead_numbers[1] keeps the value 6 but now names the pinned snapshot hash and commit, and states that the live file prices none of those sessions",
+    "sessions carry outcomes for the configured additional markets, including the three with no cached series (present:false with the reason)"
+  ],
+  "what_did_not_change": {
+    "sessions": 725,
+    "date_range": { "start": "2024-01-02", "end": "2026-10-12" },
+    "calls": { "current": 714, "challenger": 508 },
+    "test2_challenger_eurusd": { "scored": 314, "hits": 149, "misses": 165, "flat": 92, "accuracy_pct": 47.45 },
+    "lead_numbers": {
+      "dxy_sessions_priced": 205,
+      "sessions_with_original_levels": 6,
+      "trades_replayed": "unchanged from the published tick sweep"
+    },
+    "account": { "starting_balance": 100000, "currency": "GBP", "risk_per_trade_pct": 1 }
+  },
+  "deliberately_not_done": [
+    "the six-session tick sweep was not re-run against the v2 artefact: its ladder hash and sessions are unchanged and the sweep is already published against the same snapshot",
+    "no new market's direction result is claimed: XAGUSD, WTIUSD and GBPUSD have no cached one-hour series and report blocked",
+    "no L2L combination is scored: the M5 archive holds mid-price bars only and no pre-session ladder for any market"
+  ]
+}

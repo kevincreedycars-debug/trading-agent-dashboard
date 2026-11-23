@@ -1,5 +1,42 @@
 # Session Notes
 
+2026-11-23 (second build), USD Layer 1 lane, same branch - the four-market arrangement became configuration and
+the L2L ladder's history became evidence. `backtester/config/usd_layer1_market_matrix.json` declares a primary
+market (`DXY`) and seven additional markets, and every selected market receives three tests: directional
+accuracy, original L2L 5R and 0.5 L2L 3R. That is 24 combinations per strategy, and the new `market_matrix.js`
+validates the document (one primary; a duplicate primary is refused; no unknown test; a declared sign per
+market), fingerprints it for experiment identity, and evaluates each combination against the data that exists.
+The published run scores 5 combinations and blocks 19 with a named missing dataset - three markets have no
+cached one-hour series, the M5 sample is mid-price only with no bid/ask, and no session has both a tape and a
+pre-session ladder - and a blocked combination is never rendered as a zero, on the artefact, in the ledger, in
+the n8n `test_configuration` or on the Tests tab. The configuration travels: `run.markets`, `market_matrix`,
+`market_matrix_id`/fingerprint, the ledger's configuration digest, the per-market comparisons, the screen
+payload and the dashboard table. The session-horizon fix now has its endpoint proof as well as its resolver
+tests: pricing reads the following 05:00 London close and ignores the next session's bar; `sessionTape` cuts a
+tape to `[cutoff, endpoint)` and `simulateSessionPath` closes an open position at the last in-session close, so
+a target that prints at the endpoint is dropped and counted, and the clock-change sessions either side of both
+2026 and 2027 transitions measure exactly 24 hours while the Saturday starts measure 23 and 25 and are refused.
+Level provenance was the other correction. The live ladder had been re-marked automatically at
+`2026-11-23T16:20:57.042Z`, so dating the six sessions against the file on disk priced none of them. The 22-level
+ladder those sessions were actually traded against was recovered intact (sha256 `a5dc10a3...`, matching the
+published tick sweep's own record), its git commit `5262f8d2` (`2026-10-04T19:02:52Z`) and its internal stamp
+`2026-10-04T16:14:19Z` both precede the first session start `2026-10-05T04:00:00Z`, and it is now committed
+under `data/usd-layer1-backtester/level-snapshots/` with an index that records the hash, the commit and the
+timing. Eligibility is resolved against the latest archived snapshot that precedes a session, so the six
+sessions are priced from the archive and the live file prices zero of them: approval cannot make an unavailable
+historical level contemporaneous, and a re-mark can no longer back-date history. The v1 artefact is preserved
+byte for byte (`run-v1-superseded-20261114.json`, `0fea0347...61f3`) with `run-v1-supersession.json` recording
+what changed and what did not; the v2 build is `adad65fd...dc7`, 7,056,949 bytes. The ledger check was pinned to
+the preserved v1 dataset for the same reason: re-merging old captures against v2 recomputed every record's
+configuration digest and doubled the rows, so that run was reverted and the check now names its dataset. Green
+after the rebuild: platform check exit 0 (four artefacts reproduce, verdict pass), ledger reproduces,
+platform 40/40, n8n 34/34, controller 17/17, l2l simulation 15/15, usd-session 118/118, engine 32/32, native and
+browser backtesting 26/26, and the report, screen and morning-run checks. H1's 0 of 725 is a measured result, not
+an owner decision: what is pending there is the gold identity/licence and the calendar vintage (D5, D6), and the
+0 stands if those inputs never exist. Full detail: `docs/research/usd-session/v1/MARKET_MATRIX_AND_READINESS.md`
+and checklist sections 5, 5b and 5c.
+
+
 2026-11-23, USD Layer 1 lane (branch `backtesting/usd-l1-session-horizon-20261123`, cut from `origin/main`
 `0288994a`) - the session-engine interface was ending a session at 17:00 `America/New_York` while the contract
 it serves, the four test definitions and every published artefact say 05:00 London to 05:00 London on the next

@@ -1,9 +1,9 @@
 {
   "schema_version": "usd-l1-n8n-execution-evidence-v1",
-  "generated_at": "2026-11-21T18:29:07.710Z",
+  "generated_at": "2026-11-23T21:06:00.390Z",
   "research_only": true,
   "repository": {
-    "head": "1ff42303db65a706337e0e51865947eb4b0b7e30",
+    "head": "594bd518127edcf9eabb106c960b4b5c9f44128e",
     "manifest": "automation/n8n/usd-l1-cloud-workflows.manifest.json"
   },
   "instance": {
@@ -12,14 +12,14 @@
   },
   "bundle": {
     "schema_version": "usd-l1-cloud-workflows-v2",
-    "bundle_version": "usd-l1-cloud-runtime-v2",
+    "bundle_version": "usd-l1-cloud-runtime-v3",
     "bundle_path": "automation/n8n/usd-l1-cloud-runtime.js",
-    "bundle_sha256": "5fbc87f2568007cdb7a4fa5340cd88f878d7c639b4b47de55028fb446076219e",
-    "bundle_bytes": 104864,
+    "bundle_sha256": "544b24b495727a49b3da3e3d4fdbc8624faac1d5a9425291228c12679a9d2ef3",
+    "bundle_bytes": 122751,
     "source_files": [
       {
         "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
-        "sha256": "6639111429c81da3c96ce499b12ff65d977d6e6249844e4790ac6d4875533d38",
+        "sha256": "116aa956048c98ce2f51c96ca680b335db90dcb924dfd1279c4d8cf0aa9fe7c0",
         "stub": false
       },
       {
@@ -29,7 +29,7 @@
       },
       {
         "path": "backtester/lib/usd_layer1_backtester/model_registry.js",
-        "sha256": "d7174aaa42122351462bce1d22ef655010f6c0e61856ab71ed798c29de92113f",
+        "sha256": "cf210ac68321e93a53b7ddfdd0e65fa5bb7e8ec62e59cf26708d9459205fdffb",
         "stub": false
       },
       {
@@ -48,13 +48,18 @@
         "stub": false
       },
       {
+        "path": "lib/layer1_backtesting/test_modules.js",
+        "sha256": "c663c50fb4b6634c52ec9ca946cef7b43d95eaf49caeeebc2a4af5181c596d7e",
+        "stub": false
+      },
+      {
         "path": "lib/usd_l1_votes.js",
         "sha256": "76c2eae8a2fad079ea988615d7d6d212bcdd1b285f09c3e3920c2533aa218f23",
         "stub": false
       },
       {
         "path": "backtester/lib/usd_session_engine_interface.js",
-        "sha256": "3aa41dc91adc52bdae446aec7ee89e9747652db6cb916b58b1ca882d8b408435",
+        "sha256": "73ba4fc1d1812db7c4df5006214d80024c5a08ec5003664fd3ff00b15a23c808",
         "stub": false
       },
       {
@@ -120,9 +125,11 @@
             "nasdaq100_d20_pct"
           ],
           "input_contract": {
-            "contract_version": "usd-l1-model-input-contract-v1",
-            "retrieval": "saved_panel_replay",
-            "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+            "contract_version": "usd-l1-model-input-contract-v2",
+            "retrieval": "declared_sources_with_reconstruction_disclosure",
+            "retrieval_statement": "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+            "source_catalogue": "lib/layer1_backtesting/input_sources.js",
+            "source_clock_policy": "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
             "missing_input_policy": "abstain_or_block",
             "fill_policy": "the controller never fills a missing value and never estimates one",
             "keys": [
@@ -335,9 +342,11 @@
             "usdjpy_d5_pct"
           ],
           "input_contract": {
-            "contract_version": "usd-l1-model-input-contract-v1",
-            "retrieval": "saved_panel_replay",
-            "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+            "contract_version": "usd-l1-model-input-contract-v2",
+            "retrieval": "declared_sources_with_reconstruction_disclosure",
+            "retrieval_statement": "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+            "source_catalogue": "lib/layer1_backtesting/input_sources.js",
+            "source_clock_policy": "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
             "missing_input_policy": "abstain_or_block",
             "fill_policy": "the controller never fills a missing value and never estimates one",
             "keys": [
@@ -424,9 +433,11 @@
             "usdjpy_d5_pct"
           ],
           "input_contract": {
-            "contract_version": "usd-l1-model-input-contract-v1",
-            "retrieval": "saved_panel_replay",
-            "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+            "contract_version": "usd-l1-model-input-contract-v2",
+            "retrieval": "declared_sources_with_reconstruction_disclosure",
+            "retrieval_statement": "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+            "source_catalogue": "lib/layer1_backtesting/input_sources.js",
+            "source_clock_policy": "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
             "missing_input_policy": "abstain_or_block",
             "fill_policy": "the controller never fills a missing value and never estimates one",
             "keys": [
@@ -505,9 +516,11 @@
             "vix_level"
           ],
           "input_contract": {
-            "contract_version": "usd-l1-model-input-contract-v1",
-            "retrieval": "saved_panel_replay",
-            "retrieval_statement": "This model reads the values saved in the committed morning panel. Neither the model nor its n8n Cloud child fetches the underlying history; historical availability is therefore not established by a replay.",
+            "contract_version": "usd-l1-model-input-contract-v2",
+            "retrieval": "declared_sources_with_reconstruction_disclosure",
+            "retrieval_statement": "This model reads the values saved in the committed morning panel. Each key is resolved through the declared source catalogue (provider, series, transform and publication lag) and every value carries either a contemporaneous capture with a receipt taken at or before the cutoff, or an explicit reconstruction digest. The n8n Cloud child replays the saved values; it does not fetch history, so a replay alone never establishes historical availability.",
+            "source_catalogue": "lib/layer1_backtesting/input_sources.js",
+            "source_clock_policy": "contemporaneous only when a capture at or before the cutoff matches the replayed value and carries a receipt id; otherwise reconstructed_panel with no receipt",
             "missing_input_policy": "abstain_or_block",
             "fill_policy": "the controller never fills a missing value and never estimates one",
             "keys": [
@@ -524,7 +537,7 @@
           "cloud_note": null
         }
       ],
-      "fingerprint": "c06a73d68453f78884773ce7acd8a5b65d808c9cb54d399b5620c38e8f52ce01",
+      "fingerprint": "a8ed771c975c9cd02b3b880b34e73448bafdd997700c387e448f10a43a343719",
       "file": "backtester/lib/usd_layer1_backtester/model_registry.js"
     },
     "children": [
@@ -37773,7 +37786,7 @@
       "note": "Reproduction of the stored calls only. These figures are not accuracy and not an edge claim."
     },
     "cloud_bundle": {
-      "bundle_sha256": "5fbc87f2568007cdb7a4fa5340cd88f878d7c639b4b47de55028fb446076219e",
+      "bundle_sha256": "544b24b495727a49b3da3e3d4fdbc8624faac1d5a9425291228c12679a9d2ef3",
       "checked_decisions": 1450,
       "mismatches": 0,
       "note": "The generated Cloud bundle reproduced the Node controller for both challengers over all 725 mornings."
@@ -37975,6 +37988,13 @@
         "module": "lib/layer1_backtesting/l2l_simulation.js",
         "tests": "tests/l2l_simulation.test.js",
         "cases": 7,
+        "accounting": {
+          "status": "implemented_and_fixture_demonstrated",
+          "module": "lib/layer1_backtesting/execution_accounting.js",
+          "fixture": "data/usd-layer1-backtester/fixtures/execution-accounting-v1.json",
+          "tests": "tests/execution_accounting.test.js",
+          "statement": "Costs, 1% sizing, equity and drawdown are implemented from contracts.ACCOUNT and demonstrated on a labelled fixture. No historical trade path exists to apply them to."
+        },
         "statement": "The frozen 5R path rule is implemented and unit-tested on synthetic tapes. The historical 5-minute tape and level ladder are absent, so the rule has never been measured on history."
       },
       "blocked_on": "history",
@@ -38018,6 +38038,13 @@
         "module": "lib/layer1_backtesting/l2l_simulation.js",
         "tests": "tests/l2l_simulation.test.js",
         "cases": 7,
+        "accounting": {
+          "status": "implemented_and_fixture_demonstrated",
+          "module": "lib/layer1_backtesting/execution_accounting.js",
+          "fixture": "data/usd-layer1-backtester/fixtures/execution-accounting-v1.json",
+          "tests": "tests/execution_accounting.test.js",
+          "statement": "Costs, 1% sizing, equity and drawdown are implemented from contracts.ACCOUNT and demonstrated on a labelled fixture. No historical trade path exists to apply them to."
+        },
         "statement": "The levels-plus-midpoints ladder and the frozen 3R path are implemented and unit-tested on synthetic tapes. The historical 5-minute tape and level ladder are absent, so the rule has never been measured on history."
       },
       "blocked_on": "history",

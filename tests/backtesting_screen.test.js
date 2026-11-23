@@ -509,3 +509,23 @@ test("the ledger saves once per model per morning and refuses a conflicting seco
   assert.throws(() => saveDecision(ledger, { ...record, outcome: "allowed" }), /conflicting decision/);
   assert.equal(ledger.conflicts, 1);
 });
+test("the market x test matrix is carried to the screen with a reason per blocked combination", () => {
+  const matrix = screen.market_matrix;
+  assert.equal(matrix.primary_market, "DXY");
+  assert.equal(matrix.market_count, 8);
+  assert.equal(matrix.test_count, 3);
+  assert.equal(matrix.combination_count, 24);
+  assert.equal(matrix.rows.length, 8);
+  assert.deepEqual(matrix.tests.map((entry) => entry.id), ["direction", "l2l_full_5r", "l2l_half_3r"]);
+  const dxy = matrix.rows.find((row) => row.market === "DXY");
+  assert.equal(dxy.tests.direction.status, "proxy_scored");
+  assert.equal(dxy.tests.l2l_full_5r.status, "blocked");
+  assert.equal(dxy.tests.l2l_half_3r.status, "blocked");
+  const gbp = matrix.rows.find((row) => row.market === "GBPUSD");
+  assert.equal(gbp.tests.direction.status, "blocked");
+  assert.match(gbp.tests.direction.reason, /no cached one-hour series/);
+  assert.match(gbp.tests.l2l_full_5r.reason, /no 5-minute tape/);
+  const total = matrix.counts.scored + matrix.counts.proxy_scored + matrix.counts.blocked;
+  assert.equal(total, 24);
+  assert.match(matrix.note, /never shown as a scored zero/);
+});
