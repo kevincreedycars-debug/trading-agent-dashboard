@@ -9,8 +9,10 @@ const test = require("node:test");
 
 const ROOT = path.join(__dirname, "..");
 const accounting = require(path.join(ROOT, "lib", "layer1_backtesting", "execution_accounting"));
+const accounts = require(path.join(ROOT, "backtester", "lib", "usd_layer1_backtester", "accounts"));
 const contracts = require(path.join(ROOT, "backtester", "lib", "usd_layer1_backtester", "contracts"));
 const fixture = require(path.join(ROOT, "data", "usd-layer1-backtester", "fixtures", "execution-accounting-v1.json"));
+const panel = require(path.join(ROOT, "data", "usd-layer1-backtester", "run-v1.json"));
 
 function run(costs) {
   return accounting.accountFor({ trades: fixture.trades, costs });
@@ -22,6 +24,42 @@ test("the sizing rule is the contract's own account rule", () => {
   assert.equal(accounting.SIZING.risk_per_trade_pct, contracts.ACCOUNT.risk_per_trade_pct);
   assert.equal(accounting.SIZING.risk_per_trade_pct, 1);
   assert.equal(accounting.SIZING.currency, "GBP");
+});
+
+test("one authority names the account: the contract, the panel, the demo accounts and the accounting agree", () => {
+  // The North Star says GBP 100,000 and 1% of the running balance. The contract is the authority; every
+  // other surface reads it. This check would fail if a module retyped a different currency or a
+  // different starting balance, which is how two accounts quietly become two different experiments.
+  assert.deepEqual(
+    Object.keys(contracts.ACCOUNT).sort(),
+    ["chronological", "currency", "position_limits", "risk_per_trade_pct", "sizing_rule", "starting_balance"]
+  );
+  assert.equal(contracts.ACCOUNT.starting_balance, 100000);
+  assert.equal(contracts.ACCOUNT.currency, "GBP");
+  assert.equal(contracts.ACCOUNT.risk_per_trade_pct, 1);
+
+  assert.equal(accounting.SIZING.starting_balance, contracts.ACCOUNT.starting_balance);
+  assert.equal(accounting.SIZING.currency, contracts.ACCOUNT.currency);
+  assert.equal(accounting.SIZING.risk_per_trade_pct, contracts.ACCOUNT.risk_per_trade_pct);
+
+  const emptyDemoAccount = accounts.runAccount({ account: accounts.FOUR_ACCOUNTS[0], trades: [] });
+  assert.equal(emptyDemoAccount.starting_balance, contracts.ACCOUNT.starting_balance);
+  assert.equal(emptyDemoAccount.currency, contracts.ACCOUNT.currency);
+  assert.equal(emptyDemoAccount.risk_per_trade_pct, contracts.ACCOUNT.risk_per_trade_pct);
+
+  assert.equal(panel.run.account.starting_balance, contracts.ACCOUNT.starting_balance);
+  assert.equal(panel.run.account.currency, contracts.ACCOUNT.currency);
+  assert.equal(panel.run.account.risk_per_trade_pct, contracts.ACCOUNT.risk_per_trade_pct);
+  assert.equal(panel.run.account.sizing_rule, contracts.ACCOUNT.sizing_rule);
+  const replayRow = panel.results.lead_numbers.find((row) => row.key === "trades_replayed");
+  assert.ok(replayRow, "the panel must carry the replay lead number");
+  const accountLabel = `${
+    contracts.ACCOUNT.currency === "GBP" ? "£" : `${contracts.ACCOUNT.currency} `
+  }${contracts.ACCOUNT.starting_balance.toLocaleString("en-GB")} account`;
+  assert.ok(
+    replayRow.note.includes(accountLabel),
+    `the panel's account note must read the contract, expected ${accountLabel} in: ${replayRow.note}`
+  );
 });
 
 test("the labelled fixture reproduces every hand-checked row and the summary", () => {

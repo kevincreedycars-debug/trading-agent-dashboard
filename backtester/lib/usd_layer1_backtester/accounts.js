@@ -8,7 +8,13 @@
  * rule rather than convenient: the risk is taken at the fill, not at the trigger, and the position is
  * rounded to the instrument's lot step before the money moves, so a balance cannot drift through
  * fractional lots the broker would never accept.
+ *
+ * `contracts.ACCOUNT` is the one authority for the starting balance, currency and risk. The defaults
+ * below are read from it rather than retyped, so the run artefact, this module and the execution
+ * accounting cannot drift into two different accounts.
  */
+
+const contracts = require("./contracts");
 
 /** Round a lot size down to the instrument's step, refusing anything under its minimum. */
 function roundLots(rawLots, { lotStep = 0.01, minLot = 0.01 } = {}) {
@@ -48,7 +54,13 @@ function maxDrawdown(equityCurve, startingBalance) {
  * @param {number} [options.riskPct] risk per filled trade, as a percentage of the running balance.
  * @param {object} [options.instrument] `{ lotStep, minLot }`.
  */
-function runAccount({ account, trades, startingBalance = 100000, riskPct = 1, instrument = {} }) {
+function runAccount({
+  account,
+  trades,
+  startingBalance = contracts.ACCOUNT.starting_balance,
+  riskPct = contracts.ACCOUNT.risk_per_trade_pct,
+  instrument = {}
+}) {
   const ordered = trades
     .filter((trade) => trade.geometry === account.geometry)
     .slice()
@@ -104,7 +116,7 @@ function runAccount({ account, trades, startingBalance = 100000, riskPct = 1, in
     geometry: account.geometry,
     model: account.model,
     starting_balance: startingBalance,
-    currency: "GBP",
+    currency: contracts.ACCOUNT.currency,
     risk_per_trade_pct: riskPct,
     fills: realised.length,
     wins,

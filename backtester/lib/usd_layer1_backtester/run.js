@@ -479,7 +479,9 @@ function buildLeadNumbers({ broker, levelProvenance = null, tickSweep = null }) 
       source: "data/usd-layer1-backtester/l2l-tick-sweep-v1.json",
       note: sweepRules
         ? "one call per session per model, one percent of the running balance risked per filled trade on each " +
-          "£100,000 account"
+          `${
+            contracts.ACCOUNT.currency === "GBP" ? "\u00a3" : `${contracts.ACCOUNT.currency} `
+          }${contracts.ACCOUNT.starting_balance.toLocaleString("en-GB")} account`
         : "run node backtester/scripts/run_l2l_tick_sweep.js --publish to produce it"
     }
   ];

@@ -292,8 +292,8 @@ on nearly all of them.
 | --- | --- | --- | --- | --- | --- |
 | 1 | USD direction on the broker DXY.cash series | historical_coverage | scored on a broker proxy series, not on the official index | 360 | 725 |
 | 2 | USD-only opposite-direction mapping in four markets | historical_coverage | scored market by market; no cross-market aggregate is published or reported | 685 | 725 |
-| 3 | Original Layer 2 levels with the frozen 5R rules | historical_coverage | blocked on history: the only evidence is a worked demonstration | 0 | 725 |
-| 4 | Original levels plus midpoints with the frozen 3R rules | historical_coverage | blocked on history: the only evidence is a worked demonstration | 0 | 725 |
+| 3 | Original Layer 2 levels with the frozen 5R rules | historical_coverage | blocked on history: the simulation is implemented and unit-tested, but no 5-minute tape or level ladder exists | 0 | 725 |
+| 4 | Original levels plus midpoints with the frozen 3R rules | historical_coverage | blocked on history: the simulation is implemented and unit-tested, but no 5-minute tape or level ladder exists | 0 | 725 |
 
 ### 1. USD direction on the broker DXY.cash series
 
@@ -357,7 +357,7 @@ Market NAS100:
 
 ### 3. Original Layer 2 levels with the frozen 5R rules
 
-Type: historical_coverage. Outcome source: one-hour closes with the original layer-2 level grid and 5R management. Status: blocked on history: the only evidence is a worked demonstration.
+Type: historical_coverage. Outcome source: one-hour closes with the original layer-2 level grid and 5R management. Status: blocked on history: the simulation is implemented and unit-tested, but no 5-minute tape or level ladder exists.
 
 Question: When a Layer 1 call was handed to the original Layer 2 levels, did the frozen 5R path reach its target before its stop?
 
@@ -373,11 +373,12 @@ The path test needs a 5-minute tape and a level ladder archived before the setup
 | l2l_full_5r | Current / half 3R | control | 10 | 4 | 4 | 8 |
 
 - This is the agreed test 3. It needs a trade-qualified call, contemporaneous levels and an actionable bid/ask M5 replay.
+- The path rule engine is implemented and unit-tested on synthetic tapes (lib/layer1_backtesting/l2l_simulation.js). That is a statement about the simulator, not a measured result.
 - The grid does not yet exist for these markets, so the test is blocked on history, not scored at zero.
 
 ### 4. Original levels plus midpoints with the frozen 3R rules
 
-Type: historical_coverage. Outcome source: one-hour closes with the levels-plus-midpoints grid and 3R management. Status: blocked on history: the only evidence is a worked demonstration.
+Type: historical_coverage. Outcome source: one-hour closes with the levels-plus-midpoints grid and 3R management. Status: blocked on history: the simulation is implemented and unit-tested, but no 5-minute tape or level ladder exists.
 
 Question: With midpoints added to the original levels, did the frozen 3R path reach its target before its stop?
 
@@ -394,6 +395,7 @@ The path test needs a 5-minute tape and a level ladder archived before the setup
 
 - This is the agreed test 4, a separately frozen geometry and management rule, not a sensitivity check on test 3.
 - It needs the same tape and ladder evidence as test 3 plus the midpoint geometry.
+- The midpoint ladder and the 3R path are implemented and unit-tested on synthetic tapes; the historical inputs are absent.
 
 ### Pair combination: `definition_recorded_not_scored`
 
@@ -506,12 +508,12 @@ Does not license: It does not license treating reconstructed calls as valid call
 
 | Input | Bytes | sha256 |
 | --- | --- | --- |
-| `data/usd-layer1-backtester/run-v1.json` | 6584003 | `20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e` |
+| `data/usd-layer1-backtester/run-v1.json` | 6583957 | `0fea034745c343610c441ffa3a0e35304222a73ea8034f9c78055ea9e1e861f3` |
 | `data/usd-layer1-backtester/engine-v1.json` | 927740 | `f4290bae4ff91a41727f717f0f7138dffedbf8b3e2a3dc824dcdceeb7aeab6c8` |
 | `config/usd_l1_factor_rulebook_v1.json` | 38281 | `1f12c64f019e38056330a8beb3ffb85314e2ff5a25c46af91c18bf078cf9f6a0` |
 | `config/usd_l1_decision_rules_v1.json` | 10240 | `015155d3092d8a6786ce5ce18c2150155bf13c01a37328cfb19336484b974cc8` |
 
-Report digest: `a458d02a409ed53480de7eb2921bf4bebcddadd1235e5bbe353af0023f157024`.
+Report digest: `e73fb5c62b20e9fbc1fba2c11a8d215ad48e009233eec0101dd11cf323448f76`.
 
 The digest is taken over the body before this block; rebuilding the report from the same artefacts reproduces it.
 

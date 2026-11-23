@@ -4,11 +4,16 @@ Research only. No workflow is scheduled, no webhook is left authenticated, and n
 runtime table is read or written by anything in this lane. This file answers "what works, what is evidenced,
 and what is next" without reading the code.
 
-Last measured: 2026-11-21, after the retrieval, independent-validation, accounting, test-selection and
+Last measured: 2026-11-23, after the retrieval, independent-validation, accounting, test-selection and
 coverage work. This edition corrects the previous one in a specific way: historical retrieval, independent
 rule validation and costs/sizing/equity were described as "what remains" and are now **implementation work
 that is done**; what remains on those axes is the historical data they need, which is a separate dependency.
-Receipted refusals are no longer counted anywhere as completed structural runs.
+Receipted refusals are no longer counted anywhere as completed structural runs. The data dependency and its
+acquisition order are now written down in `backtester/docs/usd_historical_data_acquisition_plan.md`, so this
+checklist points at one plan rather than restating it. The 2026-11-23 edition adds one correction of its own,
+in section 5a: the session-engine interface resolved its endpoint at 17:00 `America/New_York`, so the window
+it measured was 16 or 17 hours while the contract it serves declares 24. Both ends are now 05:00
+`Europe/London`.
 
 ## 0. Three statuses, kept apart
 
@@ -81,11 +86,37 @@ that would turn any of those rows into `contemporaneous_capture`.
 
 The verdict is `pass` for implementation fidelity. That is not a statement that the rules predict anything.
 
+## 5a. Session horizon: 05:00 London to 05:00 London
+
+The session every test is defined on is one local day in London: it starts at the 05:00 research cutoff on
+local date D and ends at 05:00 on D+1. `contracts.SESSION_CONTRACT` said so - `cutoff_local` 05:00
+`Europe/London`, `endpoint_day_offset` 1, `nominal_hours` 24, `start_weekdays` Monday to Friday - and all four
+test definitions read "from 05:00 London to 05:00 the next local calendar day".
+
+`backtester/lib/usd_session_engine_interface.js` did not. It resolved the endpoint at 17:00
+`America/New_York` on the same local date, so the window it measured and returned was 16 or 17 hours, while
+the block it built called itself `usd-session-engine-interface-v1`. The endpoints had drifted apart without
+anything failing: the artefact, the panel and the tests all read the contract, and the one module whose job is
+to resolve the two instants for a later implementation resolved something else.
+
+| Criterion | Status | Evidence |
+| --- | --- | --- |
+| Both endpoints are the contract's own | **works** | `SESSION_CONTRACT` is `cutoff_local` 05:00 `Europe/London` and `endpoint_local` 05:00 `Europe/London` with `endpoint_day_offset: 1`; `America/New_York` stays in `ZONE_TRANSITIONS` only because the macro as-of builder times the Fed's H.10 release in that zone |
+| The measured window is the declared one | **works** | 261 Monday-to-Friday starts in 2026, every one exactly 24 hours. Under the old endpoint the same 261 measured 17 hours on 241 of them and 16 hours on the 20 that fall in the two weeks a year when London and New York are on different offsets |
+| A transition cannot shorten an eligible session | **works** | the EU change at 01:00 UTC on the last Sunday of March and October always falls inside the session that starts on the preceding Saturday; the 2026 Saturday starts measure 23 hours (2026-03-28) and 25 (2026-10-24), and `isSessionStart()` refuses both, because only Monday to Friday start a session |
+| The rule is stated, not just obeyed | **works** | `resolveSession()` returns `nominal_hours`, `window_hours` and `session_starts_weekday`; `SESSION_CONTRACT.session_start_rule` writes the rule out in words and carries it into the bundle |
+| The version records the correction | **works** | `engine_version` is `usd-session-engine-interface-v2` |
+| The bundled Cloud runtime carries it | **works** | `node scripts/build_usd_l1_n8n_cloud_workflows.js` rewrote all six files to identical bytes at `bundle_sha256` `73215c1e…d787`, 119,268 bytes, with the interface source at `73ba4fc1…c808`, the three child ids and the header-auth credential preserved |
+
+Nothing else moved. The 725 panel mornings, the four test definitions, the ledger, the coverage table and the
+published `run-v1.json` are unchanged, because they were already built on the contract's 05:00-to-05:00 day:
+this correction changes what a future implementation resolves, not any recorded result.
+
 ## 6. Costs, sizing, equity and drawdown
 
 | Criterion | Status | Evidence |
 | --- | --- | --- |
-| Sizing is the contract's own rule | **works** | `lib/layer1_backtesting/execution_accounting.js#SIZING` reads `contracts.ACCOUNT`: GBP 100,000, 1% of the running balance at fill |
+| Sizing is the contract's own rule | **works** | `contracts.ACCOUNT` is the only machine-readable source for starting balance, currency and risk: `execution_accounting.js#SIZING`, `usd_layer1_backtester/accounts.js#runAccount` defaults, the demo call, the published panel and the panel's account note all read it, and the accounting test asserts they agree on GBP 100,000, 1% of the running balance at fill |
 | Costs are configurable and labelled | **works** | `zero` (gross, labelled) and `fixture_costs` (spread, slippage, round-turn commission per market; labelled a fixture, not a broker schedule) |
 | Equity and drawdown are computed | **works** | per-trade equity, running peak, drawdown amount and percentage, expectancy in R, profit factor and cost drag |
 | A trade that cannot be sized is skipped with its reason | **works** | no stop, non-positive balance or below-minimum lot each produce a reason, not a forced minimum |
@@ -145,22 +176,38 @@ npm run test:usd-l1-n8n                     # bundle, wiring, map, ledger, sweep
 npm run test:usd-l1-platform                # modules, retrieval, spec check, accounting, morning traces
 npm run test:l2l-simulation                 # the frozen path engine + the aggregate comparison
 npm run check:usd-l1-ledger                 # re-merge every record capture and compare with the ledger
+node backtester/scripts/verify_m5_archive.js            # re-derive the recorded EUR/USD trades from the M5 tape
+node --test backtester/tests/usd_layer1_m5_archive.test.js
 node scripts/verify_usd_l1_test_selection.js --upload   # upload, run both selections, deactivate
 ```
 
-`npm run check:usd-l1-platform` reported `reproduces` for all four artefacts on 2026-11-21, and
-`npm run check:usd-l1-ledger` reported `ledger reproduces` with 0 added rows and 0 verification failures. The
-verification script printed `verdict: pass` and left the parent deactivated.
+On 2026-11-23, measured on this branch: `npm run check:usd-l1-platform` reported `reproduces` for all four
+artefacts, `npm run check:usd-l1-ledger` reported `ledger reproduces` with 0 verification failures, and
+`node backtester/scripts/verify_m5_archive.js` re-derived 6 of 6 recorded EUR/USD trades with 0 failures
+(`node --test backtester/tests/usd_layer1_m5_archive.test.js`, 5 of 5). The M5 sample itself is four markets,
+two and a half days, **0 bid/ask series and 0 pre-session ladders**: it proves the tape can reproduce a
+recorded execution, not that tests 3 or 4 have historical inputs.
+
+The artefact builder is the one step whose output depends on an input outside this commit, and it moved on
+2026-11-23. `node backtester/scripts/run_usd_layer1_backtest.js --generated-at 2026-11-14T00:00:00.000Z`
+reproduced `run-v1.json` byte for byte on 2026-11-22 (SHA-256 `0fea0347…61f3`); on 2026-11-23 the same command
+produces SHA-256 `390b6118…1af7`, and every one of the 51 differing leaves is inside
+`results.lead_numbers[1]` or `level_provenance`. The cause is upstream: `origin/main` published a re-marked
+L2L ladder (`a04cc73a`, stamped `2026-11-23T16:20:57Z`, marked by automatic coverage) over the 2026-10-04
+ladder the published artefact was built from, so the rebuild prices 6 sessions with original levels where the
+committed artefact records 0. The artefact was not republished here: moving the panel's lead number from 0 to
+6 is a statement about the new ladder, and it needs to be read before it is published.
 
 ## 11. What remains
 
 | Item | Kind | Why it is not done | Next step |
 | --- | --- | --- | --- |
-| Contemporaneous input captures | **data dependency** | the retrieval path is implemented, but no capture corpus exists, so every value is a reconstruction | archive a 05:00 receipt set for each declared key; the code already accepts it |
+| Contemporaneous input captures | **data dependency** | the retrieval path is implemented, but no capture corpus exists, so every value is a reconstruction | archive a 05:00 receipt set for each declared key; the code already accepts it. The document shape and acquisition order are in `backtester/docs/usd_historical_data_acquisition_plan.md` |
 | Tests 3 and 4 on history | **data dependency** | the simulator and the account are implemented and tested; there is no contemporaneous level ladder and no actionable bid/ask M5 tape | acquire the ladder and tape; do not relax the readiness rule |
 | ICE DXY for test 1 | **data dependency** | the official series is not licensed in this checkout | ICE sample/licence; the broker proxy stays labelled |
 | H1 eligibility | **owner decision** | 0 of 725; gold identity/licence and calendar vintage are the movable inputs | D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md` |
 | Broker cost schedule | **data dependency** | the accounting runs on a labelled fixture schedule | commit a broker schedule with a source and date |
+| Republish `run-v1.json` from the re-marked ladder | **owner decision** | the committed artefact records 0 sessions with original levels, built from the 2026-10-04 ladder; `data/l2l-levels.json` now carries a ladder stamped `2026-11-23T16:20:57Z` that prices 6 | decide whether the new ladder is accepted, then republish and re-read the 5R/3R line-to-line figures |
 | Rule validation as edge | **research work** | the specification check proves fidelity, not profitability | pre-registered tests on unseen mornings |
 
 Nothing in the first column is blocked by the platform. The platform can consume each of them unchanged.

@@ -11,9 +11,10 @@ const { chromium } = require('playwright');
 // honesty notes. It also holds the page to the two things print kept breaking on: the horizon
 // headers and the two-digit weights must stay on one line (an auto-laid-out table squeezed those
 // columns below a single glyph), and the printed weights must stay dark on white paper.
-// Since 2026-10-08 the page is reached from the shared top bar and from the rail's outbound entries, so the
-// fourth test makes both hops rather than reading either entry's href, and the fifth holds the block's promise
-// about the page: one bar and one rail on screen, both off the printed sheet, the sheet starting at its own edge.
+// Since the rail became the only navigation surface, the page is reached from the rail's outbound entries, so the
+// fourth test makes that hop rather than reading the entry's href, and the fifth holds the block's promise about
+// the page: the bar carries no page links, one rail offers the sheet, both leave the printed sheet, and the sheet
+// starts at its own edge.
 // The sixth test holds the white printable version: the switcher's preview, its promise that every colour on the
 // paper stays legible, and the sheet the printer lays down even for a reader who never touched the switcher.
 const PAGE = path.resolve(__dirname, '../usd-layer1-call-flow.html');
@@ -163,37 +164,29 @@ test('the USD call map keeps its worked example, honesty flags and guard test', 
   } finally { await browser.close(); }
 });
 
-test('the dashboard reaches the USD call map from the shared top bar and the rail', async () => {
+test('the dashboard reaches the USD call map from the shared rail', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
-    // The sheet is only useful if a published page opens it, so the guard makes the hop from the entries the
-    // shared navigation renders instead of reading their hrefs: an entry that was renamed, hidden or pointed
-    // at a missing file fails here, the same way the site-nav guard holds the other six bar entries. The page
-    // is a sheet a reader prints rather than a dashboard view, so the rail offers it as an outbound link,
-    // never as a tab: the rail drives dashboard views by data-tab and this is not one.
-    const bar = page.locator('.topbar.site-nav a.topbar-link[href="usd-layer1-call-flow.html"]');
-    assert.equal(await bar.count(), 1, 'the dashboard bar must link to the USD call map');
-    assert.equal(await bar.textContent(), 'USD Call Map', 'the bar entry must carry the label the navigation agreed');
-    assert.equal(await bar.getAttribute('target'), '_top', 'the bar entry must leave any frame it is shown in');
+    // The sheet is only useful if a published page opens it, so the guard makes the hop from the entry the
+    // shared navigation renders instead of reading its href: an entry that was renamed, hidden or pointed
+    // at a missing file fails here, the same way the site-nav guard holds the rail. The page is a sheet a
+    // reader prints rather than a dashboard view, so the rail offers it as an outbound link, never as a tab:
+    // the rail drives dashboard views by data-tab and this is not one.
+    assert.equal(await page.locator('.topbar.site-nav a.topbar-link').count(), 0, 'the bar carries no page links');
     const rail = page.locator('nav#agentTabs a.side-rail-link[href="usd-layer1-call-flow.html"]');
     assert.equal(await rail.count(), 1, 'the rail must offer the sheet as one of its outbound entries');
     assert.equal(await rail.textContent(), 'USD Call Map', 'the rail entry must carry the label the navigation agreed');
     assert.equal(await rail.getAttribute('target'), '_top', 'the rail entry must leave any frame it is shown in');
     assert.equal(await page.locator('nav#agentTabs a[href="usd-layer1-call-flow.html"][data-tab]').count(), 0, 'the sheet must not be a rail tab: the rail drives dashboard views');
-    assert.equal(await bar.isVisible(), true, 'the bar entry must be visible in a 1440px window');
-    await bar.click();
-    await page.waitForURL(/usd-layer1-call-flow\.html$/);
-    assert.equal(await page.locator('ol.flow > .node').count(), 8, 'the bar entry opens the sheet with all eight chain steps');
-    assert.match(await page.locator('h1').textContent(), /How the USD Layer 1 call is made/);
-    await page.goBack();
-    await page.waitForURL(/index\.html$/);
-    // The rail entry is the second way in, from the same page.
+    await page.locator('details.side-rail-details').evaluate((node) => { node.open = true; });
+    assert.equal(await rail.isVisible(), true, 'the rail entry must be visible once its disclosure is open');
     await rail.click();
     await page.waitForURL(/usd-layer1-call-flow\.html$/);
     assert.equal(await page.locator('ol.flow > .node').count(), 8, 'the rail entry opens the sheet with all eight chain steps');
+    assert.match(await page.locator('h1').textContent(), /How the USD Layer 1 call is made/);
   } finally { await browser.close(); }
 });
 
@@ -208,7 +201,8 @@ test('the USD call map carries the shared navigation on screen, and prints as th
     // fact worth holding is that the block sits beside the map rather than over it.
     assert.equal(await page.locator('body > header.site-nav.topbar').count(), 1, 'the page must carry the shared bar as its own');
     assert.equal(await page.locator('body > aside.site-nav.side-rail').count(), 1, 'the page must carry the shared rail');
-    assert.equal(await page.locator('.topbar.site-nav a.topbar-link[href="usd-layer1-call-flow.html"]').count(), 1, 'the sheet must be reachable from the bar on its own page');
+    assert.equal(await page.locator('.topbar.site-nav a.topbar-link').count(), 0, 'the bar carries no page links on the sheet');
+    assert.equal(await page.locator('.side-rail-link[href="usd-layer1-call-flow.html"]').count(), 1, 'the sheet must be reachable from the rail on its own page');
     const shifted = await page.evaluate(() => document.querySelector('main').getBoundingClientRect().left);
     assert.equal(Math.round(shifted), 232, `the fixed rail must sit beside the map, main starts at ${Math.round(shifted)}px`);
     // Print: the bar and the rail leave the sheet, and the sheet starts at its own left edge rather than 232px in.

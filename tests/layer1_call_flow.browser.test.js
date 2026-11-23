@@ -12,14 +12,13 @@ const { chromium } = require('playwright');
 // rules only the export proves. It also holds the page to the two things it promises about itself:
 // no text may outgrow its own card, and the whole page must still fit one A4 landscape sheet when
 // printed, without the print type being shrunk under the legibility floor.
-// The page is reached from the shared top bar and, since 2026-10-04, from the rail's one outbound entry,
-// so the fourth test makes both hops rather than reading either entry's href. Both entries live in
-// backtester/partials/shared_nav.html and are rendered into all twelve published pages by
-// backtester/scripts/build_shared_nav.js, which is what keeps the dashboard's own copy of them in step
-// with every other page's. Since the same date this page carries that block itself - the map is a page a
-// reader navigates to, not only a sheet - so the fifth test holds the block's two promises about it: the
-// bar and the rail are on screen and off the printed sheet, and the sheet is still the map alone, with the
-// white palette the switcher previews held to a contrast floor rather than only to a colour list.
+// The page is reached from the rail's outbound entry, so the fourth test makes that hop rather than
+// reading the entry's href. The entry lives in backtester/partials/shared_nav.html and is rendered into
+// all published pages by backtester/scripts/build_shared_nav.js, which is what keeps every page's copy in
+// step. Since the shared bar carries no page links, this page carries the block itself and the fifth test
+// holds the block's promises about it: one navigable rail on screen, no bar links, both off the printed
+// sheet, and the sheet still the map alone, with the white palette the switcher previews held to a
+// contrast floor rather than only to a colour list.
 const PAGE = path.resolve(__dirname, '../layer1-call-flow.html');
 const WIDTHS = [1440, 1180, 860, 721, 390];
 // The box Chrome lays the printed sheet out in: 297x210mm A4 landscape minus the 8mm page margin.
@@ -210,39 +209,29 @@ test('the call map keeps its honesty flags and its guard test', async () => {
   } finally { await browser.close(); }
 });
 
-test('the dashboard reaches the call map from the shared top bar and the rail', async () => {
+test('the dashboard reaches the call map from the shared rail', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href);
     // The one-pager is only useful if a published page opens it, so the guard makes the hop from the
-    // bar entry the shared navigation renders instead of reading its href: an entry that was
-    // renamed, hidden or pointed at a missing file fails here, the same way the site-nav guard holds
-    // the other four bar entries. The map is a page a reader prints rather than a dashboard view, so
-    // where the rail offers it - it has since 2026-10-04, in the System group beside Architecture - it
-    // offers it as an outbound link, never as a tab: the rail's tabs drive dashboard views by data-tab
-    // and this is not one.
-    const bar = page.locator('.topbar.site-nav a.topbar-link[href="layer1-call-flow.html"]');
-    assert.equal(await bar.count(), 1, 'the dashboard bar must link to the call map');
-    assert.equal(await bar.textContent(), 'Call Map', 'the bar entry must carry the label the navigation agreed');
-    assert.equal(await bar.getAttribute('target'), '_top', 'the bar entry must leave any frame it is shown in');
+    // entry the shared navigation renders instead of reading its href: an entry that was renamed,
+    // hidden or pointed at a missing file fails here, the same way the site-nav guard holds the rail.
+    // The map is a page a reader prints rather than a dashboard view, so the rail offers it as an
+    // outbound link, never as a tab: the rail's tabs drive dashboard views by data-tab and this is not one.
+    assert.equal(await page.locator('.topbar.site-nav a.topbar-link').count(), 0, 'the bar carries no page links');
     const rail = page.locator('nav#agentTabs a.side-rail-link[href="layer1-call-flow.html"]');
     assert.equal(await rail.count(), 1, 'the rail must offer the map as one of its outbound entries');
     assert.equal(await rail.textContent(), 'Call Map', 'the rail entry must carry the label the navigation agreed');
     assert.equal(await rail.getAttribute('target'), '_top', 'the rail entry must leave any frame it is shown in');
     assert.equal(await page.locator('nav#agentTabs a[href="layer1-call-flow.html"][data-tab]').count(), 0, 'the map must not be a rail tab: the rail drives dashboard views');
-    assert.equal(await bar.isVisible(), true, 'the bar entry must be visible in a 1440px window');
-    await bar.click();
-    await page.waitForURL(/layer1-call-flow\.html$/);
-    assert.equal(await page.locator('ol.flow > .node').count(), 7, 'the bar entry opens the map with all seven chain steps');
-    assert.match(await page.locator('h1').textContent(), /How the calls are made/);
-    await page.goBack();
-    await page.waitForURL(/index\.html$/);
-    // The rail entry is the second way in, from the same page.
+    await page.locator('details.side-rail-details').evaluate((node) => { node.open = true; });
+    assert.equal(await rail.isVisible(), true, 'the rail entry must be visible once its disclosure is open');
     await rail.click();
     await page.waitForURL(/layer1-call-flow\.html$/);
     assert.equal(await page.locator('ol.flow > .node').count(), 7, 'the rail entry opens the map with all seven chain steps');
+    assert.match(await page.locator('h1').textContent(), /How the calls are made/);
   } finally { await browser.close(); }
 });
 
@@ -260,7 +249,8 @@ test('the map carries the shared navigation on screen, and prints as the map alo
     // rather than over it.
     assert.equal(await page.locator('body > header.site-nav.topbar').count(), 1, 'the page must carry the shared bar as its own');
     assert.equal(await page.locator('body > aside.site-nav.side-rail').count(), 1, 'the page must carry the shared rail');
-    assert.equal(await page.locator('.topbar.site-nav a.topbar-link[href="layer1-call-flow.html"]').count(), 1, 'the map must be reachable from the bar on its own page');
+    assert.equal(await page.locator('.topbar.site-nav a.topbar-link').count(), 0, 'the bar carries no page links on the map');
+    assert.equal(await page.locator('.side-rail-link[href="layer1-call-flow.html"]').count(), 1, 'the map must be reachable from the rail on its own page');
     const toggle = page.locator('#sheetToggle');
     assert.equal(await toggle.count(), 1, 'the title block must offer the sheet switcher');
     assert.equal(await toggle.isVisible(), true, 'the switcher must be visible in a 1440px window');

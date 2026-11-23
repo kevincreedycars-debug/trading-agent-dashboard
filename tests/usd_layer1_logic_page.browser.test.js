@@ -13,6 +13,10 @@ const { chromium } = require('playwright');
 // summarises the dossier instead of carrying it, and a download that hands over a file which is no longer
 // the dossier. It reads the Markdown itself and compares against it, so an edit to the dossier cannot leave
 // the page behind, and it runs the builder's own `--check` as a separate opinion on the same question.
+//
+// The page uses the shared navigation: the dossier lives in the rail's "Old documentation" disclosure, not
+// in a topbar link, and the page carries the shared inline clock. The guard follows that route and allows
+// the one inline script while still refusing any script, image or frame loaded from somewhere else.
 const ROOT = path.resolve(__dirname, '..');
 const PAGE = path.resolve(ROOT, 'usd-layer1-logic.html');
 const SOURCE = path.resolve(ROOT, 'docs/analysis-engine/USD_LAYER1_LOGIC.md');
@@ -53,10 +57,12 @@ test('the dashboard reaches the USD logic dossier and the page leads back', asyn
     const page = await browser.newPage();
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(pathToFileURL(path.resolve(ROOT, 'index.html')).href);
-    const link = page.locator('a.topbar-link[href="usd-layer1-logic.html"]');
-    assert.equal(await link.count(), 1, 'the dashboard topbar must carry exactly one dossier link');
+    assert.equal(await page.locator('.topbar .topbar-link').count(), 0, 'the shared topbar carries no page links');
+    const disclosure = page.locator('.side-rail nav details.side-rail-details').first();
+    await disclosure.evaluate(node => { node.open = true; });
+    const link = page.locator('a.side-rail-link[href="usd-layer1-logic.html"]');
+    assert.equal(await link.count(), 1, 'the rail documentation disclosure must carry exactly one dossier link');
     assert.equal(await link.isVisible(), true);
-    assert.equal(await page.locator('a.side-rail-link[href="usd-layer1-logic.html"]').count(), 1, 'the side rail must carry the same route');
     await link.click();
     await page.waitForURL(/usd-layer1-logic\.html$/);
     assert.equal(flatten(await page.locator('h1').textContent()), TITLE, 'the page must carry the dossier title');
@@ -81,7 +87,9 @@ test('the dossier page renders offline at desktop and narrow widths', async () =
       await page.goto(pathToFileURL(PAGE).href, { waitUntil: 'domcontentloaded' });
       await page.locator('.doc').waitFor();
       assert.equal(await page.locator('.chapter').count(), SECTIONS, `at ${width}px the page keeps all ${SECTIONS} sections`);
-      assert.equal(await page.locator('script, img, iframe').count(), 0, 'the page loads no script, image or frame of its own');
+      assert.equal(await page.locator('script[src], img, iframe, object, embed').count(), 0, 'the page loads no script, image or frame from somewhere else');
+      assert.equal(await page.locator('script').count(), 1, 'the page carries the shared clock and no second script');
+      assert.equal(await page.locator('script').getAttribute('src'), null, 'the shared clock must be inline');
       assert.deepEqual(await page.evaluate(overflowing), [], `at ${width}px no panel may let its text outgrow its own box`);
       assert.equal(await page.evaluate(sideways), false, `at ${width}px the page itself may not scroll sideways`);
       // A wide table is allowed to scroll, but only inside its own frame: that is what keeps the page still.

@@ -8,7 +8,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   const BUNDLE_VERSION = "usd-l1-cloud-runtime-v3";
-  const BUNDLE_SHA256 = "bb92e002976270d9016b9d584599c9bb01d2e6fee61d2b59205699bc6b7fd69b";
+  const BUNDLE_SHA256 = "73215c1e4785b6029e6ead99a7b7a9783f96497833f01acebfe0dbba01b6d787";
   const SOURCE_FILES = [
   {
     "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
@@ -52,7 +52,7 @@
   },
   {
     "path": "backtester/lib/usd_session_engine_interface.js",
-    "sha256": "3aa41dc91adc52bdae446aec7ee89e9747652db6cb916b58b1ca882d8b408435",
+    "sha256": "73ba4fc1d1812db7c4df5006214d80024c5a08ec5003664fd3ff00b15a23c808",
     "stub": false
   },
   {
@@ -2287,14 +2287,19 @@
       "use strict";
       
       /**
-       * Session-target and as-of-cutoff interfaces for the USD session engine (research only, 2026-10-13).
+       * Session-target and as-of-cutoff interfaces for the USD session engine (research only, 2026-10-13;
+       * session horizon corrected to 05:00 London to 05:00 London on 2026-10-14).
        *
        * This file is an interface contract, not the engine. It exists so that every later implementation of a
        * historical or prospective run resolves the two endpoints and the as-of rule in one place, and so a
        * leakage mistake is caught by construction rather than by review.
        *
-       * The two time zones are handled separately, as the brief requires. Offsets are derived from declared
-       * transition instants, never from a fixed hour count, because London and New York change on different dates.
+       * Both ends of the session are wall-clock local times in Europe/London: the session runs from 05:00 London
+       * on its own local date to 05:00 London on the next local date. Offsets are derived from declared
+       * transition instants, never from a fixed hour count.
+       *
+       * America/New_York is no longer part of the session definition. Its transitions are kept in
+       * ZONE_TRANSITIONS only because the macro as-of builder times the Fed's H.10 release in that zone.
        *
        * Nothing here reads the network, the warehouse, the dispatcher or a production path.
        */
@@ -2302,8 +2307,12 @@
       const SESSION_CONTRACT = Object.freeze({
         cutoff_local: "05:00",
         cutoff_zone: "Europe/London",
-        endpoint_local: "17:00",
-        endpoint_zone: "America/New_York"
+        endpoint_local: "05:00",
+        endpoint_zone: "Europe/London",
+        endpoint_day_offset: 1,
+        nominal_hours: 24,
+        session_start_weekdays: [1, 2, 3, 4, 5],
+        session_start_rule: "a session starts on Monday to Friday only, so the Saturday and Sunday starts are never sessions; the Saturday start is the only one that can contain a London DST transition, which is why every eligible session is exactly 24 hours"
       });
       
       /**
@@ -2370,20 +2379,43 @@
       }
       
       /**
-       * Resolve one session's cutoff and endpoint.
+       * Whether the session starting on this local date is an eligible session.
+       *
+       * A London local date is the same calendar date as its UTC date: at 05:00 London the UTC clock reads 05:00Z on
+       * GMT or 04:00Z on BST, so the date never rolls over and the weekday can be read straight off the UTC date.
        *
        * @param {number} dayUtcMs UTC midnight of the session's local date.
-       * @returns {object} instants, offset abbreviations and the nominal window length.
+       * @returns {boolean} true for a Monday-to-Friday start, false for a Saturday or Sunday start.
+       */
+      function isSessionStart(dayUtcMs) {
+        const weekday = new Date(dayUtcMs).getUTCDay();
+        return SESSION_CONTRACT.session_start_weekdays.includes(weekday);
+      }
+      
+      /**
+       * Resolve one session's cutoff and endpoint.
+       *
+       * Both instants are resolved from declared London transitions. The EU change happens at 01:00 UTC on the
+       * last Sunday of March and October, which always falls inside the session that starts on the preceding
+       * Saturday (05:00 Saturday to 05:00 Sunday), so that start measures 23 hours in spring and 25 in autumn.
+       * A Saturday start is not an eligible session, and no Monday-to-Friday start ever contains a transition.
+       *
+       * @param {number} dayUtcMs UTC midnight of the session's local date.
+       * @returns {object} instants, offset abbreviations, the nominal length, the measured length and whether
+       *   the start is an eligible session.
        */
       function resolveSession(dayUtcMs) {
         const cutoffMs = instantForLocalTime(dayUtcMs, 5, 0, SESSION_CONTRACT.cutoff_zone);
-        const endpointMs = instantForLocalTime(dayUtcMs, 17, 0, SESSION_CONTRACT.endpoint_zone);
+        const endpointDayMs = dayUtcMs + SESSION_CONTRACT.endpoint_day_offset * 24 * HOUR_MS;
+        const endpointMs = instantForLocalTime(endpointDayMs, 5, 0, SESSION_CONTRACT.endpoint_zone);
         return {
           cutoff_at_utc: new Date(cutoffMs).toISOString(),
           cutoff_offset_abbrev: offsetMinutesAt(cutoffMs, SESSION_CONTRACT.cutoff_zone).abbrev,
           endpoint_at_utc: new Date(endpointMs).toISOString(),
           endpoint_offset_abbrev: offsetMinutesAt(endpointMs, SESSION_CONTRACT.endpoint_zone).abbrev,
-          window_hours: (endpointMs - cutoffMs) / HOUR_MS
+          nominal_hours: SESSION_CONTRACT.nominal_hours,
+          window_hours: (endpointMs - cutoffMs) / HOUR_MS,
+          session_starts_weekday: isSessionStart(dayUtcMs)
         };
       }
       
@@ -2434,7 +2466,7 @@
           factor_verdicts: factor_verdicts || [],
           combination: combination || null,
           decision: decision || null,
-          engine_version: "usd-session-engine-interface-v1",
+          engine_version: "usd-session-engine-interface-v2",
           note: "interface placeholder: the numeric engine is not implemented in this checkpoint"
         };
       }
@@ -2445,6 +2477,7 @@
         SessionContractError,
         offsetMinutesAt,
         instantForLocalTime,
+        isSessionStart,
         resolveSession,
         assertAsOf,
         buildAsOfSnapshot,

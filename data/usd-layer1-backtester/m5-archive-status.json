@@ -1,0 +1,484 @@
+{
+  "schema_version": "usd-l1-m5-archive-status-v1",
+  "generated_at": "2026-11-10T20:57:54.915Z",
+  "script": "backtester/scripts/verify_m5_archive.js",
+  "status": "started",
+  "coverage": {
+    "instruments_required": 4,
+    "instruments_with_m5_bars": 4,
+    "instruments_with_bid_ask": 0,
+    "instruments_with_a_marked_ladder": 4,
+    "sessions_held": [
+      "2026-11-04",
+      "2026-11-05",
+      "2026-11-06"
+    ],
+    "sessions_without_truncation": [
+      "2026-11-05"
+    ],
+    "saved_feed_snapshots": 1
+  },
+  "instruments": [
+    {
+      "key": "EURUSD",
+      "label": "EUR/USD",
+      "feed_symbol": "EURUSD",
+      "m5_bars": 576,
+      "first_bar_utc": "2026-11-04T21:30:00.000Z",
+      "last_bar_utc": "2026-11-06T21:50:00.000Z",
+      "spread_points": {
+        "min": 0,
+        "max": 66
+      },
+      "has_m5": true,
+      "has_bid_ask": false,
+      "bid_ask_note": "the feed carries mid-price OHLC and a spread column; bid and ask are never stored separately, so no spread path can be reconstructed after the fact",
+      "ladder": {
+        "levels": 22,
+        "roles": {
+          "derived": 20,
+          "seed": 2
+        },
+        "marked_at": "2026-10-04T16:14:19Z",
+        "pre_session_for_the_saved_sessions": false,
+        "note": "a hand-marked ladder from the dashboard tool, dated a month before the saved sessions; it proves the format, not the setup either session was traded on"
+      },
+      "blocker": "no bid/ask series and no pre-session ladder"
+    },
+    {
+      "key": "XAUUSD",
+      "label": "Gold (XAU/USD)",
+      "feed_symbol": "XAUUSD",
+      "m5_bars": 576,
+      "first_bar_utc": "2026-11-04T19:20:00.000Z",
+      "last_bar_utc": "2026-11-06T21:45:00.000Z",
+      "spread_points": {
+        "min": 35,
+        "max": 46
+      },
+      "has_m5": true,
+      "has_bid_ask": false,
+      "bid_ask_note": "the feed carries mid-price OHLC and a spread column; bid and ask are never stored separately, so no spread path can be reconstructed after the fact",
+      "ladder": {
+        "levels": 22,
+        "roles": {
+          "derived": 20,
+          "seed": 2
+        },
+        "marked_at": "2026-10-04T16:14:19Z",
+        "pre_session_for_the_saved_sessions": false,
+        "note": "a hand-marked ladder from the dashboard tool, dated a month before the saved sessions; it proves the format, not the setup either session was traded on"
+      },
+      "blocker": "no bid/ask series and no pre-session ladder"
+    },
+    {
+      "key": "NAS100",
+      "label": "NAS100",
+      "feed_symbol": "US100.cash",
+      "m5_bars": 576,
+      "first_bar_utc": "2026-11-04T19:20:00.000Z",
+      "last_bar_utc": "2026-11-06T21:45:00.000Z",
+      "spread_points": {
+        "min": 145,
+        "max": 213
+      },
+      "has_m5": true,
+      "has_bid_ask": false,
+      "bid_ask_note": "the feed carries mid-price OHLC and a spread column; bid and ask are never stored separately, so no spread path can be reconstructed after the fact",
+      "ladder": {
+        "levels": 22,
+        "roles": {
+          "derived": 20,
+          "seed": 2
+        },
+        "marked_at": "2026-10-04T16:14:19Z",
+        "pre_session_for_the_saved_sessions": false,
+        "note": "a hand-marked ladder from the dashboard tool, dated a month before the saved sessions; it proves the format, not the setup either session was traded on"
+      },
+      "blocker": "no bid/ask series and no pre-session ladder"
+    },
+    {
+      "key": "BTCUSD",
+      "label": "BTC/USD",
+      "feed_symbol": "BTCUSD",
+      "m5_bars": 576,
+      "first_bar_utc": "2026-11-05T13:15:00.000Z",
+      "last_bar_utc": "2026-11-07T15:30:00.000Z",
+      "spread_points": {
+        "min": 100,
+        "max": 100
+      },
+      "has_m5": true,
+      "has_bid_ask": false,
+      "bid_ask_note": "the feed carries mid-price OHLC and a spread column; bid and ask are never stored separately, so no spread path can be reconstructed after the fact",
+      "ladder": {
+        "levels": 22,
+        "roles": {
+          "derived": 20,
+          "seed": 2
+        },
+        "marked_at": "2026-10-04T16:14:19Z",
+        "pre_session_for_the_saved_sessions": false,
+        "note": "a hand-marked ladder from the dashboard tool, dated a month before the saved sessions; it proves the format, not the setup either session was traded on"
+      },
+      "blocker": "no bid/ask series and no pre-session ladder"
+    }
+  ],
+  "verified_session": {
+    "date": "2026-11-05",
+    "symbol": "EURUSD",
+    "bars_expected": 288,
+    "bars_present": 286,
+    "bars_missing": 2,
+    "coverage_pct": 99.31,
+    "first_bar_utc": "2026-11-05T05:00:00.000Z",
+    "last_bar_utc": "2026-11-06T04:55:00.000Z",
+    "complete": false,
+    "trades_checked": 6,
+    "trades_verified": 6,
+    "trades_failed": 0,
+    "skipped": [],
+    "trades": [
+      {
+        "session_date": "2026-11-05",
+        "side": "short",
+        "level": 1.12308,
+        "entry": 1.12308,
+        "exit_price": 1.12392,
+        "exit_reason": "stop",
+        "trigger_time_utc": "2026-11-05T10:35:00.000Z",
+        "fill_time_utc": "2026-11-05T10:40:00.000Z",
+        "exit_time_utc": "2026-11-05T17:40:00.000Z",
+        "checks": [
+          {
+            "check": "the trigger bar is in the tape",
+            "pass": true,
+            "detail": "close 1.12301 at 2026-11-05T10:35:00.000Z"
+          },
+          {
+            "check": "the trigger bar closes below the level",
+            "pass": true,
+            "detail": "close 1.12301 against level 1.12308"
+          },
+          {
+            "check": "the fill bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12282-1.12308"
+          },
+          {
+            "check": "the level sits inside the fill bar",
+            "pass": true,
+            "detail": "entry 1.12308 inside 1.12282-1.12308"
+          },
+          {
+            "check": "the exit bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12335-1.12396"
+          },
+          {
+            "check": "the exit price sits inside the exit bar",
+            "pass": true,
+            "detail": "exit 1.12392 inside 1.12335-1.12396"
+          },
+          {
+            "check": "the stop is where the bar went against the trade",
+            "pass": true,
+            "detail": "bar high 1.12396 reached the stop"
+          }
+        ],
+        "failures": 0,
+        "verified": true
+      },
+      {
+        "session_date": "2026-11-05",
+        "side": "short",
+        "level": 1.12308,
+        "entry": 1.12308,
+        "exit_price": 1.11887,
+        "exit_reason": "target",
+        "trigger_time_utc": "2026-11-05T18:40:00.000Z",
+        "fill_time_utc": "2026-11-05T19:00:00.000Z",
+        "exit_time_utc": "2026-11-06T06:40:00.000Z",
+        "checks": [
+          {
+            "check": "the trigger bar is in the tape",
+            "pass": true,
+            "detail": "close 1.12259 at 2026-11-05T18:40:00.000Z"
+          },
+          {
+            "check": "the trigger bar closes below the level",
+            "pass": true,
+            "detail": "close 1.12259 against level 1.12308"
+          },
+          {
+            "check": "the fill bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12265-1.12314"
+          },
+          {
+            "check": "the level sits inside the fill bar",
+            "pass": true,
+            "detail": "entry 1.12308 inside 1.12265-1.12314"
+          },
+          {
+            "check": "the exit bar is in the tape",
+            "pass": true,
+            "detail": "range 1.11862-1.11911"
+          },
+          {
+            "check": "the exit price sits inside the exit bar",
+            "pass": true,
+            "detail": "exit 1.11887 inside 1.11862-1.11911"
+          },
+          {
+            "check": "the target is where the bar went for the trade",
+            "pass": true,
+            "detail": "bar low 1.11862 reached the target"
+          }
+        ],
+        "failures": 0,
+        "verified": true
+      },
+      {
+        "session_date": "2026-11-05",
+        "side": "short",
+        "level": 1.12308,
+        "entry": 1.12308,
+        "exit_price": 1.12098,
+        "exit_reason": "target",
+        "trigger_time_utc": "2026-11-05T10:35:00.000Z",
+        "fill_time_utc": "2026-11-05T10:40:00.000Z",
+        "exit_time_utc": "2026-11-05T14:35:00.000Z",
+        "checks": [
+          {
+            "check": "the trigger bar is in the tape",
+            "pass": true,
+            "detail": "close 1.12301 at 2026-11-05T10:35:00.000Z"
+          },
+          {
+            "check": "the trigger bar closes below the level",
+            "pass": true,
+            "detail": "close 1.12301 against level 1.12308"
+          },
+          {
+            "check": "the fill bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12282-1.12308"
+          },
+          {
+            "check": "the level sits inside the fill bar",
+            "pass": true,
+            "detail": "entry 1.12308 inside 1.12282-1.12308"
+          },
+          {
+            "check": "the exit bar is in the tape",
+            "pass": true,
+            "detail": "range 1.1203-1.12151"
+          },
+          {
+            "check": "the exit price sits inside the exit bar",
+            "pass": true,
+            "detail": "exit 1.12098 inside 1.1203-1.12151"
+          },
+          {
+            "check": "the target is where the bar went for the trade",
+            "pass": true,
+            "detail": "bar low 1.1203 reached the target"
+          }
+        ],
+        "failures": 0,
+        "verified": true
+      },
+      {
+        "session_date": "2026-11-05",
+        "side": "short",
+        "level": 1.12308,
+        "entry": 1.12308,
+        "exit_price": 1.12378,
+        "exit_reason": "stop",
+        "trigger_time_utc": "2026-11-05T15:50:00.000Z",
+        "fill_time_utc": "2026-11-05T16:35:00.000Z",
+        "exit_time_utc": "2026-11-05T17:05:00.000Z",
+        "checks": [
+          {
+            "check": "the trigger bar is in the tape",
+            "pass": true,
+            "detail": "close 1.12278 at 2026-11-05T15:50:00.000Z"
+          },
+          {
+            "check": "the trigger bar closes below the level",
+            "pass": true,
+            "detail": "close 1.12278 against level 1.12308"
+          },
+          {
+            "check": "the fill bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12226-1.12315"
+          },
+          {
+            "check": "the level sits inside the fill bar",
+            "pass": true,
+            "detail": "entry 1.12308 inside 1.12226-1.12315"
+          },
+          {
+            "check": "the exit bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12327-1.12378"
+          },
+          {
+            "check": "the exit price sits inside the exit bar",
+            "pass": true,
+            "detail": "exit 1.12378 inside 1.12327-1.12378"
+          },
+          {
+            "check": "the stop is where the bar went against the trade",
+            "pass": true,
+            "detail": "bar high 1.12378 reached the stop"
+          }
+        ],
+        "failures": 0,
+        "verified": true
+      },
+      {
+        "session_date": "2026-11-05",
+        "side": "short",
+        "level": 1.12308,
+        "entry": 1.12308,
+        "exit_price": 1.12098,
+        "exit_reason": "target",
+        "trigger_time_utc": "2026-11-05T18:40:00.000Z",
+        "fill_time_utc": "2026-11-05T19:00:00.000Z",
+        "exit_time_utc": "2026-11-05T22:30:00.000Z",
+        "checks": [
+          {
+            "check": "the trigger bar is in the tape",
+            "pass": true,
+            "detail": "close 1.12259 at 2026-11-05T18:40:00.000Z"
+          },
+          {
+            "check": "the trigger bar closes below the level",
+            "pass": true,
+            "detail": "close 1.12259 against level 1.12308"
+          },
+          {
+            "check": "the fill bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12265-1.12314"
+          },
+          {
+            "check": "the level sits inside the fill bar",
+            "pass": true,
+            "detail": "entry 1.12308 inside 1.12265-1.12314"
+          },
+          {
+            "check": "the exit bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12078-1.12159"
+          },
+          {
+            "check": "the exit price sits inside the exit bar",
+            "pass": true,
+            "detail": "exit 1.12098 inside 1.12078-1.12159"
+          },
+          {
+            "check": "the target is where the bar went for the trade",
+            "pass": true,
+            "detail": "bar low 1.12078 reached the target"
+          }
+        ],
+        "failures": 0,
+        "verified": true
+      },
+      {
+        "session_date": "2026-11-05",
+        "side": "short",
+        "level": 1.12308,
+        "entry": 1.12308,
+        "exit_price": 1.12098,
+        "exit_reason": "target",
+        "trigger_time_utc": "2026-11-06T00:10:00.000Z",
+        "fill_time_utc": "2026-11-06T00:15:00.000Z",
+        "exit_time_utc": "2026-11-06T01:55:00.000Z",
+        "checks": [
+          {
+            "check": "the trigger bar is in the tape",
+            "pass": true,
+            "detail": "close 1.12307 at 2026-11-06T00:10:00.000Z"
+          },
+          {
+            "check": "the trigger bar closes below the level",
+            "pass": true,
+            "detail": "close 1.12307 against level 1.12308"
+          },
+          {
+            "check": "the fill bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12256-1.12313"
+          },
+          {
+            "check": "the level sits inside the fill bar",
+            "pass": true,
+            "detail": "entry 1.12308 inside 1.12256-1.12313"
+          },
+          {
+            "check": "the exit bar is in the tape",
+            "pass": true,
+            "detail": "range 1.12093-1.12131"
+          },
+          {
+            "check": "the exit price sits inside the exit bar",
+            "pass": true,
+            "detail": "exit 1.12098 inside 1.12093-1.12131"
+          },
+          {
+            "check": "the target is where the bar went for the trade",
+            "pass": true,
+            "detail": "bar low 1.12093 reached the target"
+          }
+        ],
+        "failures": 0,
+        "verified": true
+      }
+    ]
+  },
+  "sources": [
+    {
+      "file": "backtester/tmp/usd-session-research/raw/main/data__live-trading.json",
+      "bytes": 2407747,
+      "sha256": "76dbf9fea9c7f5d9751e66c8ff954070b31f9157661190f6eb6bec520740ff8d"
+    },
+    {
+      "file": "backtester/tmp/usd-session-research/raw/main/data__l2l-levels.json",
+      "bytes": 47758,
+      "sha256": "a5dc10a32e0ccb50a0eb816b649d1e6cb0dd35a647c04c1e6f03dfb4b4793704"
+    },
+    {
+      "file": "backtester/tmp/usd-session-research/replays/ledger-EURUSD-5r-short.json",
+      "bytes": 12465,
+      "sha256": "cad87bd0f34bb2b63487c66abf7833862c6cf34f5f9baeec308d6b148353906e"
+    },
+    {
+      "file": "backtester/tmp/usd-session-research/replays/ledger-EURUSD-3r-half-short.json",
+      "bytes": 20219,
+      "sha256": "820c9757ab418a7a4bc2b36e37d3895df5a496d7deddd2adff01b5cbe66f8dd8"
+    }
+  ],
+  "missing": [
+    "a bid/ask five-minute series for any of the four markets: the saved feed stores mid OHLC plus a spread column",
+    "a pre-session snapshot of the level ladder each morning, as the setup was drawn before the open",
+    "continuous collection: two and a half days of one saved snapshot is a sample, not an archive",
+    "the same proof for gold, NAS100 and BTC/USD: only the EUR/USD replay has recorded trades to check against"
+  ],
+  "next_steps": [
+    "keep the existing EUR/USD proof as the archive contract and re-run it on every new session",
+    "record the mid OHLC and the spread column as they arrive, with the receipt time, so a later bid/ask backfill can be reconciled",
+    "capture the pre-session ladder from the marking tool at 04:55 London and store it beside the session tape",
+    "repeat the trade-level proof for gold, NAS100 and BTC/USD once a tape with a recorded trade exists for them"
+  ],
+  "not_claimed": [
+    "nothing here is a backtest, a fill model or an edge",
+    "a verified session is not a verified strategy: it says the tape can reproduce trades that a replay already recorded",
+    "mid prices with a spread column cannot settle whether a stop was taken at the bid or the ask"
+  ],
+  "note": "Started, not finished. The archive is useful because it fixes the contract a five-minute tape has to meet before any line-to-line trade is priced, and because one complete session now demonstrably reproduces the trades a replay recorded from the same bars."
+}

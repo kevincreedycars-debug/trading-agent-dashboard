@@ -1,5 +1,48 @@
 # Session Notes
 
+2026-11-23, USD Layer 1 lane (branch `backtesting/usd-l1-session-horizon-20261123`, cut from `origin/main`
+`0288994a`) - the session-engine interface was ending a session at 17:00 `America/New_York` while the contract
+it serves, the four test definitions and every published artefact say 05:00 London to 05:00 London on the next
+local day, so the one module whose whole job is to place those two instants was measuring a window of 16 or 17
+hours. Across 2026's 261 Monday-to-Friday starts the old endpoint gave 17 hours on 241 of them and 16 on the 20
+that fall in the two weeks a year when London and New York are on different offsets; nothing failed, because
+nothing else read the module, which is exactly why it was worth correcting before an implementation inherited
+it. Both ends are now 05:00 `Europe/London` with `endpoint_day_offset` 1, `nominal_hours` 24,
+`session_start_weekdays` Monday to Friday and the rule written out in `session_start_rule`; `isSessionStart()`
+refuses a Saturday or Sunday start, `resolveSession()` returns the measured window and the weekday flag beside
+the two instants, the version is `usd-session-engine-interface-v2`, and `America/New_York` stays in the
+transition table only because the macro as-of builder times the Fed's H.10 release in it. All 261 weekday
+starts now measure exactly 24 hours, and the 2026 Saturday starts measure 23 (2026-03-28) and 25 (2026-10-24)
+hours - the two EU transitions, both refused - so no eligible session can contain one. The Cloud runtime was
+re-cut around the corrected interface: `node scripts/build_usd_l1_n8n_cloud_workflows.js` rewrote all six files
+to identical bytes at `bundle_sha256` `73215c1e4785b6029e6ead99a7b7a9783f96497833f01acebfe0dbba01b6d787`,
+119,268 bytes, with the interface source at `73ba4fc1d181…c808`, the three child ids (`giGJKNQw5WLh1xbX`,
+`42sxXHScRvE3qSTX`, `kaWqy2iYIz8UzPRS`) and the header-auth credential preserved; nothing was uploaded or
+executed on n8n Cloud in this session.
+
+Landed with it on the same branch, each with its own evidence: `contracts.ACCOUNT` is now the only
+machine-readable account - `usd_layer1_backtester/accounts.js#runAccount` defaults, the demo call and the
+panel's account note read it instead of retyping GBP 100,000 and 1%, and `tests/execution_accounting.test.js`
+asserts they agree; the M5 archive has a verifier (`backtester/scripts/verify_m5_archive.js`, 4 of 4 markets
+hold five-minute bars, 0 hold bid/ask, 4 hold a marked ladder, 6 of 6 recorded EUR/USD trades re-derived on
+2026-11-05 with 0 failures) and a guard (`backtester/tests/usd_layer1_m5_archive.test.js`, 5 of 5); and the
+research artefacts this lane reads are committed (`data/usd-24h-research-dataset.json`,
+`data/usd-24h-baseline-comparison.json`, `data/usd-layer1-backtester/l2l-tick-sweep-v1.json`,
+`data/usd-layer1-backtester/m5-archive-status.json`). Verified on this base: `check:usd-l1-platform` exit 0 with
+all four artefacts `reproduces` and `verdict: pass`, `test:usd-l1-platform` 29 of 29, `test:usd-l1-n8n` 34 of
+34, `test:usd-session` 117 of 117, `execution_accounting` 8 of 8, `check:usd-l1-ledger` `ledger reproduces`
+with no verification failures, `report:layer1:check`, `report:morning:check` and `screen:backtesting:check`
+each reproducing their artefact, and the four browser suites 23 of 23 (`site_nav_consistency` 6,
+`usd_layer1_logic_page` 6, `layer1_call_flow` 5, `usd_layer1_call_flow` 6). One thing was found and deliberately
+not acted on: re-running the artefact builder now yields SHA-256 `390b6118…1af7` instead of the committed
+`0fea0347…61f3`, and all 51 differing leaves sit in `results.lead_numbers[1]` and `level_provenance`, because
+`origin/main` published a re-marked L2L ladder today (`a04cc73a`, stamped `2026-11-23T16:20:57Z`, automatic
+coverage) over the 2026-10-04 ladder the artefact was built from - the rebuild prices 6 sessions with original
+levels where the committed artefact records 0. Republishing would move the panel's lead number from 0 to 6, so
+it is recorded as the owner decision it is in
+`docs/research/usd-session/v1/PLATFORM_COMPLETION_CHECKLIST.md` section 11 rather than folded into this fix. No
+rule, weight, threshold, workflow, order, size, feed, lane or runtime table was touched, and nothing live moved.
+
 2026-11-22, live-trading trader lane - the trader half of the L2L coverage work shipped to all three FTMO accounts, and
 the daily entry cap came off the two lanes still carrying it. The three checkouts were on three different revisions
 (`c5abd0ac`, `f14f2ac7`, `441c308f`) and none of them was `main`; the blind lane's line was merged into `main`
