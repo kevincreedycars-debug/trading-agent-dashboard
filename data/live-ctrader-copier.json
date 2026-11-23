@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-23T00:40:22.416Z",
+  "generated_at_utc": "2026-11-23T00:50:22.547Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,8 +12,8 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-23T00:39:22.169929Z",
-    "positions_seen": 0
+    "probed_at_utc": "2026-11-23T00:49:22.178952Z",
+    "positions_seen": 1
   },
   "destination": {
     "login": 7348195,
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-23T00:40:21.937Z",
+    "read_at_utc": "2026-11-23T00:50:21.983Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -45,16 +45,16 @@
       "state": "ok",
       "label": "OK",
       "age_seconds": 60,
-      "last_poll_utc": "2026-11-23T00:39:22.386Z",
-      "last_success_utc": "2026-11-23T00:39:22.386Z",
+      "last_poll_utc": "2026-11-23T00:49:22.398Z",
+      "last_success_utc": "2026-11-23T00:49:22.398Z",
       "detail": "the last poll finished 60s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-23T00:39:22.386Z",
-    "last_success_utc": "2026-11-23T00:39:22.386Z",
+    "last_poll_utc": "2026-11-23T00:49:22.398Z",
+    "last_success_utc": "2026-11-23T00:49:22.398Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-23T00:39:21.191Z",
-      "finished_utc": "2026-11-23T00:39:22.386Z",
+      "started_utc": "2026-11-23T00:49:21.158Z",
+      "finished_utc": "2026-11-23T00:49:22.398Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -63,20 +63,32 @@
           "login": 511428614,
           "server": "FTMO-Server"
         },
-        "positions": 0,
-        "rows": [],
-        "cause": null,
-        "probed_at_utc": "2026-11-23T00:39:22.169929Z",
-        "orders": [
+        "positions": 1,
+        "rows": [
           {
             "ticket": "309663598",
             "symbol": "XAUUSD",
             "side": "buy",
-            "kind": "limit",
             "volume": 0.01,
-            "price": 3568.67,
+            "entry": 3568.66,
+            "current": 3576.87,
             "stop": 3554.37,
             "target": 3640.15,
+            "open_time_utc": "2026-11-23T02:40:57Z"
+          }
+        ],
+        "cause": null,
+        "probed_at_utc": "2026-11-23T00:49:22.178952Z",
+        "orders": [
+          {
+            "ticket": "309680266",
+            "symbol": "EURUSD",
+            "side": "buy",
+            "kind": "limit",
+            "volume": 0.01,
+            "price": 1.09782,
+            "stop": 1.09698,
+            "target": 1.10203,
             "expiry_utc": null
           }
         ]
@@ -84,15 +96,21 @@
       "destination": {
         "account_id": "42585819",
         "symbols": [
-          "XAUUSD"
+          "XAUUSD",
+          "EURUSD"
         ],
         "references": {
-          "XAUUSD": 3569.99
+          "XAUUSD": 3577.35,
+          "EURUSD": 1.09801
         },
         "exposure": {
           "XAUUSD": {
+            "positions": 1,
+            "orders": 0
+          },
+          "EURUSD": {
             "positions": 0,
-            "orders": 1
+            "orders": 0
           }
         },
         "spec_summary": {
@@ -102,6 +120,17 @@
             "volumeScale": 10000,
             "minVolume": 0.01,
             "maxVolume": 100000,
+            "volumeStep": 0.01,
+            "tradeMode": "full",
+            "minStopDistance": 0,
+            "minStopPercent": null
+          },
+          "EURUSD": {
+            "digits": 5,
+            "lotSizeBtc": 100000,
+            "volumeScale": 10000000,
+            "minVolume": 0.01,
+            "maxVolume": 1000,
             "volumeStep": 0.01,
             "tradeMode": "full",
             "minStopDistance": 0,
@@ -116,7 +145,13 @@
         "dropped": 0,
         "filled": 0
       },
-      "refusals": [],
+      "refusals": [
+        {
+          "code": "max_open_reached",
+          "ticket": "309680266",
+          "detail": 4
+        }
+      ],
       "actions": [],
       "closes": [
         {
@@ -168,21 +203,21 @@
   },
   "account": {
     "balance": 23688.52,
-    "equity": 23688.52,
+    "equity": 23694.56,
     "equity_basis": "broker balance plus the open positions marked at the broker's own reference price",
     "equity_estimated": true,
     "currency": "USD",
     "leverage": 100,
     "money_digits": 2,
-    "open_positions": 0,
-    "pending_orders": 1,
+    "open_positions": 1,
+    "pending_orders": 0,
     "closed_trades": 18,
-    "read_at_utc": "2026-11-23T00:40:21.937Z"
+    "read_at_utc": "2026-11-23T00:50:21.983Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-24T00:40:21.937Z",
-    "to_utc": "2026-11-23T00:40:21.937Z"
+    "from_utc": "2026-10-24T00:50:21.983Z",
+    "to_utc": "2026-11-23T00:50:21.983Z"
   },
   "closed_trades": [
     {
@@ -918,18 +953,18 @@
     },
     {
       "source_ticket": "309663598",
-      "target_position_id": null,
+      "target_position_id": "62357296",
       "source_symbol": "XAUUSD",
       "symbol": "XAUUSD",
       "side": "buy",
-      "status": "not_open",
-      "status_detail": "the mapping store holds this copy but the broker read no open position for it",
+      "status": "open",
+      "status_detail": null,
       "volume_lots": 0.01,
       "protocol_units": 100,
       "base_units": 1,
-      "entry_price": null,
+      "entry_price": 3568.66,
       "stop_price": 3554.37,
-      "target_price": null,
+      "target_price": 3640.15,
       "expiry_utc": null,
       "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
       "order_kind": "limit",
@@ -942,7 +977,7 @@
     }
   ],
   "differences": {
-    "count": 4,
+    "count": 3,
     "missing_copies": [],
     "orphaned_mappings": [
       {
@@ -962,12 +997,6 @@
         "target_position_id": "62352837",
         "symbol": "BTCUSD",
         "detail": "the source no longer holds the ticket; the close is due on the next poll"
-      },
-      {
-        "source_ticket": "309663598",
-        "target_position_id": null,
-        "symbol": "XAUUSD",
-        "detail": "the source no longer holds the ticket; the close is due on the next poll"
       }
     ],
     "unresolved_pending": [],
@@ -975,42 +1004,49 @@
   },
   "rejections": [
     {
+      "kind": "refusal",
+      "code": "max_open_reached",
+      "ticket": "309680266",
+      "detail": 4,
+      "at_utc": "2026-11-23T00:49:22.398Z"
+    },
+    {
       "kind": "close",
       "code": null,
       "ticket": "309462132",
       "detail": null,
-      "at_utc": "2026-11-23T00:39:22.386Z"
+      "at_utc": "2026-11-23T00:49:22.398Z"
     },
     {
       "kind": "close",
       "code": null,
       "ticket": "309464502",
       "detail": null,
-      "at_utc": "2026-11-23T00:39:22.386Z"
+      "at_utc": "2026-11-23T00:49:22.398Z"
     },
     {
       "kind": "close",
       "code": null,
       "ticket": "309640315",
       "detail": null,
-      "at_utc": "2026-11-23T00:39:22.386Z"
+      "at_utc": "2026-11-23T00:49:22.398Z"
     }
   ],
   "verification": [
     {
       "behaviour": "Copying a filled FTMO-1 position",
-      "state": "awaiting_live_proof",
-      "detail": "no copy is open on the destination in this read"
+      "state": "broker_observed",
+      "detail": "broker read 2026-11-23T00:50:21.983Z: #62357296 XAUUSD buy 0.01 lot from source 309663598"
     },
     {
       "behaviour": "Size conversion through the destination contract",
-      "state": "tested",
-      "detail": "the adapter regression sends 0.01 lot of EURUSD as 100,000 protocol units, XAUUSD as 100, BTCUSD as 1 and the index as 1 on this account"
+      "state": "broker_observed",
+      "detail": "the adapter regression sends 0.01 lot of EURUSD as 100,000 protocol units, XAUUSD as 100, BTCUSD as 1 and the index as 1 on this account; the open copies above read back at 0.01 lot"
     },
     {
       "behaviour": "Stop carried at entry",
-      "state": "tested",
-      "detail": "the market send carries a stop derived from the destination reference; no open copy proves it on this read"
+      "state": "broker_observed",
+      "detail": "the broker holds the stop the copier sent, placed as a distance from the destination's own reference price, so it differs from the source stop by the fill"
     },
     {
       "behaviour": "Amending a stop or target after the copy",
@@ -1020,7 +1056,7 @@
     {
       "behaviour": "Copying a resting source order",
       "state": "broker_observed",
-      "detail": "the mapping for order 178348935 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178349950 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178453658 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178454788 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178464128 XAUUSD limit records a broker order the copier placed, no longer working"
+      "detail": "the mapping for order 178348935 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178349950 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178453658 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178454788 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178464128 XAUUSD limit records a broker order the copier placed, still working"
     },
     {
       "behaviour": "Cancelling a resting source order",
@@ -1057,7 +1093,7 @@
       "target_symbol": "XAUUSD",
       "mapped": true,
       "excluded": false,
-      "held": false,
+      "held": true,
       "digits": 2,
       "lot_units": 100,
       "protocol_units_per_lot": 10000,
