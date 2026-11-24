@@ -160,3 +160,20 @@ refuses a committed CSV. Published counts do not move: 4/1/8/11, with 7/1/8/8 st
 **Shared baseline.** `docs/dashboard-design/SHARED_BASELINE_20261124.md` is now the single record both
 lanes read before their next edit: the commit, the four dimensions, the numbers and their non-claims,
 the rules for the next design branch, and the open blockers.
+
+**Verified live at `89b56339`.** GitHub Pages served the committed bytes, fetched cache-busted and
+unauthenticated on 2026-11-24:
+
+| Path | HTTP | Bytes | sha256 (first 16) |
+| --- | --- | --- | --- |
+| `backtest-engine-v2.html` | 200 | 21,356 | `290718c29f26795e` |
+| `backtester/assets/backtest-engine-v2.manifest.json` | 200 | 48,239 | `7a45e63d75e91411` |
+| `backtester/assets/backtest-engine-v2.js` | 200 | 35,446 | `8f8a448bd6c25462` |
+| `backtester/assets/backtest-engine-v2.css` | 200 | 25,562 | `f6d806d36c336bbb` |
+| `data/usd-layer1-backtester/market-readiness-v1.json` | 200 | 12,535 | `77ca8c4d0a497842` |
+
+The same headless read recorded `12 steps - 10 of 10 artefacts read`, no console or page errors, the
+dimension key `Sof / Dep / Dat / Res`, the fresh-call pips `complete / complete / complete / pending`,
+all four readiness rows in its panel naming bundle `usd-l1-cloud-runtime-v3` and `Cloud execution
+7260`, and `deployed:inactive` on the seven checkout steps.
+

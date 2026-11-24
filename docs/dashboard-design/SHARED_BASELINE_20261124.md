@@ -7,10 +7,28 @@ own tip (`7ba4fc82`) is **not** part of this baseline and is not to be merged wh
 
 ## 1. The commit both lanes start from
 
-`origin/main` is `34c62426` - the accessibility pass (PR #36) - plus this publication's merge commit
-for `release/bev2-deployed-dim` (PR #37). The exact merge commit and the live read-back are recorded
-in `docs/PUBLICATION_20261124.md`; the artefacts below are byte-identical to the committed blobs at
-that commit.
+`origin/main` is **`89b56339`** - the merge of PR #37 - on top of `34c62426` (the accessibility pass,
+PR #36). The files below are byte-identical to the committed blobs at `89b56339`; the live site was
+read back at that commit on 2026-11-24 and served the same bytes.
+
+### Live read-back, 2026-11-24 (cache-busted, unauthenticated)
+
+| Path | HTTP | Bytes | sha256 (first 16) |
+| --- | --- | --- | --- |
+| `backtest-engine-v2.html` | 200 | 21,356 | `290718c29f26795e` |
+| `backtester/assets/backtest-engine-v2.manifest.json` | 200 | 48,239 | `7a45e63d75e91411` |
+| `backtester/assets/backtest-engine-v2.js` | 200 | 35,446 | `8f8a448bd6c25462` |
+| `backtester/assets/backtest-engine-v2.css` | 200 | 25,562 | `f6d806d36c336bbb` |
+| `data/usd-layer1-backtester/market-readiness-v1.json` | 200 | 12,535 | `77ca8c4d0a497842` |
+
+A headless Chromium read of the live URL recorded `12 steps - 10 of 10 artefacts read`, no console or
+page errors, the four-entry dimension key, and the fresh-call step's pips as
+`software:complete, deployed:complete, data:complete, research:pending`; its panel showed all four
+readiness rows and named bundle `usd-l1-cloud-runtime-v3` and `Cloud execution 7260`. The seven
+checkout steps read `deployed:inactive`; the controller, both challengers, the fixture and the
+fresh-call step read `deployed:complete`. The served readiness artefact carries the licence position
+for XAG/WTI/GBP and `readiness_sha256` `d3e3778b...`.
+
 
 ## 2. What the page is
 
