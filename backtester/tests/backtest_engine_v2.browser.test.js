@@ -613,4 +613,49 @@ test("no word on the page is smaller than twelve pixels, and the keyboard ring i
     server.close();
   }
 });
+// The look is a stylesheet, so the way this page could drift back to what was fixed is quiet: the markup, the
+// manifest and every number would stay right while the grouping, the band accents and the twelve-pixel floor went
+// away with an older sheet. Two of the fixes are also only visible as pixels - a band that paints an opaque
+// surface cuts every wire that leaves one group for the next, and four bands that all take one accent give the
+// reader no grouping at all - so they are read back from the laid-out page, not from the text.
+test("the page still asks for the control-room sheet, and the sheet still keeps its promises", async () => {
+  const page = fs.readFileSync(path.join(root, PAGE), "utf8");
+  const versioned = page.match(/backtest-engine-v2\.css\?v=([0-9A-Za-z._-]+)/);
+  assert.ok(versioned, "the page must ask for a versioned stylesheet, or a returning reader keeps the sheet it was fixed against");
+
+  const css = fs.readFileSync(path.join(root, "backtester", "assets", "backtest-engine-v2.css"), "utf8");
+  for (const token of ["--cr-ink-faint", "--cr-label-size: 12px", "--cr-body-size: 13px", "--cr-complete", "--cr-inactive"]) {
+    assert.ok(css.includes(token), `the control room's sheet must still declare ${token}`);
+  }
+  const small = Array.from(css.matchAll(/font-size:\s*([\d.]+)px/g))
+    .filter(match => Number(match[1]) < 12)
+    .map(match => match[0]);
+  assert.deepEqual(small, [], "no rule in the sheet may set a word below twelve pixels");
+
+  const server = await serve();
+  const browser = await chromium.launch({ headless: true });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const { context, view } = await open(browser, base, 1440);
+    const drawn = await view.evaluate(() => Array.from(document.querySelectorAll(".cr-band")).map(band => {
+      const style = getComputedStyle(band);
+      const colour = style.backgroundColor.match(/[\d.]+/g).map(Number);
+      return {
+        id: band.dataset.band,
+        accent: style.getPropertyValue("--cr-accent").trim(),
+        alpha: colour.length === 4 ? colour[3] : 1
+      };
+    }));
+    assert.equal(drawn.length, manifest.bands.length, "every band must still be drawn as its own frame");
+    drawn.forEach(band => assert.ok(band.accent, `${band.id} must still take an accent of its own`));
+    assert.equal(new Set(drawn.map(band => band.accent)).size, drawn.length, `each band must keep a different accent, not one colour: ${JSON.stringify(drawn)}`);
+    // The surface stays see-through: the wires are drawn behind the bands, and an opaque band severs them.
+    drawn.forEach(band => assert.ok(band.alpha < 0.8, `${band.id}'s surface must stay translucent so the wires cross its edge (alpha ${band.alpha})`));
+    await context.close();
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
 
