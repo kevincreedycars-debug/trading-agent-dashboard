@@ -1,0 +1,762 @@
+{
+  "schema_version": "backtest-engine-v2-view-manifest-v1",
+  "page": {
+    "eyebrow": "Backtest engine \u00b7 v2",
+    "title": "Backtesting Control Room",
+    "intro": "One page for the whole evidence path: what a morning is read from, which frozen rules decide it, which workflows run it, what scores it, and what the published evidence still does not claim. Every state below is read from a published artefact when this page opens, so no state is typed in by hand and none can drift away from the file it came from.",
+    "note": "Research only. Nothing here is published as a live call, sizes a position or places a trade, and no figure on this page is an edge claim."
+  },
+  "sources": {
+    "evidence": { "url": "data/usd-layer1-backtester/n8n-execution-evidence-v1.json", "label": "n8n execution evidence", "verified_at": "generated_at" },
+    "retrieval": { "url": "data/usd-layer1-backtester/input-retrieval-v1.json", "label": "Input retrieval", "verified_at": "generated_at" },
+    "coverage": { "url": "data/usd-layer1-backtester/coverage-v1.json", "label": "Sweep coverage", "verified_at": "generated_at" },
+    "spec": { "url": "data/usd-layer1-backtester/spec-check-v1.json", "label": "Specification check", "verified_at": "generated_at" },
+    "rules": { "url": "data/usd-layer1-backtester/decision-rules-v1.json", "label": "Decision rules", "verified_at": "frozen_on" },
+    "parity": { "url": "data/usd-layer1-backtester/parity-v1.json", "label": "Parity", "verified_at": null },
+    "m5": { "url": "data/usd-layer1-backtester/m5-archive-status.json", "label": "Five-minute archive status", "verified_at": "generated_at" },
+    "matrix": { "url": "backtester/config/usd_layer1_market_matrix.json", "label": "Market matrix configuration", "verified_at": "created_at" },
+    "freshcall": { "url": "data/usd-layer1-backtester/n8n/fresh-call-v1.json", "label": "Fresh-call proof", "verified_at": "created_at" },
+    "readiness": { "url": "data/usd-layer1-backtester/market-readiness-v1.json", "label": "Published market readiness", "verified_at": "generated_at" }
+  },
+  "legend": [
+    { "state": "complete", "label": "Complete", "meaning": "The artefact records this step as done, and the check that belongs to it has run." },
+    { "state": "pending", "label": "Pending", "meaning": "Built and running, but something the artefact names is still outstanding." },
+    { "state": "blocked", "label": "Blocked", "meaning": "A named input is missing, so the step stops there. Nothing is filled in or estimated." },
+    { "state": "stale", "label": "Stale", "meaning": "Computed on an older build of the panel than the one now published." },
+    { "state": "unknown", "label": "Unknown", "meaning": "No artefact in this checkout states it, so the page says so instead of guessing." },
+    { "state": "inactive", "label": "Inactive", "meaning": "Present and deployed, but deliberately not running or not counted." }
+  ],
+  "bands": [
+    { "id": "inputs", "label": "Inputs", "caption": "What a morning is read from, and whether each value could have been known at 05:00 London." },
+    { "id": "decision", "label": "Decision", "caption": "The registry, the frozen rules and the Cloud pair that turn a saved morning into a call." },
+    { "id": "measurement", "label": "Measurement", "caption": "What the call is scored against, and what reproduces when the engine is run again." },
+    { "id": "proof", "label": "Proof", "caption": "What the published evidence claims, claim by claim, and what it leaves open." }
+  ],
+  "edges": [
+    { "from": "sources", "to": "panel" },
+    { "from": "panel", "to": "controller" },
+    { "from": "registry", "to": "controller" },
+    { "from": "rulebook", "to": "controller" },
+    { "from": "controller", "to": "challenger-v0" },
+    { "from": "controller", "to": "challenger-v1" },
+    { "from": "controller", "to": "fixture" },
+    { "from": "challenger-v0", "to": "outcomes" },
+    { "from": "challenger-v1", "to": "outcomes" },
+    { "from": "outcomes", "to": "reproduction" },
+    { "from": "reproduction", "to": "evidence" },
+    { "from": "controller", "to": "freshcall" },
+    { "from": "freshcall", "to": "evidence" }
+  ],
+  "nodes": [
+    {
+      "id": "sources",
+      "band": "inputs",
+      "span": 6,
+      "kind": "core",
+      "title": "Source retrieval",
+      "role": "Where every morning value comes from",
+      "summary": "Each key a model consumes is resolved through a declared source catalogue: provider, series, transform and publication lag. A value counts as contemporaneous only when a capture taken at or before the cutoff matches it and carries a receipt; otherwise it is labelled a reconstruction, with a digest and no receipt.",
+      "io": {
+        "in": ["Declared source catalogue", "The committed morning panel"],
+        "out": ["One resolved value per key, with a receipt or a reconstruction digest"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [{ "if": { "path": "retrieval.statement", "op": "exists" }, "state": "complete" }],
+          "note": "The resolver, the source clock policy and the receipt test are in place, and they report what they found instead of assuming it.",
+          "quote": { "path": "retrieval.statement", "from": "retrieval" }
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "retrieval.capture_corpus.entries", "op": "eq", "value": 0 }, "state": "blocked" },
+            { "if": { "path": "retrieval.capture_corpus.entries", "op": "gt", "value": 0 }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "{{retrieval.capture_corpus.entries|count}} captures are held, so every value in the panel is a reconstruction rather than something captured before the cutoff."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "evidence.claims.historical_availability.status", "op": "eq", "value": "not_established" }, "state": "unknown" },
+            { "state": "pending" }
+          ],
+          "note": "Historical availability is the claim this step exists to support, and the evidence records it as not established.",
+          "quote": { "path": "evidence.claims.historical_availability.statement", "from": "evidence" }
+        }
+      },
+      "metrics": [
+        { "label": "Captures held", "value": "{{retrieval.capture_corpus.entries}}", "format": "count" },
+        { "label": "Receipted rows", "value": "{{evidence.claims.historical_availability.receipted_rows}}", "format": "count" }
+      ],
+      "links": [
+        { "label": "Input retrieval artefact", "href": "data/usd-layer1-backtester/input-retrieval-v1.json", "kind": "artefact" },
+        { "label": "Where it is shown today", "href": "backtesting.html", "kind": "page" }
+      ],
+      "open": "evidence.next_actions"
+    },
+    {
+      "id": "panel",
+      "band": "inputs",
+      "span": 6,
+      "kind": "core",
+      "title": "Saved morning panel",
+      "role": "The one committed panel every call is replayed against",
+      "summary": "One research artefact holds a row per London morning: the values, the frozen calls and the outcomes. The Cloud children read this panel and never fetch history themselves, so a replay on its own never shows a value was available at the cutoff.",
+      "io": {
+        "in": ["Resolved values for every declared key"],
+        "out": ["One row per eligible morning, each stamped against the 05:00 London cutoff"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "evidence.source_dataset.sessions", "op": "gt", "value": 0 }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "The panel builds, carries its cutoff contract, and is the dataset every artefact below names."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "coverage.panel_mornings", "op": "eqPath", "value": "evidence.source_dataset.sessions" }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "The sweep covers {{coverage.panel_mornings|count}} of the {{evidence.source_dataset.sessions|count}} panel mornings, with {{evidence.source_dataset.cutoff_contract.cutoff_local}} {{evidence.source_dataset.cutoff_contract.cutoff_zone}} as the cutoff."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "evidence.claims.coverage.status", "op": "eq", "value": "not_established" }, "state": "unknown" },
+            { "state": "complete" }
+          ],
+          "note": "The panel is a research artefact: nothing shows it equals what a live 05:00 run would have offered on each date.",
+          "quote": { "path": "evidence.claims.coverage.statement", "from": "evidence" }
+        }
+      },
+      "metrics": [
+        { "label": "Mornings", "value": "{{evidence.source_dataset.sessions}}", "format": "count" },
+        { "label": "First morning", "value": "{{evidence.source_dataset.first}}" },
+        { "label": "Last morning", "value": "{{evidence.source_dataset.last}}" },
+        { "label": "Cutoff", "value": "{{evidence.source_dataset.cutoff_contract.cutoff_local}} {{evidence.source_dataset.cutoff_contract.cutoff_zone}}" },
+        { "label": "Panel built", "value": "{{evidence.source_dataset.generated_at}}", "format": "datetime" }
+      ],
+      "links": [
+        { "label": "Panel artefact", "href": "data/usd-layer1-backtester/run-v1.json", "kind": "artefact" },
+        { "label": "Backtester page", "href": "usd-layer1-backtester.html", "kind": "page" }
+      ]
+    },
+    {
+      "id": "registry",
+      "band": "decision",
+      "span": 3,
+      "kind": "core",
+      "title": "Model registry",
+      "role": "Which models exist, and which of them are research",
+      "summary": "One registry lists the production baseline, the two frozen challengers and one fixture. The Cloud children are generated from it, so a newly registered model needs no hand edit of a workflow and cannot quietly become a different model.",
+      "io": {
+        "in": ["Registered model definitions and their source files"],
+        "out": ["One generated Cloud adapter per registered model, carrying its identity"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "evidence.workflows.children.2.id", "op": "exists" }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "Every registered model has a workflow identity, a source file and a published URL."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "evidence.bundle.bundle_version", "op": "exists" }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "The runtime bundle is versioned ({{evidence.bundle.bundle_version}}) and built from the registry's own modules."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "evidence.identities.not_invoked.0.reason", "op": "exists" }, "state": "inactive" },
+            { "state": "unknown" }
+          ],
+          "note": "The production baseline is registered but deliberately not invoked in the Cloud pair; only the two frozen challengers and the fixture are.",
+          "quote": { "path": "evidence.identities.not_invoked.0.reason", "from": "evidence" }
+        }
+      },
+      "metrics": [
+        { "label": "Cloud adapters", "value": "{{evidence.workflows.children.length}}", "format": "count" },
+        { "label": "Runtime bundle", "value": "{{evidence.bundle.bundle_version}}" },
+        { "label": "Bundle size", "value": "{{evidence.bundle.bundle_bytes}}", "format": "bytes" }
+      ],
+      "links": [
+        { "label": "Challenger v0 in the pair", "href": "{{evidence.workflows.children.0.url}}", "kind": "workflow" },
+        { "label": "Challenger v1 in the pair", "href": "{{evidence.workflows.children.1.url}}", "kind": "workflow" },
+        { "label": "Fixture in the pair", "href": "{{evidence.workflows.children.2.url}}", "kind": "workflow" }
+      ]
+    },
+    {
+      "id": "rulebook",
+      "band": "decision",
+      "span": 3,
+      "kind": "core",
+      "title": "Frozen rulebook",
+      "role": "The rules a morning is decided by",
+      "summary": "The rule set is versioned and frozen on a named date, so a call can be traced to the exact rows that produced it. Some rows vote, some are counted elsewhere, some act as a gate and some are excluded; the book says which is which.",
+      "io": {
+        "in": ["The frozen decision version and its eligibility rules"],
+        "out": ["One directional call per eligible morning, or an abstention with a reason"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "rules.version", "op": "exists" }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "The version, the freeze date and the vote specification are recorded together, so a call names the rules behind it."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "rules.scored.current.run_generated_at", "op": "olderThanPath", "value": "evidence.source_dataset.generated_at" }, "state": "stale" },
+            { "state": "complete" }
+          ],
+          "note": "The published counts were computed on a panel built {{rules.scored.current.run_generated_at|datetime}}; the panel served today was rebuilt {{evidence.source_dataset.generated_at|datetime}}."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "rules.status", "op": "eq", "value": "FROZEN_EXPERIMENTAL" }, "state": "pending" },
+            { "state": "unknown" }
+          ],
+          "note": "Frozen and experimental: a written specification exists and the implementation is checked against it, but the rules themselves are not independently adjudicated."
+        }
+      },
+      "metrics": [
+        { "label": "Rule version", "value": "{{rules.version}}" },
+        { "label": "Frozen on", "value": "{{rules.frozen_on}}" },
+        { "label": "Status", "value": "{{rules.status}}" },
+        { "label": "Sessions scored", "value": "{{rules.totals.sessions}}", "format": "count" },
+        { "label": "Eligible mornings", "value": "{{rules.totals.eligible}}", "format": "count" },
+        { "label": "Directional calls", "value": "{{rules.totals.directional_calls}}", "format": "count" }
+      ],
+      "links": [
+        { "label": "Decision rules artefact", "href": "data/usd-layer1-backtester/decision-rules-v1.json", "kind": "artefact" },
+        { "label": "Rules page", "href": "usd-l1-decision-rules-v1.html", "kind": "page" }
+      ]
+    },
+    {
+      "id": "controller",
+      "band": "decision",
+      "span": 6,
+      "kind": "core",
+      "title": "Paired controller",
+      "role": "The n8n Cloud parent that runs one morning through the pair",
+      "summary": "A manual or header-authenticated webhook fetches the published panel, selects one morning and calls each child once, then reports the matrix it executed. It has no schedule, and the webhook was deactivated as soon as the evidence run finished.",
+      "io": {
+        "in": ["A published panel", "A selected morning", "The registered model set"],
+        "out": ["One call per child, with the execution ids that produced it"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "evidence.workflows.parent.id", "op": "exists" }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "The parent is deployed, and every node and code blob was read back and compared with the committed files after the write."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "evidence.execution_cases.0.parent_execution.id", "op": "exists" }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "Recorded Cloud executions exist for {{evidence.execution_cases.length|count}} controlled mornings, and the run ledger re-verifies each of them."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "evidence.workflows.parent.active", "op": "eq", "value": false }, "state": "inactive" },
+            { "state": "pending" }
+          ],
+          "note": "Deliberately not running: manual and webhook only, no schedule, and the webhook is off until another run is asked for.",
+          "quote": { "path": "evidence.workflows.parent.trigger", "from": "evidence" }
+        }
+      },
+      "metrics": [
+        { "label": "Workflow", "value": "{{evidence.workflows.parent.name}}" },
+        { "label": "Active", "value": "{{evidence.workflows.parent.active}}", "format": "boolean" },
+        { "label": "Ledger rows", "value": "{{evidence.sweep.summary.records}}", "format": "count" },
+        { "label": "Mornings covered", "value": "{{evidence.sweep.summary.unique_dates}}", "format": "count" },
+        { "label": "Failed verifications", "value": "{{evidence.sweep.summary.by_validation_mode.structural.failed_verification}}", "format": "count" },
+        { "label": "Fresh-call execution", "value": "{{freshcall.live_call.execution.id}}" }
+      ],
+      "links": [
+        { "label": "Open in n8n", "href": "{{evidence.workflows.parent.url}}", "kind": "workflow" },
+        { "label": "First recorded execution", "href": "{{evidence.execution_cases.0.parent_execution.url}}", "kind": "execution" }
+      ]
+    },
+    {
+      "id": "challenger-v0",
+      "band": "decision",
+      "span": 2,
+      "kind": "replaceable",
+      "title": "Challenger v0",
+      "role": "Frozen research model",
+      "summary": "A frozen challenger that reads the saved panel and returns one call or an abstention. The Cloud adapter evaluates the model's own rules on the stored values and never reads a stored prediction, its arithmetic is recomputed against the committed outcomes, and the fresh-call proof shows the call changes when an input changes.",
+      "io": {
+        "in": ["One panel row: the values the model consumes"],
+        "out": ["A direction or an abstention, with its conviction and reasons"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "evidence.workflows.children.0.active", "op": "eq", "value": true }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "Deployed and active. It carries an execute-workflow trigger only, so it cannot start itself."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "coverage.by_model.challenger.panel_coverage_pct", "op": "eq", "value": 100 }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "{{coverage.by_model.challenger.panel_coverage_pct|count}}% of the panel carries a stored call, over {{coverage.by_model.challenger.unique_dates|count}} mornings."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "evidence.claims.model_logic.status", "op": "eq", "value": "not_established" }, "state": "unknown" },
+            { "state": "pending" }
+          ],
+          "note": "The child recomputes the call from the saved inputs - 8 of 8 rehearsal cases and a captured execution - but a call that reproduces perfectly is still not proof that the rules are right.",
+          "quote": { "path": "evidence.claims.model_logic.statement", "from": "evidence" }
+        }
+      },
+      "metrics": [
+        { "label": "Identity", "value": "{{evidence.workflows.children.0.identity}}" },
+        { "label": "Allowed", "value": "{{evidence.performance.reports.challenger.statuses.allowed}}", "format": "count" },
+        { "label": "Abstained", "value": "{{evidence.performance.reports.challenger.statuses.abstained}}", "format": "count" },
+        { "label": "Scored", "value": "{{evidence.performance.reports.challenger.pooled.scored}}", "format": "count" }
+      ],
+      "links": [
+        { "label": "Open in n8n", "href": "{{evidence.workflows.children.0.url}}", "kind": "workflow" },
+        { "label": "Comparison artefact", "href": "data/usd-layer1-backtester/model-comparison-v1.json", "kind": "artefact" }
+      ]
+    },
+    {
+      "id": "challenger-v1",
+      "band": "decision",
+      "span": 2,
+      "kind": "replaceable",
+      "title": "Challenger v1",
+      "role": "Frozen research model, the London pit-conditional build",
+      "summary": "The second frozen challenger, checked against a second hand transcription of its approved specification as well as against deliberately corrupted inputs and calculations. Like v0 it replays the saved panel and cannot start itself.",
+      "io": {
+        "in": ["One panel row: the values this model consumes"],
+        "out": ["A direction or an abstention, with its conviction and reasons"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "evidence.workflows.children.1.active", "op": "eq", "value": true }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "Deployed and active, with an execute-workflow trigger only."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "spec.verdict", "op": "eq", "value": "pass" }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "The specification check passes: {{spec.hand_examples.passed|count}} hand examples, {{spec.corrupted_calls.detected|count}} corrupted calls, {{spec.corrupted_tables.detected|count}} corrupted tables and {{spec.corrupted_inputs.detected|count}} corrupted input sets were all caught."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "evidence.claims.model_logic.status", "op": "eq", "value": "not_established" }, "state": "unknown" },
+            { "state": "pending" }
+          ],
+          "note": "The child recomputes its call and the specification check holds it to the written rules; neither shows that the rules are right.",
+          "quote": { "path": "spec.statement", "from": "spec" }
+        }
+      },
+      "metrics": [
+        { "label": "Identity", "value": "{{evidence.workflows.children.1.identity}}" },
+        { "label": "Specification", "value": "{{spec.spec.id}}" },
+        { "label": "Allowed", "value": "{{evidence.performance.reports.challenger_v1.statuses.allowed}}", "format": "count" },
+        { "label": "Abstained", "value": "{{evidence.performance.reports.challenger_v1.statuses.abstained}}", "format": "count" },
+        { "label": "Scored", "value": "{{evidence.performance.reports.challenger_v1.pooled.scored}}", "format": "count" }
+      ],
+      "links": [
+        { "label": "Open in n8n", "href": "{{evidence.workflows.children.1.url}}", "kind": "workflow" },
+        { "label": "Specification check", "href": "data/usd-layer1-backtester/spec-check-v1.json", "kind": "artefact" }
+      ]
+    },
+    {
+      "id": "fixture",
+      "band": "decision",
+      "span": 2,
+      "kind": "replaceable",
+      "badge": "Not a research model",
+      "title": "Constant fixture",
+      "role": "A test double in the same pair",
+      "summary": "A registered constant answer that proves an arbitrary model set runs through the same pair. It is labelled a fixture in every artefact it touches, its calls are never pooled with a book, and no performance figure may include it.",
+      "io": {
+        "in": ["One panel row"],
+        "out": ["The same answer every morning, by design"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "evidence.workflows.children.2.active", "op": "eq", "value": true }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "Deployed and active, so the plumbing is proven with a model that cannot be mistaken for research."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "coverage.by_model.fixture_constant.records", "op": "gt", "value": 0 }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "{{coverage.by_model.fixture_constant.records|count}} recorded call, held apart from every research count."
+        },
+        "research": {
+          "rules": [{ "state": "inactive" }],
+          "note": "Never counted: a fixture cannot support a research claim, so its research state stays inactive by design."
+        }
+      },
+      "metrics": [
+        { "label": "Identity", "value": "{{evidence.workflows.children.2.identity}}" },
+        { "label": "Kind", "value": "{{evidence.workflows.children.2.kind}}" },
+        { "label": "Calls", "value": "{{coverage.by_model.fixture_constant.records}}", "format": "count" }
+      ],
+      "links": [
+        { "label": "Open in n8n", "href": "{{evidence.workflows.children.2.url}}", "kind": "workflow" }
+      ]
+    },
+    {
+      "id": "outcomes",
+      "band": "measurement",
+      "span": 6,
+      "kind": "core",
+      "title": "Outcome scoring",
+      "role": "Every call scored against the window it names",
+      "summary": "The panel declares its markets and its tests, and a run scores the matrix its own dataset names rather than a hard-coded list. Direction is measured today; the two level simulations are built and checked, but wait on a tape and a ladder that history does not hold.",
+      "io": {
+        "in": ["Stored calls", "One outcome series per market", "The declared matrix"],
+        "out": ["Hit, miss, flat and no-outcome counts per market and test"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "matrix.tests", "op": "exists" }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "{{matrix.markets.length|count}} markets and {{matrix.tests.length|count}} tests are declared in configuration, and each run reports the matrix it executed."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "readiness.published.counts.blocked", "op": "gt", "value": 0 }, "state": "pending" },
+            { "if": { "path": "m5.coverage.instruments_with_bid_ask", "op": "eq", "value": 0 }, "state": "pending" },
+            { "state": "complete" }
+          ],
+          "note": "The published matrix scores {{readiness.published.counts.scored|count}} cells, prices {{readiness.published.counts.proxy_scored|count}} on a named proxy, measures {{readiness.published.counts.measured_tick_replay|count}} by tick replay and blocks {{readiness.published.counts.blocked|count}}; every blocked cell names its own missing dataset. The five-minute archive carries bid and ask for {{m5.coverage.instruments_with_bid_ask|count}} of {{m5.coverage.instruments_required|count}} instruments."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "evidence.performance.status", "op": "eq", "value": "not established as an edge" }, "state": "unknown" },
+            { "state": "complete" }
+          ],
+          "note": "{{readiness.advantage.status}} - no published cell establishes a predictive advantage.",
+          "quote": { "path": "evidence.performance.note", "from": "evidence" }
+        }
+      },
+      "claims_title": "What is published, what waits, and what is not claimed",
+      "claims": [
+        { "label": "XAG/USD direction", "status": "{{readiness.markets.3.direction.publication}}", "note": "{{readiness.markets.3.direction.distribution}} Its L2L cells name {{readiness.markets.3.l2l_full_5r.missing.0}} and {{readiness.markets.3.l2l_full_5r.missing.1}}." },
+        { "label": "WTI/USD direction", "status": "{{readiness.markets.6.direction.publication}}", "note": "{{readiness.markets.6.direction.distribution}} Its L2L cells name {{readiness.markets.6.l2l_full_5r.missing.0}} and {{readiness.markets.6.l2l_full_5r.missing.1}}." },
+        { "label": "GBP/USD direction", "status": "{{readiness.markets.7.direction.publication}}", "note": "{{readiness.markets.7.direction.distribution}} Its L2L cells name {{readiness.markets.7.l2l_full_5r.missing.0}} and {{readiness.markets.7.l2l_full_5r.missing.1}}." },
+        { "label": "Predictive advantage", "status": "{{readiness.advantage.status}}", "note": "{{readiness.advantage.statement}}" }
+      ],
+      "metrics": [
+        { "label": "Published cells scored", "value": "{{readiness.published.counts.scored}}", "format": "count" },
+        { "label": "Proxy-scored cells", "value": "{{readiness.published.counts.proxy_scored}}", "format": "count" },
+        { "label": "Measured by tick replay", "value": "{{readiness.published.counts.measured_tick_replay}}", "format": "count" },
+        { "label": "Blocked cells", "value": "{{readiness.published.counts.blocked}}", "format": "count" },
+        { "label": "Declared markets", "value": "{{matrix.markets.length}}", "format": "count" },
+        { "label": "Declared tests", "value": "{{matrix.tests.length}}", "format": "count" },
+        { "label": "Instruments with bid and ask", "value": "{{m5.coverage.instruments_with_bid_ask}}", "format": "count" }
+      ],
+      "tests": [
+        { "title": "{{evidence.four_backtests.0.label}}", "status": "{{evidence.four_backtests.0.status}}", "note": "{{evidence.four_backtests.0.status_label}}" },
+        { "title": "{{evidence.four_backtests.1.label}}", "status": "{{evidence.four_backtests.1.status}}", "note": "{{evidence.four_backtests.1.status_label}}" },
+        { "title": "{{evidence.four_backtests.2.label}}", "status": "{{evidence.four_backtests.2.status}}", "note": "{{evidence.four_backtests.2.status_label}}" },
+        { "title": "{{evidence.four_backtests.3.label}}", "status": "{{evidence.four_backtests.3.status}}", "note": "{{evidence.four_backtests.3.status_label}}" }
+      ],
+      "links": [
+        { "label": "Five-minute archive status", "href": "data/usd-layer1-backtester/m5-archive-status.json", "kind": "artefact" },
+        { "label": "Sweep coverage", "href": "data/usd-layer1-backtester/coverage-v1.json", "kind": "artefact" },
+        { "label": "Published readiness artefact", "href": "data/usd-layer1-backtester/market-readiness-v1.json", "kind": "artefact" }
+      ],
+      "limitations": [
+        "The scratch run that read 7 scored, 1 proxy-scored, 8 measured and 8 blocked is unpublished research evidence, not live readiness.",
+        "No cell in the published matrix establishes a predictive advantage; the counts record what could be measured, not accuracy or edge."
+      ],
+      "open": "m5.missing"
+    },
+    {
+      "id": "reproduction",
+      "band": "measurement",
+      "span": 6,
+      "kind": "core",
+      "title": "Reproduction and parity",
+      "role": "Does the stored call reproduce, to the number?",
+      "summary": "A local controller re-runs every model over the panel and compares both the call and the arithmetic with what was stored. A second check runs the generated Cloud bundle against that controller, so a change in the bundle cannot pass unnoticed.",
+      "io": {
+        "in": ["Stored calls and outcomes", "The generated Cloud bundle"],
+        "out": ["Match and mismatch counts per model, per window"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "parity.ok", "op": "eq", "value": true }, "state": "complete" },
+            { "state": "blocked" }
+          ],
+          "note": "The parity gate is built into the publish path, so a mismatch fails the run rather than being reported quietly."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "parity.decision_mismatches", "op": "gt", "value": 0 }, "state": "blocked" },
+            { "if": { "path": "parity.checked", "op": "gt", "value": 0 }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "{{parity.decision_matches|count}} of {{parity.checked|count}} decisions and {{parity.result_matches|count}} of {{parity.results_checked|count}} results reproduce, with {{parity.decision_mismatches|count}} decision mismatches."
+        },
+        "research": {
+          "rules": [{ "state": "pending" }],
+          "note": "Reproduction is not accuracy: a stored call that repeats perfectly can still be wrong, and this check never claims otherwise.",
+          "quote": { "path": "evidence.claims.consistency.statement", "from": "evidence" }
+        }
+      },
+      "metrics": [
+        { "label": "Decisions checked", "value": "{{parity.checked}}", "format": "count" },
+        { "label": "Decision mismatches", "value": "{{parity.decision_mismatches}}", "format": "count" },
+        { "label": "Results checked", "value": "{{parity.results_checked}}", "format": "count" },
+        { "label": "Result mismatches", "value": "{{parity.result_mismatches}}", "format": "count" },
+        { "label": "Cloud bundle decisions", "value": "{{evidence.reproduction.cloud_bundle.checked_decisions}}", "format": "count" },
+        { "label": "Cloud bundle mismatches", "value": "{{evidence.reproduction.cloud_bundle.mismatches}}", "format": "count" }
+      ],
+      "links": [
+        { "label": "Parity artefact", "href": "data/usd-layer1-backtester/parity-v1.json", "kind": "artefact" },
+        { "label": "Specification check", "href": "data/usd-layer1-backtester/spec-check-v1.json", "kind": "artefact" }
+      ]
+    },
+    {
+      "id": "freshcall",
+      "band": "proof",
+      "span": 6,
+      "kind": "core",
+      "title": "Fresh-call proof",
+      "role": "Does the Cloud child compute the call, or repeat the stored row?",
+      "summary": "The child is sent one morning's cutoff inputs and a model name with the stored calls and results removed. Re-running the committed parent glue and child wrapper over eight cases reproduces 8 of 8 calls and 4 of 4 per-market results, and negating one saved input at a time moves the call in 27 of 110 probes. One real Cloud execution (parent 7260, children 7261 and 7262) returned the same call. This establishes call generation only: it does not establish contemporaneous availability across the 725 mornings, and it is not accuracy or edge.",
+      "io": {
+        "in": [
+          "One morning's cutoff inputs, a model name and a validation label",
+          "The committed parent glue and the pinned Cloud bundle"
+        ],
+        "out": [
+          "The direction, conviction, eligibility and per-market results, recomputed in the child"
+        ]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            {
+              "if": {
+                "path": "freshcall.verdict.status",
+                "op": "eq",
+                "value": "recomputed_from_cutoff_inputs"
+              },
+              "state": "complete"
+            },
+            {
+              "state": "unknown"
+            }
+          ],
+          "note": "The rehearsal reproduces the published call from stripped inputs and the captured execution agrees with the rehearsal; the verdict's blocking list holds {{freshcall.verdict.blocking|count}} entries.",
+          "quote": {
+            "path": "freshcall.answer",
+            "from": "freshcall"
+          }
+        },
+        "data": {
+          "rules": [
+            {
+              "if": {
+                "path": "freshcall.totals.cases",
+                "op": "gt",
+                "value": 0
+              },
+              "state": "complete"
+            },
+            {
+              "state": "unknown"
+            }
+          ],
+          "note": "{{freshcall.totals.calls_matching_published|count}} of {{freshcall.totals.cases|count}} calls and {{freshcall.totals.scoring_cases_matching|count}} scored cases match, from {{freshcall.totals.input_probes|count}} single-input probes."
+        },
+        "research": {
+          "rules": [
+            {
+              "if": {
+                "path": "evidence.claims.model_logic.status",
+                "op": "eq",
+                "value": "not_established"
+              },
+              "state": "pending"
+            },
+            {
+              "state": "unknown"
+            }
+          ],
+          "note": "Call generation is established; the rules that produce the call are still not independently adjudicated, and one captured morning is not a sample.",
+          "quote": {
+            "path": "evidence.claims.model_logic.statement",
+            "from": "evidence"
+          }
+        }
+      },
+      "metrics": [
+        {
+          "label": "Cases re-run",
+          "value": "{{freshcall.totals.cases}}",
+          "format": "count"
+        },
+        {
+          "label": "Calls matching",
+          "value": "{{freshcall.totals.calls_matching_published}}",
+          "format": "count"
+        },
+        {
+          "label": "Scored cases matching",
+          "value": "{{freshcall.totals.scoring_cases_matching}}",
+          "format": "count"
+        },
+        {
+          "label": "Single-input probes",
+          "value": "{{freshcall.totals.input_probes}}",
+          "format": "count"
+        },
+        {
+          "label": "Probes that moved the call",
+          "value": "{{freshcall.totals.probes_that_moved_the_call}}",
+          "format": "count"
+        },
+        {
+          "label": "Parent execution",
+          "value": "{{freshcall.live_call.execution.id}}"
+        },
+        {
+          "label": "Child executions",
+          "value": "{{freshcall.live_call.child_executions.0.execution_id}} / {{freshcall.live_call.child_executions.1.execution_id}}"
+        },
+        {
+          "label": "Captured at",
+          "value": "{{freshcall.live_call.captured_at}}",
+          "format": "datetime"
+        }
+      ],
+      "tests": [
+        {
+          "title": "Rehearsal: committed parent glue and child wrapper, stored calls and results stripped",
+          "status": "{{freshcall.verdict.status}}",
+          "note": "{{freshcall.totals.calls_matching_published}} of {{freshcall.totals.cases}} calls and {{freshcall.totals.scoring_cases_matching}} of 4 scored cases agree; {{freshcall.totals.probes_that_moved_the_call}} of {{freshcall.totals.input_probes}} probes move the call."
+        },
+        {
+          "title": "Live: one Cloud execution, captured and deactivated after the call",
+          "status": "{{freshcall.live_call.status}}",
+          "note": "Parent {{freshcall.live_call.execution.id}}, children {{freshcall.live_call.child_executions.0.execution_id}} and {{freshcall.live_call.child_executions.1.execution_id}}; agrees with the recomputation."
+        }
+      ],
+      "limitations": [
+        "One execution is one morning. It is kept because it is inspectable, not because it is a sample.",
+        "The fresh-call proof does not establish contemporaneous availability: the saved inputs are still not shown to have been known before the 05:00 cutoff on any of the 725 mornings.",
+        "No accuracy, hit rate, edge or predictive advantage is claimed."
+      ],
+      "open": "freshcall.not_claimed",
+      "links": [
+        {
+          "label": "Fresh-call proof artefact",
+          "href": "data/usd-layer1-backtester/n8n/fresh-call-v1.json",
+          "kind": "artefact"
+        },
+        {
+          "label": "The written proof",
+          "href": "docs/research/usd-session/v1/FRESH_CALL_PROOF_20261124.md",
+          "kind": "document"
+        },
+        {
+          "label": "Captured execution 7260",
+          "href": "{{freshcall.live_call.execution.url}}",
+          "kind": "execution"
+        },
+        {
+          "label": "Child execution 7261",
+          "href": "{{freshcall.live_call.child_executions.0.execution_url}}",
+          "kind": "execution"
+        },
+        {
+          "label": "Child execution 7262",
+          "href": "{{freshcall.live_call.child_executions.1.execution_url}}",
+          "kind": "execution"
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "band": "proof",
+      "span": 6,
+      "kind": "core",
+      "title": "Published evidence",
+      "role": "What the evidence claims, and what it refuses to claim",
+      "summary": "Five claims are published side by side instead of one headline. Internal consistency and call generation are established; historical availability, model logic and coverage are not established, and this page repeats that rather than smoothing it into a single score.",
+      "io": {
+        "in": ["Every artefact above"],
+        "out": ["One evidence file, one run ledger and the pages that read them"]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            { "if": { "path": "evidence.schema_version", "op": "exists" }, "state": "complete" },
+            { "state": "unknown" }
+          ],
+          "note": "The evidence file is generated by a script rather than written by hand, and this page reads it live when it opens."
+        },
+        "data": {
+          "rules": [
+            { "if": { "path": "evidence.sweep.summary.by_validation_mode.structural.failed_verification", "op": "eq", "value": 0 }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "The ledger re-verifies from its own raw captures: {{evidence.sweep.summary.records|count}} rows over {{evidence.sweep.summary.unique_dates|count}} mornings."
+        },
+        "research": {
+          "rules": [
+            { "if": { "path": "evidence.claims.consistency.status", "op": "eq", "value": "established" }, "state": "pending" },
+            { "state": "unknown" }
+          ],
+          "note": "Two of the five claims are established - internal consistency and call generation - and three are recorded as not established.",
+          "quote": { "path": "evidence.claims.consistency.statement", "from": "evidence" }
+        }
+      },
+      "claims": [
+        { "label": "Consistency", "status": "{{evidence.claims.consistency.status}}", "note": "{{evidence.claims.consistency.statement}}" },
+        { "label": "Historical availability", "status": "{{evidence.claims.historical_availability.status}}", "note": "{{evidence.claims.historical_availability.statement}}" },
+        { "label": "Model logic", "status": "{{evidence.claims.model_logic.status}}", "note": "{{evidence.claims.model_logic.statement}}" },
+        { "label": "Coverage", "status": "{{evidence.claims.coverage.status}}", "note": "{{evidence.claims.coverage.statement}}" },
+        { "label": "Call generation", "status": "{{freshcall.verdict.status}}", "note": "Established for eight rehearsal cases and one captured execution (7260): the child recomputes the call from stripped inputs. It is not a survey and not an edge." }
+      ],
+      "metrics": [
+        { "label": "Evidence built", "value": "{{evidence.generated_at}}", "format": "datetime" },
+        { "label": "Mornings accepted structurally", "value": "{{evidence.historical_validity.structural_accepted}}", "format": "count" },
+        { "label": "Mornings receipted", "value": "{{evidence.historical_validity.receipted_complete}}", "format": "count" },
+        { "label": "Bundle", "value": "{{evidence.bundle.bundle_version}}" },
+        { "label": "Fresh-call verdict", "value": "{{freshcall.verdict.status}}" }
+      ],
+      "limitations": "evidence.limitations",
+      "open": "evidence.next_actions",
+      "links": [
+        { "label": "Evidence artefact", "href": "data/usd-layer1-backtester/n8n-execution-evidence-v1.json", "kind": "artefact" },
+        { "label": "Recorded mornings", "href": "backtesting.html", "kind": "page" },
+        { "label": "Fresh-call proof", "href": "data/usd-layer1-backtester/n8n/fresh-call-v1.json", "kind": "artefact" }
+      ]
+    }
+  ]
+}

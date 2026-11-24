@@ -1,0 +1,320 @@
+{
+  "schema_version": "usd-l1-market-readiness-v1",
+  "research_only": true,
+  "generated_at": "2026-11-23T22:10:00.000Z",
+  "title": "Published readiness of the USD Layer 1 market matrix",
+  "published": {
+    "matrix_id": "usd-l1-matrix-1f943a83989d",
+    "fingerprint": "1f943a83989d2ec65ba31b4f01ff85515fc3e94473b5c4f9204de9215590f06f",
+    "markets": 8,
+    "tests": 3,
+    "combinations": 24,
+    "measured_at": "2026-11-23T22:10:00.000Z",
+    "counts": {
+      "scored": 4,
+      "proxy_scored": 1,
+      "measured_tick_replay": 8,
+      "blocked": 11,
+      "ready": 0,
+      "proxy_ready": 0
+    },
+    "note": "every selected market receives the same three tests; a blocked combination names the missing dataset and is never shown as a scored zero"
+  },
+  "unpublished_research": {
+    "id": "h1-present-scratch-20261124",
+    "published": false,
+    "status": "scratch_measurement",
+    "label": "Scratch run with the H1-present one-hour series in the working tree",
+    "counts": {
+      "scored": 7,
+      "proxy_scored": 1,
+      "measured_tick_replay": 8,
+      "blocked": 8
+    },
+    "provenance": "measured in a scratch run; no committed artefact carries it and no published count includes it",
+    "note": "This is research evidence, not live readiness. The published matrix above is the only readiness this page reports."
+  },
+  "markets": [
+    {
+      "key": "DXY",
+      "label": "USD index (DXY.cash)",
+      "role": "primary",
+      "broker_symbol": "DXY.cash",
+      "broker_symbol_confirmed": true,
+      "direction": {
+        "status": "proxy_scored",
+        "publication": "published_on_a_named_proxy",
+        "reason": "scored on the broker DXY.cash series, a named proxy for the official index, and never reported as it",
+        "scored_sessions": 205
+      },
+      "l2l_full_5r": {
+        "status": "blocked",
+        "missing": [
+          "bid/ask 5-minute tape",
+          "pre-session level ladder"
+        ],
+        "sessions_with_tape_and_ladder": 0,
+        "reason": "USD index (DXY.cash): no 5-minute tape was archived for this market before the setup; no level ladder for this market was archived before the setup"
+      },
+      "l2l_half_3r": {
+        "status": "blocked",
+        "missing": [
+          "bid/ask 5-minute tape",
+          "pre-session level ladder"
+        ],
+        "sessions_with_tape_and_ladder": 0,
+        "reason": "USD index (DXY.cash): no 5-minute tape was archived for this market before the setup; no level ladder for this market was archived before the setup"
+      }
+    },
+    {
+      "key": "EURUSD",
+      "label": "EUR/USD",
+      "role": "additional",
+      "broker_symbol": "EURUSD",
+      "broker_symbol_confirmed": true,
+      "direction": {
+        "status": "scored",
+        "publication": "published",
+        "reason": null,
+        "scored_sessions": 314
+      },
+      "l2l_full_5r": {
+        "status": "measured_tick_replay",
+        "missing": [],
+        "sessions_with_tape_and_ladder": 6,
+        "reason": "EUR/USD: priced by the 6-session tick replay against the archived ladder; this run's candle lane has not scored the combination"
+      },
+      "l2l_half_3r": {
+        "status": "measured_tick_replay",
+        "missing": [],
+        "sessions_with_tape_and_ladder": 6,
+        "reason": "EUR/USD: priced by the 6-session tick replay against the archived ladder; this run's candle lane has not scored the combination"
+      }
+    },
+    {
+      "key": "XAUUSD",
+      "label": "XAU/USD",
+      "role": "additional",
+      "broker_symbol": "XAUUSD",
+      "broker_symbol_confirmed": true,
+      "direction": {
+        "status": "scored",
+        "publication": "published",
+        "reason": null,
+        "scored_sessions": 340
+      },
+      "l2l_full_5r": {
+        "status": "measured_tick_replay",
+        "missing": [],
+        "sessions_with_tape_and_ladder": 6,
+        "reason": "XAU/USD: priced by the 6-session tick replay against the archived ladder; this run's candle lane has not scored the combination"
+      },
+      "l2l_half_3r": {
+        "status": "measured_tick_replay",
+        "missing": [],
+        "sessions_with_tape_and_ladder": 6,
+        "reason": "XAU/USD: priced by the 6-session tick replay against the archived ladder; this run's candle lane has not scored the combination"
+      }
+    },
+    {
+      "key": "XAGUSD",
+      "label": "XAG/USD",
+      "role": "additional",
+      "broker_symbol": "XAGUSD",
+      "broker_symbol_confirmed": false,
+      "direction": {
+        "status": "blocked",
+        "publication": "pending_data_distribution",
+        "reason": "backtester/tmp/oanda_xag_usd_h1.csv: no cached one-hour series for this market in this checkout, so neither 05:00 London endpoint can be priced",
+        "scored_sessions": null,
+        "distribution": "the acquired XAG_USD one-hour rows are held outside the checkout pending the data-distribution decision",
+        "acquisition": {
+          "instrument": "XAG_USD",
+          "rows": 17149,
+          "csv_sha256": "42b65cbb5d3997978126e1b9981013727d490f4fa18db897d38a575c00ee0017",
+          "sessions": 725,
+          "cutoff_present": 718,
+          "endpoint_present": 573,
+          "both_present": 569,
+          "licence": null
+        }
+      },
+      "l2l_full_5r": {
+        "status": "blocked",
+        "missing": [
+          "bid/ask 5-minute tape",
+          "pre-session level ladder"
+        ],
+        "sessions_with_tape_and_ladder": 0,
+        "reason": "XAG/USD: no 5-minute tape was archived for this market before the setup; no level ladder for this market was archived before the setup"
+      },
+      "l2l_half_3r": {
+        "status": "blocked",
+        "missing": [
+          "bid/ask 5-minute tape",
+          "pre-session level ladder"
+        ],
+        "sessions_with_tape_and_ladder": 0,
+        "reason": "XAG/USD: no 5-minute tape was archived for this market before the setup; no level ladder for this market was archived before the setup"
+      }
+    },
+    {
+      "key": "NAS100",
+      "label": "NAS100",
+      "role": "additional",
+      "broker_symbol": "US100.cash",
+      "broker_symbol_confirmed": true,
+      "direction": {
+        "status": "scored",
+        "publication": "published",
+        "reason": null,
+        "scored_sessions": 327
+      },
+      "l2l_full_5r": {
+        "status": "measured_tick_replay",
+        "missing": [],
+        "sessions_with_tape_and_ladder": 6,
+        "reason": "NAS100: priced by the 6-session tick replay against the archived ladder; this run's candle lane has not scored the combination"
+      },
+      "l2l_half_3r": {
+        "status": "measured_tick_replay",
+        "missing": [],
+        "sessions_with_tape_and_ladder": 6,
+        "reason": "NAS100: priced by the 6-session tick replay against the archived ladder; this run's candle lane has not scored the combination"
+      }
+    },
+    {
+      "key": "BTCUSD",
+      "label": "BTC/USD",
+      "role": "additional",
+      "broker_symbol": "BTCUSD",
+      "broker_symbol_confirmed": true,
+      "direction": {
+        "status": "scored",
+        "publication": "published",
+        "reason": null,
+        "scored_sessions": 386
+      },
+      "l2l_full_5r": {
+        "status": "measured_tick_replay",
+        "missing": [],
+        "sessions_with_tape_and_ladder": 6,
+        "reason": "BTC/USD: priced by the 6-session tick replay against the archived ladder; this run's candle lane has not scored the combination"
+      },
+      "l2l_half_3r": {
+        "status": "measured_tick_replay",
+        "missing": [],
+        "sessions_with_tape_and_ladder": 6,
+        "reason": "BTC/USD: priced by the 6-session tick replay against the archived ladder; this run's candle lane has not scored the combination"
+      }
+    },
+    {
+      "key": "WTIUSD",
+      "label": "WTI/USD",
+      "role": "additional",
+      "broker_symbol": "USOIL",
+      "broker_symbol_confirmed": false,
+      "direction": {
+        "status": "blocked",
+        "publication": "pending_data_distribution",
+        "reason": "backtester/tmp/oanda_wti_usd_h1.csv: no cached one-hour series for this market in this checkout, so neither 05:00 London endpoint can be priced",
+        "scored_sessions": null,
+        "distribution": "the acquired WTICO_USD one-hour rows are held outside the checkout pending the data-distribution decision",
+        "acquisition": {
+          "instrument": "WTICO_USD",
+          "rows": 17139,
+          "csv_sha256": "ff33d342e94d0a08ef2025f7f871835d97a4baf012d162b09305655a3fb7b556",
+          "sessions": 725,
+          "cutoff_present": 717,
+          "endpoint_present": 572,
+          "both_present": 568,
+          "licence": null
+        }
+      },
+      "l2l_full_5r": {
+        "status": "blocked",
+        "missing": [
+          "bid/ask 5-minute tape",
+          "pre-session level ladder"
+        ],
+        "sessions_with_tape_and_ladder": 0,
+        "reason": "WTI/USD: no 5-minute tape was archived for this market before the setup; no level ladder for this market was archived before the setup"
+      },
+      "l2l_half_3r": {
+        "status": "blocked",
+        "missing": [
+          "bid/ask 5-minute tape",
+          "pre-session level ladder"
+        ],
+        "sessions_with_tape_and_ladder": 0,
+        "reason": "WTI/USD: no 5-minute tape was archived for this market before the setup; no level ladder for this market was archived before the setup"
+      }
+    },
+    {
+      "key": "GBPUSD",
+      "label": "GBP/USD",
+      "role": "additional",
+      "broker_symbol": "GBPUSD",
+      "broker_symbol_confirmed": true,
+      "direction": {
+        "status": "blocked",
+        "publication": "pending_data_distribution",
+        "reason": "backtester/tmp/oanda_gbp_usd_h1.csv: no cached one-hour series for this market in this checkout, so neither 05:00 London endpoint can be priced",
+        "scored_sessions": null,
+        "distribution": "the acquired GBP_USD one-hour rows are held outside the checkout pending the data-distribution decision",
+        "acquisition": {
+          "instrument": "GBP_USD",
+          "rows": 18026,
+          "csv_sha256": "ce68ffe5d85b5bd116ecf4b7e98f981fe8a0fbe4dc35a297e0f7a8fd9053f3df",
+          "sessions": 725,
+          "cutoff_present": 721,
+          "endpoint_present": 576,
+          "both_present": 572,
+          "licence": null
+        }
+      },
+      "l2l_full_5r": {
+        "status": "blocked",
+        "missing": [
+          "bid/ask 5-minute tape",
+          "pre-session level ladder"
+        ],
+        "sessions_with_tape_and_ladder": 0,
+        "reason": "GBP/USD: no 5-minute tape was archived for this market before the setup; no level ladder for this market was archived before the setup"
+      },
+      "l2l_half_3r": {
+        "status": "blocked",
+        "missing": [
+          "bid/ask 5-minute tape",
+          "pre-session level ladder"
+        ],
+        "sessions_with_tape_and_ladder": 0,
+        "reason": "GBP/USD: no 5-minute tape was archived for this market before the setup; no level ladder for this market was archived before the setup"
+      }
+    }
+  ],
+  "advantage": {
+    "status": "not_established",
+    "statement": "No cell in the published matrix establishes a predictive advantage; the matrix reports measurement status, not accuracy or edge."
+  },
+  "refresh": {
+    "build": "npm run build:usd-l1-market-readiness",
+    "check": "npm run check:usd-l1-market-readiness",
+    "inputs": [
+      "data/usd-layer1-backtester/backtesting-screen-v1.json",
+      "data/usd-layer1-backtester/run-v1.json",
+      "data/usd-layer1-backtester/h1-v1/oanda-h1-acquisition-latest.json"
+    ],
+    "contract": "A coordinator build regenerates this artefact from the published screen; the page reads it at open, so refreshing the map needs no UI edit."
+  },
+  "provenance": {
+    "screen_sha256": "3f986088fb88b22b5e694cbeb5ce76c14ad9dd228ccc72560bfb698569a5effd",
+    "screen_bytes": 18504178,
+    "panel_sha256": "90800e10572ac47e83a233c94212953ea43b10f09b4f2add262d4c6b823ebf39",
+    "panel_bytes": 7090881,
+    "acquisition_sha256": "af025442c7b890ae22fb605e45acfe53c2e78eb80fd9ce92817c0dbe2ae50ece",
+    "acquisition_bytes": 6054,
+    "note": "Every published count is copied from the screen's own market_matrix block; the build fails rather than inventing a number."
+  },
+  "readiness_sha256": "4b4d2aa7e5d80970e45b4da2e1975b58b8590afd47c3371eee7f15b2845ed34c"
+}
