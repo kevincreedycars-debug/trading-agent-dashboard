@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=20261117-header-tidy">
-<link rel="stylesheet" href="backtester/assets/backtest-engine-v2.css?v=20261124-cr-v2-3">
+<link rel="stylesheet" href="backtester/assets/backtest-engine-v2.css?v=20261124-approved-reference-1">
 </head>
-<body>
+<body class="control-room-reference">
 <!-- SHARED-NAV:START -->
 <header class="topbar site-nav">
   <div class="topbar-brand">Asset Directional Movement Dashboard</div>
@@ -83,7 +83,7 @@
    scoped to .site-nav so no page's own rules can leak in or be disturbed. The bar is the compact strip it
    became when its page links moved into the rail's Old documentation section: brand, date and the two clocks
    only. The rail splits in two again by structure: inside .dashboard-frame it is the grid column it already
-   was (sticky, 42px under the bar); as a direct child of <body> it is fixed to the left edge and the following
+   was (sticky, 42px under the bar); as a direct child of <body class="control-room-reference"> it is fixed to the left edge and the following
    blocks are shifted clear. Under 901px the rail becomes the horizontal strip it already becomes on the
    dashboard, and the block still adds nothing that needs a script. */
 .site-nav.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;padding:0 24px;background:rgba(5,8,13,.92);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(18px)}
@@ -234,11 +234,10 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 <!-- SHARED-CLOCK:END -->
 
 <main class="cr-page">
+  <div class="cr-breadcrumb"><a href="index.html#overview">Dashboard</a> / Backtester / <strong>Visual workflow</strong></div>
   <header class="cr-head">
-    <p class="cr-eyebrow">Backtest engine &middot; v2</p>
-    <h1 class="cr-title">Backtesting Control Room</h1>
-    <p class="cr-intro">One page for the whole evidence path: what a morning is read from, which frozen rules decide it, which workflows run it, what scores it, and what the published evidence still does not claim. Every state below is read from a published artefact when this page opens, so no state is typed in by hand and none can drift away from the file it came from.</p>
-    <p class="cr-note"><span class="cr-note-text">Research only. Nothing here is published as a live call, sizes a position or places a trade, and no figure on this page is an edge claim.</span></p>
+    <h1 class="cr-title">How the backtester works</h1>
+    <p class="cr-intro">One reusable engine. Replaceable strategies, data and markets.</p>
   </header>
 
   <section class="cr-controls" aria-label="Flow controls">
@@ -265,9 +264,8 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
           </div>
         </div>
       </div>
-      <div class="cr-dimensions" id="crDimensions"></div>
-      <div class="cr-legend" id="crLegend"></div>
-      <div class="cr-sources" id="crSources"></div>
+      <div class="cr-mini-legend"><span class="plug">Replaceable module</span><span class="core">Engine step</span><span class="pending">Pending work</span></div>
+      <div id="crSources" hidden></div>
     </section>
 
     <aside class="cr-inspector" id="crInspector" aria-labelledby="crInspectorTitle">
@@ -289,6 +287,6 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
   <div class="cr-backdrop" id="crBackdrop" aria-hidden="true"></div>
   <p class="cr-visually-hidden" id="crAnnounce" role="status" aria-live="polite"></p>
 </main>
-<script src="backtester/assets/backtest-engine-v2.js?v=20261124-cr-v2-3"></script>
+<script src="backtester/assets/backtest-engine-v2.js?v=20261124-approved-reference-1"></script>
 </body>
 </html>
