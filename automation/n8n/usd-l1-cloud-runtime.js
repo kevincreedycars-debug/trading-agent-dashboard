@@ -8,7 +8,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   const BUNDLE_VERSION = "usd-l1-cloud-runtime-v3";
-  const BUNDLE_SHA256 = "544b24b495727a49b3da3e3d4fdbc8624faac1d5a9425291228c12679a9d2ef3";
+  const BUNDLE_SHA256 = "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1";
   const SOURCE_FILES = [
   {
     "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
@@ -59,6 +59,36 @@
     "path": "backtester/lib/usd_layer1_backtester/current_model.js",
     "sha256": "dad0fb69d13ac9f72b14f0d307c6584d00650653e138f841544f2a50b6c94ab4",
     "stub": true
+  },
+  {
+    "path": "automation/n8n/templates/usd-l1-cloud-runtime.tmpl",
+    "sha256": "b2c1983b64fd75b9bba781d3c0fd4b01e2caf6678399a0a21b35c8dc72b032e9",
+    "stub": false
+  },
+  {
+    "path": "automation/n8n/templates/usd-l1-parent-config.js",
+    "sha256": "8e6e9cbf3ad5d8609273b1ca6d04757b6dae06abf15f95d26a311d5346532e11",
+    "stub": false
+  },
+  {
+    "path": "automation/n8n/templates/usd-l1-parent-select.js",
+    "sha256": "43cf4fbad7d84e0f55f3b3fe99e527b53fde4b7687dfbe5070115ef44da86a6d",
+    "stub": false
+  },
+  {
+    "path": "automation/n8n/templates/usd-l1-parent-bind.js",
+    "sha256": "335afdbe844f5ff5f1a24e597a12545003fcb58360f50d87c05f11b30f33e8d0",
+    "stub": false
+  },
+  {
+    "path": "automation/n8n/templates/usd-l1-parent-combine.js",
+    "sha256": "4fbedd1b168b98490f648ff3a3509131cbcce384cb5f1d7ab7f7256127cc63fb",
+    "stub": false
+  },
+  {
+    "path": "automation/n8n/templates/usd-l1-child-wrapper.js",
+    "sha256": "b56e011ea00e080a23ecba189b90bb42ffc1c605757eeb2eaf0f2568475ad54b",
+    "stub": false
   }
 ];
   const __modules = {
@@ -2615,9 +2645,12 @@
     }
     const dataset = {
       schema_version: meta.schema_version || null,
-      run: { run_version: meta.run_version || null },
+      run: { run_version: meta.run_version || null, markets: meta.markets || null },
       generated_at: meta.generated_at || null,
       input_source_legend: meta.input_source_legend || [],
+      // The market x test matrix travels with the dataset, not with this code: the parent passes the
+      // document it fetched, so a different selection is a different dataset and never a different runtime.
+      market_matrix: meta.market_matrix || null,
       sessions: session ? [session] : []
     };
     const result = controller.runBacktest({

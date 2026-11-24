@@ -1,0 +1,2250 @@
+{
+ "schema_version": "usd-layer1-backtester-panel-v1",
+ "generated_at": "2026-11-23T22:10:00.000Z",
+ "research_only": true,
+ "labels": {
+  "research_only": "Research only. Nothing here is published as a live call or an edge claim.",
+  "execution_demo": "Execution demo: the two-day EUR/USD M5 replay reported at 5d488ef5, whose call direction came from the live fill record because no 05:00 Layer 1 archive for those dates exists in this checkout",
+  "benchmark": "Benchmark, not a challenger: the historical hourly ADR results stand under their own label and are never compared as if they were this programme's output",
+  "no_edge_claim": "No scored 5R or 3R figure is publishable from this run: the figures are gross of costs, single pair, two sessions and one call direction"
+ },
+ "run": {
+  "run_version": "usd-l1-backtester-r1",
+  "artefact_version": "usd-l1-run-v2",
+  "supersedes": {
+   "artefact_version": "usd-l1-run-v1",
+   "preserved_at": "data/usd-layer1-backtester/run-v1-superseded-20261114.json",
+   "why": "v2 carries the configurable market x test matrix and resolves level eligibility against the archived 2026-10-04 snapshot instead of an ignored working copy; the v1 build is preserved byte for byte"
+  },
+  "market_matrix_id": "usd-l1-matrix-f995c2ec458f",
+  "market_matrix_fingerprint": "f995c2ec458fb71b88cac4b97da580b24dfb2b543fe8ea43516353f96ca68856",
+  "market_matrix_source": "data/usd-layer1-backtester/run-v1.json",
+  "challenger_version": "usd-layer1-challenger-v0",
+  "challenger_frozen_on": "2026-11-08",
+  "challenger_frozen_before": "the first date of the development window was scored",
+  "current_model_version": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+  "session_contract": {
+   "cutoff_local": "05:00",
+   "cutoff_zone": "Europe/London",
+   "endpoint_day_offset": 1,
+   "nominal_hours": 24,
+   "start_weekdays": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "note": "05:00 London is midnight in New York in both GMT and BST, so the session starts on the New York calendar day boundary and each eligible session is exactly 24 hours long"
+  },
+  "account": {
+   "starting_balance": 100000,
+   "currency": "GBP",
+   "risk_per_trade_pct": 1,
+   "sizing_rule": "1% of the running simulated balance at the moment the order fills, never of the starting balance",
+   "chronological": "trades are processed in fill-time order across the four markets before the balance moves on",
+   "position_limits": "the trader rule's limits are kept: one position per line, one live order per line, and no re-entry order while the line is behind the market"
+  },
+  "conviction": {
+   "scale": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "labels": {
+    "1": "minimal",
+    "2": "weak",
+    "3": "moderate",
+    "4": "strong",
+    "5": "distinct"
+   },
+   "trade_threshold": 3,
+   "trade_threshold_rule": "a call at conviction 3 or higher is the provisional trade threshold; every call below it is still recorded and scored so the threshold can be reviewed on evidence instead of moved by hand",
+   "current_model_mapping": {
+    "rule": "the current model's own 0-100 conviction is banded, not recomputed",
+    "bands": [
+     {
+      "min": 80,
+      "conviction": 5
+     },
+     {
+      "min": 65,
+      "conviction": 4
+     },
+     {
+      "min": 50,
+      "conviction": 3
+     },
+     {
+      "min": 35,
+      "conviction": 2
+     },
+     {
+      "min": 0,
+      "conviction": 1
+     }
+    ]
+   }
+  },
+  "markets": [
+   {
+    "key": "DXY",
+    "role": "primary",
+    "label": "USD index (DXY.cash)",
+    "outcome_series": "backtester/tmp/ftmo_dxy_cash_h1.csv",
+    "quote_convention": "index points",
+    "usd_bullish_predicts": "UP",
+    "digits": 3,
+    "broker_symbol": "DXY.cash",
+    "ladder_symbol": null
+   },
+   {
+    "key": "EURUSD",
+    "role": "additional",
+    "label": "EUR/USD",
+    "outcome_series": "backtester/tmp/oanda_eur_usd_h1.csv",
+    "quote_convention": "USD per EUR",
+    "usd_bullish_predicts": "DOWN",
+    "digits": 5,
+    "broker_symbol": "EURUSD",
+    "ladder_symbol": "EURUSD"
+   },
+   {
+    "key": "XAUUSD",
+    "role": "additional",
+    "label": "XAU/USD",
+    "outcome_series": "backtester/tmp/oanda_xau_usd_h1.csv",
+    "quote_convention": "USD per ounce",
+    "usd_bullish_predicts": "DOWN",
+    "digits": 2,
+    "broker_symbol": "XAUUSD",
+    "ladder_symbol": "XAUUSD"
+   },
+   {
+    "key": "GBPUSD",
+    "role": "additional",
+    "label": "GBP/USD",
+    "outcome_series": "backtester/tmp/oanda_gbp_usd_h1.csv",
+    "quote_convention": "USD per GBP",
+    "usd_bullish_predicts": "DOWN",
+    "digits": 5,
+    "broker_symbol": "GBPUSD",
+    "ladder_symbol": "GBPUSD"
+   }
+  ],
+  "splits": {
+   "development": {
+    "start": "2024-01-02",
+    "end": "2025-03-31",
+    "label": "development"
+   },
+   "validation": {
+    "start": "2025-04-01",
+    "end": "2025-10-31",
+    "label": "unseen"
+   },
+   "holdout": {
+    "start": "2025-11-01",
+    "end": "2026-12-31",
+    "label": "unseen"
+   }
+  },
+  "flat_bands": {
+   "EURUSD": {
+    "flat_band_pct": 0.1,
+    "sample": 255,
+    "rule": "20th percentile of the absolute 05:00-to-05:00 move over development dates, rounded to 3 decimals",
+    "frozen": "computed from development dates only and applied unchanged to every later date in this run"
+   },
+   "XAUUSD": {
+    "flat_band_pct": 0.152,
+    "sample": 254,
+    "rule": "20th percentile of the absolute 05:00-to-05:00 move over development dates, rounded to 3 decimals",
+    "frozen": "computed from development dates only and applied unchanged to every later date in this run"
+   },
+   "XAGUSD": {
+    "flat_band_pct": null,
+    "sample": 0,
+    "rule": "20th percentile of the absolute 05:00-to-05:00 move over development dates, rounded to 3 decimals",
+    "frozen": "computed from development dates only and applied unchanged to every later date in this run"
+   },
+   "NAS100": {
+    "flat_band_pct": 0.21,
+    "sample": 254,
+    "rule": "20th percentile of the absolute 05:00-to-05:00 move over development dates, rounded to 3 decimals",
+    "frozen": "computed from development dates only and applied unchanged to every later date in this run"
+   },
+   "BTCUSD": {
+    "flat_band_pct": 0.553,
+    "sample": 325,
+    "rule": "20th percentile of the absolute 05:00-to-05:00 move over development dates, rounded to 3 decimals",
+    "frozen": "computed from development dates only and applied unchanged to every later date in this run"
+   },
+   "WTIUSD": {
+    "flat_band_pct": null,
+    "sample": 0,
+    "rule": "20th percentile of the absolute 05:00-to-05:00 move over development dates, rounded to 3 decimals",
+    "frozen": "computed from development dates only and applied unchanged to every later date in this run"
+   },
+   "GBPUSD": {
+    "flat_band_pct": null,
+    "sample": 0,
+    "rule": "20th percentile of the absolute 05:00-to-05:00 move over development dates, rounded to 3 decimals",
+    "frozen": "computed from development dates only and applied unchanged to every later date in this run"
+   }
+  },
+  "date_range": {
+   "start": "2024-01-02",
+   "end": "2026-10-12"
+  },
+  "sessions_eligible": 725,
+  "sessions_processed": 725,
+  "last_update": "2026-11-23T22:10:00.000Z",
+  "official_dxy": {
+   "available": false,
+   "required_series": "ICE US Dollar Index, cash, official close, USDX",
+   "what_exists_instead": "FRED DTWEXBGS (broad trade-weighted dollar), stored locally as `dxy_level`",
+   "why_it_cannot_stand_in": "DTWEXBGS is a weekly-cadence H.10 release carried with a publication lag, so a 05:00-to-05:00 move read from it is neither the ICE basket nor knowable at 05:00; using it would silently answer a different question and flatter whichever model happened to agree with the lagged print",
+   "blocker_owner": "ICE sample and fee letter (docs/research/usd-session/v1/ice_dxy_sample_and_fee_request_20261107.md)",
+   "unblock_condition": "a licensed cash DXY history with at least 05:00 London and next-05:00 London prints"
+  },
+  "challenger_mechanisms": [
+   {
+    "id": "vix_regime",
+    "label": "VIX level and risk regime",
+    "factor": "live.f1-vix-level",
+    "input": "vix_level",
+    "rule": "VIX above 25 is safe-haven USD demand; below 16 is risk-on pressure",
+    "threshold": "25 / 16",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 25,
+      "usd": 1
+     },
+     {
+      "when": "lt",
+      "value": 16,
+      "usd": -1
+     }
+    ],
+    "weight": 1
+   },
+   {
+    "id": "vix_momentum",
+    "label": "VIX 5-day change",
+    "factor": "live.f1-vix-level",
+    "input": "vix_d5_chg",
+    "rule": "a 5-day VIX rise of more than one index point bids USD; a fall of the same size releases it",
+    "threshold": "1 index point",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 1,
+      "usd": 1
+     },
+     {
+      "when": "lt",
+      "value": -1,
+      "usd": -1
+     }
+    ],
+    "weight": 1
+   },
+   {
+    "id": "us_2y",
+    "label": "US 2-year yield 5-day change",
+    "factor": "live.f2-us-2y-delta",
+    "input": "us_2y_d5_bps",
+    "rule": "front-end yields up more than 5bp support USD; down more than 5bp oppose it",
+    "threshold": "5 bp",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 5,
+      "usd": 1
+     },
+     {
+      "when": "lt",
+      "value": -5,
+      "usd": -1
+     }
+    ],
+    "weight": 1
+   },
+   {
+    "id": "us_10y_real",
+    "label": "US 10-year real yield 5-day change",
+    "factor": "live.f4-real-yield-delta",
+    "input": "us_10y_real_d5_bps",
+    "rule": "real yields up more than 5bp support USD; down more than 5bp oppose it",
+    "threshold": "5 bp",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 5,
+      "usd": 1
+     },
+     {
+      "when": "lt",
+      "value": -5,
+      "usd": -1
+     }
+    ],
+    "weight": 1
+   },
+   {
+    "id": "broad_dollar_momentum",
+    "label": "Broad dollar 5-day momentum",
+    "factor": "live.f5-dxy-delta",
+    "input": "broad_dollar_d5_pct",
+    "rule": "the dollar's own 5-day move continues: a rise above 0.15% is read as USD strength and a fall as weakness; FRED DTWEXBGS stands in for ICE DXY and is labelled as such everywhere",
+    "threshold": "0.15%",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 0.15,
+      "usd": 1
+     },
+     {
+      "when": "lt",
+      "value": -0.15,
+      "usd": -1
+     }
+    ],
+    "weight": 1
+   },
+   {
+    "id": "gold",
+    "label": "Gold 5-day change",
+    "factor": "live.f6-gold-delta",
+    "input": "gold_d5_pct",
+    "rule": "gold up more than 0.5% is a hedge bid against USD; down more than 0.5% is the reverse",
+    "threshold": "0.5%",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 0.5,
+      "usd": -1
+     },
+     {
+      "when": "lt",
+      "value": -0.5,
+      "usd": 1
+     }
+    ],
+    "weight": 1
+   },
+   {
+    "id": "equities",
+    "label": "NAS100 5-day change",
+    "factor": "live.f10-equity-versus-usd",
+    "input": "nasdaq100_d5_pct",
+    "rule": "equities up more than 0.5% is risk-on and reads against USD; down more than 0.5% reads for it",
+    "threshold": "0.5%",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 0.5,
+      "usd": -1
+     },
+     {
+      "when": "lt",
+      "value": -0.5,
+      "usd": 1
+     }
+    ],
+    "weight": 1
+   },
+   {
+    "id": "eurusd_mirror",
+    "label": "EUR/USD 5-day change",
+    "factor": "live.f3-us-de-2y-spread-delta",
+    "input": "eurusd_d5_pct",
+    "rule": "EUR/USD is USD inverted: a rise above 0.15% is read as USD weakness and a fall as USD strength; it stands in for the German 2-year leg the current model cannot reconstruct, and says so",
+    "threshold": "0.15%",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 0.15,
+      "usd": -1
+     },
+     {
+      "when": "lt",
+      "value": -0.15,
+      "usd": 1
+     }
+    ],
+    "weight": 1
+   },
+   {
+    "id": "usdjpy_mirror",
+    "label": "USD/JPY 5-day change",
+    "factor": "live.f9-dollar-smile",
+    "input": "usdjpy_d5_pct",
+    "rule": "USD/JPY is USD direct: a rise above 0.15% is read as USD strength and a fall as weakness",
+    "threshold": "0.15%",
+    "vote_spec": [
+     {
+      "when": "gt",
+      "value": 0.15,
+      "usd": 1
+     },
+     {
+      "when": "lt",
+      "value": -0.15,
+      "usd": -1
+     }
+    ],
+    "weight": 1
+   }
+  ],
+  "challenger_rules": {
+   "equal_weight": 1,
+   "min_usable_mechanisms": 6,
+   "agreement_deadband": 0.2,
+   "agreement_deadband_pct": 20,
+   "conviction_bands": [
+    {
+     "min_agreement": 0.75,
+     "min_participation": 0.9,
+     "conviction": 5
+    },
+    {
+     "min_agreement": 0.6,
+     "min_participation": 0.75,
+     "conviction": 4
+    },
+    {
+     "min_agreement": 0.45,
+     "min_participation": 0.6,
+     "conviction": 3
+    },
+    {
+     "min_agreement": 0.25,
+     "min_participation": 0.4,
+     "conviction": 2
+    },
+    {
+     "min_agreement": 0,
+     "min_participation": 0,
+     "conviction": 1
+    }
+   ],
+   "interpreter": "usd-l1-votes-v1",
+   "vote_reading": "+1 is a bullish USD reading, -1 bearish, 0 means the input was live but inside its threshold",
+   "gates": [
+    {
+     "id": "min_usable_mechanisms",
+     "rule": "no call when fewer than 6 of 9 mechanisms have a value",
+     "why": "a thin book is a data problem, not a directional signal"
+    },
+    {
+     "id": "agreement_deadband",
+     "rule": "no call when agreement is inside 0.2, meaning no side holds 20% of the live mechanisms",
+     "why": "a split book is a coin toss and is recorded as such"
+    }
+   ],
+   "missing_data_rules": [
+    "a value counts only when it is a finite number at the 05:00 cutoff; null, blank or a later revision is missing",
+    "a missing mechanism does not vote, is named in the row's missing list, and lowers participation",
+    "a missing input never zero-votes and is never filled from a later print or a neighbouring session",
+    "every excluded input is listed with its reason, so an exclusion is a decision rather than an omission"
+   ]
+  },
+  "current_model_rules": {
+   "version": "agent_usd_direction.md (production baseline, replayed by backtester/replay/usd/usd_replay_core.js)",
+   "engine": "backtester/replay/usd/usd_replay_core.js (unchanged; replayed, never re-weighted)",
+   "scale": "0-100 conviction on the model's own scale, banded to 1-5 for comparison only",
+   "conviction_mapping": {
+    "rule": "the current model's own 0-100 conviction is banded, not recomputed",
+    "bands": [
+     {
+      "min": 80,
+      "conviction": 5
+     },
+     {
+      "min": 65,
+      "conviction": 4
+     },
+     {
+      "min": 50,
+      "conviction": 3
+     },
+     {
+      "min": 35,
+      "conviction": 2
+     },
+     {
+      "min": 0,
+      "conviction": 1
+     }
+    ]
+   },
+   "factor_source": "the per-session factor signals and weights are the production model's own breakdown for that morning",
+   "absent_inputs": [
+    {
+     "key": "us_de_2y_spread",
+     "needed_by": "current model F3 (US/Germany 2-year rate differential delta)",
+     "reason": "the German 2-year series lives in the warehouse and no 05:00 cache of it exists in this checkout, so F3 is scored NEUTRAL with the input named, never guessed"
+    },
+    {
+     "key": "fed_bias",
+     "needed_by": "current model F8 (Fed bias delta)",
+     "reason": "no historical Fed-bias snapshots exist at the 05:00 cutoff; the warehouse builder leaves the field null for every row"
+    },
+    {
+     "key": "latest_us_event",
+     "needed_by": "current model F7 (US economic surprise direction)",
+     "reason": "no committed US economic-event history reaches the 05:00 cutoff with surprise scores"
+    },
+    {
+     "key": "official_cash_dxy",
+     "needed_by": "current model F5 as written, and test 1 outright",
+     "reason": "only FRED DTWEXBGS is cached; it is a lagged broad index, not the ICE cash DXY, so it is used as a declared substitute for F5's motor and not at all for test 1"
+    }
+   ],
+   "substitutions": [
+    {
+     "factor": "F5 dollar momentum",
+     "stands_in": "FRED DTWEXBGS, stored as dxy_level",
+     "why": "no licensed ICE cash DXY exists in this checkout"
+    },
+    {
+     "factor": "F3 US-DE 2-year spread",
+     "stands_in": "no substitute: the spread is passed as null and the factor scores NEUTRAL",
+     "why": "no 05:00 cache of the German 2-year series exists"
+    }
+   ],
+   "missing_data_rules": [
+    "a factor whose input is absent scores NEUTRAL with the input named in the row's missing list",
+    "the model still returns its own label and conviction; nothing is imputed to fill the gap",
+    "when the model returns NO_CLEAR_BIAS the row is recorded as no call and the reason is kept"
+   ]
+  },
+  "challenger_excluded_inputs": [
+   {
+    "key": "us_de_2y_spread",
+    "reason": "no 05:00 cache of the German 2-year series exists in this checkout; EUR/USD momentum stands in"
+   },
+   {
+    "key": "fed_bias",
+    "reason": "no historical Fed-bias snapshots exist; scoring it would mean inventing the input"
+   },
+   {
+    "key": "latest_us_event",
+    "reason": "no committed event history reaches the cutoff with surprise scores"
+   },
+   {
+    "key": "policy_rate_effr",
+    "reason": "a policy rate is a level that moves a handful of times a year, so its 5-day change is zero almost always"
+   },
+   {
+    "key": "sofr",
+    "reason": "collinear with the effective policy rate; keeping both would double-count the same stance"
+   },
+   {
+    "key": "us_3m_yield",
+    "reason": "collinear with the 2-year leg; the shorter point adds noise, not information"
+   },
+   {
+    "key": "us_5y_real_yield",
+    "reason": "collinear with the 10-year real yield already used"
+   },
+   {
+    "key": "us_10y_yield",
+    "reason": "the real-yield leg is the cleaner signal; the nominal leg would double-count it"
+   },
+   {
+    "key": "us_10y_breakeven",
+    "reason": "an inflation-expectations read with no single agreed USD sign, so it needs the adjudication first"
+   },
+   {
+    "key": "credit_spread_hy",
+    "reason": "risk-appetite reading that overlaps VIX; its USD sign needs the adjudication"
+   },
+   {
+    "key": "sp500_level",
+    "reason": "overlaps NAS100, which the rules already name"
+   },
+   {
+    "key": "wti_spot",
+    "reason": "an oil shock can move USD either way depending on the driver, so it needs the adjudication"
+   },
+   {
+    "key": "usdgbp",
+    "reason": "already inside the broad dollar index; adding it double-counts"
+   },
+   {
+    "key": "usdcad",
+    "reason": "already inside the broad dollar index; adding it double-counts"
+   },
+   {
+    "key": "usdchf",
+    "reason": "already inside the broad dollar index; adding it double-counts"
+   },
+   {
+    "key": "usdsek",
+    "reason": "already inside the broad dollar index; adding it double-counts"
+   },
+   {
+    "key": "afe_dollar",
+    "reason": "a regional subset of the broad index; the two would move together"
+   }
+  ],
+  "absent_inputs": [
+   {
+    "key": "us_de_2y_spread",
+    "needed_by": "current model F3 (US/Germany 2-year rate differential delta)",
+    "reason": "the German 2-year series lives in the warehouse and no 05:00 cache of it exists in this checkout, so F3 is scored NEUTRAL with the input named, never guessed"
+   },
+   {
+    "key": "fed_bias",
+    "needed_by": "current model F8 (Fed bias delta)",
+    "reason": "no historical Fed-bias snapshots exist at the 05:00 cutoff; the warehouse builder leaves the field null for every row"
+   },
+   {
+    "key": "latest_us_event",
+    "needed_by": "current model F7 (US economic surprise direction)",
+    "reason": "no committed US economic-event history reaches the 05:00 cutoff with surprise scores"
+   },
+   {
+    "key": "official_cash_dxy",
+    "needed_by": "current model F5 as written, and test 1 outright",
+    "reason": "only FRED DTWEXBGS is cached; it is a lagged broad index, not the ICE cash DXY, so it is used as a declared substitute for F5's motor and not at all for test 1"
+   }
+  ],
+  "subset_reason": "a different market configuration for the n8n Cloud run, cut from the published artefact"
+ },
+ "market_matrix": {
+  "id": "usd-l1-matrix-f995c2ec458f",
+  "schema_version": "usd-l1-market-matrix-v1",
+  "source": "data/usd-layer1-backtester/run-v1.json",
+  "sha256": null,
+  "fingerprint": "f995c2ec458fb71b88cac4b97da580b24dfb2b543fe8ea43516353f96ca68856",
+  "primary_market": "DXY",
+  "additional_markets": [
+   "EURUSD",
+   "XAUUSD",
+   "GBPUSD"
+  ],
+  "market_count": 4,
+  "test_count": 3,
+  "combination_count": 12,
+  "combinations_per_strategy": 12,
+  "tests": [
+   {
+    "id": "direction",
+    "ordinal": 1,
+    "label": "Directional accuracy",
+    "requires": [
+     "session_outcome_series"
+    ]
+   },
+   {
+    "id": "l2l_full_5r",
+    "ordinal": 2,
+    "label": "Original L2L 5R",
+    "requires": [
+     "m5_tape",
+     "level_snapshot"
+    ]
+   },
+   {
+    "id": "l2l_half_3r",
+    "ordinal": 3,
+    "label": "0.5 L2L 3R",
+    "requires": [
+     "m5_tape",
+     "level_snapshot"
+    ]
+   }
+  ],
+  "markets": [
+   {
+    "key": "DXY",
+    "role": "primary",
+    "label": "USD index (DXY.cash)",
+    "asset_code": "USD",
+    "instrument_kind": "usd_index",
+    "series_file": "backtester/tmp/ftmo_dxy_cash_h1.csv",
+    "ladder_symbol": null,
+    "quote_convention": "index points",
+    "usd_bullish_predicts": "UP",
+    "digits": 3,
+    "broker_symbol": "DXY.cash",
+    "broker_symbol_confirmed": true,
+    "official_series": {
+     "required": "ICE US Dollar Index, cash, official close, USDX",
+     "available": false,
+     "why_it_matters": "the primary market's direction is only the official answer when it is priced on the licensed index; the broker CFD is a labelled proxy"
+    }
+   },
+   {
+    "key": "EURUSD",
+    "role": "additional",
+    "label": "EUR/USD",
+    "asset_code": "EUR",
+    "instrument_kind": "fx_pair",
+    "series_file": "backtester/tmp/oanda_eur_usd_h1.csv",
+    "ladder_symbol": "EURUSD",
+    "quote_convention": "USD per EUR",
+    "usd_bullish_predicts": "DOWN",
+    "digits": 5,
+    "broker_symbol": "EURUSD",
+    "broker_symbol_confirmed": true,
+    "official_series": null
+   },
+   {
+    "key": "XAUUSD",
+    "role": "additional",
+    "label": "XAU/USD",
+    "asset_code": "GOLD",
+    "instrument_kind": "metal",
+    "series_file": "backtester/tmp/oanda_xau_usd_h1.csv",
+    "ladder_symbol": "XAUUSD",
+    "quote_convention": "USD per ounce",
+    "usd_bullish_predicts": "DOWN",
+    "digits": 2,
+    "broker_symbol": "XAUUSD",
+    "broker_symbol_confirmed": true,
+    "official_series": null
+   },
+   {
+    "key": "GBPUSD",
+    "role": "additional",
+    "label": "GBP/USD",
+    "asset_code": "GBP",
+    "instrument_kind": "fx_pair",
+    "series_file": "backtester/tmp/oanda_gbp_usd_h1.csv",
+    "ladder_symbol": "GBPUSD",
+    "quote_convention": "USD per GBP",
+    "usd_bullish_predicts": "DOWN",
+    "digits": 5,
+    "broker_symbol": "GBPUSD",
+    "broker_symbol_confirmed": true,
+    "official_series": null
+   }
+  ],
+  "combinations": [
+   {
+    "id": "DXY/direction",
+    "market": "DXY",
+    "market_label": "USD index (DXY.cash)",
+    "role": "primary",
+    "test": "direction",
+    "test_label": "Directional accuracy",
+    "ordinal": 1
+   },
+   {
+    "id": "DXY/l2l_full_5r",
+    "market": "DXY",
+    "market_label": "USD index (DXY.cash)",
+    "role": "primary",
+    "test": "l2l_full_5r",
+    "test_label": "Original L2L 5R",
+    "ordinal": 2
+   },
+   {
+    "id": "DXY/l2l_half_3r",
+    "market": "DXY",
+    "market_label": "USD index (DXY.cash)",
+    "role": "primary",
+    "test": "l2l_half_3r",
+    "test_label": "0.5 L2L 3R",
+    "ordinal": 3
+   },
+   {
+    "id": "EURUSD/direction",
+    "market": "EURUSD",
+    "market_label": "EUR/USD",
+    "role": "additional",
+    "test": "direction",
+    "test_label": "Directional accuracy",
+    "ordinal": 1
+   },
+   {
+    "id": "EURUSD/l2l_full_5r",
+    "market": "EURUSD",
+    "market_label": "EUR/USD",
+    "role": "additional",
+    "test": "l2l_full_5r",
+    "test_label": "Original L2L 5R",
+    "ordinal": 2
+   },
+   {
+    "id": "EURUSD/l2l_half_3r",
+    "market": "EURUSD",
+    "market_label": "EUR/USD",
+    "role": "additional",
+    "test": "l2l_half_3r",
+    "test_label": "0.5 L2L 3R",
+    "ordinal": 3
+   },
+   {
+    "id": "XAUUSD/direction",
+    "market": "XAUUSD",
+    "market_label": "XAU/USD",
+    "role": "additional",
+    "test": "direction",
+    "test_label": "Directional accuracy",
+    "ordinal": 1
+   },
+   {
+    "id": "XAUUSD/l2l_full_5r",
+    "market": "XAUUSD",
+    "market_label": "XAU/USD",
+    "role": "additional",
+    "test": "l2l_full_5r",
+    "test_label": "Original L2L 5R",
+    "ordinal": 2
+   },
+   {
+    "id": "XAUUSD/l2l_half_3r",
+    "market": "XAUUSD",
+    "market_label": "XAU/USD",
+    "role": "additional",
+    "test": "l2l_half_3r",
+    "test_label": "0.5 L2L 3R",
+    "ordinal": 3
+   },
+   {
+    "id": "GBPUSD/direction",
+    "market": "GBPUSD",
+    "market_label": "GBP/USD",
+    "role": "additional",
+    "test": "direction",
+    "test_label": "Directional accuracy",
+    "ordinal": 1
+   },
+   {
+    "id": "GBPUSD/l2l_full_5r",
+    "market": "GBPUSD",
+    "market_label": "GBP/USD",
+    "role": "additional",
+    "test": "l2l_full_5r",
+    "test_label": "Original L2L 5R",
+    "ordinal": 2
+   },
+   {
+    "id": "GBPUSD/l2l_half_3r",
+    "market": "GBPUSD",
+    "market_label": "GBP/USD",
+    "role": "additional",
+    "test": "l2l_half_3r",
+    "test_label": "0.5 L2L 3R",
+    "ordinal": 3
+   }
+  ]
+ },
+ "input_source_legend": [
+  "Bundesbank BBSIS daily 2Y spot (observation date, usable from the next day)",
+  "macro as-of frame at GMT 05:00",
+  "backtester/tmp/oanda_xau_usd_h1.csv",
+  "backtester/tmp/oanda_nas100_usd_h1.csv",
+  "backtester/tmp/oanda_eur_usd_h1.csv",
+  "macro as-of frame at BST 05:00"
+ ],
+ "sessions": [
+  {
+   "date": "2024-01-10",
+   "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+   "cutoff_offset_abbrev": "GMT",
+   "endpoint_at_utc": "2024-01-11T05:00:00.000Z",
+   "window_hours": 24,
+   "split": "development",
+   "split_key": "development",
+   "saved_inputs": {
+    "vix_level": 12.76,
+    "vix_d5_chg": -0.44,
+    "us_2y_d5_bps": 3,
+    "us_10y_real_d5_bps": 6,
+    "broad_dollar_d5_pct": 0.8167,
+    "gold_d5_pct": -1.8119,
+    "nasdaq100_d5_pct": 0.8374,
+    "eurusd_d5_pct": -0.9492,
+    "usdjpy_d5_pct": 2.5546,
+    "usdjpy_d1_pct": 0,
+    "usdchf_d1_pct": 0,
+    "us_2y_yield": 4.36,
+    "de_2y_yield": 2.53,
+    "us_de_2y_spread": 1.83,
+    "us_de_2y_spread_d5_bps": -10,
+    "us_10y_real_yield": 1.8,
+    "us_10y_yield": 4.02,
+    "us_10y_d5_bps": 7,
+    "vix_d1_chg": -0.32,
+    "broad_dollar": 119.388,
+    "broad_dollar_d1_pct": 0,
+    "gold_price": 2026.745,
+    "gold_d1_pct": -0.3006,
+    "nasdaq100_price": 16690.4,
+    "nasdaq100_d1_pct": 0.3125
+   },
+   "audit_values": {
+    "us_3m_yield": 5.47,
+    "us_5y_real_yield": 1.8,
+    "us_5y_breakeven": 2.17,
+    "us_10y_breakeven": 2.22,
+    "credit_spread_hy": 3.59,
+    "policy_rate_effr": 5.33,
+    "sofr": 5.31,
+    "sp500_level": 4756.5,
+    "nasdaq100_level": 16678.7,
+    "wti_spot": 72.43,
+    "eurusd": 1.0957,
+    "usdjpy": 144.52,
+    "usdgbp": 1.274,
+    "usdcad": 1.3331,
+    "usdchf": 0.8486,
+    "usdsek": 10.237,
+    "afe_dollar": 113.9205,
+    "us_2y_d1_bps": 0,
+    "de_2y_d5_bps": 13,
+    "relative_front_end_d5_bps": -10,
+    "us_3m_d5_bps": 1,
+    "us_10y_d1_bps": 1,
+    "us_10y_real_d1_bps": 1,
+    "us_5y_real_d5_bps": 4,
+    "us_10y_breakeven_d5_bps": 1,
+    "credit_spread_d5_bps": 5,
+    "afe_dollar_d5_pct": 1.0596,
+    "usdgbp_d5_pct": -0.0235,
+    "usdcad_d5_pct": 0.9771,
+    "sp500_d5_pct": 0.2882,
+    "wti_d5_pct": 2.563,
+    "curve_10y_2y": -0.34,
+    "fx_eurusd_momentum_1s_pct": -0.2209,
+    "fx_eurusd_momentum_5s_pct": -0.2773,
+    "fx_overnight_range_position": 0.599,
+    "fx_overnight_range_pips": 20.2,
+    "fx_eurusd_volatility_120h_pct": 0.0732
+   },
+   "input_meta": [
+    [
+     "vix_level",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_2y_yield",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "de_2y_yield",
+     "2024-01-09",
+     1,
+     0
+    ],
+    [
+     "us_3m_yield",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_10y_yield",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_5y_real_yield",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_10y_real_yield",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_5y_breakeven",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_10y_breakeven",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "credit_spread_hy",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "policy_rate_effr",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "sofr",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "sp500_level",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "nasdaq100_level",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "wti_spot",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "eurusd",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdjpy",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdgbp",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdcad",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdchf",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdsek",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "broad_dollar",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "afe_dollar",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "gold_price",
+     "2024-01-10T05:00:00.000Z",
+     0,
+     2
+    ],
+    [
+     "nasdaq100_price",
+     "2024-01-10T05:00:00.000Z",
+     0,
+     3
+    ],
+    [
+     "fx_eurusd_momentum_1s_pct",
+     "2024-01-10",
+     0,
+     4
+    ],
+    [
+     "fx_eurusd_momentum_5s_pct",
+     "2024-01-10",
+     0,
+     4
+    ],
+    [
+     "fx_overnight_range_position",
+     "2024-01-10",
+     0,
+     4
+    ],
+    [
+     "fx_overnight_range_pips",
+     "2024-01-10",
+     0,
+     4
+    ],
+    [
+     "fx_eurusd_volatility_120h_pct",
+     "2024-01-10",
+     0,
+     4
+    ],
+    [
+     "vix_d1_chg",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "vix_d5_chg",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_2y_d5_bps",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_10y_d5_bps",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_10y_real_d5_bps",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_5y_real_d5_bps",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "us_10y_breakeven_d5_bps",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "credit_spread_d5_bps",
+     "2024-01-10",
+     1,
+     1
+    ],
+    [
+     "broad_dollar_d1_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "broad_dollar_d5_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "afe_dollar_d5_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "eurusd_d5_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdjpy_d5_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdjpy_d1_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdchf_d1_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdgbp_d5_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "usdcad_d5_pct",
+     "2024-01-10",
+     3,
+     1
+    ],
+    [
+     "nasdaq100_d1_pct",
+     "2024-01-10T05:00:00.000Z",
+     0,
+     3
+    ],
+    [
+     "nasdaq100_d5_pct",
+     "2024-01-10T05:00:00.000Z",
+     0,
+     3
+    ],
+    [
+     "gold_d1_pct",
+     "2024-01-10T05:00:00.000Z",
+     0,
+     2
+    ],
+    [
+     "gold_d5_pct",
+     "2024-01-10T05:00:00.000Z",
+     0,
+     2
+    ]
+   ],
+   "inputs": {
+    "vix_level": 12.76,
+    "vix_d5_chg": -0.44,
+    "us_2y_d5_bps": 3,
+    "us_10y_real_d5_bps": 6,
+    "broad_dollar_d5_pct": 0.8167,
+    "gold_d5_pct": -1.8119,
+    "nasdaq100_d5_pct": 0.8374,
+    "eurusd_d5_pct": -0.9492,
+    "usdjpy_d5_pct": 2.5546,
+    "gold_price": 2026.745,
+    "nasdaq100_price": 16690.4,
+    "eurusd": 1.0957
+   },
+   "inputs_missing": [],
+   "models": {
+    "current": {
+     "direction": "BULLISH",
+     "direction_label": "BULLISH_LEAN",
+     "conviction": 1,
+     "conviction_raw": 10,
+     "net_weight": 2,
+     "factors_live": 5,
+     "missing_inputs": [
+      "us_de_2y_spread_d5_bps",
+      "latest_us_event",
+      "fed_bias"
+     ],
+     "reason": "BULLISH_LEAN at conviction 10 on the model's own 0-100 scale",
+     "factors": [
+      [
+       "F1 VIX",
+       "BEARISH",
+       10
+      ],
+      [
+       "F2 US 2Y Yield Delta",
+       "NEUTRAL",
+       14
+      ],
+      [
+       "F3 US-DE 2Y Spread Delta",
+       "NEUTRAL",
+       10
+      ],
+      [
+       "F4 US 10Y Real Yield Delta",
+       "BULLISH",
+       10
+      ],
+      [
+       "F5 DXY Delta",
+       "NEUTRAL",
+       14
+      ],
+      [
+       "F6 Gold Delta",
+       "BULLISH",
+       4
+      ],
+      [
+       "F7 US Economic Surprise",
+       "NEUTRAL",
+       24
+      ],
+      [
+       "F8 Fed Bias",
+       "NEUTRAL",
+       12
+      ],
+      [
+       "F9 Dollar Smile",
+       "BEARISH",
+       1
+      ],
+      [
+       "F10 Equity Regime",
+       "BEARISH",
+       1
+      ]
+     ]
+    },
+    "challenger": {
+     "direction": "BULLISH",
+     "conviction": 2,
+     "raw_score": 3,
+     "usable_mechanisms": 9,
+     "agreement": 0.3333,
+     "participation": 1,
+     "missing_inputs": [],
+     "reason": "9 of 9 mechanisms live, net +3 (33% agreement, 100% participation)",
+     "mechanisms": [
+      [
+       "vix_regime",
+       12.76,
+       -1
+      ],
+      [
+       "vix_momentum",
+       -0.44,
+       0
+      ],
+      [
+       "us_2y",
+       3,
+       0
+      ],
+      [
+       "us_10y_real",
+       6,
+       1
+      ],
+      [
+       "broad_dollar_momentum",
+       0.8167,
+       1
+      ],
+      [
+       "gold",
+       -1.8119,
+       1
+      ],
+      [
+       "equities",
+       0.8374,
+       -1
+      ],
+      [
+       "eurusd_mirror",
+       -0.9492,
+       1
+      ],
+      [
+       "usdjpy_mirror",
+       2.5546,
+       1
+      ]
+     ]
+    },
+    "challenger_v1": {
+     "direction": "BULLISH",
+     "conviction": 2,
+     "raw_score": 2.5,
+     "usable_mechanisms": 9,
+     "usable_weight": 7,
+     "total_weight": 7,
+     "agreement": 0.3571,
+     "participation": 1,
+     "missing_inputs": [],
+     "reason": "9 of 9 mechanisms live, net +2.5 (36% agreement, 100% participation)",
+     "mechanisms": [
+      [
+       "vix_regime",
+       12.76,
+       -1,
+       0.5
+      ],
+      [
+       "vix_momentum",
+       -0.44,
+       0,
+       0.5
+      ],
+      [
+       "us_2y",
+       3,
+       0,
+       1
+      ],
+      [
+       "us_10y_real",
+       6,
+       1,
+       1
+      ],
+      [
+       "broad_dollar_momentum",
+       0.8167,
+       1,
+       1
+      ],
+      [
+       "gold",
+       -1.8119,
+       1,
+       1
+      ],
+      [
+       "equities",
+       0.8374,
+       -1,
+       1
+      ],
+      [
+       "eurusd_mirror",
+       -0.9492,
+       1,
+       0.5
+      ],
+      [
+       "usdjpy_mirror",
+       2.5546,
+       1,
+       0.5
+      ]
+     ]
+    }
+   },
+   "outcomes": {
+    "EURUSD": {
+     "direction": "UP",
+     "move_pct": 0.4217,
+     "flat_band_pct": 0.1,
+     "present": true,
+     "reason": null
+    },
+    "XAUUSD": {
+     "direction": "UP",
+     "move_pct": 0.3103,
+     "flat_band_pct": 0.152,
+     "present": true,
+     "reason": null
+    },
+    "XAGUSD": {
+     "direction": null,
+     "move_pct": null,
+     "flat_band_pct": null,
+     "present": false,
+     "reason": "undefined is not cached in this checkout"
+    },
+    "NAS100": {
+     "direction": "UP",
+     "move_pct": 1.0377,
+     "flat_band_pct": 0.21,
+     "present": true,
+     "reason": null
+    },
+    "BTCUSD": {
+     "direction": "FLAT",
+     "move_pct": 0.2045,
+     "flat_band_pct": 0.553,
+     "present": true,
+     "reason": null
+    },
+    "WTIUSD": {
+     "direction": null,
+     "move_pct": null,
+     "flat_band_pct": null,
+     "present": false,
+     "reason": "undefined is not cached in this checkout"
+    },
+    "GBPUSD": {
+     "direction": null,
+     "move_pct": null,
+     "flat_band_pct": null,
+     "present": false,
+     "reason": "undefined is not cached in this checkout"
+    }
+   },
+   "results": {
+    "current": {
+     "EURUSD": "miss",
+     "XAUUSD": "miss",
+     "XAGUSD": "no_outcome",
+     "NAS100": "miss",
+     "BTCUSD": "flat",
+     "WTIUSD": "no_outcome",
+     "GBPUSD": "no_outcome"
+    },
+    "challenger": {
+     "EURUSD": "miss",
+     "XAUUSD": "miss",
+     "XAGUSD": "no_outcome",
+     "NAS100": "miss",
+     "BTCUSD": "flat",
+     "WTIUSD": "no_outcome",
+     "GBPUSD": "no_outcome"
+    },
+    "challenger_v1": {
+     "EURUSD": "miss",
+     "XAUUSD": "miss",
+     "XAGUSD": "no_outcome",
+     "NAS100": "miss",
+     "BTCUSD": "flat",
+     "WTIUSD": "no_outcome",
+     "GBPUSD": "no_outcome"
+    }
+   }
+  },
+  {
+   "date": "2024-03-26",
+   "cutoff_at_utc": "2024-03-26T05:00:00.000Z",
+   "cutoff_offset_abbrev": "GMT",
+   "endpoint_at_utc": "2024-03-27T05:00:00.000Z",
+   "window_hours": 24,
+   "split": "development",
+   "split_key": "development",
+   "saved_inputs": {
+    "vix_level": 13.19,
+    "vix_d5_chg": -1.14,
+    "us_2y_d5_bps": -19,
+    "us_10y_real_d5_bps": -11,
+    "broad_dollar_d5_pct": 0.6511,
+    "gold_d5_pct": 0.7103,
+    "nasdaq100_d5_pct": 2.01,
+    "eurusd_d5_pct": -0.6521,
+    "usdjpy_d5_pct": 1.4818,
+    "usdjpy_d1_pct": 1.4818,
+    "usdchf_d1_pct": 1.6521,
+    "us_2y_yield": 4.54,
+    "de_2y_yield": 2.81,
+    "us_de_2y_spread": 1.73,
+    "us_de_2y_spread_d5_bps": -9,
+    "us_2y_d20_bps": -15,
+    "us_10y_real_yield": 1.92,
+    "us_10y_real_d20_bps": -5,
+    "us_10y_yield": 4.25,
+    "us_10y_d5_bps": -9,
+    "vix_d1_chg": 0.13,
+    "broad_dollar": 121.1842,
+    "broad_dollar_d1_pct": 0.6511,
+    "broad_dollar_d20_pct": 0.1217,
+    "gold_price": 2172.995,
+    "gold_d1_pct": 0.1424,
+    "gold_d20_pct": 6.8493,
+    "nasdaq100_price": 18346.5,
+    "nasdaq100_d1_pct": 0.0038,
+    "nasdaq100_d20_pct": 2.495
+   },
+   "audit_values": {
+    "us_3m_yield": 5.46,
+    "us_5y_real_yield": 1.82,
+    "us_5y_breakeven": 2.41,
+    "us_10y_breakeven": 2.33,
+    "credit_spread_hy": 3.11,
+    "policy_rate_effr": 5.33,
+    "sofr": 5.31,
+    "sp500_level": 5218.19,
+    "nasdaq100_level": 18277.06,
+    "wti_spot": 82.41,
+    "eurusd": 1.0817,
+    "usdjpy": 151.35,
+    "usdgbp": 1.2603,
+    "usdcad": 1.3594,
+    "usdchf": 0.8983,
+    "usdsek": 10.5507,
+    "afe_dollar": 116.3714,
+    "vix_d20_chg": -0.55,
+    "us_2y_d1_bps": -5,
+    "de_2y_d5_bps": -10,
+    "relative_front_end_d5_bps": -9,
+    "us_3m_d5_bps": -2,
+    "us_10y_d1_bps": 3,
+    "us_10y_d20_bps": -3,
+    "us_10y_real_d1_bps": 5,
+    "us_5y_real_d5_bps": -15,
+    "us_10y_breakeven_d5_bps": 2,
+    "credit_spread_d5_bps": -2,
+    "afe_dollar_d5_pct": 0.8201,
+    "usdgbp_d5_pct": -1.0909,
+    "usdcad_d5_pct": 0.473,
+    "sp500_d5_pct": 1.3355,
+    "wti_d5_pct": -1.5177,
+    "curve_10y_2y": -0.29,
+    "fx_eurusd_momentum_1s_pct": 0.2497,
+    "fx_eurusd_momentum_5s_pct": -0.2806,
+    "fx_overnight_range_position": 0.5556,
+    "fx_overnight_range_pips": 12.6,
+    "fx_eurusd_volatility_120h_pct": 0.0797,
+    "fx_eurusd_volatility_ratio_60s": 1.0993
+   },
+   "input_meta": [
+    [
+     "vix_level",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_2y_yield",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "de_2y_yield",
+     "2024-03-25",
+     1,
+     0
+    ],
+    [
+     "us_3m_yield",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_10y_yield",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_5y_real_yield",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_10y_real_yield",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_5y_breakeven",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_10y_breakeven",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "credit_spread_hy",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "policy_rate_effr",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "sofr",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "sp500_level",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "nasdaq100_level",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "wti_spot",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "eurusd",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdjpy",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdgbp",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdcad",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdchf",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdsek",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "broad_dollar",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "afe_dollar",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "gold_price",
+     "2024-03-26T05:00:00.000Z",
+     0,
+     2
+    ],
+    [
+     "nasdaq100_price",
+     "2024-03-26T05:00:00.000Z",
+     0,
+     3
+    ],
+    [
+     "fx_eurusd_momentum_1s_pct",
+     "2024-03-26",
+     0,
+     4
+    ],
+    [
+     "fx_eurusd_momentum_5s_pct",
+     "2024-03-26",
+     0,
+     4
+    ],
+    [
+     "fx_overnight_range_position",
+     "2024-03-26",
+     0,
+     4
+    ],
+    [
+     "fx_overnight_range_pips",
+     "2024-03-26",
+     0,
+     4
+    ],
+    [
+     "fx_eurusd_volatility_120h_pct",
+     "2024-03-26",
+     0,
+     4
+    ],
+    [
+     "fx_eurusd_volatility_ratio_60s",
+     "2024-03-26",
+     0,
+     4
+    ],
+    [
+     "vix_d1_chg",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "vix_d5_chg",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_2y_d5_bps",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_2y_d20_bps",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_10y_d5_bps",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_10y_real_d5_bps",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_10y_real_d20_bps",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_5y_real_d5_bps",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "us_10y_breakeven_d5_bps",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "credit_spread_d5_bps",
+     "2024-03-26",
+     1,
+     1
+    ],
+    [
+     "broad_dollar_d1_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "broad_dollar_d5_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "broad_dollar_d20_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "afe_dollar_d5_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "eurusd_d5_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdjpy_d5_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdjpy_d1_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdchf_d1_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdgbp_d5_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "usdcad_d5_pct",
+     "2024-03-26",
+     2,
+     1
+    ],
+    [
+     "nasdaq100_d1_pct",
+     "2024-03-26T05:00:00.000Z",
+     0,
+     3
+    ],
+    [
+     "nasdaq100_d5_pct",
+     "2024-03-26T05:00:00.000Z",
+     0,
+     3
+    ],
+    [
+     "nasdaq100_d20_pct",
+     "2024-03-26T05:00:00.000Z",
+     0,
+     3
+    ],
+    [
+     "gold_d1_pct",
+     "2024-03-26T05:00:00.000Z",
+     0,
+     2
+    ],
+    [
+     "gold_d5_pct",
+     "2024-03-26T05:00:00.000Z",
+     0,
+     2
+    ],
+    [
+     "gold_d20_pct",
+     "2024-03-26T05:00:00.000Z",
+     0,
+     2
+    ]
+   ],
+   "inputs": {
+    "vix_level": 13.19,
+    "vix_d5_chg": -1.14,
+    "us_2y_d5_bps": -19,
+    "us_10y_real_d5_bps": -11,
+    "broad_dollar_d5_pct": 0.6511,
+    "gold_d5_pct": 0.7103,
+    "nasdaq100_d5_pct": 2.01,
+    "eurusd_d5_pct": -0.6521,
+    "usdjpy_d5_pct": 1.4818,
+    "gold_price": 2172.995,
+    "nasdaq100_price": 18346.5,
+    "eurusd": 1.0817
+   },
+   "inputs_missing": [],
+   "models": {
+    "current": {
+     "direction": "BEARISH",
+     "direction_label": "BEARISH",
+     "conviction": 3,
+     "conviction_raw": 57,
+     "net_weight": -26,
+     "factors_live": 7,
+     "missing_inputs": [
+      "us_de_2y_spread_d5_bps",
+      "latest_us_event",
+      "fed_bias"
+     ],
+     "reason": "BEARISH at conviction 57 on the model's own 0-100 scale",
+     "factors": [
+      [
+       "F1 VIX",
+       "BEARISH",
+       10
+      ],
+      [
+       "F2 US 2Y Yield Delta",
+       "BEARISH",
+       14
+      ],
+      [
+       "F3 US-DE 2Y Spread Delta",
+       "NEUTRAL",
+       10
+      ],
+      [
+       "F4 US 10Y Real Yield Delta",
+       "BEARISH",
+       10
+      ],
+      [
+       "F5 DXY Delta",
+       "BULLISH",
+       14
+      ],
+      [
+       "F6 Gold Delta",
+       "BEARISH",
+       4
+      ],
+      [
+       "F7 US Economic Surprise",
+       "NEUTRAL",
+       24
+      ],
+      [
+       "F8 Fed Bias",
+       "NEUTRAL",
+       12
+      ],
+      [
+       "F9 Dollar Smile",
+       "BEARISH",
+       1
+      ],
+      [
+       "F10 Equity Regime",
+       "BEARISH",
+       1
+      ]
+     ]
+    },
+    "challenger": {
+     "direction": "BEARISH",
+     "conviction": 2,
+     "raw_score": -3,
+     "usable_mechanisms": 9,
+     "agreement": 0.3333,
+     "participation": 1,
+     "missing_inputs": [],
+     "reason": "9 of 9 mechanisms live, net -3 (33% agreement, 100% participation)",
+     "mechanisms": [
+      [
+       "vix_regime",
+       13.19,
+       -1
+      ],
+      [
+       "vix_momentum",
+       -1.14,
+       -1
+      ],
+      [
+       "us_2y",
+       -19,
+       -1
+      ],
+      [
+       "us_10y_real",
+       -11,
+       -1
+      ],
+      [
+       "broad_dollar_momentum",
+       0.6511,
+       1
+      ],
+      [
+       "gold",
+       0.7103,
+       -1
+      ],
+      [
+       "equities",
+       2.01,
+       -1
+      ],
+      [
+       "eurusd_mirror",
+       -0.6521,
+       1
+      ],
+      [
+       "usdjpy_mirror",
+       1.4818,
+       1
+      ]
+     ]
+    },
+    "challenger_v1": {
+     "direction": "BEARISH",
+     "conviction": 2,
+     "raw_score": -3,
+     "usable_mechanisms": 9,
+     "usable_weight": 7,
+     "total_weight": 7,
+     "agreement": 0.4286,
+     "participation": 1,
+     "missing_inputs": [],
+     "reason": "9 of 9 mechanisms live, net -3 (43% agreement, 100% participation)",
+     "mechanisms": [
+      [
+       "vix_regime",
+       13.19,
+       -1,
+       0.5
+      ],
+      [
+       "vix_momentum",
+       -1.14,
+       -1,
+       0.5
+      ],
+      [
+       "us_2y",
+       -19,
+       -1,
+       1
+      ],
+      [
+       "us_10y_real",
+       -11,
+       -1,
+       1
+      ],
+      [
+       "broad_dollar_momentum",
+       0.6511,
+       1,
+       1
+      ],
+      [
+       "gold",
+       0.7103,
+       -1,
+       1
+      ],
+      [
+       "equities",
+       2.01,
+       -1,
+       1
+      ],
+      [
+       "eurusd_mirror",
+       -0.6521,
+       1,
+       0.5
+      ],
+      [
+       "usdjpy_mirror",
+       1.4818,
+       1,
+       0.5
+      ]
+     ]
+    }
+   },
+   "outcomes": {
+    "EURUSD": {
+     "direction": "DOWN",
+     "move_pct": -0.1918,
+     "flat_band_pct": 0.1,
+     "present": true,
+     "reason": null
+    },
+    "XAUUSD": {
+     "direction": "UP",
+     "move_pct": 0.1894,
+     "flat_band_pct": 0.152,
+     "present": true,
+     "reason": null
+    },
+    "XAGUSD": {
+     "direction": null,
+     "move_pct": null,
+     "flat_band_pct": null,
+     "present": false,
+     "reason": "undefined is not cached in this checkout"
+    },
+    "NAS100": {
+     "direction": "FLAT",
+     "move_pct": -0.2033,
+     "flat_band_pct": 0.21,
+     "present": true,
+     "reason": null
+    },
+    "BTCUSD": {
+     "direction": "FLAT",
+     "move_pct": 0.249,
+     "flat_band_pct": 0.553,
+     "present": true,
+     "reason": null
+    },
+    "WTIUSD": {
+     "direction": null,
+     "move_pct": null,
+     "flat_band_pct": null,
+     "present": false,
+     "reason": "undefined is not cached in this checkout"
+    },
+    "GBPUSD": {
+     "direction": null,
+     "move_pct": null,
+     "flat_band_pct": null,
+     "present": false,
+     "reason": "undefined is not cached in this checkout"
+    }
+   },
+   "results": {
+    "current": {
+     "EURUSD": "miss",
+     "XAUUSD": "hit",
+     "XAGUSD": "no_outcome",
+     "NAS100": "flat",
+     "BTCUSD": "flat",
+     "WTIUSD": "no_outcome",
+     "GBPUSD": "no_outcome"
+    },
+    "challenger": {
+     "EURUSD": "miss",
+     "XAUUSD": "hit",
+     "XAGUSD": "no_outcome",
+     "NAS100": "flat",
+     "BTCUSD": "flat",
+     "WTIUSD": "no_outcome",
+     "GBPUSD": "no_outcome"
+    },
+    "challenger_v1": {
+     "EURUSD": "miss",
+     "XAUUSD": "hit",
+     "XAGUSD": "no_outcome",
+     "NAS100": "flat",
+     "BTCUSD": "flat",
+     "WTIUSD": "no_outcome",
+     "GBPUSD": "no_outcome"
+    }
+   }
+  }
+ ],
+ "subset": {
+  "source": "data/usd-layer1-backtester/run-v1.json",
+  "source_sha256": "90800e10572ac47e83a233c94212953ea43b10f09b4f2add262d4c6b823ebf39",
+  "source_generated_at": "2026-11-23T22:10:00.000Z",
+  "dates": [
+   "2024-01-10",
+   "2024-03-26"
+  ],
+  "market_matrix_fingerprint": "f995c2ec458fb71b88cac4b97da580b24dfb2b543fe8ea43516353f96ca68856",
+  "combination_count": 12,
+  "rule": "every session row is copied byte for byte from the source artefact; only run.markets and market_matrix are replaced, so the engine is unchanged and the data is the published data"
+ }
+}

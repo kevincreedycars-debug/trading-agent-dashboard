@@ -102,7 +102,19 @@ const MODULES = [
 ].map(([id, source, stub]) => ({ id, source, stub: Boolean(stub) }));
 
 const SOURCE_FILES = MODULES.map((m) => ({ path: m.id, sha256: sha256(m.source), stub: m.stub }));
-const BUNDLE_SHA256 = sha256(JSON.stringify(SOURCE_FILES));
+// The templates shape the workflow glue and the runtime's own entry point: `evaluateOne` is a template, not a
+// module, so a change there would otherwise leave the identity untouched. They are hashed into the same list,
+// which makes the source-set hash cover everything that can change what a deployed workflow computes.
+const TEMPLATE_FILES = [
+  "usd-l1-cloud-runtime.tmpl",
+  "usd-l1-parent-config.js",
+  "usd-l1-parent-select.js",
+  "usd-l1-parent-bind.js",
+  "usd-l1-parent-combine.js",
+  "usd-l1-child-wrapper.js"
+].map((name) => ({ path: `automation/n8n/templates/${name}`, sha256: sha256(template(name)), stub: false }));
+const ALL_SOURCE_FILES = SOURCE_FILES.concat(TEMPLATE_FILES);
+const BUNDLE_SHA256 = sha256(JSON.stringify(ALL_SOURCE_FILES));
 
 function moduleFunctions() {
   return MODULES.map((m) => [
@@ -116,7 +128,7 @@ function buildBundle() {
   return template("usd-l1-cloud-runtime.tmpl")
     .replace("__BUNDLE_VERSION__", BUNDLE_VERSION)
     .replace("__BUNDLE_SHA256__", BUNDLE_SHA256)
-    .replace("__SOURCE_FILES__", JSON.stringify(SOURCE_FILES, null, 2))
+    .replace("__SOURCE_FILES__", JSON.stringify(ALL_SOURCE_FILES, null, 2))
     .replace("__MODULES__", moduleFunctions())
     .replace("__CONTROLLER_ID__", IDS.controller)
     .replace("__REGISTRY_ID__", IDS.registry);
@@ -380,7 +392,7 @@ function main() {
     bundle_path: path.relative(ROOT, BUNDLE).replace(/\\/g, "/"),
     bundle_sha256: BUNDLE_SHA256,
     bundle_bytes: fs.statSync(BUNDLE).size,
-    source_files: SOURCE_FILES,
+    source_files: ALL_SOURCE_FILES,
     registry: Object.assign(registryDocument(), {
       file: IDS.registry.replace(/\\/g, "/")
     }),
@@ -430,6 +442,7 @@ module.exports = {
   BUNDLE_VERSION,
   BUNDLE_SHA256,
   SOURCE_FILES,
+  ALL_SOURCE_FILES,
   cloudChildren,
   registryDocument,
   buildBundle
