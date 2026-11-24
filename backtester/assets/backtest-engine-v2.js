@@ -253,83 +253,78 @@
     return (FLOW.manifest.bands || []).find(band => band.id === node.band) || { label: node.band };
   }
 
-  // --- The flow ---------------------------------------------------------
+  // Presentation groups are deliberately separate from the evidence manifest.
+  // No workflow, readiness rule or research result is changed by this view.
+  const VIEW = [
+    {id:"strategy", title:"Layer 1 strategy", band:"inputs", icon:"layers", plug:true, members:["registry","rulebook","challenger-v0","challenger-v1","fixture"], summary:"Choose the versioned strategy to test. Its rules and required inputs travel with it."},
+    {id:"required", title:"Required inputs", band:"inputs", icon:"database", plug:true, members:["sources","rulebook"], summary:"The selected strategy declares the factors it needs. Input preparation must check each required factor for every morning in the selected period."},
+    {id:"history", title:"Historical data", band:"inputs", icon:"database", members:["panel","sources"], summary:"Prepare the historical inputs for each morning, keeping source availability and missing data visible."},
+    {id:"validate", title:"Validate inputs", band:"core", icon:"shield", members:["sources"], summary:"Check completeness, source identity and availability at the decision cutoff. An incomplete morning must be blocked rather than filled with guessed values."},
+    {id:"blocked", title:"Blocked", band:"core", icon:"blocked", members:["sources"], summary:"Inspect what prevents a morning from passing. This branch shows validation refusals, not a running workflow."},
+    {id:"call", title:"Generate call", band:"core", icon:"code", members:["controller","freshcall","challenger-v0","challenger-v1"], summary:"Run the selected Layer 1 logic to produce a directional call. Inspect the recorded executions and the fresh-call proof below."},
+    {id:"matrix", title:"Market × test matrix", band:"compare", icon:"grid", members:["outcomes"], summary:"Apply all three tests to each selected market: directional accuracy, original L2L 5R and 0.5 L2L 3R. Missing history remains a blocker, never a zero result."},
+    {id:"prices", title:"Outcomes data", band:"compare", icon:"chart", members:["outcomes"], summary:"Prices, historical levels and execution tape feed outcome evaluation. These future outcomes must not feed the earlier directional decision."},
+    {id:"baseline", title:"Compare with baseline", band:"compare", icon:"scale", members:["reproduction","evidence"], summary:"Compare the candidate and baseline on comparable dates and tests. Replay agreement alone does not demonstrate improved predictive accuracy."},
+    {id:"results", title:"Results dashboard", band:"compare", icon:"screen", members:["evidence","outcomes"], summary:"Review results, coverage and limitations together. Software verification does not mean the historical data is complete or that a predictive edge exists."}
+  ];
+  const CONNECTIONS = [
+    ["strategy","history"],["required","history"],["history","validate"],
+    ["validate","blocked","side"],["validate","call"],["call","matrix"],
+    ["prices","matrix","left"],["matrix","baseline"],["baseline","results"]
+  ];
+  const ICONS = {
+    layers:'<path d="m3 8 9-5 9 5-9 5-9-5Zm0 5 9 5 9-5M3 18l9 5 9-5"/>',
+    database:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/>',
+    shield:'<path d="m12 2 9 4v6c0 6-9 10-9 10S3 18 3 12V6l9-4Z"/><path d="m8 12 3 3 5-6"/>',
+    blocked:'<circle cx="12" cy="12" r="9"/><path d="m6 18 12-12"/>',
+    code:'<path d="m7 5-6 7 6 7m10-14 6 7-6 7M14 3l-4 18"/>',
+    grid:'<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/>',
+    chart:'<path d="M4 20V12m6 8V4m6 16V9m6 11V1"/>',
+    scale:'<path d="M12 2v19M6 22h12M3 6h18M5 6l-4 9h8L5 6Zm14 0-4 9h8l-4-9Z"/>',
+    screen:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M12 17v5m-6 0h12"/>'
+  };
+  function icon(name) {
+    const wrap=el("span","cr-icon");
+    wrap.innerHTML=`<svg viewBox="0 0 24 26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ICONS.grid}</svg>`;
+    return wrap;
+  }
+  function members(view) { return view.members.map(id => FLOW.manifest.nodes.find(n=>n.id===id)).filter(Boolean); }
+  function viewState(view) {
+    const states=members(view).map(n=>stepState(n).state);
+    return STATE_RANK.find(s=>states.includes(s)) || "unknown";
+  }
   function renderNodes() {
-    const host = document.getElementById("crBands");
-    if (!host) return;
-    host.textContent = "";
-    (FLOW.manifest.bands || []).forEach(band => {
-      const section = el("section", "cr-band");
-      section.dataset.band = band.id;
-      const head = el("div", "cr-band-head");
-      head.append(
-        el("h2", "cr-band-label", band.label),
-        el("span", "cr-band-rule"),
-        el("p", "cr-band-caption", band.caption)
-      );
-      const grid = el("div", "cr-grid");
-      FLOW.manifest.nodes
-        .filter(node => node.band === band.id)
-        .forEach(node => grid.append(renderNode(node)));
-      section.append(head, grid);
-      host.append(section);
+    const host=document.getElementById("crBands"); host.textContent="";
+    [["inputs","Configurable inputs"],["core","Fixed core"],["compare","Test & compare"]].forEach(([id,label])=>{
+      const section=el("section","cr-band"); section.dataset.band=id;
+      section.append(el("h2","cr-band-label",label));
+      const grid=el("div","cr-grid");
+      VIEW.filter(v=>v.band===id).forEach(v=>{
+        const button=el("button","cr-node"); button.type="button";
+        button.dataset.node=v.id; button.dataset.state=viewState(v);
+        button.dataset.kind=v.plug?"replaceable":"core";
+        button.setAttribute("aria-pressed","false");
+        button.append(icon(v.icon));
+        const text=el("span","cr-node-copy"); text.append(el("span","cr-node-title",v.title));
+        if(v.id==="matrix") text.append(el("span","cr-node-subtitle","Each selected market · 3 tests"));
+        text.append(chip(viewState(v))); button.append(text);
+        if(v.plug) button.append(el("span","cr-badge","Plug-in"));
+        if(v.id==="matrix") {
+          const tests=el("span","cr-test-chips");
+          ["Direction","L2L 5R","0.5 L2L 3R"].forEach(t=>tests.append(el("span",null,t)));
+          button.append(tests);
+        }
+        button.addEventListener("click",()=>select(v.id)); grid.append(button);
+      });
+      section.append(grid); host.append(section);
     });
   }
-
-  function renderNode(node) {
-    const state = stepState(node);
-    const button = el("button", "cr-node");
-    button.type = "button";
-    button.dataset.node = node.id;
-    button.dataset.state = state.state;
-    button.dataset.kind = node.kind || "step";
-    button.style.setProperty("--cr-span", String(node.span || 6));
-    button.setAttribute("aria-pressed", "false");
-    if (node.id === "fixture") button.classList.add("is-fixture");
-
-    const top = el("div", "cr-node-top");
-    top.append(el("span", "cr-node-index", String(nodeOrder(node)).padStart(2, "0")));
-    top.append(el("span", "cr-node-title", node.title));
-    button.append(top);
-
-    if (node.role) button.append(el("p", "cr-node-role", node.role));
-
-    const foot = el("div", "cr-node-foot");
-    foot.append(chip(state.state));
-    if (node.badge) foot.append(el("span", "cr-badge", node.badge));
-    foot.append(el("span", "cr-kind", node.kind || "step"));
-    button.append(foot);
-
-    const pips = el("div", "cr-pips");
-    pips.setAttribute("role", "img");
-    pips.setAttribute("aria-label", dimensions()
-      .map(([key, name], index) => `${name}: ${legendLabel(state.dimensions[index])}`)
-      .join(", "));
-    dimensions().forEach(([key, name, short], index) => {
-      const pip = el("span", "cr-pip", short);
-      pip.dataset.dimension = key;
-      pip.dataset.state = state.dimensions[index];
-      pip.title = `${name}: ${legendLabel(state.dimensions[index])}`;
-      pip.setAttribute("aria-hidden", "true");
-      pips.append(pip);
-    });
-    button.append(pips);
-
-    button.append(el("span", "cr-port cr-port-in"));
-    button.append(el("span", "cr-port cr-port-out"));
-
-    button.addEventListener("click", () => select(node.id));
-    return button;
-  }
-
   function markSelection() {
-    document.querySelectorAll(".cr-node").forEach(node => {
-      const selected = node.dataset.node === FLOW.selection;
-      node.classList.toggle("is-selected", selected);
-      node.setAttribute("aria-pressed", selected ? "true" : "false");
+    document.querySelectorAll(".cr-node").forEach(n=>{
+      const selected=n.dataset.node===FLOW.selection;
+      n.classList.toggle("is-selected",selected); n.setAttribute("aria-pressed",String(selected));
     });
   }
-
   // --- The inspector ----------------------------------------------------
   function block(title) {
     const box = el("section", "cr-block");
@@ -537,79 +532,53 @@
   }
 
   function select(id) {
-    const node = (FLOW.manifest.nodes || []).find(candidate => candidate.id === id) || null;
-    FLOW.selection = node ? node.id : null;
-    markSelection();
-    renderInspector(node);
-    if (node) openSheet();
-    const announce = document.getElementById("crAnnounce");
-    if (announce) {
-      announce.textContent = node
-        ? `Step ${String(nodeOrder(node)).padStart(2, "0")}: ${node.title}, ${legendLabel(stepState(node).state)}`
-        : "No step selected";
-    }
-    drawWires();
+    const view=VIEW.find(v=>v.id===id);
+    FLOW.selection=view?view.id:null; markSelection();
+    if(!view) { renderInspector(null); return; }
+    const title=document.getElementById("crInspectorTitle");
+    const role=document.getElementById("crInspectorRole");
+    const body=document.getElementById("crInspectorBody");
+    document.getElementById("crInspectorKicker").textContent=view.plug?"Replaceable module":"Engine step";
+    title.textContent=view.title; role.textContent=view.summary; body.textContent="";
+    const summary=block("Current status"); summary.append(chip(viewState(view)));
+    summary.append(el("p", "cr-readiness-note", "Combined evidence status. Software, deployment, data and research are assessed separately below."));
+    body.append(summary);
+    const links=block("Connected workflows"); const seen=new Set();
+    members(view).forEach(n=>(n.links||[]).map(linkTarget).filter(Boolean).forEach(l=>{
+      if(!l.href || !l.href.includes("app.n8n.cloud/workflow/") || seen.has(l.href)) return;
+      seen.add(l.href); const a=el("a","cr-link",n.title + " in n8n"); a.href=l.href; a.target="_blank"; a.rel="noopener noreferrer"; links.append(a);
+    }));
+    if(seen.size) body.append(links);
+    else { links.append(el("p","cr-readiness-note","This stage has no separate n8n workflow linked in the current evidence.")); body.append(links); }
+    const progress=block("Build progress & next actions");
+    members(view).forEach(n=>{
+      const detail=el("details","cr-component"); detail.append(el("summary",null,n.title));
+      const summary=interpolate(n.summary,FLOW.sources); if(summary) detail.append(el("p","cr-insp-summary",summary));
+      [readability(n),readableList(n,n.open,"Needed next","is-open"),readableList(n,n.limitations,"Limitations","is-limit"),readableMetrics(n),readableIo(n),readableTests(n),readableClaims(n),readableLinks(n)].forEach(part=>{if(part) detail.append(part);});
+      progress.append(detail);
+    }); body.append(progress);
+    const sources=el("details","cr-component"); sources.append(el("summary",null,"Evidence sources and timestamps"));
+    const sourceHost=document.getElementById("crSources"); if(sourceHost) { const copy=sourceHost.cloneNode(true); copy.removeAttribute("id"); copy.hidden=false; sources.append(copy); } body.append(sources);
+    document.getElementById("crAnnounce").textContent=view.title+", "+legendLabel(viewState(view));
+    openSheet(); drawWires();
   }
-
-  // --- Wires ------------------------------------------------------------
   function drawWires() {
-    const svg = document.getElementById("crWires");
-    const scaler = document.getElementById("crScaler");
-    if (!svg || !scaler || !FLOW.manifest) return;
-    const width = scaler.offsetWidth;
-    const height = scaler.offsetHeight;
-    if (!width || !height) return;
-    svg.setAttribute("width", width);
-    svg.setAttribute("height", height);
-    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-    svg.textContent = "";
-    const box = scaler.getBoundingClientRect();
-    const zoom = FLOW.zoom || 1;
-    const at = port => {
-      const rect = port.getBoundingClientRect();
-      return {
-        x: (rect.left + rect.width / 2 - box.left) / zoom,
-        y: (rect.top + rect.height / 2 - box.top) / zoom
-      };
-    };
-    const edges = FLOW.manifest.edges || [];
-    // A port is only drawn where a wire attaches: the start of the path keeps no in-port, and a step nothing
-    // follows keeps no out-port. Otherwise the ends look like the flow continues off the page.
-    const tails = new Set(edges.map(edge => edge.from));
-    const heads = new Set(edges.map(edge => edge.to));
-    scaler.querySelectorAll("[data-node]").forEach(node => {
-      node.classList.toggle("is-terminal", !tails.has(node.dataset.node));
-      node.classList.toggle("is-origin", !heads.has(node.dataset.node));
-    });
-    (FLOW.manifest.edges || []).forEach(edge => {
-      const from = scaler.querySelector(`[data-node="${edge.from}"] .cr-port-out`);
-      const to = scaler.querySelector(`[data-node="${edge.to}"] .cr-port-in`);
-      if (!from || !to) return;
-      const start = at(from);
-      const end = at(to);
-      // Wires are drawn as a rounded elbow through the middle of the gap: down out of the source port, across,
-      // then down into the target port. Two ports that share a column are joined by a straight run.
-      const mid = (start.y + end.y) / 2;
-      const away = end.x >= start.x ? 1 : -1;
-      const radius = Math.min(6, Math.max(2, Math.abs(end.x - start.x) / 2), Math.max(1, mid - start.y - 1));
-      const d = Math.abs(end.x - start.x) < 1.5 || mid - start.y <= 2
-        ? `M ${start.x} ${start.y} L ${end.x} ${end.y}`
-        : [
-          `M ${start.x} ${start.y}`,
-          `L ${start.x} ${mid - radius}`,
-          `Q ${start.x} ${mid} ${start.x + away * radius} ${mid}`,
-          `L ${end.x - away * radius} ${mid}`,
-          `Q ${end.x} ${mid} ${end.x} ${mid + radius}`,
-          `L ${end.x} ${end.y}`
-        ].join(" ");
-      const near = !FLOW.selection || FLOW.selection === edge.from || FLOW.selection === edge.to;
-      const base = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      base.setAttribute("d", d);
-      base.setAttribute("class", near ? "cr-wire" : "cr-wire is-muted");
-      const flow = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      flow.setAttribute("d", d);
-      flow.setAttribute("class", "cr-wire-flow");
-      svg.append(base, flow);
+    const svg=document.getElementById("crWires"), scaler=document.getElementById("crScaler");
+    if(!svg || !scaler || !FLOW.manifest) return;
+    const box=scaler.getBoundingClientRect(), z=FLOW.zoom||1;
+    const w=scaler.offsetWidth,h=scaler.offsetHeight;
+    svg.setAttribute("viewBox",`0 0 ${w} ${h}`); svg.setAttribute("width",w); svg.setAttribute("height",h);
+    svg.innerHTML='<defs><marker id="crArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#50eff4" stroke-width="1.5"/></marker></defs>';
+    function point(id,side) {
+      const r=scaler.querySelector(`[data-node="${id}"]`).getBoundingClientRect();
+      return {x:((side==="left"?r.left:side==="right"?r.right:r.left+r.width/2)-box.left)/z,y:((side==="top"?r.top:side==="bottom"?r.bottom:r.top+r.height/2)-box.top)/z};
+    }
+    CONNECTIONS.forEach(([from,to,type])=>{
+      const a=point(from,type==="side"?"right":type==="left"?"left":"bottom");
+      const b=point(to,type==="side"?"left":type==="left"?"right":"top");
+      const middle=(a.y+b.y)/2;
+      const d=type?`M${a.x},${a.y} L${b.x},${b.y}`:`M${a.x},${a.y} C${a.x},${middle} ${b.x},${middle} ${b.x},${b.y}`;
+      ["cr-wire","cr-wire-flow"].forEach(cls=>{const path=document.createElementNS("http://www.w3.org/2000/svg","path");path.setAttribute("d",d);path.setAttribute("class",cls);if(cls==="cr-wire")path.setAttribute("marker-end","url(#crArrow)");svg.append(path);});
     });
   }
 
@@ -671,7 +640,7 @@
     const hint = document.getElementById("crHint");
     const total = Object.keys((FLOW.manifest && FLOW.manifest.sources) || {}).length;
     if (hint) {
-      hint.textContent = `${FLOW.manifest.nodes.length} steps \u00b7 ${FLOW.loaded} of ${total} artefacts read` +
+      hint.textContent = `${FLOW.loaded} of ${total} evidence sources read` +
         (FLOW.failed.length ? ` \u00b7 ${FLOW.failed.length} unavailable` : "");
     }
     const foot = document.getElementById("crInspectorFoot");
@@ -710,7 +679,7 @@
           ? formatValue(readWithin(FLOW.sources[key], source.verified_at), "datetime")
           : null;
         item.dataset.state = stamp ? "read" : "unstamped";
-        item.append(el("span", "cr-source-stamp", stamp ? `verified ${stamp}` : "read - no timestamp published"));
+        item.append(el("span", "cr-source-stamp", stamp ? `Source timestamp: ${stamp}` : "read - no timestamp published"));
       }
       list.append(item);
     }
@@ -831,6 +800,19 @@
     if (page.title) document.title = `${page.title} \u2014 Backtest Engine v2`;
   }
 
+  function simplifyNavigation() {
+    const brand=document.querySelector(".topbar-brand"); if(brand) brand.textContent="Backtesting Control Room";
+    const nav=document.querySelector(".side-rail-tabs"); if(!nav) return;
+    const original=Array.from(nav.children); nav.textContent="";
+    [["Dashboard","index.html#overview"],["Research","index.html#research-library"],["Evidence",null],["Backtest Engine v2","backtest-engine-v2.html"],["Architecture","index.html#architecture"],["Live Trading","index.html#live-trading"]].forEach(([label,href])=>{
+      if(!href) {nav.append(el("span","side-rail-group",label));return;}
+      const a=el("a","tab-button",label);a.href=href;
+      if(label==="Backtest Engine v2") {a.classList.add("active");a.setAttribute("aria-current","page");}nav.append(a);
+    });
+    const more=el("details","side-rail-details");more.append(el("summary","side-rail-link","All dashboard pages"));
+    const body=el("div","side-rail-details-body"); original.forEach(n=>body.append(n));more.append(body);nav.append(more);
+  }
+
   // --- Boot -------------------------------------------------------------
   async function boot() {
     try {
@@ -842,9 +824,8 @@
       );
       return;
     }
-    renderHead();
-    renderLegend();
-    renderDimensionKey();
+    // Page heading follows the approved visual reference, not the technical manifest intro.
+
     const entries = Object.entries(FLOW.manifest.sources || {});
     await Promise.all(entries.map(async ([key, source]) => {
       try {
@@ -858,10 +839,12 @@
     renderNodes();
     renderSources();
     renderInspector(null);
+    simplifyNavigation();
     wireControls();
     applyZoom();
     drawWires();
     updateStatus();
+    if (window.innerWidth > 1000) select("history");
   }
 
   if (document.readyState === "loading") {
