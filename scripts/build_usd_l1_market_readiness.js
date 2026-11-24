@@ -124,8 +124,8 @@ function build() {
       cutoff_present: held.boundary_coverage.cutoff_present,
       endpoint_present: held.boundary_coverage.endpoint_present,
       both_present: held.boundary_coverage.both_present,
-      licence: acquisition.value.licence && acquisition.value.licence.status
-        ? acquisition.value.licence.status
+      licence: acquisition.value.licence && (acquisition.value.licence.position || acquisition.value.licence.status)
+        ? (acquisition.value.licence.position || acquisition.value.licence.status)
         : null
     };
   }

@@ -119,9 +119,12 @@ npm run check:usd-l1-fresh-call                       # fails if the record is s
 
 `tests/usd_l1_market_readiness.test.js` pins the readiness artefact to the screen, holds the published
 counts at 4/1/8/11 and the scratch counts out of them, and checks that the manifest still binds the
-fresh-call and readiness sources. `backtester/tests/backtest_engine_v2.browser.test.js` holds the
-page itself to the manifest: bands, steps, states, wires, the source stamps, and the fresh-call and
-readiness text.
+fresh-call and readiness sources. `tests/h1_oanda_acquisition.test.js` binds the acquisition record to
+the readiness copy of it - counts, row totals, hashes and the licence position - and refuses a
+committed CSV. `backtester/tests/backtest_engine_v2.browser.test.js` holds the page itself to the
+manifest: bands, steps, states, wires, the source stamps, the dimensions in their declared order, the
+deployment evidence each step names, the fresh-call and readiness text, the 12px label floor and the
+inside focus ring.
 
 No UI text has to change for a rebuild. The only edits that are design work are the manifest's
 sentences and rules - and those are checked against the artefacts, not against a memory of them.

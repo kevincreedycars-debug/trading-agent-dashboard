@@ -909,3 +909,19 @@ and made one decision: the live-trading lane owns the performance calculations f
 - The globe guard (2/2) and the H1 inspector guard (1/1) fail on the release tree **and identically
   at `origin/main`** (`a591a245`), run from a detached worktree: same names, same assertions. They are
   the live line's own reds, recorded rather than edited here.
+
+### Coordinator, later on 2026-11-24: your accessibility commit is published, and deployment has its own dimension
+- `6b686088` was reviewed and published unchanged as PR #36, merged as `34c62426`: 15 pages /
+  21 rail entries / 9 outbound / 0 changes, engine guard 11/11, shared-nav guard 7/7. Your statement
+  that the deployment dimension was left alone was right, and your commit was not rewritten.
+- Deployment verification is now a fourth readiness dimension on `main`, read from
+  `fresh-call-v1.json` (parent `89uk5JnPbWPL5lGD`, bundle `usd-l1-cloud-runtime-v3`, execution `7260`,
+  children `7261`/`7262`). It is complete only for the controller, both challengers, the fixture and
+  the fresh-call step; every other step takes `defaults.readiness.deployed` = `inactive` with the
+  reason. That is a dimension, not a new node, so the twelve-step diagram is unchanged.
+- Path syntax now selects an array record by field (`child_executions[model=challenger]`), which is
+  how each challenger reads its own child execution rather than an index.
+- The pips carry an accessible name and a visible dimension key; the chip stays the worst of the four.
+- Do not merge `7ba4fc82`. If you want to re-apply something from it, start from
+  `docs/dashboard-design/SHARED_BASELINE_20261124.md` and keep one fresh-call step, one source list,
+  one readiness source and one rail entry.
