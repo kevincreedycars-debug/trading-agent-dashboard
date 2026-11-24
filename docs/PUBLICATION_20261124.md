@@ -85,6 +85,37 @@ The missing-evidence path was exercised rather than assumed: with `market-readin
 
 ## Remaining blockers
 
+
+## Post-release design tip (reviewed, deliberately not merged)
+
+The design lane pushed `7ba4fc82` ("design: draw all four readiness dimensions, repeat links and the
+published tally") after the reviewed tip `13e091d0` was integrated. It is based on `13e091d0`, not on
+this release, and it rewrites the same manifest, reader and guard files. Merging it blind would have
+overwritten the evidence bindings, so it is queued as a deliberate reconciliation rather than a merge.
+
+What it contains:
+
+- a fourth readiness dimension, `deployed` (software / deployed / data / research), with a
+  `defaults.readiness.deployed` fallback for steps that run in the checkout;
+- its own `fresh-call` step and `fresh`, `freshLive`, `tick` and `screen` sources, including a
+  selector path syntax (`freshLive.calls[model=challenger].child_execution_id`) its reader supports;
+- the same rail entry this release added, so the navigation half is already on `main`;
+- challenger copy this release already rewrote in its own words.
+
+What reconciling it needs, in one place:
+
+1. One fresh-call step. This release binds `fresh-call-v1.json` (verdict, 8 cases, 27/110 probes) and
+   `market-readiness-v1.json`; `7ba4fc82` binds `fresh-call-live-v1.json` for deployment evidence.
+   Both are true and belong together - one step, two artefacts.
+2. One source list with `verified_at`, and one readiness source. `7ba4fc82` would add `tick` and a
+   lazy `screen`; the screen is ~18 MB, so lazy loading must be proved before it is added.
+3. A decision on the fourth dimension. The browser guard, the readiness test and this contract all
+   pin the three-dimension form; extending them to four is a design revision with its own checks.
+4. Regenerating all fifteen pages from the partial after the rebase (the nav entry must not double).
+
+Until that lands, the published page is the three-dimension form described above; the designer's
+next branch should be rebased onto `4ba73ac7` so the two lanes stop diverging.
+
 1. **Data distribution for XAG/WTI/GBP.** Direction stays blocked until the acquired one-hour rows
    are committed under licence or fetched by a documented step; no count moves off 4/1/8/11.
 2. **L2L for those three markets.** No pre-session ladder and no bid/ask tape.
