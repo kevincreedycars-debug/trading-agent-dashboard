@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-24T09:40:43.335Z",
+  "generated_at_utc": "2026-11-24T10:38:40.504Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,8 +12,8 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-24T09:39:27.613764Z",
-    "positions_seen": 1
+    "probed_at_utc": null,
+    "positions_seen": 0
   },
   "destination": {
     "login": 7348195,
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-24T09:40:41.534Z",
+    "read_at_utc": "2026-11-24T10:38:38.819Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -42,80 +42,32 @@
       "restart_recovery": "a lock left by a dead pid is taken over on the next run; the mapping store is the dedupe key"
     },
     "heartbeat": {
-      "state": "ok",
-      "label": "OK",
-      "age_seconds": 75,
-      "last_poll_utc": "2026-11-24T09:39:28.042Z",
-      "last_success_utc": "2026-11-24T09:39:28.042Z",
-      "detail": "the last poll finished 75s ago and reported ok"
+      "state": "error",
+      "label": "ERROR",
+      "age_seconds": 2866,
+      "last_poll_utc": "2026-11-24T09:50:54.743Z",
+      "last_success_utc": null,
+      "detail": "the last poll finished source_unreadable: the source could not be read; nothing was opened and nothing was closed"
     },
-    "last_poll_utc": "2026-11-24T09:39:28.042Z",
-    "last_success_utc": "2026-11-24T09:39:28.042Z",
+    "last_poll_utc": "2026-11-24T09:50:54.743Z",
+    "last_success_utc": null,
     "health": {
-      "status": "ok",
-      "started_utc": "2026-11-24T09:39:25.029Z",
-      "finished_utc": "2026-11-24T09:39:28.042Z",
+      "status": "source_unreadable",
+      "started_utc": "2026-11-24T09:49:46.462Z",
+      "finished_utc": "2026-11-24T09:50:54.743Z",
       "polls": 1,
       "dry_run": false,
       "source": {
-        "ok": true,
-        "account": {
-          "login": 511428614,
-          "server": "FTMO-Server"
-        },
-        "positions": 1,
-        "rows": [
-          {
-            "ticket": "310153561",
-            "symbol": "BTCUSD",
-            "side": "buy",
-            "volume": 0.01,
-            "entry": 59833.4,
-            "current": 60041.39,
-            "stop": 59544.77,
-            "target": 61290.61,
-            "open_time_utc": "2026-11-24T11:22:44Z"
-          }
-        ],
-        "cause": null,
-        "probed_at_utc": "2026-11-24T09:39:27.613764Z",
+        "ok": false,
+        "account": null,
+        "positions": 0,
+        "rows": [],
+        "cause": "source_probe_failed",
+        "probed_at_utc": null,
         "orders": []
       },
-      "destination": {
-        "account_id": "42585819",
-        "symbols": [
-          "BTCUSD"
-        ],
-        "references": {
-          "BTCUSD": 60046.04
-        },
-        "exposure": {
-          "BTCUSD": {
-            "positions": 1,
-            "orders": 0
-          }
-        },
-        "spec_summary": {
-          "BTCUSD": {
-            "digits": 2,
-            "lotSizeBtc": 1,
-            "volumeScale": 100,
-            "minVolume": 0.01,
-            "maxVolume": 5,
-            "volumeStep": 0.01,
-            "tradeMode": "full",
-            "minStopDistance": 0,
-            "minStopPercent": null
-          }
-        },
-        "spec_refusals": []
-      },
-      "reconcile": {
-        "checked": 0,
-        "mapped": 0,
-        "dropped": 0,
-        "filled": 0
-      },
+      "destination": null,
+      "reconcile": null,
       "refusals": [],
       "actions": [],
       "closes": [],
@@ -127,17 +79,15 @@
         "checked": []
       },
       "order_checks": [],
-      "reconcile_orders": {
-        "checked": 0,
-        "filled": 0,
-        "gone": 0
-      },
-      "notes": []
+      "reconcile_orders": null,
+      "notes": [
+        "the source could not be read; nothing was opened and nothing was closed"
+      ]
     }
   },
   "account": {
     "balance": 23707.04,
-    "equity": 23710.58,
+    "equity": 23706.43,
     "equity_basis": "broker balance plus the open positions marked at the broker's own reference price",
     "equity_estimated": true,
     "currency": "USD",
@@ -146,12 +96,12 @@
     "open_positions": 1,
     "pending_orders": 0,
     "closed_trades": 19,
-    "read_at_utc": "2026-11-24T09:40:41.534Z"
+    "read_at_utc": "2026-11-24T10:38:38.819Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-25T09:40:41.534Z",
-    "to_utc": "2026-11-24T09:40:41.534Z"
+    "from_utc": "2026-10-25T10:38:38.819Z",
+    "to_utc": "2026-11-24T10:38:38.819Z"
   },
   "closed_trades": [
     {
@@ -978,7 +928,7 @@
     {
       "behaviour": "Copying a filled FTMO-1 position",
       "state": "broker_observed",
-      "detail": "broker read 2026-11-24T09:40:41.534Z: #62448129 BTCUSD buy 0.01 lot from source 310153561"
+      "detail": "broker read 2026-11-24T10:38:38.819Z: #62448129 BTCUSD buy 0.01 lot from source 310153561"
     },
     {
       "behaviour": "Size conversion through the destination contract",
