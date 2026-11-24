@@ -69,9 +69,12 @@ __MODULES__
     }
     const dataset = {
       schema_version: meta.schema_version || null,
-      run: { run_version: meta.run_version || null },
+      run: { run_version: meta.run_version || null, markets: meta.markets || null },
       generated_at: meta.generated_at || null,
       input_source_legend: meta.input_source_legend || [],
+      // The market x test matrix travels with the dataset, not with this code: the parent passes the
+      // document it fetched, so a different selection is a different dataset and never a different runtime.
+      market_matrix: meta.market_matrix || null,
       sessions: session ? [session] : []
     };
     const result = controller.runBacktest({

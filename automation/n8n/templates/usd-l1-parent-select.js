@@ -13,7 +13,11 @@ const dataset_meta = {
   run_version: dataset.run && dataset.run.run_version ? dataset.run.run_version : null,
   generated_at: dataset.generated_at || null,
   sessions: sessions.length,
-  input_source_legend: dataset.input_source_legend || []
+  input_source_legend: dataset.input_source_legend || [],
+  // The selection and the matrix are configuration the dataset carries. They are passed to the children
+  // so the run scores the markets the document declares instead of a set hard-coded in the runtime.
+  markets: dataset.run && Array.isArray(dataset.run.markets) ? dataset.run.markets : null,
+  market_matrix: dataset.market_matrix || null
 };
 const dataset_window = {
   first: sessions.length ? sessions[0].date : null,

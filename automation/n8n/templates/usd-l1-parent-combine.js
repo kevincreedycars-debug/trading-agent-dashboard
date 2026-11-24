@@ -113,6 +113,9 @@ function experimentIdentity(first, code, recordDate) {
         requested: Array.isArray(config.tests) ? config.tests.slice() : null,
         defaulted: first.test_configuration.defaulted === true,
         scored_markets: first.test_configuration.scored_markets,
+        // The configured selection travels with the run: the matrix the dataset declared, the markets it
+        // resolved to, and the number of combinations per strategy the engine executed.
+        market_matrix: first.test_configuration.market_matrix || null,
         simulations: first.test_configuration.simulations,
         applied_by: "the controller that evaluated the morning",
         statement:

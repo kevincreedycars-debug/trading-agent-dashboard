@@ -4,9 +4,9 @@
   "dataset": {
     "path": null,
     "run_version": "usd-l1-backtester-r1",
-    "generated_at": "2026-11-14T00:00:00.000Z"
+    "generated_at": "2026-11-23T22:10:00.000Z"
   },
-  "updated_at": "2026-11-21T18:16:38.155Z",
+  "updated_at": "2026-11-24T05:25:13.280Z",
   "runs": [
     {
       "run_id": "011612d05c4030de",
@@ -510,6 +510,25 @@
         "structural|2024-08-19",
         "structural|2024-08-20",
         "structural|2024-08-21"
+      ],
+      "duplicate_keys": [],
+      "rejected": 0
+    },
+    {
+      "run_id": "264689bc3c24f506",
+      "label": "matrix 24 combinations, 2 mornings, Cloud",
+      "captured_at": "2026-11-24T05:25:13.280Z",
+      "execution_id": "7212",
+      "validation_modes": [
+        "structural"
+      ],
+      "requested_keys": [
+        "structural|2024-01-10",
+        "structural|2024-03-26"
+      ],
+      "added_keys": [
+        "structural|2024-01-10#ee6bbf3e",
+        "structural|2024-03-26#9f712d23"
       ],
       "duplicate_keys": [],
       "rejected": 0
@@ -5409,6 +5428,441 @@
       },
       "input_snapshot_digest": "e71ec3b94712d11ee36359ae781aec6eb19e2669227657fcc68f7c8c43c87e89",
       "evidence": "data/usd-layer1-backtester/n8n/sweep-006-2024-01-10-2024-01-10.json"
+    },
+    {
+      "key": "structural|2024-01-10#ee6bbf3e",
+      "date": "2024-01-10",
+      "validation_mode": "structural",
+      "selection": [
+        "challenger",
+        "challenger_v1"
+      ],
+      "outcome": "allowed",
+      "model_outcomes": {
+        "challenger": "allowed",
+        "challenger_v1": "allowed"
+      },
+      "calls": {
+        "challenger": {
+          "key": "challenger",
+          "identity": "usd-layer1-challenger-v0",
+          "label": "Challenger v0",
+          "role": "challenger",
+          "kind": "research",
+          "fixture": false,
+          "model": "challenger",
+          "model_version": "usd-layer1-challenger-v0",
+          "status": "allowed",
+          "direction": "BULLISH",
+          "conviction": 2,
+          "tests": {
+            "modules": [
+              "dxy_direction_broker_cfd",
+              "four_markets",
+              "l2l_full_5r",
+              "l2l_half_3r"
+            ],
+            "scored_markets": [
+              "EURUSD",
+              "XAUUSD",
+              "XAGUSD",
+              "NAS100",
+              "BTCUSD",
+              "WTIUSD",
+              "GBPUSD"
+            ],
+            "states": [
+              {
+                "id": "dxy_direction_broker_cfd",
+                "ordinal": 1,
+                "state": "not_run",
+                "markets": [],
+                "reason": "the replayed panel carries no broker DXY outcome per morning; test 1 is scored once per run from the broker's one-hour candles, not inside a per-morning record"
+              },
+              {
+                "id": "four_markets",
+                "ordinal": 2,
+                "state": "scored",
+                "markets": [
+                  "EURUSD",
+                  "XAUUSD",
+                  "XAGUSD",
+                  "NAS100",
+                  "BTCUSD",
+                  "WTIUSD",
+                  "GBPUSD"
+                ],
+                "reason": null
+              },
+              {
+                "id": "l2l_full_5r",
+                "ordinal": 3,
+                "state": "blocked_on_history",
+                "simulation": "full_5r",
+                "markets": [],
+                "reason": "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+              },
+              {
+                "id": "l2l_half_3r",
+                "ordinal": 4,
+                "state": "blocked_on_history",
+                "simulation": "half_3r",
+                "markets": [],
+                "reason": "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+              }
+            ]
+          },
+          "results": {
+            "EURUSD": "miss",
+            "XAUUSD": "miss",
+            "XAGUSD": "no_outcome",
+            "NAS100": "miss",
+            "BTCUSD": "flat",
+            "WTIUSD": "no_outcome",
+            "GBPUSD": "no_outcome"
+          }
+        },
+        "challenger_v1": {
+          "key": "challenger_v1",
+          "identity": "usd-layer1-challenger-v1",
+          "label": "Challenger v1",
+          "role": "challenger",
+          "kind": "research",
+          "fixture": false,
+          "model": "challenger_v1",
+          "model_version": "usd-layer1-challenger-v1",
+          "status": "allowed",
+          "direction": "BULLISH",
+          "conviction": 2,
+          "tests": {
+            "modules": [
+              "dxy_direction_broker_cfd",
+              "four_markets",
+              "l2l_full_5r",
+              "l2l_half_3r"
+            ],
+            "scored_markets": [
+              "EURUSD",
+              "XAUUSD",
+              "XAGUSD",
+              "NAS100",
+              "BTCUSD",
+              "WTIUSD",
+              "GBPUSD"
+            ],
+            "states": [
+              {
+                "id": "dxy_direction_broker_cfd",
+                "ordinal": 1,
+                "state": "not_run",
+                "markets": [],
+                "reason": "the replayed panel carries no broker DXY outcome per morning; test 1 is scored once per run from the broker's one-hour candles, not inside a per-morning record"
+              },
+              {
+                "id": "four_markets",
+                "ordinal": 2,
+                "state": "scored",
+                "markets": [
+                  "EURUSD",
+                  "XAUUSD",
+                  "XAGUSD",
+                  "NAS100",
+                  "BTCUSD",
+                  "WTIUSD",
+                  "GBPUSD"
+                ],
+                "reason": null
+              },
+              {
+                "id": "l2l_full_5r",
+                "ordinal": 3,
+                "state": "blocked_on_history",
+                "simulation": "full_5r",
+                "markets": [],
+                "reason": "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+              },
+              {
+                "id": "l2l_half_3r",
+                "ordinal": 4,
+                "state": "blocked_on_history",
+                "simulation": "half_3r",
+                "markets": [],
+                "reason": "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+              }
+            ]
+          },
+          "results": {
+            "EURUSD": "miss",
+            "XAUUSD": "miss",
+            "XAGUSD": "no_outcome",
+            "NAS100": "miss",
+            "BTCUSD": "flat",
+            "WTIUSD": "no_outcome",
+            "GBPUSD": "no_outcome"
+          }
+        }
+      },
+      "gate": {
+        "accepted": true,
+        "structural_accepted": true,
+        "reasons": [],
+        "declared_inputs": 9,
+        "present_inputs": 9,
+        "missing_inputs": 0,
+        "missing_keys": [],
+        "stamped_before_cutoff": 2,
+        "receipted_complete": false,
+        "unclocked_keys": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps",
+          "broad_dollar_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ]
+      },
+      "comparison": {
+        "same_direction": true,
+        "research_models": [
+          "challenger",
+          "challenger_v1"
+        ],
+        "fixture_models": [],
+        "models": {
+          "challenger": "BULLISH",
+          "challenger_v1": "BULLISH"
+        }
+      },
+      "dataset": {
+        "path": "https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/data/usd-layer1-backtester/run-v1.json",
+        "run_version": "usd-l1-backtester-r1",
+        "generated_at": "2026-11-23T22:10:00.000Z"
+      },
+      "identity": {
+        "schema_version": "usd-l1-experiment-identity-v1",
+        "selection": [
+          "challenger",
+          "challenger_v1"
+        ],
+        "models": {
+          "challenger": {
+            "identity": "usd-layer1-challenger-v0",
+            "version": "usd-layer1-challenger-v0",
+            "role": "challenger",
+            "kind": "research",
+            "source": "backtester/lib/usd_layer1_backtester/challenger.js",
+            "input_contract_version": "usd-l1-model-input-contract-v2"
+          },
+          "challenger_v1": {
+            "identity": "usd-layer1-challenger-v1",
+            "version": "usd-layer1-challenger-v1",
+            "role": "challenger",
+            "kind": "research",
+            "source": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+            "input_contract_version": "usd-l1-model-input-contract-v2"
+          }
+        },
+        "code": {
+          "bundle_version": "usd-l1-cloud-runtime-v3",
+          "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1",
+          "controller_version": "usd-l1-backtest-controller-v1"
+        },
+        "input": {
+          "dataset_path": "https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/data/usd-layer1-backtester/run-v1.json",
+          "dataset_run_version": null,
+          "dataset_generated_at": null,
+          "dates": [
+            "2024-01-10"
+          ],
+          "date_count": 1,
+          "snapshot_digest": "a9a75a63fe59281cd48a9ae3021e250e487ea33c851e4f92383031c0f76f078b"
+        },
+        "cutoff": {
+          "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+          "contract_cutoff_at_utc": "2024-01-10T05:00:00.000Z"
+        },
+        "validation_policy": {
+          "mode": "structural",
+          "gate": "structural accepts an internally consistent morning whose stamped prints do not sit after the cutoff; receipted additionally requires a full timestamp before the cutoff on every input the model reads"
+        },
+        "test_configuration": {
+          "schema_version": "usd-l1-test-configuration-v1",
+          "modules": [
+            "dxy_direction_broker_cfd",
+            "four_markets",
+            "l2l_full_5r",
+            "l2l_half_3r"
+          ],
+          "requested": null,
+          "defaulted": true,
+          "scored_markets": [
+            "EURUSD",
+            "XAUUSD",
+            "XAGUSD",
+            "NAS100",
+            "BTCUSD",
+            "WTIUSD",
+            "GBPUSD"
+          ],
+          "market_matrix": {
+            "id": "usd-l1-matrix-1f943a83989d",
+            "fingerprint": "1f943a83989d2ec65ba31b4f01ff85515fc3e94473b5c4f9204de9215590f06f",
+            "primary_market": "DXY",
+            "additional_markets": [
+              "EURUSD",
+              "XAUUSD",
+              "XAGUSD",
+              "NAS100",
+              "BTCUSD",
+              "WTIUSD",
+              "GBPUSD"
+            ],
+            "combination_count": 24,
+            "tests": [
+              "direction",
+              "l2l_full_5r",
+              "l2l_half_3r"
+            ],
+            "source": "dataset.market_matrix (the artefact the run fetched)"
+          },
+          "simulations": [
+            "full_5r",
+            "half_3r"
+          ],
+          "applied_by": "the controller that evaluated the morning",
+          "statement": "The selection is executed, not annotated: only the markets the selected modules consume are scored, and a selected module this record cannot carry is recorded as not_run or blocked_on_history."
+        }
+      },
+      "registry": {
+        "version": "usd-l1-model-registry-v1",
+        "fingerprint": "a8ed771c975c9cd02b3b880b34e73448bafdd997700c387e448f10a43a343719"
+      },
+      "executions": {
+        "parent": {
+          "id": "7212",
+          "url": "https://silver17.app.n8n.cloud/execution/7212",
+          "workflow_id": "89uk5JnPbWPL5lGD"
+        },
+        "children": {
+          "challenger": {
+            "id": "7213",
+            "url": "https://silver17.app.n8n.cloud/execution/7213",
+            "workflow_id": "giGJKNQw5WLh1xbX"
+          },
+          "challenger_v1": {
+            "id": "7215",
+            "url": "https://silver17.app.n8n.cloud/execution/7215",
+            "workflow_id": "42sxXHScRvE3qSTX"
+          }
+        },
+        "challenger": {
+          "id": "7213",
+          "url": "https://silver17.app.n8n.cloud/execution/7213",
+          "workflow_id": "giGJKNQw5WLh1xbX"
+        },
+        "challenger_v1": {
+          "id": "7215",
+          "url": "https://silver17.app.n8n.cloud/execution/7215",
+          "workflow_id": "42sxXHScRvE3qSTX"
+        }
+      },
+      "duplicate_of": "structural|2024-01-10",
+      "configuration_key": "structural|2024-01-10#ee6bbf3e",
+      "configuration": {
+        "schema_version": "usd-l1-experiment-configuration-v1",
+        "fingerprint": "ee6bbf3e64cc2fb8"
+      },
+      "input_snapshot_digest": "a9a75a63fe59281cd48a9ae3021e250e487ea33c851e4f92383031c0f76f078b",
+      "coexistence": true,
+      "verification": {
+        "verified": true,
+        "consistency_verified": true,
+        "checks": [
+          {
+            "name": "dataset_join",
+            "ok": true,
+            "detail": "2024-01-10 is in the committed panel"
+          },
+          {
+            "name": "local_replay_challenger",
+            "ok": true,
+            "detail": "2024-01-10 challenger matches the local controller (allowed, BULLISH)"
+          },
+          {
+            "name": "outcome_arithmetic_challenger",
+            "ok": true,
+            "detail": "2024-01-10 challenger hit/miss/flat recomputes for the 7 scored market(s)"
+          },
+          {
+            "name": "test_selection_challenger",
+            "ok": true,
+            "detail": "2024-01-10 challenger executed test modules dxy_direction_broker_cfd, four_markets, l2l_full_5r, l2l_half_3r and recorded dxy_direction_broker_cfd=not_run, four_markets=scored, l2l_full_5r=blocked_on_history, l2l_half_3r=blocked_on_history"
+          },
+          {
+            "name": "local_replay_challenger_v1",
+            "ok": true,
+            "detail": "2024-01-10 challenger_v1 matches the local controller (allowed, BULLISH)"
+          },
+          {
+            "name": "outcome_arithmetic_challenger_v1",
+            "ok": true,
+            "detail": "2024-01-10 challenger_v1 hit/miss/flat recomputes for the 7 scored market(s)"
+          },
+          {
+            "name": "test_selection_challenger_v1",
+            "ok": true,
+            "detail": "2024-01-10 challenger_v1 executed test modules dxy_direction_broker_cfd, four_markets, l2l_full_5r, l2l_half_3r and recorded dxy_direction_broker_cfd=not_run, four_markets=scored, l2l_full_5r=blocked_on_history, l2l_half_3r=blocked_on_history"
+          },
+          {
+            "name": "execution_links",
+            "ok": true,
+            "detail": "parent 7212, children challenger 7213, challenger_v1 7215"
+          },
+          {
+            "name": "gate_recorded",
+            "ok": true,
+            "detail": "2024-01-10 structural gate: accepted=true, 9/9 inputs present"
+          },
+          {
+            "name": "comparison_consistency",
+            "ok": true,
+            "detail": "2024-01-10 same_direction=true matches the selected research models"
+          }
+        ],
+        "mismatches": [],
+        "claims": {
+          "consistency": {
+            "claim": "replay_consistency",
+            "status": "established",
+            "statement": "The stored call reproduces in the local controller from the same saved morning, and the stored hit/miss/flat arithmetic recomputes from the stored call and the committed outcomes."
+          },
+          "availability": {
+            "claim": "historical_input_availability",
+            "status": "not_established",
+            "reason": "The n8n child replayed the values saved in the committed panel. No source retrieval, receipt archive or provider response is recorded for this morning, so a replay cannot establish that the same values were available at the cutoff.",
+            "recorded_evidence": {
+              "gate_accepted": true,
+              "structural_accepted": true,
+              "receipted_complete": false,
+              "present_inputs": 9,
+              "declared_inputs": 9,
+              "stamped_before_cutoff": 2,
+              "failure_codes": []
+            }
+          },
+          "logic": {
+            "claim": "model_logic_correctness",
+            "status": "not_established",
+            "reason": "Parity compares the same frozen rules with themselves. There is no independent adjudication or outcome-blind oracle for these rules, so consistency is not evidence that the rules are correct."
+          },
+          "coverage": {
+            "claim": "panel_matches_live_morning",
+            "status": "not_established",
+            "reason": "The committed panel is a research artefact. Nothing here proves it contains exactly what a live 05:00 run would have offered on this date."
+          }
+        }
+      }
     },
     {
       "key": "receipted|2024-01-11",
@@ -18600,6 +19054,441 @@
       },
       "input_snapshot_digest": "fefc0bc2806fb56385631bced28a722aee7ac936fbce22a8fd52fcf940de28ad",
       "evidence": "data/usd-layer1-backtester/n8n/sweep-010-2024-03-07-2024-04-03.json"
+    },
+    {
+      "key": "structural|2024-03-26#9f712d23",
+      "date": "2024-03-26",
+      "validation_mode": "structural",
+      "selection": [
+        "challenger",
+        "challenger_v1"
+      ],
+      "outcome": "allowed",
+      "model_outcomes": {
+        "challenger": "allowed",
+        "challenger_v1": "allowed"
+      },
+      "calls": {
+        "challenger": {
+          "key": "challenger",
+          "identity": "usd-layer1-challenger-v0",
+          "label": "Challenger v0",
+          "role": "challenger",
+          "kind": "research",
+          "fixture": false,
+          "model": "challenger",
+          "model_version": "usd-layer1-challenger-v0",
+          "status": "allowed",
+          "direction": "BEARISH",
+          "conviction": 2,
+          "tests": {
+            "modules": [
+              "dxy_direction_broker_cfd",
+              "four_markets",
+              "l2l_full_5r",
+              "l2l_half_3r"
+            ],
+            "scored_markets": [
+              "EURUSD",
+              "XAUUSD",
+              "XAGUSD",
+              "NAS100",
+              "BTCUSD",
+              "WTIUSD",
+              "GBPUSD"
+            ],
+            "states": [
+              {
+                "id": "dxy_direction_broker_cfd",
+                "ordinal": 1,
+                "state": "not_run",
+                "markets": [],
+                "reason": "the replayed panel carries no broker DXY outcome per morning; test 1 is scored once per run from the broker's one-hour candles, not inside a per-morning record"
+              },
+              {
+                "id": "four_markets",
+                "ordinal": 2,
+                "state": "scored",
+                "markets": [
+                  "EURUSD",
+                  "XAUUSD",
+                  "XAGUSD",
+                  "NAS100",
+                  "BTCUSD",
+                  "WTIUSD",
+                  "GBPUSD"
+                ],
+                "reason": null
+              },
+              {
+                "id": "l2l_full_5r",
+                "ordinal": 3,
+                "state": "blocked_on_history",
+                "simulation": "full_5r",
+                "markets": [],
+                "reason": "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+              },
+              {
+                "id": "l2l_half_3r",
+                "ordinal": 4,
+                "state": "blocked_on_history",
+                "simulation": "half_3r",
+                "markets": [],
+                "reason": "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+              }
+            ]
+          },
+          "results": {
+            "EURUSD": "miss",
+            "XAUUSD": "hit",
+            "XAGUSD": "no_outcome",
+            "NAS100": "flat",
+            "BTCUSD": "flat",
+            "WTIUSD": "no_outcome",
+            "GBPUSD": "no_outcome"
+          }
+        },
+        "challenger_v1": {
+          "key": "challenger_v1",
+          "identity": "usd-layer1-challenger-v1",
+          "label": "Challenger v1",
+          "role": "challenger",
+          "kind": "research",
+          "fixture": false,
+          "model": "challenger_v1",
+          "model_version": "usd-layer1-challenger-v1",
+          "status": "allowed",
+          "direction": "BEARISH",
+          "conviction": 2,
+          "tests": {
+            "modules": [
+              "dxy_direction_broker_cfd",
+              "four_markets",
+              "l2l_full_5r",
+              "l2l_half_3r"
+            ],
+            "scored_markets": [
+              "EURUSD",
+              "XAUUSD",
+              "XAGUSD",
+              "NAS100",
+              "BTCUSD",
+              "WTIUSD",
+              "GBPUSD"
+            ],
+            "states": [
+              {
+                "id": "dxy_direction_broker_cfd",
+                "ordinal": 1,
+                "state": "not_run",
+                "markets": [],
+                "reason": "the replayed panel carries no broker DXY outcome per morning; test 1 is scored once per run from the broker's one-hour candles, not inside a per-morning record"
+              },
+              {
+                "id": "four_markets",
+                "ordinal": 2,
+                "state": "scored",
+                "markets": [
+                  "EURUSD",
+                  "XAUUSD",
+                  "XAGUSD",
+                  "NAS100",
+                  "BTCUSD",
+                  "WTIUSD",
+                  "GBPUSD"
+                ],
+                "reason": null
+              },
+              {
+                "id": "l2l_full_5r",
+                "ordinal": 3,
+                "state": "blocked_on_history",
+                "simulation": "full_5r",
+                "markets": [],
+                "reason": "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+              },
+              {
+                "id": "l2l_half_3r",
+                "ordinal": 4,
+                "state": "blocked_on_history",
+                "simulation": "half_3r",
+                "markets": [],
+                "reason": "a trade path needs a 5-minute tape and a level ladder archived before the setup; neither exists for these mornings"
+              }
+            ]
+          },
+          "results": {
+            "EURUSD": "miss",
+            "XAUUSD": "hit",
+            "XAGUSD": "no_outcome",
+            "NAS100": "flat",
+            "BTCUSD": "flat",
+            "WTIUSD": "no_outcome",
+            "GBPUSD": "no_outcome"
+          }
+        }
+      },
+      "gate": {
+        "accepted": true,
+        "structural_accepted": true,
+        "reasons": [],
+        "declared_inputs": 9,
+        "present_inputs": 9,
+        "missing_inputs": 0,
+        "missing_keys": [],
+        "stamped_before_cutoff": 2,
+        "receipted_complete": false,
+        "unclocked_keys": [
+          "vix_level",
+          "vix_d5_chg",
+          "us_2y_d5_bps",
+          "us_10y_real_d5_bps",
+          "broad_dollar_d5_pct",
+          "eurusd_d5_pct",
+          "usdjpy_d5_pct"
+        ]
+      },
+      "comparison": {
+        "same_direction": true,
+        "research_models": [
+          "challenger",
+          "challenger_v1"
+        ],
+        "fixture_models": [],
+        "models": {
+          "challenger": "BEARISH",
+          "challenger_v1": "BEARISH"
+        }
+      },
+      "dataset": {
+        "path": "https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/data/usd-layer1-backtester/run-v1.json",
+        "run_version": "usd-l1-backtester-r1",
+        "generated_at": "2026-11-23T22:10:00.000Z"
+      },
+      "identity": {
+        "schema_version": "usd-l1-experiment-identity-v1",
+        "selection": [
+          "challenger",
+          "challenger_v1"
+        ],
+        "models": {
+          "challenger": {
+            "identity": "usd-layer1-challenger-v0",
+            "version": "usd-layer1-challenger-v0",
+            "role": "challenger",
+            "kind": "research",
+            "source": "backtester/lib/usd_layer1_backtester/challenger.js",
+            "input_contract_version": "usd-l1-model-input-contract-v2"
+          },
+          "challenger_v1": {
+            "identity": "usd-layer1-challenger-v1",
+            "version": "usd-layer1-challenger-v1",
+            "role": "challenger",
+            "kind": "research",
+            "source": "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+            "input_contract_version": "usd-l1-model-input-contract-v2"
+          }
+        },
+        "code": {
+          "bundle_version": "usd-l1-cloud-runtime-v3",
+          "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1",
+          "controller_version": "usd-l1-backtest-controller-v1"
+        },
+        "input": {
+          "dataset_path": "https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/data/usd-layer1-backtester/run-v1.json",
+          "dataset_run_version": null,
+          "dataset_generated_at": null,
+          "dates": [
+            "2024-03-26"
+          ],
+          "date_count": 1,
+          "snapshot_digest": "8af8dc03ad4271a7a798c252e7b1913f6f0a3ad6cd839d4365c341e6ae96d45a"
+        },
+        "cutoff": {
+          "cutoff_at_utc": "2024-03-26T05:00:00.000Z",
+          "contract_cutoff_at_utc": "2024-03-26T05:00:00.000Z"
+        },
+        "validation_policy": {
+          "mode": "structural",
+          "gate": "structural accepts an internally consistent morning whose stamped prints do not sit after the cutoff; receipted additionally requires a full timestamp before the cutoff on every input the model reads"
+        },
+        "test_configuration": {
+          "schema_version": "usd-l1-test-configuration-v1",
+          "modules": [
+            "dxy_direction_broker_cfd",
+            "four_markets",
+            "l2l_full_5r",
+            "l2l_half_3r"
+          ],
+          "requested": null,
+          "defaulted": true,
+          "scored_markets": [
+            "EURUSD",
+            "XAUUSD",
+            "XAGUSD",
+            "NAS100",
+            "BTCUSD",
+            "WTIUSD",
+            "GBPUSD"
+          ],
+          "market_matrix": {
+            "id": "usd-l1-matrix-1f943a83989d",
+            "fingerprint": "1f943a83989d2ec65ba31b4f01ff85515fc3e94473b5c4f9204de9215590f06f",
+            "primary_market": "DXY",
+            "additional_markets": [
+              "EURUSD",
+              "XAUUSD",
+              "XAGUSD",
+              "NAS100",
+              "BTCUSD",
+              "WTIUSD",
+              "GBPUSD"
+            ],
+            "combination_count": 24,
+            "tests": [
+              "direction",
+              "l2l_full_5r",
+              "l2l_half_3r"
+            ],
+            "source": "dataset.market_matrix (the artefact the run fetched)"
+          },
+          "simulations": [
+            "full_5r",
+            "half_3r"
+          ],
+          "applied_by": "the controller that evaluated the morning",
+          "statement": "The selection is executed, not annotated: only the markets the selected modules consume are scored, and a selected module this record cannot carry is recorded as not_run or blocked_on_history."
+        }
+      },
+      "registry": {
+        "version": "usd-l1-model-registry-v1",
+        "fingerprint": "a8ed771c975c9cd02b3b880b34e73448bafdd997700c387e448f10a43a343719"
+      },
+      "executions": {
+        "parent": {
+          "id": "7212",
+          "url": "https://silver17.app.n8n.cloud/execution/7212",
+          "workflow_id": "89uk5JnPbWPL5lGD"
+        },
+        "children": {
+          "challenger": {
+            "id": "7214",
+            "url": "https://silver17.app.n8n.cloud/execution/7214",
+            "workflow_id": "giGJKNQw5WLh1xbX"
+          },
+          "challenger_v1": {
+            "id": "7216",
+            "url": "https://silver17.app.n8n.cloud/execution/7216",
+            "workflow_id": "42sxXHScRvE3qSTX"
+          }
+        },
+        "challenger": {
+          "id": "7214",
+          "url": "https://silver17.app.n8n.cloud/execution/7214",
+          "workflow_id": "giGJKNQw5WLh1xbX"
+        },
+        "challenger_v1": {
+          "id": "7216",
+          "url": "https://silver17.app.n8n.cloud/execution/7216",
+          "workflow_id": "42sxXHScRvE3qSTX"
+        }
+      },
+      "duplicate_of": "structural|2024-03-26",
+      "configuration_key": "structural|2024-03-26#9f712d23",
+      "configuration": {
+        "schema_version": "usd-l1-experiment-configuration-v1",
+        "fingerprint": "9f712d236294f1ca"
+      },
+      "input_snapshot_digest": "8af8dc03ad4271a7a798c252e7b1913f6f0a3ad6cd839d4365c341e6ae96d45a",
+      "coexistence": true,
+      "verification": {
+        "verified": true,
+        "consistency_verified": true,
+        "checks": [
+          {
+            "name": "dataset_join",
+            "ok": true,
+            "detail": "2024-03-26 is in the committed panel"
+          },
+          {
+            "name": "local_replay_challenger",
+            "ok": true,
+            "detail": "2024-03-26 challenger matches the local controller (allowed, BEARISH)"
+          },
+          {
+            "name": "outcome_arithmetic_challenger",
+            "ok": true,
+            "detail": "2024-03-26 challenger hit/miss/flat recomputes for the 7 scored market(s)"
+          },
+          {
+            "name": "test_selection_challenger",
+            "ok": true,
+            "detail": "2024-03-26 challenger executed test modules dxy_direction_broker_cfd, four_markets, l2l_full_5r, l2l_half_3r and recorded dxy_direction_broker_cfd=not_run, four_markets=scored, l2l_full_5r=blocked_on_history, l2l_half_3r=blocked_on_history"
+          },
+          {
+            "name": "local_replay_challenger_v1",
+            "ok": true,
+            "detail": "2024-03-26 challenger_v1 matches the local controller (allowed, BEARISH)"
+          },
+          {
+            "name": "outcome_arithmetic_challenger_v1",
+            "ok": true,
+            "detail": "2024-03-26 challenger_v1 hit/miss/flat recomputes for the 7 scored market(s)"
+          },
+          {
+            "name": "test_selection_challenger_v1",
+            "ok": true,
+            "detail": "2024-03-26 challenger_v1 executed test modules dxy_direction_broker_cfd, four_markets, l2l_full_5r, l2l_half_3r and recorded dxy_direction_broker_cfd=not_run, four_markets=scored, l2l_full_5r=blocked_on_history, l2l_half_3r=blocked_on_history"
+          },
+          {
+            "name": "execution_links",
+            "ok": true,
+            "detail": "parent 7212, children challenger 7214, challenger_v1 7216"
+          },
+          {
+            "name": "gate_recorded",
+            "ok": true,
+            "detail": "2024-03-26 structural gate: accepted=true, 9/9 inputs present"
+          },
+          {
+            "name": "comparison_consistency",
+            "ok": true,
+            "detail": "2024-03-26 same_direction=true matches the selected research models"
+          }
+        ],
+        "mismatches": [],
+        "claims": {
+          "consistency": {
+            "claim": "replay_consistency",
+            "status": "established",
+            "statement": "The stored call reproduces in the local controller from the same saved morning, and the stored hit/miss/flat arithmetic recomputes from the stored call and the committed outcomes."
+          },
+          "availability": {
+            "claim": "historical_input_availability",
+            "status": "not_established",
+            "reason": "The n8n child replayed the values saved in the committed panel. No source retrieval, receipt archive or provider response is recorded for this morning, so a replay cannot establish that the same values were available at the cutoff.",
+            "recorded_evidence": {
+              "gate_accepted": true,
+              "structural_accepted": true,
+              "receipted_complete": false,
+              "present_inputs": 9,
+              "declared_inputs": 9,
+              "stamped_before_cutoff": 2,
+              "failure_codes": []
+            }
+          },
+          "logic": {
+            "claim": "model_logic_correctness",
+            "status": "not_established",
+            "reason": "Parity compares the same frozen rules with themselves. There is no independent adjudication or outcome-blind oracle for these rules, so consistency is not evidence that the rules are correct."
+          },
+          "coverage": {
+            "claim": "panel_matches_live_morning",
+            "status": "not_established",
+            "reason": "The committed panel is a research artefact. Nothing here proves it contains exactly what a live 05:00 run would have offered on this date."
+          }
+        }
+      }
     },
     {
       "key": "structural|2024-03-27",
