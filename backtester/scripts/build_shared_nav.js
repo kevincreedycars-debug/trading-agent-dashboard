@@ -1,7 +1,7 @@
 'use strict';
 
 // Renders the shared navigation block from backtester/partials/shared_nav.html into the published pages,
-// so the fourteen copies cannot drift apart again.
+// so the fifteen copies cannot drift apart again.
 //
 //   node backtester/scripts/build_shared_nav.js --check            verify every page carries the render
 //   node backtester/scripts/build_shared_nav.js --write            place or refresh the block
@@ -30,9 +30,9 @@ const ORDER = {
   standalone: ['bar-standalone', 'rail-standalone', 'css'],
 };
 
-// The fourteen published pages. "place" says what a first placement does: index.html already carries a bar and a
+// The fifteen published pages. "place" says what a first placement does: index.html already carries a bar and a
 // rail, so its anchor is the whole span they occupy, from the line break before the bar to the line break
-// after the rail, and the block replaces it rather than joining it. The other thirteen carry neither, so the
+// after the rail, and the block replaces it rather than joining it. The other fourteen carry neither, so the
 // block goes in under the body tag and nothing already on the page moves. Once a page carries the markers
 // the anchor is never consulted again.
 const PAGES = [
@@ -65,8 +65,12 @@ const PAGES = [
   // Backtesting tab and from backtesting.html. It was published on 2026-11-10 with a hand-written copy of the old
   // bar and rail, so it kept eight page links in its bar after every other page had folded them into Old
   // documentation. It already carries the markers, and this registration refreshes that copy from the partial
-  // like the other thirteen, so it cannot drift again.
+  // like the other thirteen at the time, so it cannot drift again.
   { file: 'usd-layer1-backtester.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
+  // Added 2026-11-24, the fifteenth page: the Backtest Engine v2 control room. It renders the whole evidence path
+  // from a view manifest and the artefacts it names, reading them when the page opens. It carries the block like
+  // every other standalone page; the rail is restyled by nothing here, and the page adds no rail entry of its own.
+  { file: 'backtest-engine-v2.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
 ];
 
 function readParts() {
@@ -184,7 +188,7 @@ function applyPage(source, page) {
 }
 
 // The two variants must stay one navigation, not two: the same bar on every page and the same rail but for
-// the way an entry is driven. These checks fail loudly here rather than quietly in fourteen pages.
+// the way an entry is driven. These checks fail loudly here rather than quietly in fifteen pages.
 function selfChecks() {
   const parts = readParts();
   const liveSpans = /\n? {0,6}<span id="currentDate">[\s\S]*?UK --:-- \| ET --:--<\/span>/;

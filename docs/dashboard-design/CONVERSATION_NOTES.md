@@ -799,3 +799,65 @@ and made one decision: the live-trading lane owns the performance calculations f
 - The drift guards remain in `tests/system_factory.browser.test.js`: three FTMO labels, phone controls and hit-tests,
   T2 rows against the committed artefact, relay wording, and both n8n/document-link paths. No data file was committed.
 
+
+## 2026-11-24 - the Backtest Engine v2 control room: the wire no longer strikes through a caption, nothing published
+
+### What was asked
+- Build and finish the manifest-driven control room page `backtest-engine-v2.html` (the whole evidence path on one
+  page, every state read from a published artefact when the page opens), then polish the flow drawing: the wires ran
+  over the band captions, the columns were cramped vertically, and a path end carried a port with nothing after it.
+
+### Read first, and what it showed
+- The page is not published yet: it is an untracked file in this checkout, so there is no live HTTPS read to make and
+  none was claimed. Everything below was measured from this checkout over `http://127.0.0.1`, which is what the preview
+  serves, at 1440 and 390, and at 1180 / 860 / 768 for the fit guard.
+- Before the polish the wires were cubic beziers drawn in scaled page coordinates, which left them off their ports
+  after a zoom, and they crossed the band caption row with no break, so a line struck through the sentence that
+  describes the band.
+
+### What was changed
+- `backtester/assets/backtest-engine-v2.css`: the band head is lifted above the drawing (`position: relative; z-index: 1`)
+  and its label and caption carry a dark multi-layer text shadow, so a wire breaks around the words instead of crossing
+  them; the node grid gap became `22px 12px` for vertical breathing room; `.is-terminal` / `.is-origin` nodes hide the
+  port that has nothing attached; the narrow sheet and its backdrop now show at once on open and hide only after they
+  have slid away (`visibility 0s` on open, `visibility 0s linear 220ms` on close) - before this the sheet spent the first
+  half of its own entrance invisible.
+- `backtester/assets/backtest-engine-v2.js`: `drawWires` draws a rounded elbow (down, across the mid-gap, down) with the
+  radius clamped to 2-6px, a straight line when the columns match or the gap is too tight, in scaler-local coordinates so
+  the drawing survives zoom; the edge loop marks `is-terminal` / `is-origin` from the manifest edges rather than node ids;
+  Escape now returns the wide panel to its empty state (the choice cleared, the dimmed lines restored) and still closes the
+  phone sheet first.
+- `backtester/tests/backtest_engine_v2.browser.test.js`, new, seven guards: the manifest drawn as written (bands, order,
+  titles, legend words), no step claiming more than its own dimensions, every wire on the two ports it joins and no port
+  without a wire, the caption above the drawing with its halo, no sideways scroll at five widths, choosing a step / dimming
+  / Escape at both layouts, and zoom keeping every wire on its port.
+- `backtester/scripts/build_shared_nav.js`, `backtester/partials/shared_nav.html`,
+  `backtester/tests/site_nav_consistency.browser.test.js`: the page is registered as the fifteenth published page, so the
+  four places that spelled "fourteen" now say fifteen. No rail label, target, order or brand string moved.
+
+### Measured after the change (1440 unless stated)
+- 11 steps, 4 bands, 6 legend states; 22 wire paths for 11 edges (a rule and a dot each); a chosen step dims 5 of the 11
+  rules, all of them rules that do not touch it; zoom 100% -> 90% -> 100% keeps every wire within 1.5px of its port.
+- No horizontal overflow at 1440, 1180, 860, 768, 390 (0px at each); node 742px wide at 1440, 352px at 390; the phone
+  sheet is 675px tall, visible the moment it is asked for, gone once it has slid out; zero console or page errors.
+- Sizes and digests of what this change would serve: `backtest-engine-v2.html` 21,005 bytes `bdd45c72861b3677`;
+  `backtester/assets/backtest-engine-v2.css` 22,267 `23b7d0c49ae96e28`; `backtester/assets/backtest-engine-v2.js` 30,914
+  `f8216fa463801d53`; `backtester/assets/backtest-engine-v2.manifest.json` 33,969 `353d963c614f9533`;
+  the new guard 19,328 `1ded91573f076bd5`.
+
+### Two reds in the browser suite that are not this page
+- `tests/dashboard_globe_landmasses.browser.test.js` fails on the live tip: the sphere measures 135x135 where the guard
+  asks 290x290. `styles.css` line 10876 (`.globe-column { width: clamp(80px, 15vh, 20vh) }`, added 2026-11-19 by the
+  live-trading header compaction, `c9fd4df6`) supersedes the 290px box the guard and the older stylesheet carry, and at a
+  900px-tall viewport 15vh is 135px. Removing this page's new rail link changes nothing (135x135 either way), so the
+  navigation is not the cause and this lane did not touch the home page.
+- `tests/backtesting_h1.browser.test.js` fails on the live tip: the 2024-01-02 blocked card shows 4 blocker rows where the
+  guard asks 9. `backtesting.html` was rewritten on 2026-11-24 by the usd-l1 lane (`4aa97638`), so the guard is behind the
+  page it guards. Both are other lanes pages; recorded here rather than edited.
+
+### State
+- Not pushed. One commit is ready for the user go-ahead: fetch, rebase on the live tip, run the browser suite again, fetch
+  once more, then `git push origin HEAD:main`. No data file is part of it.
+- The brief's state report could not be filed: `monitor-state.js` is not in this checkout or in the main checkout
+  (`D:/trading-agent-dashboard-codex/scripts`), and no script in `scripts/` mentions `monitor-state`. Nothing was invented
+  to stand in for it, and nothing outside this checkout was written.
