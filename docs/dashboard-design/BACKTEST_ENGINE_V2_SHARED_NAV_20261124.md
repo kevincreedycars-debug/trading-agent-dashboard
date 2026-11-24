@@ -51,4 +51,20 @@ that integration stays distinct from Layer 1 analysis and waits for the verified
   to any request whose URL looks like the navigation file).
 - `backtester/tests/backtest_engine_v2.presentation.test.js`: 4/4 (three groups, ten nodes, nine connections).
 - Rendered at 1440, 1366, 1280, 1180, 1100, 1024, 900, 768, 620, 390: no sideways scroll, no console error,
+## What is served
+
+Pushed as PR #40, squash-merged to `main` as 3ea0a99b, read back over HTTPS at 21:55 UTC:
+
+| file | served bytes | SHA-256 |
+|------|--------------|---------|
+| backtest-engine-v2.html | 20,995 | 0A952ACBC9336989A52691102F9A5093970519DB7AE3B3B0826A91CE8C62930D |
+| backtester/assets/backtest-engine-v2.css | 44,545 | 3383299DBE7542CA9FFF24E137DEC02441825F985EECE4C7DBE17B1C9205E1FE |
+| backtester/assets/backtest-engine-v2.js | 39,172 | 20F59137C2310F2D0ACB927FBDD33C4F34C51CA2C942FB3BC873DCD094969C1B |
+
+The byte difference from this checkout (21,287 / 45,433 / 40,013) is line endings only: Pages serves LF, the
+checkout holds CRLF, and each pair hashes identically once normalised. The live CSS and JS contain no
+`control-room-reference` reference. Live at 1440 and 390: brand, date, both clocks, bar and rail geometry,
+head, foot and all 31 rail labels match the live `standing-dashboard.html`; no console error; no sideways
+scroll; 3 bands, 10 nodes, 9 wires and the inspector present.
+
   stage never overflows, rail visible at every width, 3 bands / 10 nodes / 9 wires throughout.
