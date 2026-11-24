@@ -40,35 +40,47 @@ That is 8 markets x 3 tests = **24 combinations per strategy**. The artefact car
 `market_matrix.combinations` and the readiness block as one row per market per test. The North Star sentence
 stays the programme's original question and is unchanged; the matrix is the measurement arrangement behind it.
 
-## 2. Readiness: 24 combinations, 5 scored, 19 blocked with a reason
+## 2. Readiness: 24 combinations, 5 scored (4 + 1 proxy), 8 measured on the tick replay, 11 blocked with a reason
 
 The counts below are the run's own (`run-v1.json -> market_matrix.readiness.run_counts`): `scored` 4,
-`proxy_scored` 1, `blocked` 19. A blocked combination is not a zero; it names the missing dataset.
+`proxy_scored` 1, `measured_tick_replay` 8, `blocked` 11 - all 24 combinations accounted for. A blocked
+combination is not a zero; it names the missing dataset. `measured_tick_replay` is neither a zero nor a
+score: it is a measurement from `l2l-tick-sweep-v2.json`, inside each session's own window, reconciled cell
+by cell in `READINESS_RECONCILIATION_20261123.md`. That status reached the four markets whose archived
+ladder and recovered tape share a session when the sweep was re-priced on 2026-11-23 (third build); before
+that the same cells read `blocked`, which is why the earlier shorthand in this note said 19 blocked.
 
 | Market | Directional accuracy | Original L2L 5R | 0.5 L2L 3R |
 | --- | --- | --- | --- |
 | DXY | **proxy_scored, 205 sessions** (broker DXY.cash, not ICE) | blocked: no 5-minute tape, no level ladder for the index | blocked: same |
-| EURUSD | **scored, 314 sessions** | blocked: mid-price M5 only (no bid/ask), no pre-session ladder for those dates | blocked: same |
-| XAUUSD | **scored, 340 sessions** | blocked: mid-price M5 only, no pre-session ladder | blocked: same |
-| XAGUSD | blocked: no cached one-hour series (`oanda_xag_usd_h1.csv`) | blocked: no tape, no ladder | blocked: same |
-| NAS100 | **scored, 327 sessions** | blocked: mid-price M5 only, no pre-session ladder | blocked: same |
-| BTCUSD | **scored, 386 sessions** | blocked: mid-price M5 only, no pre-session ladder | blocked: same |
-| WTIUSD | blocked: no cached one-hour series (`oanda_wti_usd_h1.csv`) | blocked: no tape, no ladder | blocked: same |
-| GBPUSD | blocked: no cached one-hour series (`oanda_gbp_usd_h1.csv`) | blocked: no tape, no ladder | blocked: same |
+| EURUSD | **scored, 314 sessions** | **measured_tick_replay, 6 sessions** (archived ladder, tape not committed) | **measured_tick_replay** |
+| XAUUSD | **scored, 340 sessions** | **measured_tick_replay, 6 sessions** (archived ladder, tape not committed) | **measured_tick_replay** |
+| XAGUSD | blocked: no cached one-hour series (`oanda_xag_usd_h1.csv`) in this checkout - acquired 2026-11-24 outside it, section 6 | blocked: no tape, no ladder | blocked: same |
+| NAS100 | **scored, 327 sessions** | **measured_tick_replay, 6 sessions** (archived ladder, tape not committed) | **measured_tick_replay** |
+| BTCUSD | **scored, 386 sessions** | **measured_tick_replay, 6 sessions** (archived ladder, tape not committed) | **measured_tick_replay** |
+| WTIUSD | blocked: no cached one-hour series (`oanda_wti_usd_h1.csv`) in this checkout - acquired 2026-11-24 outside it, section 6 | blocked: no tape, no ladder | blocked: same |
+| GBPUSD | blocked: no cached one-hour series (`oanda_gbp_usd_h1.csv`) in this checkout - acquired 2026-11-24 outside it, section 6 | blocked: no tape, no ladder | blocked: same |
 
 Three different blockers are being kept apart on purpose:
 
 1. **No session-outcome series** - XAGUSD, WTIUSD, GBPUSD. The direction test cannot price either 05:00
-   endpoint, so it is blocked. Adding the file releases the combination with no code change.
-2. **No actionable tape** - the four markets with an M5 sample hold *mid-price* bars and a spread column,
-   never separate bid and ask, so no fill cost can be reconstructed. They are blocked even though a tape
-   exists, and the reason says so.
-3. **No pre-session ladder** - the archived ladder covers 2026-10-05 to 2026-10-12; the M5 sample covers
-   2026-11-04 to 2026-11-06. No single session has both, so the L2L read is blocked by absence of a shared
-   session, not by a rule that was relaxed.
+   endpoint, so it is blocked, and the published run still says so. The three series were acquired on
+   2026-11-24 and live outside the repository (section 6): with them present the same build scores 325, 330
+   and 317 of the 569, 568 and 572 sessions that hold both endpoints, readiness moves to `scored` 7 /
+   `blocked` 8, and both L2L tests stay blocked for those markets because no ladder and no tape exist.
+   None of that is published, because the rows are a licensed history rather than a free download.
+2. **No actionable tape from the committed archive** - the four markets with an M5 sample hold *mid-price*
+   bars and a spread column, never separate bid and ask, so no fill cost can be reconstructed from that
+   archive, and no pre-session ladder covers its dates. Their L2L cells are not read from it at all: they
+   are measured from the recovered tick replay, which carries both sides of the book inside each session.
+3. **No pre-session ladder for the M5 sample dates** - the archived ladder covers 2026-10-05 to 2026-10-12
+   and the M5 sample covers 2026-11-04 to 2026-11-06. The two never share a session; the six ladder
+   sessions are priced by the tick replay instead, which is why those cells read `measured_tick_replay`
+   rather than `scored` and why the ladder, not the tape, is what a new date would need.
 
 The DXY direction figure is `proxy_scored`: it is the broker's spot CFD on the dollar-index basket, labelled
 with its own name. Official ICE cash DXY is a licence question (section 6), not a software one.
+
 ## 3. Where the configuration travels
 
 | Surface | What carries it | Evidence |
@@ -133,26 +145,45 @@ or the lead numbers moved: they were already built on the contract’s 05:00-to-
 is what the matrix and the provenance rule change: the run artefact itself (now v2), and the artefacts derived
 from it — the layer 1 report and its markdown, the backtesting screen, the morning run and its markdown, the
 model comparison, the four platform artefacts. All are rebuilt and their checks reproduce. The published
-tick sweep was **not** re-run: its ladder hash and its six sessions are unchanged, and re-running it would
-create a second artefact from the same evidence.
+tick sweep was **not** re-run from the tape; it was re-priced inside each session. `scripts/rebuild_l2l_tick_sweep_session_bounded.js`
+keeps v1's own decisions, cancels a fill stamped outside its own window at that window's endpoint (4 of
+157), and closes a position still open at the last M5 bar inside the window on the side of the book that
+would have paid it (20 exits become `session_end`) - writing `l2l-tick-sweep-v2.json` beside v1, which is
+preserved byte for byte with its supersession record in `l2l-tick-sweep-v1-supersession.json`. The ladder
+hash and the six sessions are unchanged, and no decision was re-derived, so a slot freed by an earlier
+05:00 close is not re-filled: what moved is execution accounting, not a new call.
 
 ## 6. What remains, separated by kind
 
 | Dependency | Kind | State | What would close it |
 | --- | --- | --- | --- |
-| XAGUSD, WTIUSD, GBPUSD one-hour series | data availability | blocked, named per market | cache the three series; no code change |
+| XAGUSD, WTIUSD, GBPUSD one-hour series | data availability, then a licence decision | **acquired 2026-11-24, outside the repository**: licensed quote history at `backtester/tmp/oanda_{xag,wti,gbp}_usd_h1.csv` (17,149 / 17,139 / 18,026 H1 rows), hashes and per-session boundary coverage in `data/usd-layer1-backtester/h1-v1/oanda-h1-acquisition-latest.json`; the published run still reports the three direction cells blocked | with the series present the same build scores 325 / 330 / 317 sessions and readiness becomes `scored` 7 / `blocked` 8; **publishing** that number needs either a decision that the rows may be committed or a documented download step a reader can follow |
 | Actionable bid/ask M5 tape per market | data availability | blocked (mid-price only, 0 bid/ask series) | broker bid/ask history |
 | Pre-session level ladders for those tape dates | data availability | blocked (0 pre-session ladders; the archived ladder covers different dates) | snapshot the marking tool at 04:55 London per session |
 | Official ICE cash DXY | licence / source decision | blocked; broker `DXY.cash` proxy is labelled and scored beside it | ICE sample or licence with 05:00 and next-05:00 prints |
 | Contemporaneous 05:00 input captures | data availability | 0 receipts; every value is a reconstruction | archive one capture per morning |
-| H1 eligibility 0 of 725 | **a measured result**, not a decision | measured | it moves only if the two pending rule/source decisions are settled: the gold identity/licence and the calendar vintage (D5, D6 in `H1_RULE_RESOLUTIONS_20261120.md`) |
+| H1 eligibility 0 of 725 | **a measured result**, not a decision | measured | it moves only if the two pending rule/source decisions are settled: the gold identity/licence and the calendar capture (D5, D6 in `H1_RULE_RESOLUTIONS_20261120.md` - D6 asks for each release schedule with the instant it became public, not a value vintage) |
 | Broker cost schedule | data availability | accounting runs on a labelled fixture | commit the broker’s dated commission and spread schedule |
 | Predictive advantage | research | not established, and not claimed | pre-registered tests on unseen mornings |
 
 The first two columns are not interchangeable. Software completion is high: the matrix, the snapshot-bound
 provenance, the bounded simulations and the accounting all exist and are tested. Data availability is low:
-three markets have no series, no market has an actionable tape, and no morning has a contemporaneous capture.
-Predictive advantage is unknown: nothing in this lane measures it yet, and six sessions cannot.
+three markets had no series until 2026-11-24 (their rows now sit outside the repository, awaiting the licence
+decision above), no market has an actionable tape in the committed archive, and no morning has a
+contemporaneous capture. Predictive advantage is unknown: nothing in this lane measures it yet, and six
+sessions cannot.
+
+**A Friday morning is unscorable in those three series, and that is a calendar fact rather than missing
+data.** The session ends at the next 05:00 London, which on a Friday is a Saturday, when the market is
+shut: none of the 145 Friday sessions has an endpoint bar in any of the three files. Seven, eight and four
+further sessions end on Christmas Day, New Year's Day or Good Friday (WTI also 2025-11-27, Thanksgiving);
+four sessions in each file open on Christmas Day or New Year's Day; and Good Friday itself has no bar at all
+in the XAG and WTI files, while the GBP file trades that morning and loses only the Saturday endpoint. So
+neither end can be priced, and `OANDA_H1_ACQUISITION_20261124.md` lists the dates. The 569, 568 and 572 with
+both endpoints are what remains. A call placed on a Friday therefore has no outcome to score, and any
+coverage figure quoted for these markets has to say so before it is compared with a market that prints on
+Saturday.
+
 ## 7. Reproduce
 
 ```

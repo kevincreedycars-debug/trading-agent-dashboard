@@ -30,6 +30,22 @@ Everything here is discovery and preparation. Nothing was deployed, published, a
 | `../../../../data/usd-layer1-backtester/backtesting-screen-v1.json` | The generated screen payload. Every figure on the page comes from it, including the per-morning rows, the frozen flat bands, the coverage trace and the dated evidence for each architecture node. |
 | `research-cards/` | Card files; currently the template plus one stub, waiting on the frontier models |
 
+## Documents added after checkpoint 1
+
+The table above is the package as it was handed over on 2026-10-13 and is left as written. Everything since
+is listed here, newest first.
+
+| File | What it is |
+| --- | --- |
+| `FRESH_CALL_PROOF_20261124.md` | Proof that the deployed Cloud child derives the call rather than repeating the row: eight rehearsed cases stripped of `models` and `results` (8 of 8 calls and 4 of 4 scored results identical), 27 of 110 single-input probes moving the call across eight named inputs, and captured execution 7260 with children 7261/7262 agreeing with the recomputation. Written by `npm run prove:usd-l1-fresh-call`; `npm run check:usd-l1-fresh-call` reproduces it. |
+| `OANDA_H1_ACQUISITION_20261124.md` | The acquisition of the three missing one-hour series (XAG_USD, WTICO_USD, GBP_USD): the request, row counts, hashes, the 569/568/572 sessions holding both 05:00 London endpoints, the dates of every non-Friday gap (a session ending or opening on a market holiday), the documented download step, and the licence decision that keeps the rows out of the repository. |
+| `N8N_CLOUD_MATRIX_RUN_20261124.md` | The two Cloud executions that scored the configured matrix (7212, children 7213-7216) and a four-market cut of it (7218, children 7219-7222), the identity they ran under and what each record proves. |
+| `MARKET_MATRIX_AND_READINESS.md` | The configured market matrix and its readiness: the three tests per market, the 5 scored / 8 measured / 11 blocked breakdown of the published artefact, the Friday rule for the three additional markets and the proxy status of the DXY cell. |
+| `READINESS_RECONCILIATION_20261123.md` | Where the published readiness figures come from, cell by cell, and the later update recording that the three missing series now exist outside the repository (325/330/317 directional scores, readiness moving to 7 scored / 8 blocked locally). |
+| `TICK_SWEEP_SESSION_HORIZON_20261123.md` | The tick sweep re-priced inside each session: what moved (4 fills cancelled at the session end, 20 exits closed at the window endpoint), what did not, and why the supersession record exists. |
+| `H1_RULE_RESOLUTIONS_20261120.md` | The resolutions of the open H1 rules, D1 to D6, with D6 corrected on 2026-11-24 to ask for each release schedule plus the instant it became public. |
+| `CREDENTIAL_EXPOSURE_CHECK_20261121.md` | The credential-exposure check of 2026-11-21 and what it found. |
+
 ## What is extracted, researched, reviewed, implemented and tested
 
 - **Extracted** (coordinator, from the repository): the whole inventory, the target contract, the exposed

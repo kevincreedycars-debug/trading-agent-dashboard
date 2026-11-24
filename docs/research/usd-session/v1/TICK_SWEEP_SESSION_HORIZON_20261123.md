@@ -19,7 +19,7 @@ v1 walked one continuous tape across the six sessions:
 So the sweep priced trades the corrected horizon forbids: it was affected, and the earlier note that said
 otherwise is superseded.
 
-## What was re-run
+## What was re-priced
 
 `scripts/rebuild_l2l_tick_sweep_session_bounded.js` re-prices v1's **own decisions** inside their own
 session and writes `l2l-tick-sweep-v2.json`:

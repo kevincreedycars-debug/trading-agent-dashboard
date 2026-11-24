@@ -38,11 +38,41 @@ Data acquisition. XAGUSD, WTIUSD and GBPUSD were blocked on one dataset: no cach
 (`XAG_USD`, `WTICO_USD`, `GBP_USD`, 2024-01-01 to 2026-11-24): 17,149 / 17,139 / 18,026 rows, both
 endpoints present for 569 / 568 / 572 of 725 sessions. The misses are Fridays - the session ends Saturday
 05:00, the market is shut, and the engine reports `no_outcome` instead of pricing a stale close, exactly as
-it already does for every market. The CSVs are a licensed history under gitignored `backtester/tmp/`; the
-committed record carries the request, counts, hashes and coverage, and `--check` re-hashes the local files.
+it already does for every market - plus a handful of sessions whose endpoint falls on a market holiday
+(Christmas Day, New Year's Day, Good Friday; the WTI file adds 2025-11-27, Thanksgiving): 7, 8 and 4
+sessions respectively; four sessions in each file open on Christmas Day or New Year's Day with no cutoff
+bar; and Good Friday itself has no bar in the XAG and WTI files. The CSVs are a licensed history
+under gitignored `backtester/tmp/`; the committed record carries the request, counts, hashes and coverage,
+and `--check` re-hashes the local files.
 
 Still an owner decision: publishing a score from those series needs either the rows committed under licence
 or a documented download step. Nothing here claims direction, accuracy or edge.
+
+2026-11-24, USD Layer 1 lane - the child computes the call, and one Cloud execution is kept to show it.
+
+The matrix run established that the market selection travels; it did not establish that the child derives
+anything. `run-v1.json` keeps a morning's cutoff inputs and its call on the same row, so a child that echoed
+the row would look exactly like one that computed. `scripts/prove_usd_l1_fresh_call.js` runs the committed
+parent nodes and the child wrapper in this checkout with the fetch replaced by a local read, strips `models`
+and `results` from every case and re-runs the child: eight cases (both published mornings, both challenger
+builds, `call_only` and scored) return 8 of 8 identical calls and 4 of 4 identical per-market results, and
+negating one saved input at a time moves the call in 27 of 110 probes, across eight named inputs. A quarter,
+not a curiosity: a lookup would be unmoved by all 110.
+
+`scripts/capture_usd_l1_fresh_call.js` then spent one real execution. The parent `89uk5JnPbWPL5lGD` was
+inactive; it was activated for this call, posted `dates: ["2024-01-10"], models: ["challenger",
+"challenger_v1"]` against the published dataset, and deactivated again. Execution
+[7260](https://silver17.app.n8n.cloud/execution/7260), children
+[7261](https://silver17.app.n8n.cloud/execution/7261) and
+[7262](https://silver17.app.n8n.cloud/execution/7262), returned the recomputed BULLISH call, conviction 2,
+`allowed` and the same seven per-market results as the rehearsal; `verdict.blocking` is empty and
+`live_call_agrees_with_recomputation` is true. What is not claimed: no accuracy, hit rate or edge; one
+execution is one morning, kept because it is inspectable; the rehearsal does not exercise the parent's HTTP
+node; and the saved inputs are still not shown to be known before the cutoff, which is the receipted
+validation mode's question. Record: `data/usd-layer1-backtester/n8n/fresh-call-v1.json`, written by
+`npm run prove:usd-l1-fresh-call`, recomputed by `npm run check:usd-l1-fresh-call`, restated by
+`tests/usd_l1_fresh_call.test.js` (7 assertions, inside `npm run test:usd-l1-n8n` at 41). Written up in
+`docs/research/usd-session/v1/FRESH_CALL_PROOF_20261124.md`.
 
 2026-11-23 (third build), USD Layer 1 lane, same branch - the tick sweep was re-priced inside the 05:00 session and readiness was reconciled per session.
 
