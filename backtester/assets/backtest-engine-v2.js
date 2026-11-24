@@ -800,19 +800,6 @@
     if (page.title) document.title = `${page.title} \u2014 Backtest Engine v2`;
   }
 
-  function simplifyNavigation() {
-    const brand=document.querySelector(".topbar-brand"); if(brand) brand.textContent="Backtesting Control Room";
-    const nav=document.querySelector(".side-rail-tabs"); if(!nav) return;
-    const original=Array.from(nav.children); nav.textContent="";
-    [["Dashboard","index.html#overview"],["Research","index.html#research-library"],["Evidence",null],["Backtest Engine v2","backtest-engine-v2.html"],["Architecture","index.html#architecture"],["Live Trading","index.html#live-trading"]].forEach(([label,href])=>{
-      if(!href) {nav.append(el("span","side-rail-group",label));return;}
-      const a=el("a","tab-button",label);a.href=href;
-      if(label==="Backtest Engine v2") {a.classList.add("active");a.setAttribute("aria-current","page");}nav.append(a);
-    });
-    const more=el("details","side-rail-details");more.append(el("summary","side-rail-link","All dashboard pages"));
-    const body=el("div","side-rail-details-body"); original.forEach(n=>body.append(n));more.append(body);nav.append(more);
-  }
-
   // --- Boot -------------------------------------------------------------
   async function boot() {
     try {
@@ -839,7 +826,6 @@
     renderNodes();
     renderSources();
     renderInspector(null);
-    simplifyNavigation();
     wireControls();
     applyZoom();
     drawWires();

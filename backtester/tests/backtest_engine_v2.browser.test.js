@@ -54,3 +54,55 @@ for (const width of [1440,1180,860,768,390]) {
   } finally {await browser.close();server.close();}
  });
 }
+
+// The bar and the rail are the dashboard's, not this page's. This page may draw a control room beside them,
+// but it may not rename the brand, hide the rail's head, foot or clocks, or rebuild the rail into a shorter
+// list of its own: the entries, their order and their visibility are measured against a second served page
+// that carries the same shared block, so a page-level override or a script that rewrites the rail fails here.
+test("the page keeps the dashboard's own bar and rail", async () => {
+  const server = await serve();
+  const browser = await chromium.launch({ headless: true });
+  const url = file => `http://127.0.0.1:${server.address().port}/${file}`;
+  const read = view => view.evaluate(() => {
+    const shown = node => Boolean(node) && getComputedStyle(node).display !== "none";
+    const rail = document.querySelector(".side-rail");
+    return {
+      brand: document.querySelector(".topbar-brand")?.textContent.trim(),
+      meta: shown(document.querySelector(".topbar-meta")),
+      date: document.querySelector("#currentDate")?.textContent.trim(),
+      clock: document.querySelector("#topbarClock")?.textContent.trim(),
+      head: shown(document.querySelector(".side-rail-head")),
+      foot: shown(document.querySelector(".side-rail-foot")),
+      railWidth: Math.round(rail.getBoundingClientRect().width),
+      entries: Array.from(document.querySelectorAll(".side-rail-tabs > *")).map(node => {
+        const [kind] = node.className.split(" ");
+        return `${kind}: ${(node.textContent || "").trim().replace(/\s+/g, " ")}`;
+      })
+    };
+  });
+  try {
+    for (const width of [1440, 390]) {
+      const shared = await browser.newPage({ viewport: { width, height: 1000 } });
+      await shared.goto(url("standing-dashboard.html"));
+      const expected = await read(shared);
+      const page = await browser.newPage({ viewport: { width, height: 1000 } });
+      await page.goto(url("backtest-engine-v2.html"));
+      await page.waitForFunction(() => document.querySelector("#crHint").textContent.includes("evidence sources read"));
+      const seen = await read(page);
+      assert.equal(seen.brand, "Asset Directional Movement Dashboard", `the ${width}px bar must keep the dashboard's brand`);
+      assert.deepEqual(seen.entries, expected.entries, `the ${width}px rail must offer the dashboard's entries in its order`);
+      assert.deepEqual(
+        { meta: seen.meta, head: seen.head, foot: seen.foot, railWidth: seen.railWidth },
+        { meta: expected.meta, head: expected.head, foot: expected.foot, railWidth: expected.railWidth },
+        `the ${width}px bar and rail must be shown exactly as the dashboard shows them`
+      );
+      const evidence = seen.entries.findIndex(entry => entry.startsWith("side-rail-group: Evidence"));
+      assert.ok(evidence >= 0, `the ${width}px rail must keep its Evidence group`);
+      assert.match(seen.entries[evidence + 1], /^side-rail-link: Backtest Engine v2$/, `the ${width}px rail must keep Backtest Engine v2 directly below Evidence`);
+      assert.doesNotMatch(seen.date, /Loading/, `the ${width}px bar must fill in the date`);
+      assert.match(seen.clock, /UK \d{2}:\d{2} \| ET \d{2}:\d{2}/, `the ${width}px bar must run both clocks`);
+      await page.close();
+      await shared.close();
+    }
+  } finally { await browser.close(); server.close(); }
+});
