@@ -1,10 +1,10 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-11-23T06:07:02.753Z",
-  "last_run_finished_at": "2026-11-23T06:07:02.754Z",
+  "status": "failed",
+  "last_run_started_at": "2026-11-24T06:07:21.504Z",
+  "last_run_finished_at": "2026-11-24T06:07:21.504Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Master Orchestrator finished with errors.",
+  "failed_step": "USD Collector",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -12,7 +12,8 @@
     },
     {
       "name": "USD Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "The service was not able to process your request"
     },
     {
       "name": "EUR Collector",
@@ -71,5 +72,8 @@
       "status": "success"
     }
   ],
-  "error": null
+  "error": {
+    "step": "USD Collector",
+    "reason": "The service was not able to process your request"
+  }
 }
