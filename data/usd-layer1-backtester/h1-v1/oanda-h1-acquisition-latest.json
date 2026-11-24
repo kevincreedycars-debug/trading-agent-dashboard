@@ -1,0 +1,244 @@
+{
+ "schema_version": "oanda-h1-acquisition-v1",
+ "created_at": "2026-11-24T00:00:00Z",
+ "research_only": true,
+ "source": {
+  "publisher": "OANDA v20 REST",
+  "host": "api-fxtrade.oanda.com",
+  "endpoint": "/v3/instruments/{instrument}/candles",
+  "granularity": "H1",
+  "price": "M (mid)",
+  "from": "2024-01-01T00:00:00Z",
+  "to": "2026-11-24T00:00:00Z",
+  "authentication": "bearer token from the local credential store; never printed, never written here",
+  "read_only": "market data only: no account, no order, no position, no transaction endpoint was called"
+ },
+ "what_this_unblocks": [
+  "the directional accuracy test for XAGUSD, WTIUSD and GBPUSD, once the series are priced at both 05:00 London endpoints",
+  "nothing else: the two L2L tests also need an archived ladder and a bid/ask tape, which this does not acquire"
+ ],
+ "markets": [
+  {
+   "market": "XAGUSD",
+   "instrument": "XAG_USD",
+   "broker_symbol": "XAGUSD",
+   "file": "oanda_xag_usd_h1.csv",
+   "rows": 17149,
+   "first_utc": "2024-01-01T23:00:00Z",
+   "last_utc": "2026-11-23T23:00:00Z",
+   "csv_bytes": 1869747,
+   "csv_sha256": "42b65cbb5d3997978126e1b9981013727d490f4fa18db897d38a575c00ee0017",
+   "boundary_coverage": {
+    "sessions": 725,
+    "cutoff_present": 718,
+    "endpoint_present": 573,
+    "both_present": 569,
+    "first_missing": [
+     {
+      "date": "2024-01-05",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-12",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-19",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-26",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-02",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-09",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-16",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-23",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-03-01",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-03-08",
+      "cutoff": true,
+      "endpoint": false
+     }
+    ]
+   },
+   "note": null
+  },
+  {
+   "market": "WTIUSD",
+   "instrument": "WTICO_USD",
+   "broker_symbol": "USOIL",
+   "file": "oanda_wti_usd_h1.csv",
+   "rows": 17139,
+   "first_utc": "2024-01-01T23:00:00Z",
+   "last_utc": "2026-11-23T23:00:00Z",
+   "csv_bytes": 1768942,
+   "csv_sha256": "ff33d342e94d0a08ef2025f7f871835d97a4baf012d162b09305655a3fb7b556",
+   "boundary_coverage": {
+    "sessions": 725,
+    "cutoff_present": 717,
+    "endpoint_present": 572,
+    "both_present": 568,
+    "first_missing": [
+     {
+      "date": "2024-01-05",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-12",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-19",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-26",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-02",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-09",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-16",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-23",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-03-01",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-03-08",
+      "cutoff": true,
+      "endpoint": false
+     }
+    ]
+   },
+   "note": "OANDA's WTICO_USD is the WTI contract the provider quotes; the execution venue's USOIL is a different instrument and has not been reconciled"
+  },
+  {
+   "market": "GBPUSD",
+   "instrument": "GBP_USD",
+   "broker_symbol": "GBPUSD",
+   "file": "oanda_gbp_usd_h1.csv",
+   "rows": 18026,
+   "first_utc": "2024-01-01T22:00:00Z",
+   "last_utc": "2026-11-23T23:00:00Z",
+   "csv_bytes": 1892792,
+   "csv_sha256": "ce68ffe5d85b5bd116ecf4b7e98f981fe8a0fbe4dc35a297e0f7a8fd9053f3df",
+   "boundary_coverage": {
+    "sessions": 725,
+    "cutoff_present": 721,
+    "endpoint_present": 576,
+    "both_present": 572,
+    "first_missing": [
+     {
+      "date": "2024-01-05",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-12",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-19",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-01-26",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-02",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-09",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-16",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-02-23",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-03-01",
+      "cutoff": true,
+      "endpoint": false
+     },
+     {
+      "date": "2024-03-08",
+      "cutoff": true,
+      "endpoint": false
+     }
+    ]
+   },
+   "note": null
+  }
+ ],
+ "sessions_checked": 725,
+ "licence": {
+  "position": "the rows are a licensed quote history",
+  "handling": "written under backtester/tmp/, which git ignores; not redistributed in this repository",
+  "decision_needed": "publishing a scored result from these series needs either a decision that the rows may be committed, or a documented download step so a reader can reproduce it"
+ },
+ "not_claimed": [
+  "no direction, hit rate or edge is claimed for these markets by acquiring their series",
+  "no L2L combination becomes ready: the ladder and the bid/ask tape are still missing",
+  "the WTI series is the provider's contract, not the execution venue's USOIL, so a cross-venue result would need its own reconciliation"
+ ],
+ "reproduce": "node scripts/acquire_oanda_h1_series.js --from 2024-01-01 --to 2026-11-24 --i-understand-this-is-read-only-market-data"
+}

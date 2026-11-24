@@ -225,12 +225,31 @@ function main(argv = process.argv) {
     console.log(JSON.stringify({ usage: usage() }, null, 2));
     return 1;
   }
+  /**
+   * Which dataset a capture is verified against.
+   *
+   * A capture records the `generated_at` of the artefact it fetched. When the caller names no dataset, each
+   * capture is replayed against the build it actually used: the current `run-v1.json` for a capture of this
+   * build, the preserved v1 file for an older one. Replaying an old capture against the current artefact
+   * would re-date the evidence, and replaying a new one against v1 would fail it - so neither is a default.
+   */
+  const CURRENT_DATASET_PATH = path.join(ROOT, "data", "usd-layer1-backtester", "run-v1.json");
+  const PRESERVED_DATASET_PATH = path.join(ROOT, "data", "usd-layer1-backtester", "run-v1-superseded-20261114.json");
+  const currentStamp = fs.existsSync(CURRENT_DATASET_PATH)
+    ? JSON.parse(fs.readFileSync(CURRENT_DATASET_PATH, "utf8")).generated_at
+    : null;
+  const datasetFor = (capture) => {
+    if (args.dataset) return dataset;
+    const first = capture.records && capture.records[0];
+    const stamp = first && first.dataset ? first.dataset.generated_at : null;
+    return stamp && stamp === currentStamp ? dataset : readJson(PRESERVED_DATASET_PATH);
+  };
   const recordsMerged = { added: [], duplicates: [], rejected: [], runs: [] };
   let working = existing;
   for (const capture of captures) {
     const merged = ledgerLib.mergeLedger(working, {
       records: capture.records,
-      dataset,
+      dataset: datasetFor(capture),
       capturedAt: args.capturedAt || new Date().toISOString(),
       label: captures.length === 1 ? (args.label || null) : `${args.label || "capture"} · ${path.basename(capture.file)}`
     });

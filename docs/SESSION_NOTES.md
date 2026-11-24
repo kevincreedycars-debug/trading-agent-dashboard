@@ -1,5 +1,49 @@
 # Session Notes
 
+2026-11-24, USD Layer 1 lane - the matrix went through n8n Cloud, and the three blocked markets got
+their one-hour series.
+
+The Cloud gap was real, not cosmetic. The parent fetched the artefact, kept one morning's row and passed
+that row to the children; the controller reads the market selection from the dataset's `market_matrix`, and
+a row does not carry it. So every Cloud execution had been scoring the four markets hard-coded in
+`contracts.MARKETS` while the artefact declared eight. The selection now travels in `dataset_meta` from
+the parent's fetch into `evaluateOne`, and the combine node reports it back. The bundle identity also
+hashed only the ten modules, not the six templates that shape the runtime and glue, so `evaluateOne` could
+change without the hash changing; both are in the source set now (`9c722a0e...`, 124,084 bytes).
+
+Deployed and exercised through the same workflow, two datasets:
+
+* published artefact - parent `7212`, children `7213`/`7215` (2024-01-10) and `7214`/`7216` (2024-03-26),
+  24 combinations;
+* four-market cut - parent `7218`, children `7219`/`7221` and `7220`/`7222`, 12 combinations, same mornings,
+  same calls, `scored_markets` reduced to EURUSD, XAUUSD, GBPUSD.
+
+The cut is `data/usd-layer1-backtester/n8n/datasets/run-4market-3test-v1.json`, built from `run-v1.json`
+with the two session rows copied byte for byte and only `run.markets` and `market_matrix` replaced. That is
+the demonstration that the market selection is data: same engine, same children, different document.
+
+Two verification defects surfaced and were fixed rather than explained away. `verifyRecord` replayed a
+record against `run-v1.json` whatever dataset it had fetched, so the three-market run failed on "test
+selection does not reproduce"; it now rebuilds the recorded matrix from the committed definitions of the
+markets the record names, and fails if one is unknown. `check_usd_l1_n8n_ledger.js` pinned every capture to
+the preserved v1 dataset; each capture now picks the dataset it recorded fetching.
+
+Ledger after re-merge: 733 records over 726 mornings, 1,467 model calls, 45 runs, 0 verification failures,
+`ledger reproduces`. Evidence: `consistency: established`; availability, model logic and coverage all
+`not_established`. Fixtures were not selected; the parent is webhook-only and was deactivated after the two
+runs; no live trading path was touched.
+
+Data acquisition. XAGUSD, WTIUSD and GBPUSD were blocked on one dataset: no cached H1 series priced at both
+05:00 endpoints. `scripts/acquire_oanda_h1_series.js` pulled H1 mid candles from OANDA v20
+(`XAG_USD`, `WTICO_USD`, `GBP_USD`, 2024-01-01 to 2026-11-24): 17,149 / 17,139 / 18,026 rows, both
+endpoints present for 569 / 568 / 572 of 725 sessions. The misses are Fridays - the session ends Saturday
+05:00, the market is shut, and the engine reports `no_outcome` instead of pricing a stale close, exactly as
+it already does for every market. The CSVs are a licensed history under gitignored `backtester/tmp/`; the
+committed record carries the request, counts, hashes and coverage, and `--check` re-hashes the local files.
+
+Still an owner decision: publishing a score from those series needs either the rows committed under licence
+or a documented download step. Nothing here claims direction, accuracy or edge.
+
 2026-11-23 (third build), USD Layer 1 lane, same branch - the tick sweep was re-priced inside the 05:00 session and readiness was reconciled per session.
 
 The sweep first. `l2l-tick-sweep-v1.json` was produced on 2026-11-12 by one continuous walk of the six

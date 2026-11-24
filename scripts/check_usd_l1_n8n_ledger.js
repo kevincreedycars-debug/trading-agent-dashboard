@@ -28,9 +28,11 @@ const captures = fs.readdirSync(N8N)
   .filter((name) => !name.includes("invalid-date"))
   .sort();
 
+// One re-merge of every capture. `persist_usd_l1_n8n_runs.js` verifies each capture against the dataset it
+// recorded fetching - the current artefact for a capture of this build, the preserved v1 file for an older
+// one - so the ledger is reproducible from the committed captures in a single command.
 const args = [path.join(ROOT, "scripts", "persist_usd_l1_n8n_runs.js")];
 for (const name of captures) args.push("--capture", path.join(N8N, name));
-args.push("--dataset", LEDGER_DATASET);
 args.push("--check");
 
 const result = childProcess.spawnSync(process.execPath, args, { stdio: "inherit" });
