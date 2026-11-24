@@ -7,14 +7,16 @@
     "note": "Research only. Nothing here is published as a live call, sizes a position or places a trade, and no figure on this page is an edge claim."
   },
   "sources": {
-    "evidence": { "url": "data/usd-layer1-backtester/n8n-execution-evidence-v1.json", "label": "n8n execution evidence" },
-    "retrieval": { "url": "data/usd-layer1-backtester/input-retrieval-v1.json", "label": "Input retrieval" },
-    "coverage": { "url": "data/usd-layer1-backtester/coverage-v1.json", "label": "Sweep coverage" },
-    "spec": { "url": "data/usd-layer1-backtester/spec-check-v1.json", "label": "Specification check" },
-    "rules": { "url": "data/usd-layer1-backtester/decision-rules-v1.json", "label": "Decision rules" },
-    "parity": { "url": "data/usd-layer1-backtester/parity-v1.json", "label": "Parity" },
-    "m5": { "url": "data/usd-layer1-backtester/m5-archive-status.json", "label": "Five-minute archive status" },
-    "matrix": { "url": "backtester/config/usd_layer1_market_matrix.json", "label": "Market matrix configuration" }
+    "evidence": { "url": "data/usd-layer1-backtester/n8n-execution-evidence-v1.json", "label": "n8n execution evidence", "verified_at": "generated_at" },
+    "retrieval": { "url": "data/usd-layer1-backtester/input-retrieval-v1.json", "label": "Input retrieval", "verified_at": "generated_at" },
+    "coverage": { "url": "data/usd-layer1-backtester/coverage-v1.json", "label": "Sweep coverage", "verified_at": "generated_at" },
+    "spec": { "url": "data/usd-layer1-backtester/spec-check-v1.json", "label": "Specification check", "verified_at": "generated_at" },
+    "rules": { "url": "data/usd-layer1-backtester/decision-rules-v1.json", "label": "Decision rules", "verified_at": "frozen_on" },
+    "parity": { "url": "data/usd-layer1-backtester/parity-v1.json", "label": "Parity", "verified_at": null },
+    "m5": { "url": "data/usd-layer1-backtester/m5-archive-status.json", "label": "Five-minute archive status", "verified_at": "generated_at" },
+    "matrix": { "url": "backtester/config/usd_layer1_market_matrix.json", "label": "Market matrix configuration", "verified_at": "created_at" },
+    "freshcall": { "url": "data/usd-layer1-backtester/n8n/fresh-call-v1.json", "label": "Fresh-call proof", "verified_at": "created_at" },
+    "readiness": { "url": "data/usd-layer1-backtester/market-readiness-v1.json", "label": "Published market readiness", "verified_at": "generated_at" }
   },
   "legend": [
     { "state": "complete", "label": "Complete", "meaning": "The artefact records this step as done, and the check that belongs to it has run." },
@@ -41,7 +43,9 @@
     { "from": "challenger-v0", "to": "outcomes" },
     { "from": "challenger-v1", "to": "outcomes" },
     { "from": "outcomes", "to": "reproduction" },
-    { "from": "reproduction", "to": "evidence" }
+    { "from": "reproduction", "to": "evidence" },
+    { "from": "controller", "to": "freshcall" },
+    { "from": "freshcall", "to": "evidence" }
   ],
   "nodes": [
     {
@@ -273,7 +277,8 @@
         { "label": "Active", "value": "{{evidence.workflows.parent.active}}", "format": "boolean" },
         { "label": "Ledger rows", "value": "{{evidence.sweep.summary.records}}", "format": "count" },
         { "label": "Mornings covered", "value": "{{evidence.sweep.summary.unique_dates}}", "format": "count" },
-        { "label": "Failed verifications", "value": "{{evidence.sweep.summary.by_validation_mode.structural.failed_verification}}", "format": "count" }
+        { "label": "Failed verifications", "value": "{{evidence.sweep.summary.by_validation_mode.structural.failed_verification}}", "format": "count" },
+        { "label": "Fresh-call execution", "value": "{{freshcall.live_call.execution.id}}" }
       ],
       "links": [
         { "label": "Open in n8n", "href": "{{evidence.workflows.parent.url}}", "kind": "workflow" },
@@ -287,7 +292,7 @@
       "kind": "replaceable",
       "title": "Challenger v0",
       "role": "Frozen research model",
-      "summary": "A frozen challenger that reads the saved panel and returns one call or an abstention. The Cloud adapter evaluates the model's own rules on the stored values and never creates a call, and its arithmetic is recomputed against the committed outcomes.",
+      "summary": "A frozen challenger that reads the saved panel and returns one call or an abstention. The Cloud adapter evaluates the model's own rules on the stored values and never reads a stored prediction, its arithmetic is recomputed against the committed outcomes, and the fresh-call proof shows the call changes when an input changes.",
       "io": {
         "in": ["One panel row: the values the model consumes"],
         "out": ["A direction or an abstention, with its conviction and reasons"]
@@ -312,7 +317,7 @@
             { "if": { "path": "evidence.claims.model_logic.status", "op": "eq", "value": "not_established" }, "state": "unknown" },
             { "state": "pending" }
           ],
-          "note": "Replays a stored call, so agreement is reproduction and not proof that the logic is right.",
+          "note": "The child recomputes the call from the saved inputs - 8 of 8 rehearsal cases and a captured execution - but a call that reproduces perfectly is still not proof that the rules are right.",
           "quote": { "path": "evidence.claims.model_logic.statement", "from": "evidence" }
         }
       },
@@ -359,7 +364,7 @@
             { "if": { "path": "evidence.claims.model_logic.status", "op": "eq", "value": "not_established" }, "state": "unknown" },
             { "state": "pending" }
           ],
-          "note": "Agreement with the written rules is not evidence that the rules are right.",
+          "note": "The child recomputes its call and the specification check holds it to the written rules; neither shows that the rules are right.",
           "quote": { "path": "spec.statement", "from": "spec" }
         }
       },
@@ -439,21 +444,33 @@
         },
         "data": {
           "rules": [
+            { "if": { "path": "readiness.published.counts.blocked", "op": "gt", "value": 0 }, "state": "pending" },
             { "if": { "path": "m5.coverage.instruments_with_bid_ask", "op": "eq", "value": 0 }, "state": "pending" },
             { "state": "complete" }
           ],
-          "note": "The five-minute archive is started, not established: {{m5.coverage.instruments_with_bid_ask|count}} of {{m5.coverage.instruments_required|count}} instruments carry bid and ask, so both level simulations stay blocked."
+          "note": "The published matrix scores {{readiness.published.counts.scored|count}} cells, prices {{readiness.published.counts.proxy_scored|count}} on a named proxy, measures {{readiness.published.counts.measured_tick_replay|count}} by tick replay and blocks {{readiness.published.counts.blocked|count}}; every blocked cell names its own missing dataset. The five-minute archive carries bid and ask for {{m5.coverage.instruments_with_bid_ask|count}} of {{m5.coverage.instruments_required|count}} instruments."
         },
         "research": {
           "rules": [
             { "if": { "path": "evidence.performance.status", "op": "eq", "value": "not established as an edge" }, "state": "unknown" },
             { "state": "complete" }
           ],
-          "note": "Two of the four declared tests are scored; the other two are blocked on history rather than on code.",
+          "note": "{{readiness.advantage.status}} - no published cell establishes a predictive advantage.",
           "quote": { "path": "evidence.performance.note", "from": "evidence" }
         }
       },
+      "claims_title": "What is published, what waits, and what is not claimed",
+      "claims": [
+        { "label": "XAG/USD direction", "status": "{{readiness.markets.3.direction.publication}}", "note": "{{readiness.markets.3.direction.distribution}} Its L2L cells name {{readiness.markets.3.l2l_full_5r.missing.0}} and {{readiness.markets.3.l2l_full_5r.missing.1}}." },
+        { "label": "WTI/USD direction", "status": "{{readiness.markets.6.direction.publication}}", "note": "{{readiness.markets.6.direction.distribution}} Its L2L cells name {{readiness.markets.6.l2l_full_5r.missing.0}} and {{readiness.markets.6.l2l_full_5r.missing.1}}." },
+        { "label": "GBP/USD direction", "status": "{{readiness.markets.7.direction.publication}}", "note": "{{readiness.markets.7.direction.distribution}} Its L2L cells name {{readiness.markets.7.l2l_full_5r.missing.0}} and {{readiness.markets.7.l2l_full_5r.missing.1}}." },
+        { "label": "Predictive advantage", "status": "{{readiness.advantage.status}}", "note": "{{readiness.advantage.statement}}" }
+      ],
       "metrics": [
+        { "label": "Published cells scored", "value": "{{readiness.published.counts.scored}}", "format": "count" },
+        { "label": "Proxy-scored cells", "value": "{{readiness.published.counts.proxy_scored}}", "format": "count" },
+        { "label": "Measured by tick replay", "value": "{{readiness.published.counts.measured_tick_replay}}", "format": "count" },
+        { "label": "Blocked cells", "value": "{{readiness.published.counts.blocked}}", "format": "count" },
         { "label": "Declared markets", "value": "{{matrix.markets.length}}", "format": "count" },
         { "label": "Declared tests", "value": "{{matrix.tests.length}}", "format": "count" },
         { "label": "Instruments with bid and ask", "value": "{{m5.coverage.instruments_with_bid_ask}}", "format": "count" }
@@ -466,7 +483,12 @@
       ],
       "links": [
         { "label": "Five-minute archive status", "href": "data/usd-layer1-backtester/m5-archive-status.json", "kind": "artefact" },
-        { "label": "Sweep coverage", "href": "data/usd-layer1-backtester/coverage-v1.json", "kind": "artefact" }
+        { "label": "Sweep coverage", "href": "data/usd-layer1-backtester/coverage-v1.json", "kind": "artefact" },
+        { "label": "Published readiness artefact", "href": "data/usd-layer1-backtester/market-readiness-v1.json", "kind": "artefact" }
+      ],
+      "limitations": [
+        "The scratch run that read 7 scored, 1 proxy-scored, 8 measured and 8 blocked is unpublished research evidence, not live readiness.",
+        "No cell in the published matrix establishes a predictive advantage; the counts record what could be measured, not accuracy or edge."
       ],
       "open": "m5.missing"
     },
@@ -518,13 +540,174 @@
       ]
     },
     {
+      "id": "freshcall",
+      "band": "proof",
+      "span": 6,
+      "kind": "core",
+      "title": "Fresh-call proof",
+      "role": "Does the Cloud child compute the call, or repeat the stored row?",
+      "summary": "The child is sent one morning's cutoff inputs and a model name with the stored calls and results removed. Re-running the committed parent glue and child wrapper over eight cases reproduces 8 of 8 calls and 4 of 4 per-market results, and negating one saved input at a time moves the call in 27 of 110 probes. One real Cloud execution (parent 7260, children 7261 and 7262) returned the same call. This establishes call generation only: it does not establish contemporaneous availability across the 725 mornings, and it is not accuracy or edge.",
+      "io": {
+        "in": [
+          "One morning's cutoff inputs, a model name and a validation label",
+          "The committed parent glue and the pinned Cloud bundle"
+        ],
+        "out": [
+          "The direction, conviction, eligibility and per-market results, recomputed in the child"
+        ]
+      },
+      "readiness": {
+        "software": {
+          "rules": [
+            {
+              "if": {
+                "path": "freshcall.verdict.status",
+                "op": "eq",
+                "value": "recomputed_from_cutoff_inputs"
+              },
+              "state": "complete"
+            },
+            {
+              "state": "unknown"
+            }
+          ],
+          "note": "The rehearsal reproduces the published call from stripped inputs and the captured execution agrees with the rehearsal; the verdict's blocking list holds {{freshcall.verdict.blocking|count}} entries.",
+          "quote": {
+            "path": "freshcall.answer",
+            "from": "freshcall"
+          }
+        },
+        "data": {
+          "rules": [
+            {
+              "if": {
+                "path": "freshcall.totals.cases",
+                "op": "gt",
+                "value": 0
+              },
+              "state": "complete"
+            },
+            {
+              "state": "unknown"
+            }
+          ],
+          "note": "{{freshcall.totals.calls_matching_published|count}} of {{freshcall.totals.cases|count}} calls and {{freshcall.totals.scoring_cases_matching|count}} scored cases match, from {{freshcall.totals.input_probes|count}} single-input probes."
+        },
+        "research": {
+          "rules": [
+            {
+              "if": {
+                "path": "evidence.claims.model_logic.status",
+                "op": "eq",
+                "value": "not_established"
+              },
+              "state": "pending"
+            },
+            {
+              "state": "unknown"
+            }
+          ],
+          "note": "Call generation is established; the rules that produce the call are still not independently adjudicated, and one captured morning is not a sample.",
+          "quote": {
+            "path": "evidence.claims.model_logic.statement",
+            "from": "evidence"
+          }
+        }
+      },
+      "metrics": [
+        {
+          "label": "Cases re-run",
+          "value": "{{freshcall.totals.cases}}",
+          "format": "count"
+        },
+        {
+          "label": "Calls matching",
+          "value": "{{freshcall.totals.calls_matching_published}}",
+          "format": "count"
+        },
+        {
+          "label": "Scored cases matching",
+          "value": "{{freshcall.totals.scoring_cases_matching}}",
+          "format": "count"
+        },
+        {
+          "label": "Single-input probes",
+          "value": "{{freshcall.totals.input_probes}}",
+          "format": "count"
+        },
+        {
+          "label": "Probes that moved the call",
+          "value": "{{freshcall.totals.probes_that_moved_the_call}}",
+          "format": "count"
+        },
+        {
+          "label": "Parent execution",
+          "value": "{{freshcall.live_call.execution.id}}"
+        },
+        {
+          "label": "Child executions",
+          "value": "{{freshcall.live_call.child_executions.0.execution_id}} / {{freshcall.live_call.child_executions.1.execution_id}}"
+        },
+        {
+          "label": "Captured at",
+          "value": "{{freshcall.live_call.captured_at}}",
+          "format": "datetime"
+        }
+      ],
+      "tests": [
+        {
+          "title": "Rehearsal: committed parent glue and child wrapper, stored calls and results stripped",
+          "status": "{{freshcall.verdict.status}}",
+          "note": "{{freshcall.totals.calls_matching_published}} of {{freshcall.totals.cases}} calls and {{freshcall.totals.scoring_cases_matching}} of 4 scored cases agree; {{freshcall.totals.probes_that_moved_the_call}} of {{freshcall.totals.input_probes}} probes move the call."
+        },
+        {
+          "title": "Live: one Cloud execution, captured and deactivated after the call",
+          "status": "{{freshcall.live_call.status}}",
+          "note": "Parent {{freshcall.live_call.execution.id}}, children {{freshcall.live_call.child_executions.0.execution_id}} and {{freshcall.live_call.child_executions.1.execution_id}}; agrees with the recomputation."
+        }
+      ],
+      "limitations": [
+        "One execution is one morning. It is kept because it is inspectable, not because it is a sample.",
+        "The fresh-call proof does not establish contemporaneous availability: the saved inputs are still not shown to have been known before the 05:00 cutoff on any of the 725 mornings.",
+        "No accuracy, hit rate, edge or predictive advantage is claimed."
+      ],
+      "open": "freshcall.not_claimed",
+      "links": [
+        {
+          "label": "Fresh-call proof artefact",
+          "href": "data/usd-layer1-backtester/n8n/fresh-call-v1.json",
+          "kind": "artefact"
+        },
+        {
+          "label": "The written proof",
+          "href": "docs/research/usd-session/v1/FRESH_CALL_PROOF_20261124.md",
+          "kind": "document"
+        },
+        {
+          "label": "Captured execution 7260",
+          "href": "{{freshcall.live_call.execution.url}}",
+          "kind": "execution"
+        },
+        {
+          "label": "Child execution 7261",
+          "href": "{{freshcall.live_call.child_executions.0.execution_url}}",
+          "kind": "execution"
+        },
+        {
+          "label": "Child execution 7262",
+          "href": "{{freshcall.live_call.child_executions.1.execution_url}}",
+          "kind": "execution"
+        }
+      ]
+    },
+    {
       "id": "evidence",
       "band": "proof",
       "span": 6,
       "kind": "core",
       "title": "Published evidence",
       "role": "What the evidence claims, and what it refuses to claim",
-      "summary": "Four claims are published side by side instead of one headline. Internal consistency is established; historical availability, model logic and coverage are not established, and this page repeats that rather than smoothing it into a single score.",
+      "summary": "Five claims are published side by side instead of one headline. Internal consistency and call generation are established; historical availability, model logic and coverage are not established, and this page repeats that rather than smoothing it into a single score.",
       "io": {
         "in": ["Every artefact above"],
         "out": ["One evidence file, one run ledger and the pages that read them"]
@@ -549,7 +732,7 @@
             { "if": { "path": "evidence.claims.consistency.status", "op": "eq", "value": "established" }, "state": "pending" },
             { "state": "unknown" }
           ],
-          "note": "One of the four claims is established, three are recorded as not established, and the limitations are published beside them.",
+          "note": "Two of the five claims are established - internal consistency and call generation - and three are recorded as not established.",
           "quote": { "path": "evidence.claims.consistency.statement", "from": "evidence" }
         }
       },
@@ -557,19 +740,22 @@
         { "label": "Consistency", "status": "{{evidence.claims.consistency.status}}", "note": "{{evidence.claims.consistency.statement}}" },
         { "label": "Historical availability", "status": "{{evidence.claims.historical_availability.status}}", "note": "{{evidence.claims.historical_availability.statement}}" },
         { "label": "Model logic", "status": "{{evidence.claims.model_logic.status}}", "note": "{{evidence.claims.model_logic.statement}}" },
-        { "label": "Coverage", "status": "{{evidence.claims.coverage.status}}", "note": "{{evidence.claims.coverage.statement}}" }
+        { "label": "Coverage", "status": "{{evidence.claims.coverage.status}}", "note": "{{evidence.claims.coverage.statement}}" },
+        { "label": "Call generation", "status": "{{freshcall.verdict.status}}", "note": "Established for eight rehearsal cases and one captured execution (7260): the child recomputes the call from stripped inputs. It is not a survey and not an edge." }
       ],
       "metrics": [
         { "label": "Evidence built", "value": "{{evidence.generated_at}}", "format": "datetime" },
         { "label": "Mornings accepted structurally", "value": "{{evidence.historical_validity.structural_accepted}}", "format": "count" },
         { "label": "Mornings receipted", "value": "{{evidence.historical_validity.receipted_complete}}", "format": "count" },
-        { "label": "Bundle", "value": "{{evidence.bundle.bundle_version}}" }
+        { "label": "Bundle", "value": "{{evidence.bundle.bundle_version}}" },
+        { "label": "Fresh-call verdict", "value": "{{freshcall.verdict.status}}" }
       ],
       "limitations": "evidence.limitations",
       "open": "evidence.next_actions",
       "links": [
         { "label": "Evidence artefact", "href": "data/usd-layer1-backtester/n8n-execution-evidence-v1.json", "kind": "artefact" },
-        { "label": "Recorded mornings", "href": "backtesting.html", "kind": "page" }
+        { "label": "Recorded mornings", "href": "backtesting.html", "kind": "page" },
+        { "label": "Fresh-call proof", "href": "data/usd-layer1-backtester/n8n/fresh-call-v1.json", "kind": "artefact" }
       ]
     }
   ]

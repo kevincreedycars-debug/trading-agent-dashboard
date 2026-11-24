@@ -861,3 +861,51 @@ and made one decision: the live-trading lane owns the performance calculations f
 - The brief's state report could not be filed: `monitor-state.js` is not in this checkout or in the main checkout
   (`D:/trading-agent-dashboard-codex/scripts`), and no script in `scripts/` mentions `monitor-state`. Nothing was invented
   to stand in for it, and nothing outside this checkout was written.
+
+
+## 2026-11-24 (later) - coordinator: the control room integrated, published, and bound to the evidence
+
+### What was merged, in order
+- The fresh-call lane landed first: `backtesting/usd-l1-fresh-call-20261124` at `4ad274e5`, PR #32,
+  squash-merged to `main` as `a591a245`. It committed the proof record, the one captured execution
+  (parent 7260, children 7261/7262), the H1 coverage wording and the screen's new document path.
+- The design commit `13e091d0` was then merged onto that revision on
+  `release/backtest-engine-v2-20261124` (merge commit `84b96641`). Nothing in your files was
+  rewritten; the coordinator's changes are additive and listed in the handoff.
+
+### What the page now reads
+- `freshcall` - `data/usd-layer1-backtester/n8n/fresh-call-v1.json`: `recomputed_from_cutoff_inputs`,
+  8 cases, 8/8 calls, 4/4 scored, 27/110 probes, `blocking: []`; the live block names 7260/7261/7262.
+- `readiness` - `data/usd-layer1-backtester/market-readiness-v1.json`, built by
+  `scripts/build_usd_l1_market_readiness.js` from `backtesting-screen-v1.json`'s `market_matrix.counts`.
+  Published counts stay 4 scored / 1 proxy-scored / 8 measured_tick_replay / 11 blocked over 24 cells;
+  the scratch 7/1/8/8 sits under `unpublished_research` with `published: false`.
+- Every source declares `verified_at`; the page prints that field from inside the artefact, says
+  "read - no timestamp published" for `parity-v1.json`, and "unavailable" when a fetch fails.
+
+### What changed on your page
+- A twelfth step, `Fresh-call proof`, between the controller and the evidence, with a claims block on
+  `outcomes` for the three distribution-pending markets and the "not established" advantage row.
+- The challenger notes no longer say the child merely replays a stored call.
+- `#crSources` prints the source stamps; links may name a source instead of spelling a path.
+- `Backtest Engine v2` is the first outbound entry under the rail's `Evidence` heading on all fifteen
+  pages, from the shared partial and builder (21 rail entries, 9 outbound, 0 changes).
+
+### The state-report question, answered
+- `monitor-state.js` is confirmed absent from the repository and from `scripts/`; the brief's name
+  was the only place it existed.
+- `scripts/coordination.js` is real but cannot run from `main`: `docs/orchestration/projects.json`
+  is not committed there, and the tool refuses to run without its registry.
+- The mechanism every lane actually writes is `.local/orchestration/activity/<worker>.json`.
+  `scripts/report_design_state.js` (`npm run report:design-state`) now writes that record atomically
+  and refuses an unknown state; it touches no page, artefact or workflow. The contract is
+  `docs/dashboard-design/BACKTEST_ENGINE_V2_STATUS_CONTRACT.md`.
+
+### Checks, and the two reds that are not this page
+- Control-room guard 9/9 (the two new guards read the source stamps from the files and the
+  fresh-call/readiness text from the artefacts).
+- Shared-nav guard 6/6; builder `--check` 15 pages, 21 rail entries, 9 outbound, 0 changes.
+- Readiness artefact reproduces (`4b4d2aa7...`); readiness suite 8/8 inside `test:usd-l1-platform`.
+- The globe guard (2/2) and the H1 inspector guard (1/1) fail on the release tree **and identically
+  at `origin/main`** (`a591a245`), run from a detached worktree: same names, same assertions. They are
+  the live line's own reds, recorded rather than edited here.

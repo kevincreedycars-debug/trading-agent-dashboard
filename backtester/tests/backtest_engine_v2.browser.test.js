@@ -392,3 +392,81 @@ test("zooming keeps every wire on its port, and Fit puts the flow back", async (
     server.close();
   }
 });
+
+// The page never types a verification date. Each source declares which field of its own artefact carries the
+// time it was built, and this guard reads that field back from the file itself: a source that cannot be read is
+// named as unavailable rather than dropped, and one whose artefact carries no timestamp says so.
+test("every source is stamped by its own artefact, or says it has no timestamp", async () => {
+  const server = await serve();
+  const browser = await chromium.launch({ headless: true });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const { context, view, errors } = await open(browser, base, 1440);
+    const read = await view.evaluate(() => Array.from(document.querySelectorAll(".cr-source")).map(item => ({
+      key: item.dataset.source,
+      state: item.dataset.state,
+      label: item.querySelector(".cr-source-link").textContent.trim(),
+      href: item.querySelector(".cr-source-link").getAttribute("href"),
+      stamp: item.querySelector(".cr-source-stamp").textContent.trim()
+    })));
+    assert.deepEqual(errors, [], "reading the sources must not raise a page or console error");
+    assert.equal(read.length, Object.keys(manifest.sources).length, "every source in the manifest must appear once");
+    for (const entry of read) {
+      const source = manifest.sources[entry.key];
+      assert.equal(entry.label, source.label, `${entry.key} must carry the manifest's label`);
+      assert.equal(entry.href, source.url, `${entry.key} must link to the artefact the manifest names`);
+      if (!source.verified_at) {
+        assert.equal(entry.state, "unstamped", `${entry.key} publishes no timestamp and must say so`);
+        assert.match(entry.stamp, /no timestamp published/i);
+        continue;
+      }
+      const artefact = JSON.parse(fs.readFileSync(path.join(root, source.url), "utf8").replace(/^\uFEFF/, ""));
+      const raw = source.verified_at.split(".").reduce((value, part) => (value == null ? value : value[part]), artefact);
+      assert.ok(raw, `${entry.key} must carry ${source.verified_at}`);
+      assert.equal(entry.state, "read", `${entry.key} was read`);
+      assert.match(entry.stamp, /^verified /, `${entry.key} must show its own verification stamp`);
+    }
+    await context.close();
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+// The two claims the page must keep apart: the fresh-call proof establishes call generation (eight cases, one
+// captured execution) and the readiness counts are the published matrix's, with the scratch 7/1/8/8 kept out.
+test("the fresh-call proof and the published readiness are read from their artefacts", async () => {
+  const fresh = JSON.parse(fs.readFileSync(path.join(root, "data", "usd-layer1-backtester", "n8n", "fresh-call-v1.json"), "utf8").replace(/^\uFEFF/, ""));
+  const readiness = JSON.parse(fs.readFileSync(path.join(root, "data", "usd-layer1-backtester", "market-readiness-v1.json"), "utf8"));
+  const server = await serve();
+  const browser = await chromium.launch({ headless: true });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const { context, view } = await open(browser, base, 1440);
+    await view.click('[data-node="freshcall"]');
+    const freshPanel = await view.evaluate(() => ({
+      state: document.querySelector('[data-node="freshcall"]').dataset.state,
+      body: document.getElementById("crInspectorBody").textContent
+    }));
+    assert.equal(freshPanel.state, "pending", "call generation is complete; the model logic behind it is still pending");
+    for (const token of [fresh.live_call.execution.id, fresh.live_call.child_executions[0].execution_id, fresh.live_call.child_executions[1].execution_id]) {
+      assert.ok(freshPanel.body.includes(token), `the proof must name execution ${token}`);
+    }
+    assert.match(freshPanel.body, /8 of 8 calls/, "the panel must state the rehearsal result in the artefact's own words");
+    assert.doesNotMatch(freshPanel.body, /7 of 8|replays a stored call/i, "the superseded wording must not survive");
+
+    await view.keyboard.press("Escape");
+    await view.click('[data-node="outcomes"]');
+    const outcomes = await view.evaluate(() => document.getElementById("crInspectorBody").textContent);
+    const counts = readiness.published.counts;
+    assert.ok(outcomes.includes(String(counts.scored)), `the panel must show ${counts.scored} scored cells`);
+    assert.ok(outcomes.includes(String(counts.blocked)), `the panel must show ${counts.blocked} blocked cells`);
+    assert.match(outcomes, /pending data distribution/i, "XAG/WTI/GBP direction must wait on the distribution route");
+    assert.match(outcomes, /not established/i, "no cell may claim a predictive advantage");
+    assert.match(outcomes, /unpublished research evidence, not live readiness/i, "the scratch run must be labelled unpublished");
+    await context.close();
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});

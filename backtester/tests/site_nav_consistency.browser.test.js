@@ -142,7 +142,7 @@ test("every page carries the partial's render byte for byte, in the page's own l
   } catch (error) {
     report = error.stdout || "";
   }
-  assert.match(report, /--check: 15 pages, 21 rail entries, 8 outbound, 0 change\(s\)/, "--check must find all fifteen pages current");
+  assert.match(report, /--check: 15 pages, 21 rail entries, 9 outbound, 0 change\(s\)/, "--check must find all fifteen pages current");
   assert.doesNotMatch(report, /: (refreshed|placed)$/m, "no page may still need the block written into it");
   nav.PAGES.forEach(page => {
     const source = read(page.file);
@@ -215,11 +215,11 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     if (variant === "dashboard") {
       assert.deepEqual(entries.map(entry => entry[1]), RAIL_TABS, "the dashboard rail must name the tabs its script knows");
       assert.deepEqual(entries.map(entry => entry[0]), RAIL_TABS.map(() => "data-tab"), "the dashboard rail must drive the views by data-tab");
-      assert.equal((block.match(/<a [^>]*target="_top"/g) || []).length, DOC_HREFS.length, "only the documentation leaves the dashboard, and every link must leave any frame it is shown in");
+      assert.equal((block.match(/<a [^>]*target="_top"/g) || []).length, DOC_HREFS.length + 1, "only the documentation and the control room leave the dashboard, and every link must leave any frame it is shown in");
     } else {
       assert.deepEqual(entries.map(entry => entry[1]), RAIL_HREFS, "the standalone rail must link to the pages and hashes its labels name");
       assert.deepEqual(entries.map(entry => entry[0]), RAIL_HREFS.map(() => "href"), "the standalone rail must be plain links");
-      assert.equal((block.match(/<a [^>]*target="_top"/g) || []).length, RAIL_HREFS.length + DOC_HREFS.length, "every standalone link must leave any frame it is shown in");
+      assert.equal((block.match(/<a [^>]*target="_top"/g) || []).length, RAIL_HREFS.length + DOC_HREFS.length + 1, "every standalone link must leave any frame it is shown in");
     }
   });
 });

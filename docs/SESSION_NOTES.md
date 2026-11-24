@@ -1,5 +1,45 @@
 # Session Notes
 
+2026-11-24, design and coordinator lanes - the Backtest Engine v2 control room is published, and
+the page's statuses are bound to the evidence rather than typed in.
+
+The design lane's `design/backtest-engine-v2` (`13e091d0`) is merged onto the fresh-call lane, which
+landed first as PR #32 (`a591a245`). The view manifest now names ten artefacts and twelve steps: a
+`Fresh-call proof` step sits between the controller and the evidence, reading
+`fresh-call-v1.json` for `recomputed_from_cutoff_inputs`, 8 cases, 8/8 calls, 4/4 scored cases,
+27/110 probes and executions 7260 with children 7261/7262. The step states in its own words that
+this does not establish contemporaneous availability across the 725 mornings; historical
+availability stays a separate `not_established` claim on the sources step.
+
+Readiness is read from a new small artefact, `market-readiness-v1.json`, built by
+`scripts/build_usd_l1_market_readiness.js` from `backtesting-screen-v1.json`'s own
+`market_matrix.counts`. The published counts do not move: 4 scored, 1 proxy-scored, 8 measured by
+tick replay, 11 blocked over 24 cells. The scratch run that read 7/1/8/8 is carried as
+`unpublished_research` with `published: false` and printed only as "unpublished research evidence,
+not live readiness". XAG/WTI/GBP direction cells read `pending_data_distribution` and name the
+acquired rows that wait on the distribution decision; both L2L cells name the missing bid/ask tape
+and pre-session ladder; no cell claims predictive advantage.
+
+The page now prints a sources panel whose verification timestamps are read from each artefact's own
+field (`generated_at`, `frozen_on`, `created_at`), says so where an artefact publishes no timestamp,
+and names an unreadable source as unavailable. Links may name a source instead of spelling a path.
+`Backtest Engine v2` is the first outbound entry under the rail's `Evidence` group on all fifteen
+pages, rendered by the shared-nav partial and its builder.
+
+The missing state-report script is resolved rather than invented: `monitor-state.js` is not in this
+repository, `scripts/coordination.js` cannot run here because `docs/orchestration/projects.json` is
+not on `main`, and `scripts/report_design_state.js` now writes the activity record every lane uses,
+atomically, with `npm run report:design-state`. The contract and the replacement are written down in
+`docs/dashboard-design/BACKTEST_ENGINE_V2_STATUS_CONTRACT.md`; the evidence paths and status
+mappings for the designer are in `docs/dashboard-design/BACKTEST_ENGINE_V2_HANDOFF_20261124.md`.
+
+Checks: `check:usd-l1-fresh-call` reproduces; `test:usd-l1-n8n` 41/41; the readiness artefact
+reproduces (`4b4d2aa7...`); the readiness suite passes 8/8 and is inside `test:usd-l1-platform`;
+the control-room guard passes 9/9; the shared-nav guard 6/6 and its builder reports 15 pages,
+21 rail entries, 9 outbound, 0 changes. Two browser guards fail on the release tree and identically
+at `origin/main` (`a591a245`): the globe's two geometry checks and the H1 inspector's blocker count.
+No workflow was activated, edited or executed.
+
 2026-11-24, USD Layer 1 lane - the matrix went through n8n Cloud, and the three blocked markets got
 their one-hour series.
 

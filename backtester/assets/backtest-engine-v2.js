@@ -44,6 +44,18 @@
     return value;
   }
 
+  // A source's own verification stamp is read inside that artefact, not through the source map, so a
+  // missing field is simply a missing timestamp rather than a failed lookup.
+  function readWithin(value, path) {
+    if (!value || !path) return undefined;
+    let cursor = value;
+    for (const part of String(path).replace(/\[(\d+)\]/g, ".$1").split(".")) {
+      if (cursor === null || cursor === undefined) return undefined;
+      cursor = cursor[part];
+    }
+    return cursor;
+  }
+
   // --- Formatting -------------------------------------------------------
   const COUNT = new Intl.NumberFormat("en-GB");
   const STAMP = new Intl.DateTimeFormat("en-GB", {
@@ -367,7 +379,7 @@
 
   function readableClaims(node) {
     if (!node.claims || !node.claims.length) return null;
-    const box = block("What the evidence claims, and does not");
+    const box = block(node.claims_title || "What the evidence claims, and does not");
     const list = el("div", "cr-claims");
     node.claims.forEach(entry => {
       const status = String(interpolate(entry.status, FLOW.sources) || "").trim();
@@ -396,10 +408,25 @@
     return box;
   }
 
+  // A link may name a source instead of spelling a path, so the artefact's address is declared once in
+  // `sources` and every link that cites it follows the same declaration.
+  function linkTarget(link) {
+    if (link.source) {
+      const source = (FLOW.manifest.sources || {})[link.source];
+      if (!source) return null;
+      return {
+        label: link.label || source.label,
+        href: interpolate(source.url, FLOW.sources),
+        kind: link.kind || "artefact"
+      };
+    }
+    return { label: link.label, href: interpolate(link.href, FLOW.sources), kind: link.kind || "page" };
+  }
+
   function readableLinks(node) {
     const links = (node.links || [])
-      .map(link => ({ label: link.label, href: interpolate(link.href, FLOW.sources), kind: link.kind || "page" }))
-      .filter(link => link.href);
+      .map(linkTarget)
+      .filter(link => link && link.href);
     if (!links.length) return null;
     const box = block("Where it is written down");
     const list = el("div", "cr-links");
@@ -595,6 +622,40 @@
     }
   }
 
+  // --- Sources and their own stamps -------------------------------------
+  // The page never types a verification date: each source declares which field of its own artefact
+  // carries the time it was built, and this panel prints that field or says there is none. A source
+  // that failed to load is named as unavailable rather than quietly left off the page.
+  function renderSources() {
+    const host = document.getElementById("crSources");
+    if (!host) return;
+    host.textContent = "";
+    host.append(el("h2", "cr-sources-title", "Sources, each stamped by its own artefact"));
+    const list = el("ul", "cr-sources-list");
+    for (const [key, source] of Object.entries(FLOW.manifest.sources || {})) {
+      const item = el("li", "cr-source");
+      item.dataset.source = key;
+      const anchor = el("a", "cr-source-link", source.label);
+      anchor.href = source.url;
+      anchor.dataset.kind = "artefact";
+      anchor.target = "_blank";
+      anchor.rel = "noreferrer noopener";
+      item.append(anchor);
+      if (FLOW.failed.includes(key)) {
+        item.dataset.state = "unavailable";
+        item.append(el("span", "cr-source-stamp", "unavailable - the page could not read it"));
+      } else {
+        const stamp = source.verified_at
+          ? formatValue(readWithin(FLOW.sources[key], source.verified_at), "datetime")
+          : null;
+        item.dataset.state = stamp ? "read" : "unstamped";
+        item.append(el("span", "cr-source-stamp", stamp ? `verified ${stamp}` : "read - no timestamp published"));
+      }
+      list.append(item);
+    }
+    host.append(list);
+  }
+
   // --- Wiring the controls ----------------------------------------------
   function wireControls() {
     const zoomIn = document.getElementById("crZoomIn");
@@ -733,6 +794,7 @@
       }
     }));
     renderNodes();
+    renderSources();
     renderInspector(null);
     wireControls();
     applyZoom();
