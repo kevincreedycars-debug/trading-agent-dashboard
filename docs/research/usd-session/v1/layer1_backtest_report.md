@@ -1,6 +1,6 @@
 # Layer 1 backtesting: first evidence report
 
-Schema `layer1-backtest-report.v1`, research only, generated from the stored artefacts on `2026-11-14T00:00:00.000Z`.
+Schema `layer1-backtest-report.v1`, research only, generated from the stored artefacts on `2026-11-23T22:10:00.000Z`.
 
 > One engine now takes both models over the same 725 mornings. No morning is valid for the intended model, the only scored directional test is a broker proxy and sits at a coin flip, and the published artefacts flag more trades than they allow.
 
@@ -547,12 +547,12 @@ Does not license: It does not license treating reconstructed calls as valid call
 
 | Input | Bytes | sha256 |
 | --- | --- | --- |
-| `data/usd-layer1-backtester/run-v1.json` | 7056949 | `adad65fdc7976cd4b70ccfa56c2955e861fa398f06e66f6fa8d2bce275543dc7` |
-| `data/usd-layer1-backtester/engine-v1.json` | 927740 | `f4290bae4ff91a41727f717f0f7138dffedbf8b3e2a3dc824dcdceeb7aeab6c8` |
+| `data/usd-layer1-backtester/run-v1.json` | 7090881 | `90800e10572ac47e83a233c94212953ea43b10f09b4f2add262d4c6b823ebf39` |
+| `data/usd-layer1-backtester/engine-v1.json` | 927740 | `9200982a8cf653fd46ce138c52c29ba1d8dbdbe054ce4400f0279468532cbbb5` |
 | `config/usd_l1_factor_rulebook_v1.json` | 38281 | `1f12c64f019e38056330a8beb3ffb85314e2ff5a25c46af91c18bf078cf9f6a0` |
 | `config/usd_l1_decision_rules_v1.json` | 10240 | `015155d3092d8a6786ce5ce18c2150155bf13c01a37328cfb19336484b974cc8` |
 
-Report digest: `98ca9495ff586382e2d0d8cc9e353c10e5ba92922c97a38b681736454cd70b39`.
+Report digest: `97d04591be93af3236122194948b934e5e3a68a54156e1b5e6c0d6971891dd22`.
 
 The digest is taken over the body before this block; rebuilding the report from the same artefacts reproduces it.
 

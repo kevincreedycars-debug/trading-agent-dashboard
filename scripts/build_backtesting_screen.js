@@ -136,7 +136,11 @@ function build() {
                 status: entry.status,
                 reason: entry.reason || null,
                 scored: entry.scored === undefined ? null : entry.scored,
-                sessions_with_tape_and_ladder: entry.sessions_with_tape_and_ladder === undefined ? null : entry.sessions_with_tape_and_ladder
+                sessions_with_tape_and_ladder: entry.sessions_with_tape_and_ladder === undefined ? null : entry.sessions_with_tape_and_ladder,
+                // The three data axes kept apart: the levels, the tape and the sessions they share. A blocked
+                // cell can then say which of the three is missing instead of the page guessing at one.
+                sessions: entry.sessions || null,
+                blockers: entry.blockers || null
               }
             ])
           )

@@ -525,7 +525,24 @@ test("the market x test matrix is carried to the screen with a reason per blocke
   assert.equal(gbp.tests.direction.status, "blocked");
   assert.match(gbp.tests.direction.reason, /no cached one-hour series/);
   assert.match(gbp.tests.l2l_full_5r.reason, /no 5-minute tape/);
-  const total = matrix.counts.scored + matrix.counts.proxy_scored + matrix.counts.blocked;
+  const total =
+    matrix.counts.scored +
+    matrix.counts.proxy_scored +
+    matrix.counts.measured_tick_replay +
+    matrix.counts.blocked;
   assert.equal(total, 24);
+  // Four markets have both the archived levels and a bid/ask tape over the same six sessions, so their
+  // L2L combinations are measured by the tick replay even though this run's candle lane cannot score them.
+  assert.equal(matrix.counts.measured_tick_replay, 8);
+  const measured = matrix.rows.filter((row) => row.tests.l2l_full_5r.status === "measured_tick_replay");
+  assert.deepEqual(measured.map((row) => row.market), ["EURUSD", "XAUUSD", "NAS100", "BTCUSD"]);
+  for (const row of measured) {
+    const sessions = row.tests.l2l_full_5r.sessions;
+    assert.equal(sessions.levels, 6);
+    assert.equal(sessions.tape, 6);
+    assert.equal(sessions.shared, 6);
+    assert.equal(sessions.tape_bid_ask, true);
+    assert.equal(sessions.tape_source, "tick_replay");
+  }
   assert.match(matrix.note, /never shown as a scored zero/);
 });

@@ -19,14 +19,27 @@
   "current": {
     "artefact_version": "usd-l1-run-v2",
     "path": "data/usd-layer1-backtester/run-v1.json",
-    "bytes": 7056949,
-    "sha256": "adad65fdc7976cd4b70ccfa56c2955e861fa398f06e66f6fa8d2bce275543dc7",
+    "bytes": 7090881,
+    "sha256": "90800e10572ac47e83a233c94212953ea43b10f09b4f2add262d4c6b823ebf39",
     "market_matrix": {
       "id": "usd-l1-matrix-1f943a83989d",
       "primary_market": "DXY",
       "additional_markets": ["EURUSD", "XAUUSD", "XAGUSD", "NAS100", "BTCUSD", "WTIUSD", "GBPUSD"],
-      "combination_count": 24
+      "combination_count": 24,
+      "readiness_counts": {
+        "scored": 4,
+        "proxy_scored": 1,
+        "measured_tick_replay": 8,
+        "blocked": 11
+      }
     },
+    "revisions": [
+      {
+        "on": "2026-11-23",
+        "why": "the L2L tick sweep was re-priced inside the 05:00-to-05:00 London session, and readiness gained a measured_tick_replay status with a per-session reconciliation of levels against tape",
+        "supersession_record": "data/usd-layer1-backtester/l2l-tick-sweep-v1-supersession.json"
+      }
+    ],
     "level_provenance": {
       "mode": "snapshot_pinned",
       "priced_by": "data/usd-layer1-backtester/level-snapshots/l2l-levels-2026-10-04T16-14-19Z.json",
@@ -55,13 +68,22 @@
     "lead_numbers": {
       "dxy_sessions_priced": 205,
       "sessions_with_original_levels": 6,
-      "trades_replayed": "unchanged from the published tick sweep"
+      "trades_replayed": {
+        "value": 153,
+        "targets": 24,
+        "stops": 109,
+        "session_end": 20,
+        "working": 0,
+        "cancelled_at_session_end": 4,
+        "priced_by": "data/usd-layer1-backtester/l2l-tick-sweep-v2.json",
+        "note": "the same 153 closed trades v1 published, re-priced inside their own 05:00 sessions: 9 targets and 11 stops that printed after the endpoint are now session-end closes, and 4 fills that landed in a later session are cancelled"
+      }
     },
     "account": { "starting_balance": 100000, "currency": "GBP", "risk_per_trade_pct": 1 }
   },
   "deliberately_not_done": [
-    "the six-session tick sweep was not re-run against the v2 artefact: its ladder hash and sessions are unchanged and the sweep is already published against the same snapshot",
+    "the six-session tick sweep was first published against this snapshot without re-pricing it; that gap was closed on 2026-11-23 by l2l-tick-sweep-v2 and its supersession record, which re-prices the same decisions inside their own 05:00 session",
     "no new market's direction result is claimed: XAGUSD, WTIUSD and GBPUSD have no cached one-hour series and report blocked",
-    "no L2L combination is scored: the M5 archive holds mid-price bars only and no pre-session ladder for any market"
+    "no L2L combination is scored by this run's candle lane: the four markets with an archived ladder and a bid/ask tape are reported measured_tick_replay against the replay artefact, which is a separate lane"
   ]
 }

@@ -771,7 +771,10 @@ function renderTests(v,s){
       el("td",row.role,tr);
       for(const id of ["direction","l2l_full_5r","l2l_half_3r"]){
         const entry=(row.tests&&row.tests[id])||{};
-        const cell=el("td",(entry.status||"")+(entry.scored?" ("+entry.scored+")":""),tr);
+        const label=String(entry.status||"").replace(/_/g," ");
+        const sessions=id==="direction"?null:entry.sessions||null;
+        const cell=el("td",label+(entry.scored?" ("+entry.scored+")":"")+
+          (sessions?" · "+sessions.shared+" of "+sessions.levels+" sessions":""),tr);
         if(entry.reason)cell.title=entry.reason;
       }
     }

@@ -1037,15 +1037,29 @@ test("the USD chamber opens its library beneath the camera, and one test reaches
       };
     });
     assert.match(t2.note, /Historical, not live/);
-    assert.match(t2.note, /generated 14 Nov 2026/);
+    // The date on the card is the artefact's own stamp, formatted the way the page formats it, so a rebuilt
+    // artefact does not need this guard retyped and cannot silently keep describing an older build.
+    const stampLabel = new Date(usdRun.generated_at)
+      .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
+    assert.match(t2.note, new RegExp(`generated ${stampLabel.replace(/ /g, "\\s")}`));
     assert.deepEqual(t2.headers, ["Model", "Market", "Accuracy", "Scored sessions"]);
-    const expectedRows = Object.values(usdRun.tests.four_markets.models.current.markets).map(market => [
-      "Current model",
-      market.label,
-      `${market.overall.accuracy_pct.toFixed(2)}%`,
-      String(market.overall.scored)
-    ]);
-    assert.deepEqual(t2.rows, expectedRows, "the rendered T2 rows match the committed artefact");
+    // The card renders the four markets that carry a scored denominator. Three configured markets report
+    // zero scored sessions and a null accuracy, and a null must never be printed as 0.00%.
+    const expectedRows = Object.values(usdRun.tests.four_markets.models.current.markets)
+      .filter(market => Number.isFinite(market.overall.accuracy_pct))
+      .map(market => [
+        "Current model",
+        market.label,
+        `${market.overall.accuracy_pct.toFixed(2)}%`,
+        String(market.overall.scored)
+      ]);
+    const rowsByMarket = rows =>
+      Object.fromEntries(rows.map(([model, market, accuracy, scored]) => [market, { model, accuracy, scored }]));
+    assert.deepEqual(
+      rowsByMarket(t2.rows),
+      rowsByMarket(expectedRows),
+      "the rendered T2 rows match the committed artefact's scored markets"
+    );
     assert.equal(t2.href, "data/usd-layer1-backtester/run-v1.json");
     assert.equal((await statusesOf(page, [t2.href]))[t2.href], 200);
 

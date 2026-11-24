@@ -305,17 +305,28 @@ function describeMatrix(matrix, { source = null, sha256: hash = null } = {}) {
 /**
  * Evaluate every combination against the data this checkout actually holds.
  *
+ * Three axes are kept apart because they fail apart: the levels (an archived ladder marked before the
+ * session), the tape (a 5-minute path with both sides of the book), and whether the two share a session.
+ * A market can have one, the other, neither, or both without overlapping - and each of those is a
+ * different missing dataset with a different action.
+ *
+ * A session set priced by the tick replay is reported as `measured_tick_replay`, not as scored: the replay
+ * is its own lane, its own artefact and its own account walk, and this run's candle lane has still not
+ * scored the combination.
+ *
  * @param {object} options
  * @param {object} options.matrix a validated matrix.
  * @param {object} [options.seriesByMarket] market key -> readable series or null.
- * @param {object} [options.m5ByMarket] market key -> `{ sessions }` when a 5-minute tape exists.
- * @param {object} [options.ladderByMarket] market key -> `{ sessions }` when a pre-session ladder applies.
+ * @param {object} [options.m5ByMarket] market key -> `{ sessions, dates, bid_ask, source }`.
+ * @param {object} [options.ladderByMarket] market key -> `{ sessions, dates }` when a pre-session ladder applies.
  * @returns {object} one row per market with a status and reason per test, plus counts.
  */
 function evaluateReadiness({ matrix, seriesByMarket = {}, m5ByMarket = {}, ladderByMarket = {} }) {
   const rows = [];
-  const counts = { ready: 0, blocked: 0, proxy_ready: 0 };
-  const perTest = Object.fromEntries(TEST_IDS.map((id) => [id, { ready: 0, blocked: 0, proxy_ready: 0 }]));
+  const counts = { ready: 0, blocked: 0, proxy_ready: 0, measured_tick_replay: 0 };
+  const perTest = Object.fromEntries(
+    TEST_IDS.map((id) => [id, { ready: 0, blocked: 0, proxy_ready: 0, measured_tick_replay: 0 }])
+  );
 
   for (const market of matrix.markets) {
     const series = seriesByMarket[market.key] || null;
@@ -348,6 +359,17 @@ function evaluateReadiness({ matrix, seriesByMarket = {}, m5ByMarket = {}, ladde
       const ladderDates = ladder && Array.isArray(ladder.dates) ? ladder.dates : [];
       const shared = tapeDates.filter((date) => ladderDates.includes(date));
       const tapeUsable = Boolean(m5) && tapeDates.length > 0 && m5.bid_ask !== false;
+      const sessions = {
+        levels: ladderDates.length,
+        tape: tapeDates.length,
+        shared: shared.length,
+        levels_dates: ladderDates.slice(),
+        tape_dates: tapeDates.slice(),
+        shared_dates: shared.slice(),
+        tape_bid_ask: Boolean(m5 && m5.bid_ask === true),
+        tape_source: m5 && m5.source ? m5.source : null,
+        tape_rule: m5 && m5.rule ? m5.rule : null
+      };
       if (!tapeUsable) {
         blockers.push(m5 && (m5.mid_tape_sessions || 0) > 0 ? REASONS.no_actionable_bid_ask_tape : REASONS.no_m5_tape);
       }
@@ -358,6 +380,7 @@ function evaluateReadiness({ matrix, seriesByMarket = {}, m5ByMarket = {}, ladde
           status: "blocked",
           reason: `${market.label}: ${blockers.join("; ")}`,
           blockers,
+          sessions,
           m5_sessions: tapeDates.length,
           mid_tape_sessions: m5 ? m5.mid_tape_sessions || 0 : 0,
           bid_ask: m5 ? m5.bid_ask !== false : false,
@@ -366,10 +389,28 @@ function evaluateReadiness({ matrix, seriesByMarket = {}, m5ByMarket = {}, ladde
         };
         counts.blocked += 1;
         perTest[testId].blocked += 1;
+      } else if (m5.source === "tick_replay") {
+        // The tape and the ladder share sessions and the tick replay has already priced them. That is a
+        // measurement, not this run's score, so it carries its own status and its own session count.
+        tests[testId] = {
+          status: "measured_tick_replay",
+          reason:
+            `${market.label}: priced by the ${shared.length}-session tick replay against the archived ladder; ` +
+            "this run's candle lane has not scored the combination",
+          sessions,
+          m5_sessions: tapeDates.length,
+          mid_tape_sessions: 0,
+          bid_ask: true,
+          ladder_sessions: ladderDates.length,
+          sessions_with_tape_and_ladder: shared.length
+        };
+        counts.measured_tick_replay += 1;
+        perTest[testId].measured_tick_replay += 1;
       } else {
         tests[testId] = {
           status: "ready",
           reason: null,
+          sessions,
           m5_sessions: tapeDates.length,
           mid_tape_sessions: m5.mid_tape_sessions || 0,
           bid_ask: true,
@@ -409,7 +450,7 @@ function evaluateReadiness({ matrix, seriesByMarket = {}, m5ByMarket = {}, ladde
  * @returns {object} the same block with scored rows and their counts.
  */
 function applyRunResults(readiness, results = {}) {
-  const counts = { scored: 0, ready: 0, blocked: 0, proxy_scored: 0, proxy_ready: 0 };
+  const counts = { scored: 0, ready: 0, blocked: 0, proxy_scored: 0, proxy_ready: 0, measured_tick_replay: 0 };
   const rows = readiness.rows.map((row) => {
     const tests = {};
     for (const [testId, entry] of Object.entries(row.tests)) {
