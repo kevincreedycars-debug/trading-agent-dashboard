@@ -87,15 +87,15 @@
 .site-nav.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;padding:0 24px;background:rgba(5,8,13,.92);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(18px)}
 .site-nav.topbar .topbar-brand{color:#f5f8fc;font-family:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif;font-size:15px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
 .site-nav.topbar .topbar-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px}
-.site-nav.topbar .topbar-meta span{border:1px solid rgba(255,255,255,.08);border-radius:999px;color:#d8e4f3;background:rgba(7,11,17,.84);font-family:"IBM Plex Mono",Consolas,monospace;font-size:10px;padding:3px 9px;white-space:nowrap}
+.site-nav.topbar .topbar-meta span{border:1px solid rgba(255,255,255,.08);border-radius:999px;color:#d8e4f3;background:rgba(7,11,17,.84);font-family:"IBM Plex Mono",Consolas,monospace;font-size:12px;padding:3px 9px;white-space:nowrap}
 .site-nav.topbar .topbar-dual-clock{font-variant-numeric:tabular-nums}
 .site-nav.side-rail{display:flex;flex-direction:column;min-width:0;padding:18px 12px 16px;border-right:1px solid rgba(142,169,198,.15);background:linear-gradient(180deg,rgba(12,18,27,.98),rgba(7,12,19,.99))}
 .site-nav .side-rail-head{display:flex;align-items:center;gap:10px;min-width:0;padding:0 8px 18px;border-bottom:1px solid rgba(142,169,198,.13)}
-.site-nav .side-rail-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(236,182,85,.42);border-radius:8px;background:rgba(185,137,39,.12);color:#f2c86f;font-family:"IBM Plex Mono",Consolas,monospace;font-size:10px;font-weight:700;letter-spacing:.08em}
+.site-nav .side-rail-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(236,182,85,.42);border-radius:8px;background:rgba(185,137,39,.12);color:#f2c86f;font-family:"IBM Plex Mono",Consolas,monospace;font-size:12px;font-weight:700;letter-spacing:.04em}
 .site-nav .side-rail-label,.site-nav .side-rail-group,.site-nav .side-rail-foot{font-family:"IBM Plex Mono",Consolas,monospace;text-transform:uppercase}
-.site-nav .side-rail-label{min-width:0;color:#e9f0f8;font-size:11px;font-weight:700;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-label{min-width:0;color:#e9f0f8;font-size:12px;font-weight:700;letter-spacing:.06em;overflow-wrap:anywhere}
 .site-nav .side-rail-tabs{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0;margin:0;padding:15px 0;overflow-y:auto;overflow-x:hidden;border:0;border-radius:0;background:transparent;box-shadow:none}
-.site-nav .side-rail-group{display:block;margin:14px 8px 6px;color:#697f96;font-size:9px;font-weight:700;letter-spacing:.14em}
+.site-nav .side-rail-group{display:block;margin:14px 8px 6px;color:#7c92a9;font-size:12px;font-weight:700;letter-spacing:.1em}
 .site-nav .side-rail-group:first-child{margin-top:0}
 .site-nav .side-rail-tabs .tab-button{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 14px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;text-transform:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
 .site-nav .side-rail-tabs .tab-button::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:transparent}
@@ -106,8 +106,12 @@
    the link blue and an arrow sits at the right edge where a tab shows nothing. */
 .site-nav .side-rail-tabs .side-rail-link{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 28px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
 .site-nav .side-rail-tabs .side-rail-link::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:rgba(94,161,255,.8)}
-.site-nav .side-rail-tabs .side-rail-link::after{content:"\2197";position:absolute;top:50%;right:11px;transform:translateY(-50%);color:#7fade8;font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;line-height:1}
+.site-nav .side-rail-tabs .side-rail-link::after{content:"\2197";position:absolute;top:50%;right:11px;transform:translateY(-50%);color:#7fade8;font-family:"IBM Plex Mono",Consolas,monospace;font-size:12px;line-height:1}
 .site-nav .side-rail-tabs .side-rail-link:hover,.site-nav .side-rail-tabs .side-rail-link:focus-visible{border-color:rgba(94,161,255,.3);background:rgba(78,113,150,.18);color:#f2f7fb}
+/* Keyboard focus, drawn inside the entry. Both shapes of the rail clip their own overflow - the column hides
+   anything past its width, the strip anything past its height - so a ring outside the box is cut away and a
+   keyboard reader sees nothing move. One rule over the bar and the rail, so focus speaks with one voice there. */
+.site-nav :is(a,button,summary):focus-visible{outline:2px solid #a8c8ff;outline-offset:-2px}
 /* Old documentation: a native details disclosure keeps the eight retired bar links one click away without
    a script and without spending bar width. The summary takes a rail item's shape, the chevron replaces the
    outbound arrow (nothing leaves the dashboard until a child link is chosen), and the links keep the full
@@ -115,12 +119,12 @@
 .site-nav .side-rail-details{display:block;min-width:0;margin:0}
 .site-nav .side-rail-tabs .side-rail-details-summary{list-style:none;padding-right:30px}
 .site-nav .side-rail-tabs .side-rail-details-summary::-webkit-details-marker{display:none}
-.site-nav .side-rail-tabs .side-rail-details-summary::after{content:"\25BE";font-size:10px;transition:transform 160ms ease}
+.site-nav .side-rail-tabs .side-rail-details-summary::after{content:"\25BE";font-size:12px;transition:transform 160ms ease}
 .site-nav .side-rail-details[open] > .side-rail-details-summary::after{transform:translateY(-50%) rotate(180deg)}
 .site-nav .side-rail-details-body{display:flex;flex-direction:column;gap:2px;margin:2px 0 4px;padding-left:10px}
-.site-nav .side-rail-details-body .side-rail-link{min-height:32px;padding-top:7px;padding-bottom:7px;font-size:11.5px}
+.site-nav .side-rail-details-body .side-rail-link{min-height:32px;padding-top:7px;padding-bottom:7px;font-size:12px}
 .site-nav .side-rail-details-body .side-rail-link::before{top:7px;bottom:7px;background:rgba(94,161,255,.45)}
-.site-nav .side-rail-foot{display:flex;align-items:center;gap:8px;min-width:0;padding:14px 8px 0;border-top:1px solid rgba(142,169,198,.13);color:#8095aa;font-size:9px;font-weight:600;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-foot{display:flex;align-items:center;gap:8px;min-width:0;padding:14px 8px 0;border-top:1px solid rgba(142,169,198,.13);color:#8095aa;font-size:12px;font-weight:600;letter-spacing:.06em;overflow-wrap:anywhere}
 .site-nav .side-rail-status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#48c69a;box-shadow:0 0 12px rgba(72,198,154,.62)}
 @media (min-width:901px){
 .site-nav.side-rail{position:sticky;top:42px;height:calc(100vh - 42px)}
@@ -143,7 +147,7 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 .site-nav .side-rail-tabs .side-rail-details-summary{width:auto;min-height:34px;padding:8px 12px;white-space:nowrap}
 .site-nav .side-rail-details-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px;width:min(280px,calc(100vw - 32px));margin:4px 0 0;padding:4px;border:1px solid rgba(94,161,255,.22);border-radius:9px;background:#0a1018}
 .site-nav .side-rail-details[open] > .side-rail-details-body{position:fixed;top:99px;right:12px;left:auto;z-index:24;width:min(300px,calc(100vw - 24px));max-height:calc(100vh - 111px);margin:0;overflow-y:auto;box-shadow:0 18px 36px rgba(0,0,0,.48)}
-.site-nav .side-rail-details-body .side-rail-link{min-height:32px;padding:7px 8px;font-size:11px;white-space:normal}
+.site-nav .side-rail-details-body .side-rail-link{min-height:32px;padding:7px 8px;font-size:12px;white-space:normal}
 .site-nav .side-rail-details-body .side-rail-link::before{top:auto;right:7px;bottom:0;left:7px;width:auto;height:2px}
 }
 @media (max-width:780px){
