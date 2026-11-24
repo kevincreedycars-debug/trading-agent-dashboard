@@ -60,36 +60,56 @@ inputs, decision, measurement, proof; 12 cards. The inspector is `sticky` at 144
 
 - `node --test backtester/tests/backtest_engine_v2.browser.test.js` - 11 of 11 pass, including the 12px floor,
   the focus ring drawn inside the control, the sheet opening and Escape putting both away, zoom keeping every
-  wire on its port, and the fresh-call and readiness reads.
+  wire on its port, and the fresh-call and readiness reads. The drift guard added after publishing makes it
+  12 of 12, run green before it was pushed.
 - `node scripts/test-local.js browser` - 149 of 155 pass; the six failures are in other lanes' pages
   (`backtesting_h1`, `dashboard_globe_landmasses` twice, `live_trading_chart_zoom`, `refresh_progress`,
   `research_library`). They are data- and timing-dependent, they differ between two consecutive runs (9 then
   6), and none of them loads this page or this stylesheet.
 - Nothing outside this checkout was read for the change, and nothing outside it was written.
 
-## 6. Preview
+## 6. Published - what is now served
 
-`node scripts/research-library-server.js --serve-repo --port 8799 --root <temp folder>` - the library root was
-moved to a temp folder so the service token is not written into the checkout. Page:
-`http://127.0.0.1:8799/backtest-engine-v2.html` answers 200; the stylesheet is served at 33,267 bytes.
+Pushed on the user's go-ahead, two commits, one purpose each, rebased onto the live tip and fetched again
+immediately before each push:
+
+- `bfb6586a` - design: rebuild the Backtest Engine v2 page as one grouped control room (page, stylesheet,
+  script line, this note).
+- `2fe975fa` - design: fail the suite if the control room drifts back to an older sheet (browser guard only).
+
+Read back over HTTPS after the Pages build:
+
+| Served | Bytes | sha256 |
+| --- | --- | --- |
+| `backtest-engine-v2.html` | 21,356 | `A6E59C17C6AA3CA9B57F352DC27BD48CA05B39F1EE1FE87CE8E22B45FB081ABD` |
+| `backtester/assets/backtest-engine-v2.css` | 32,437 | `4D2F845DC01555BB5476B1FD4B4F1BB0B8BB145031EFFE0BD6355FC24BE884C9` |
+
+Both digests are the files in this checkout with the line endings the Pages build strips (21,650 and 33,267
+bytes on disk), so what is served is byte-for-byte this lane's work. Rendering the live page: 1440 is 2,818
+pixels tall with four bands, twelve steps, no sideways scroll and no console error; 390 is 4,018 pixels with
+the same bands and no sideways scroll.
+
+The stylesheet and script are now also requested as `?v=20261124-cr-v2-3`, so a reader who saw the old sheet
+is not shown it again from cache.
+
+`node scripts/research-library-server.js --serve-repo --port 8799 --root <temp folder>` served the preview
+this was checked on, from the checkout, before publishing.
 
 The state report named in the brief (`scripts/monitor-state.js`) is not present in this checkout, and the
 monitor is off-limits to this lane, so no state line was written there; this note is the record instead.
 
 ## 7. Pending
 
-1. Publish: `git fetch origin`, rebase onto the live tip, re-run the page's browser test in the same change,
-   fetch again, `git push origin HEAD:main`. Needs the user's go-ahead; the push makes the site live.
-2. After publishing: record the served page's size and digest, and add a browser assertion that fails if the
-   page drifts back to the old stylesheet (the 12px floor and the inside focus ring are already asserted).
-3. Status contract: which fields read as verified rather than "Not verified" is still the coordinator's call
-   (`BACKTEST_ENGINE_V2_STATUS_CONTRACT.md`). The restyle shows whatever the manifest and the artefacts say
-   today and does not invent a state.
+1. Status contract: which fields read as verified rather than "Not verified" is still the coordinator's call
+   (`BACKTEST_ENGINE_V2_STATUS_CONTRACT.md`). The page shows whatever the manifest and the artefacts say
+   today and does not invent a state. A wording change here would be a separate change with its own commit.
+2. The twelve-pixel floor, the inside focus ring, the translucent band surface, the four distinct band
+   accents and the versioned stylesheet ask are all now asserted, so a drift back to the fixed faults fails
+   the suite rather than waiting to be noticed.
 
 ## 8. Risk to flag
 
 An earlier `git reset --hard origin/main` in this worktree may have discarded uncommitted work by other lanes.
-`git status` here now shows only the two files above, the new note, and three untracked documents
-(`ASTRA_BRIEFING_20261107.md`, `README.md`, `mobile-scope.md`) that were already untracked and that this lane
-will not stage.
+`git status` here shows nothing pending but three untracked documents (`ASTRA_BRIEFING_20261107.md`,
+`README.md`, `mobile-scope.md`) that were already untracked and that this lane did not stage.
 
