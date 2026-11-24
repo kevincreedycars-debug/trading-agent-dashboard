@@ -6,6 +6,20 @@
     "intro": "One page for the whole evidence path: what a morning is read from, which frozen rules decide it, which workflows run it, what scores it, and what the published evidence still does not claim. Every state below is read from a published artefact when this page opens, so no state is typed in by hand and none can drift away from the file it came from.",
     "note": "Research only. Nothing here is published as a live call, sizes a position or places a trade, and no figure on this page is an edge claim."
   },
+  "dimensions": [
+    { "key": "software", "label": "Software", "short": "Sof", "summary": "The code exists in this checkout and its own checks pass." },
+    { "key": "deployed", "label": "Deployed", "short": "Dep", "summary": "That exact build runs in n8n Cloud, and an execution shows it answering." },
+    { "key": "data", "label": "Data", "short": "Dat", "summary": "The morning values and outcomes the step consumes are present and scored." },
+    { "key": "research", "label": "Research", "short": "Res", "summary": "The claim the step supports has been independently adjudicated, not merely reproduced." }
+  ],
+  "defaults": {
+    "readiness": {
+      "deployed": {
+        "rules": [{ "state": "inactive" }],
+        "note": "This step runs in the checkout rather than as a deployed Cloud workflow, so deployment is not counted here."
+      }
+    }
+  },
   "sources": {
     "evidence": { "url": "data/usd-layer1-backtester/n8n-execution-evidence-v1.json", "label": "n8n execution evidence", "verified_at": "generated_at" },
     "retrieval": { "url": "data/usd-layer1-backtester/input-retrieval-v1.json", "label": "Input retrieval", "verified_at": "generated_at" },
@@ -254,7 +268,16 @@
             { "if": { "path": "evidence.workflows.parent.id", "op": "exists" }, "state": "complete" },
             { "state": "unknown" }
           ],
-          "note": "The parent is deployed, and every node and code blob was read back and compared with the committed files after the write."
+          "note": "Every node and code blob of the parent was read back and compared with the committed files after the write."
+        },
+        "deployed": {
+          "rules": [
+            { "if": { "path": "freshcall.deployed_identity.parent_workflow_id", "op": "exists" }, "state": "complete" },
+            { "if": { "path": "evidence.workflows.parent.id", "op": "exists" }, "state": "pending" },
+            { "state": "unknown" }
+          ],
+          "note": "The captured execution {{freshcall.live_call.execution.id}} names this parent ({{freshcall.deployed_identity.parent_workflow_id}}, {{freshcall.deployed_identity.parent_workflow_name}}) and the children it called, running the recorded bundle {{freshcall.deployed_identity.bundle_version}}.",
+          "quote": { "path": "freshcall.live_call.workflow.name", "from": "freshcall" }
         },
         "data": {
           "rules": [
@@ -303,7 +326,16 @@
             { "if": { "path": "evidence.workflows.children.0.active", "op": "eq", "value": true }, "state": "complete" },
             { "state": "pending" }
           ],
-          "note": "Deployed and active. It carries an execute-workflow trigger only, so it cannot start itself."
+          "note": "The adapter is committed and its rules are exercised by the replay checks. It carries an execute-workflow trigger only, so it cannot start itself."
+        },
+        "deployed": {
+          "rules": [
+            { "if": { "path": "freshcall.live_call.child_executions[model=challenger].execution_id", "op": "exists" }, "state": "complete" },
+            { "if": { "path": "freshcall.live_call.execution.id", "op": "exists" }, "state": "pending" },
+            { "state": "unknown" }
+          ],
+          "note": "Captured as child execution {{freshcall.live_call.child_executions[model=challenger].execution_id}} of parent {{freshcall.live_call.execution.id}} on {{freshcall.live_call.captured_at|datetime}}, returning the same call the recomputation derives from the cutoff inputs.",
+          "quote": { "path": "freshcall.answer", "from": "freshcall" }
         },
         "data": {
           "rules": [
@@ -350,7 +382,16 @@
             { "if": { "path": "evidence.workflows.children.1.active", "op": "eq", "value": true }, "state": "complete" },
             { "state": "pending" }
           ],
-          "note": "Deployed and active, with an execute-workflow trigger only."
+          "note": "The adapter is committed and the specification check exercises its written rules. It carries an execute-workflow trigger only."
+        },
+        "deployed": {
+          "rules": [
+            { "if": { "path": "freshcall.live_call.child_executions[model=challenger_v1].execution_id", "op": "exists" }, "state": "complete" },
+            { "if": { "path": "freshcall.live_call.execution.id", "op": "exists" }, "state": "pending" },
+            { "state": "unknown" }
+          ],
+          "note": "Captured as child execution {{freshcall.live_call.child_executions[model=challenger_v1].execution_id}} of parent {{freshcall.live_call.execution.id}} on {{freshcall.live_call.captured_at|datetime}}, returning the same call the recomputation derives from the cutoff inputs.",
+          "quote": { "path": "freshcall.answer", "from": "freshcall" }
         },
         "data": {
           "rules": [
@@ -399,7 +440,15 @@
             { "if": { "path": "evidence.workflows.children.2.active", "op": "eq", "value": true }, "state": "complete" },
             { "state": "pending" }
           ],
-          "note": "Deployed and active, so the plumbing is proven with a model that cannot be mistaken for research."
+          "note": "The constant answer is registered as a fixture in every artefact it touches, and its code is committed with the pair."
+        },
+        "deployed": {
+          "rules": [
+            { "if": { "path": "evidence.workflows.children.2.active", "op": "eq", "value": true }, "state": "complete" },
+            { "state": "pending" }
+          ],
+          "note": "Present in Cloud as a child workflow and active, so the pair's plumbing is proven with a model that cannot be mistaken for research; its research dimension stays inactive by design.",
+          "quote": { "path": "evidence.workflows.children.2.name", "from": "evidence" }
         },
         "data": {
           "rules": [
@@ -571,9 +620,35 @@
               "state": "unknown"
             }
           ],
-          "note": "The rehearsal reproduces the published call from stripped inputs and the captured execution agrees with the rehearsal; the verdict's blocking list holds {{freshcall.verdict.blocking|count}} entries.",
+          "note": "The rehearsal reproduces the published call from stripped inputs; the verdict's blocking list holds {{freshcall.verdict.blocking|count}} entries.",
           "quote": {
             "path": "freshcall.answer",
+            "from": "freshcall"
+          }
+        },
+        "deployed": {
+          "rules": [
+            {
+              "if": {
+                "path": "freshcall.live_call.execution.id",
+                "op": "exists"
+              },
+              "state": "complete"
+            },
+            {
+              "if": {
+                "path": "freshcall.rehearsal.execution_context",
+                "op": "exists"
+              },
+              "state": "pending"
+            },
+            {
+              "state": "unknown"
+            }
+          ],
+          "note": "Captured as Cloud execution {{freshcall.live_call.execution.id}} on {{freshcall.live_call.captured_at|datetime}}: the parent ran the pinned bundle {{freshcall.deployed_identity.bundle_version}} and its child returned the same call the rehearsal derives. The rehearsal itself spends no Cloud execution.",
+          "quote": {
+            "path": "freshcall.live_call.workflow.name",
             "from": "freshcall"
           }
         },

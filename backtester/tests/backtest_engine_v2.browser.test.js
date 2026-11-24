@@ -62,6 +62,8 @@ function readFlow(page) {
         chip: text(chip),
         chipState: chip ? chip.dataset.state : null,
         pips: Array.from(node.querySelectorAll(".cr-pip")).map(pip => pip.dataset.state),
+        dimensions: Array.from(node.querySelectorAll(".cr-pip")).map(pip => pip.dataset.dimension),
+        pipLabel: node.querySelector(".cr-pips") ? node.querySelector(".cr-pips").getAttribute("aria-label") : null,
         kind: text(node.querySelector(".cr-node-kind") || node.querySelector(".cr-kind")),
         band: node.closest(".cr-band").dataset.band,
         outPort: !!node.querySelector(".cr-port-out") && node.querySelector(".cr-port-out").offsetParent !== null,
@@ -182,8 +184,8 @@ test("the page draws the bands, steps and state words the manifest writes", asyn
   }
 });
 
-// The badge is the worst of the three dimensions, never better than any one of them, and the three are always
-// shown so the badge cannot hide a stronger statement than the one it makes.
+// The badge is the worst of the manifest's dimensions, never better than any one of them, and every
+// dimension is always shown so the badge cannot hide a stronger statement than the one it makes.
 test("no step claims more than its own dimensions show", async () => {
   const server = await serve();
   const browser = await chromium.launch({ headless: true });
@@ -192,7 +194,8 @@ test("no step claims more than its own dimensions show", async () => {
     const { context, view } = await open(browser, base, 1440);
     const flow = await readFlow(view);
     flow.nodes.forEach(node => {
-      assert.equal(node.pips.length, 3, `${node.id} must show software, data and research unsummarised`);
+      assert.equal(node.pips.length, manifest.dimensions.length, `${node.id} must show every declared dimension unsummarised`);
+      assert.deepEqual(node.dimensions, manifest.dimensions.map(entry => entry.key), `${node.id} must keep the manifest's dimension order`);
       const named = node.pips.filter(state => state !== "inactive");
       const worst = named.length ? STATE_RANK.find(state => named.includes(state)) : "inactive";
       assert.equal(node.state, worst, `${node.id} must read ${worst}, the worst of its own dimensions`);
@@ -203,6 +206,76 @@ test("no step claims more than its own dimensions show", async () => {
     server.close();
   }
 });
+
+// Deployment is its own dimension: a step can exist and be checked in this checkout without that exact build
+// having run in Cloud, and the captured execution is the only thing allowed to say it has. The evidence is
+// read from fresh-call-v1.json - the parent id, the pinned bundle and each child execution - never typed here.
+test("deployment is read as its own dimension, from the captured execution", async () => {
+  const fresh = JSON.parse(fs.readFileSync(path.join(root, "data", "usd-layer1-backtester", "n8n", "fresh-call-v1.json"), "utf8").replace(/^\uFEFF/, ""));
+  const child = model => fresh.live_call.child_executions.find(entry => entry.model === model);
+  const server = await serve();
+  const browser = await chromium.launch({ headless: true });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const { context, view } = await open(browser, base, 1440);
+    const flow = await readFlow(view);
+    assert.deepEqual(
+      manifest.dimensions.map(entry => entry.key),
+      ["software", "deployed", "data", "research"],
+      "deployment must be named between the code that exists and the data it reads"
+    );
+
+    const freshcall = flow.nodes.find(node => node.id === "freshcall");
+    assert.equal(freshcall.pips[1], "complete", "the captured execution proves the pinned bundle ran");
+    assert.equal(
+      freshcall.pipLabel,
+      "Software: Complete, Deployed: Complete, Data: Complete, Research: Pending",
+      "the pips must spell out the dimension each letter stands for"
+    );
+    assert.doesNotMatch(
+      manifest.nodes.find(node => node.id === "freshcall").readiness.software.note,
+      /captured execution agrees/,
+      "the software note must stop claiming the capture now that deployment is its own dimension"
+    );
+
+    await view.click('[data-node="freshcall"]');
+    const proof = await view.evaluate(() => ({
+      body: document.getElementById("crInspectorBody").textContent,
+      rows: Array.from(document.querySelectorAll(".cr-readiness-row")).map(row => row.dataset.dimension)
+    }));
+    assert.deepEqual(rowsOf(proof.rows), ["software", "deployed", "data", "research"], "the panel must show all four dimensions");
+    assert.match(proof.body, new RegExp(`Cloud execution ${fresh.live_call.execution.id}`), "the deployed row must name the parent execution");
+    assert.ok(proof.body.includes(fresh.deployed_identity.bundle_version), "the deployed row must name the bundle that ran");
+
+    await view.click('[data-node="controller"]');
+    const controller = await view.evaluate(() => document.getElementById("crInspectorBody").textContent);
+    assert.ok(controller.includes(fresh.deployed_identity.parent_workflow_id), "the controller's deployed row must name the workflow that ran");
+    assert.ok(controller.includes(fresh.deployed_identity.parent_workflow_name), "the controller's deployed row must name it in words as well");
+
+    await view.click('[data-node="challenger-v0"]');
+    const v0 = await view.evaluate(() => document.getElementById("crInspectorBody").textContent);
+    assert.ok(v0.includes(child("challenger").execution_id), "v0 must name its own child execution");
+    await view.click('[data-node="challenger-v1"]');
+    const v1 = await view.evaluate(() => document.getElementById("crInspectorBody").textContent);
+    assert.ok(v1.includes(child("challenger_v1").execution_id), "v1 must name its own child execution");
+
+    await view.click('[data-node="sources"]');
+    const sources = await view.evaluate(() => ({
+      body: document.getElementById("crInspectorBody").textContent,
+      deployed: document.querySelector('[data-node="sources"] .cr-pip[data-dimension="deployed"]').dataset.state
+    }));
+    assert.equal(sources.deployed, "inactive", "a step that runs in the checkout must not borrow a deployment it does not have");
+    assert.match(sources.body, /runs in the checkout rather than as a deployed Cloud workflow/);
+    await context.close();
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+function rowsOf(rows) {
+  return rows.filter((value, index) => rows.indexOf(value) === index);
+}
 
 // Every line must join a port, and a port must exist only where a line joins it: a wire ending in mid-air or a
 // port with nothing attached are the two ways this drawing goes wrong when a gap or a span changes.

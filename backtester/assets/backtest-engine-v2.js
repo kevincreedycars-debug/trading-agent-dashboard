@@ -15,12 +15,27 @@
 
   const MANIFEST_URL = "backtester/assets/backtest-engine-v2.manifest.json";
   const STATE_RANK = ["blocked", "stale", "pending", "unknown", "complete"];
-  const DIMENSIONS = [
-    ["software", "Software"],
-    ["data", "Data"],
-    ["research", "Research"]
+  // The manifest declares the readiness dimensions and may give a step a default for one it does not write.
+  // The fallback keeps a manifest written before that block readable rather than blank.
+  const FALLBACK_DIMENSIONS = [
+    ["software", "Software", "Sof"],
+    ["data", "Data", "Dat"],
+    ["research", "Research", "Res"]
   ];
   const FLOW = { zoom: 1, selection: null, manifest: null, sources: {}, loaded: 0, failed: [] };
+
+  function dimensions() {
+    const declared = (FLOW.manifest && FLOW.manifest.dimensions) || [];
+    if (!declared.length) return FALLBACK_DIMENSIONS;
+    return declared.map(entry => [entry.key, entry.label, entry.short || entry.label.slice(0, 3)]);
+  }
+
+  function dimensionOf(node, key) {
+    const own = node.readiness && node.readiness[key];
+    if (own) return own;
+    const defaults = (FLOW.manifest && FLOW.manifest.defaults && FLOW.manifest.defaults.readiness) || {};
+    return defaults[key] || null;
+  }
 
   // --- Fetching ---------------------------------------------------------
   async function fetchJson(url) {
@@ -31,29 +46,48 @@
 
   // --- Reading a path ---------------------------------------------------
   // "evidence.claims.consistency.status", "retrieval.capture_corpus.entries",
-  // "evidence.workflows.children[0].url" and "evidence.workflows.children.length" all read the same way.
+  // "evidence.workflows.children[0].url", "freshcall.live_call.child_executions[model=challenger].id"
+  // and "evidence.workflows.children.length" all read the same way: a bracketed number indexes an array,
+  // and a bracketed "field=value" picks the first record whose field carries that value.
+  function segments(path) {
+    return String(path)
+      .replace(/\[(\d+)\]/g, ".$1.")
+      .replace(/\[([^\[\]]+)\]/g, ".$1.")
+      .split(".")
+      .filter(Boolean);
+  }
+
+  function walk(value, path) {
+    if (!path) return undefined;
+    let cursor = value;
+    for (const part of segments(path)) {
+      if (cursor === null || cursor === undefined) return undefined;
+      if (Array.isArray(cursor) && /^\d+$/.test(part)) {
+        cursor = cursor[Number(part)];
+        continue;
+      }
+      if (Array.isArray(cursor) && part.includes("=")) {
+        const [field, ...rest] = part.split("=");
+        const wanted = rest.join("=");
+        cursor = cursor.find(item => item && String(item[field]) === wanted);
+        continue;
+      }
+      cursor = cursor[part];
+    }
+    return cursor;
+  }
+
   function readPath(path, sources) {
-    const parts = String(path).replace(/\[(\d+)\]/g, ".$1").split(".");
+    const parts = segments(path);
     const root = parts.shift();
     if (!(root in sources)) return undefined;
-    let value = sources[root];
-    for (const part of parts) {
-      if (value === null || value === undefined) return undefined;
-      value = value[part];
-    }
-    return value;
+    return walk(sources[root], parts.join("."));
   }
 
   // A source's own verification stamp is read inside that artefact, not through the source map, so a
   // missing field is simply a missing timestamp rather than a failed lookup.
   function readWithin(value, path) {
-    if (!value || !path) return undefined;
-    let cursor = value;
-    for (const part of String(path).replace(/\[(\d+)\]/g, ".$1").split(".")) {
-      if (cursor === null || cursor === undefined) return undefined;
-      cursor = cursor[part];
-    }
-    return cursor;
+    return walk(value, path);
   }
 
   // --- Formatting -------------------------------------------------------
@@ -165,11 +199,11 @@
   }
 
   // One step's state is the first state it can claim, worst first: blocked, stale, pending, unknown,
-  // complete. A step whose three dimensions are all deliberately not counted reads inactive. The three
-  // dimensions themselves are always shown unsummarised in the panel, so the badge never hides a stronger
+  // complete. A step whose dimensions are all deliberately not counted reads inactive. The dimensions
+  // themselves are always shown unsummarised in the panel, so the badge never hides a stronger
   // statement than the one it makes.
   function stepState(node) {
-    const states = DIMENSIONS.map(([key]) => readiness(node.readiness[key], FLOW.sources));
+    const states = dimensions().map(([key]) => readiness(dimensionOf(node, key), FLOW.sources));
     if (states.every(state => state === "inactive")) return { state: "inactive", dimensions: states };
     return { state: STATE_RANK.find(candidate => states.includes(candidate)) || "unknown", dimensions: states };
   }
@@ -266,10 +300,16 @@
     button.append(foot);
 
     const pips = el("div", "cr-pips");
-    DIMENSIONS.forEach(([key, name], index) => {
-      const pip = el("span", "cr-pip", name.slice(0, 3));
+    pips.setAttribute("role", "img");
+    pips.setAttribute("aria-label", dimensions()
+      .map(([key, name], index) => `${name}: ${legendLabel(state.dimensions[index])}`)
+      .join(", "));
+    dimensions().forEach(([key, name, short], index) => {
+      const pip = el("span", "cr-pip", short);
+      pip.dataset.dimension = key;
       pip.dataset.state = state.dimensions[index];
       pip.title = `${name}: ${legendLabel(state.dimensions[index])}`;
+      pip.setAttribute("aria-hidden", "true");
       pips.append(pip);
     });
     button.append(pips);
@@ -299,10 +339,11 @@
   function readability(node) {
     const box = block("Readiness");
     const list = el("div", "cr-readiness");
-    DIMENSIONS.forEach(([key, name]) => {
-      const dimension = node.readiness[key];
+    dimensions().forEach(([key, name]) => {
+      const dimension = dimensionOf(node, key);
       if (!dimension) return;
       const row = el("div", "cr-readiness-row");
+      row.dataset.dimension = key;
       const head = el("div", "cr-readiness-head");
       head.append(el("span", "cr-readiness-name", name), chip(readiness(dimension, FLOW.sources)));
       row.append(head);
@@ -606,6 +647,25 @@
     });
   }
 
+  // The dimension key names each axis a badge is read on, so a pip's three letters are never the only word
+  // for one. The manifest owns the names; this only lays them out.
+  function renderDimensionKey() {
+    const host = document.getElementById("crDimensions");
+    if (!host) return;
+    host.textContent = "";
+    host.append(el("h2", "cr-dimensions-title", "Readiness dimensions, each read separately"));
+    const list = el("div", "cr-dimensions-list");
+    dimensions().forEach(([key, name, short]) => {
+      const declared = (FLOW.manifest.dimensions || []).find(item => item.key === key);
+      const item = el("div", "cr-dimension");
+      item.dataset.dimension = key;
+      item.append(el("span", "cr-dimension-short", short), el("span", "cr-dimension-name", name));
+      if (declared && declared.summary) item.append(el("span", "cr-dimension-summary", declared.summary));
+      list.append(item);
+    });
+    host.append(list);
+  }
+
   function updateStatus() {
     const hint = document.getElementById("crHint");
     const total = Object.keys((FLOW.manifest && FLOW.manifest.sources) || {}).length;
@@ -783,6 +843,7 @@
     }
     renderHead();
     renderLegend();
+    renderDimensionKey();
     const entries = Object.entries(FLOW.manifest.sources || {});
     await Promise.all(entries.map(async ([key, source]) => {
       try {

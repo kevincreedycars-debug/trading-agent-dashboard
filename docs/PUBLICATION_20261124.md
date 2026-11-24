@@ -54,6 +54,9 @@ A headless Chromium read of the published URL, at 1440x900, recorded:
   "unpublished research evidence, not live readiness".
 
 The missing-evidence path was exercised rather than assumed: with `market-readiness-v1.json`
+blocked, the page read `12 steps - 9 of 10 artefacts read - 1 unavailable`, the readiness source
+said `unavailable - the page could not read it`, and the outcomes step read `unknown` with
+software complete and data/research unknown. Nothing was filled in or guessed.
 
 ## Status source and update mechanism
 
@@ -125,6 +128,35 @@ next branch should be rebased onto `4ba73ac7` so the two lanes stop diverging.
 
 No trading workflow was activated, edited or executed by this publication.
 
-blocked, the page read `12 steps - 9 of 10 artefacts read - 1 unavailable`, the readiness source
-said `unavailable - the page could not read it`, and the outcomes step read `unknown` with
-software complete and data/research unknown. Nothing was filled in or guessed.
+## Post-publication updates, 2026-11-24
+
+Two focused changes were published after this record was written, and neither was the designer's
+queued tip.
+
+**PR #36 (`34c62426`, design lane).** A 2px focus ring drawn inside the shared rail entry, so the
+rail's own clipping cannot cut it away, and a 12px floor on every word in the block and on the
+control-room page (chips, pips, badges, stamps, group headings, clocks). It adds two guards:
+`backtester/tests/backtest_engine_v2.browser.test.js` (no word under 12px, ring visible inside the
+control at 1440 and 390) and the same promises for the shared block in
+`backtester/tests/site_nav_consistency.browser.test.js`. No number, label, route or anchor changed.
+
+**PR #37 (`release/bev2-deployed-dim`).** Deployment verification is now its own readiness dimension
+rather than a sentence inside `software`: the chip is the worst of `software`, `deployed`, `data` and
+`research`, and `deployed` is complete only where `fresh-call-v1.json` names the parent workflow, the
+pinned bundle and the child execution that answered. The seven steps that run in the checkout take
+`defaults.readiness.deployed` (`inactive`, with the reason), so no step can borrow a deployment it
+does not have. This answers the four reconciliation points above in one place - one fresh-call step,
+one source list, one readiness source, and a decision on the fourth dimension - on top of `main`
+rather than by merging `7ba4fc82`, whose manifest and guards the release has since moved past.
+
+**Data work in the same release.** The readiness builder read `licence.status` from the acquisition
+record, which carries `position` instead, so every held market published `licence: null`. It now
+publishes the position ("the rows are a licensed quote history"); the artefact rebuilds to
+`readiness_sha256` `d3e3778b434b452e5ffe0828b380fc63defa579a5d6a919859310d45b41cad16`. The new
+`tests/h1_oanda_acquisition.test.js` binds the record to the readiness copy of it (rows, hashes,
+endpoint coverage, licence), checks the Friday-endpoint rule in the record's own missing list, and
+refuses a committed CSV. Published counts do not move: 4/1/8/11, with 7/1/8/8 still unpublished.
+
+**Shared baseline.** `docs/dashboard-design/SHARED_BASELINE_20261124.md` is now the single record both
+lanes read before their next edit: the commit, the four dimensions, the numbers and their non-claims,
+the rules for the next design branch, and the open blockers.

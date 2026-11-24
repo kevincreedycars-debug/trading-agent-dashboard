@@ -1,5 +1,38 @@
 # Session Notes
 
+2026-11-24 (publication close), coordinator lane - deployment is a visible dimension, the design
+lane's accessibility pass is published, and one baseline is recorded for both lanes.
+
+The design lane's `6b686088` (visible keyboard focus drawn inside the rail entry, a 12px floor on
+every word in the block and on the control-room page) was reviewed and published as PR #36
+(`34c62426`): the nav builder reproduces 15 pages / 21 rail entries / 9 outbound / 0 changes, the page
+guard is 11/11 and the shared-nav guard 7/7. Its commit states the deployment dimension was left
+alone; that was correct, and `7ba4fc82` was still not merged.
+
+Deployment verification is now its own readiness dimension (`software`, `deployed`, `data`,
+`research`) rather than a claim inside `software`. It is `complete` only where `fresh-call-v1.json`
+names the parent workflow `89uk5JnPbWPL5lGD`, bundle `usd-l1-cloud-runtime-v3`, parent execution
+`7260` and the child (`7261`, `7262`) that answered; the seven steps that run in the checkout take a
+manifest default of `inactive`, so no step borrows a deployment it does not have. Paths may select an
+array record by field, which is how each challenger reads its own child execution. The page prints a
+dimension key, gives the pips an accessible name and keeps the chip as the worst of the four. That
+answers the four reconciliation points recorded for `7ba4fc82` without merging it.
+
+Data work in the same release: the readiness builder asked the acquisition record for `licence.status`
+where it carries `position`, so each held market published `licence: null`. It now publishes the
+licensed-quote-history position; the artefact rebuilds to `readiness_sha256` `d3e3778b...`; and
+`tests/h1_oanda_acquisition.test.js` binds the record to the readiness copy (rows, hashes, endpoint
+coverage, licence), keeps the published counts at 4/1/8/11 with 7/1/8/8 unpublished, applies the
+Friday-endpoint rule to the record's own missing list and refuses a committed CSV. `test:usd-session`
+carries it.
+
+Shared baseline: `docs/dashboard-design/SHARED_BASELINE_20261124.md` - the commit, the four
+dimensions, the numbers and non-claims, the rules for the next design branch, and the open blockers.
+
+Checks: engine browser 11/11, shared nav 7/7, readiness 8/8, acquisition 4/4,
+`screen:backtesting:check` and both the readiness and fresh-call checks reproduce, nav builder 0
+changes. Live read-back is recorded in `docs/PUBLICATION_20261124.md`.
+
 2026-11-24, design and coordinator lanes - the Backtest Engine v2 control room is published, and
 the page's statuses are bound to the evidence rather than typed in.
 
