@@ -5,3 +5,7 @@
 The renderer groups existing technical manifest nodes into visual stages. This is a conceptual explanation, not a one-to-one n8n execution graph. Group badges take the most restrictive member evidence state. Unknown evidence stays unknown. The public page performs no workflow execution.
 
 Next action: user reviews visual fidelity before any new coordinator integration.
+
+Correction (2026-11-24, later the same day): the user ruled that this page remains part of the live
+dashboard, so the simplified navigation described above was removed and the shared bar and rail restored. The
+drawing was left untouched. See `BACKTEST_ENGINE_V2_SHARED_NAV_20261124.md`.
