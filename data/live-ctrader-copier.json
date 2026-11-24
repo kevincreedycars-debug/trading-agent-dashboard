@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-24T20:20:22.208Z",
+  "generated_at_utc": "2026-11-24T20:30:22.335Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,8 +12,8 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-24T20:19:21.968453Z",
-    "positions_seen": 1
+    "probed_at_utc": "2026-11-24T20:29:22.073426Z",
+    "positions_seen": 0
   },
   "destination": {
     "login": 7348195,
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-24T20:20:21.801Z",
+    "read_at_utc": "2026-11-24T20:30:21.962Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -44,17 +44,17 @@
     "heartbeat": {
       "state": "ok",
       "label": "OK",
-      "age_seconds": 60,
-      "last_poll_utc": "2026-11-24T20:19:22.164Z",
-      "last_success_utc": "2026-11-24T20:19:22.164Z",
-      "detail": "the last poll finished 60s ago and reported ok"
+      "age_seconds": 59,
+      "last_poll_utc": "2026-11-24T20:29:22.874Z",
+      "last_success_utc": "2026-11-24T20:29:22.874Z",
+      "detail": "the last poll finished 59s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-24T20:19:22.164Z",
-    "last_success_utc": "2026-11-24T20:19:22.164Z",
+    "last_poll_utc": "2026-11-24T20:29:22.874Z",
+    "last_success_utc": "2026-11-24T20:29:22.874Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-24T20:19:21.165Z",
-      "finished_utc": "2026-11-24T20:19:22.164Z",
+      "started_utc": "2026-11-24T20:29:21.032Z",
+      "finished_utc": "2026-11-24T20:29:22.874Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -63,22 +63,10 @@
           "login": 511428614,
           "server": "FTMO-Server"
         },
-        "positions": 1,
-        "rows": [
-          {
-            "ticket": "310363052",
-            "symbol": "BTCUSD",
-            "side": "buy",
-            "volume": 0.01,
-            "entry": 59830.8,
-            "current": 59665.94,
-            "stop": 59544.77,
-            "target": 61290.61,
-            "open_time_utc": "2026-11-24T19:14:51Z"
-          }
-        ],
+        "positions": 0,
+        "rows": [],
         "cause": null,
-        "probed_at_utc": "2026-11-24T20:19:21.968453Z",
+        "probed_at_utc": "2026-11-24T20:29:22.073426Z",
         "orders": [
           {
             "ticket": "310279363",
@@ -96,41 +84,41 @@
       "destination": {
         "account_id": "42585819",
         "symbols": [
-          "BTCUSD",
-          "EURUSD"
+          "EURUSD",
+          "BTCUSD"
         ],
         "references": {
-          "BTCUSD": 59666.2,
-          "EURUSD": 1.09671
+          "EURUSD": 1.09669,
+          "BTCUSD": 59504.32
         },
         "exposure": {
-          "BTCUSD": {
-            "positions": 1,
-            "orders": 0
-          },
           "EURUSD": {
             "positions": 0,
             "orders": 1
+          },
+          "BTCUSD": {
+            "positions": 0,
+            "orders": 0
           }
         },
         "spec_summary": {
-          "BTCUSD": {
-            "digits": 2,
-            "lotSizeBtc": 1,
-            "volumeScale": 100,
-            "minVolume": 0.01,
-            "maxVolume": 5,
-            "volumeStep": 0.01,
-            "tradeMode": "full",
-            "minStopDistance": 0,
-            "minStopPercent": null
-          },
           "EURUSD": {
             "digits": 5,
             "lotSizeBtc": 100000,
             "volumeScale": 10000000,
             "minVolume": 0.01,
             "maxVolume": 1000,
+            "volumeStep": 0.01,
+            "tradeMode": "full",
+            "minStopDistance": 0,
+            "minStopPercent": null
+          },
+          "BTCUSD": {
+            "digits": 2,
+            "lotSizeBtc": 1,
+            "volumeScale": 100,
+            "minVolume": 0.01,
+            "maxVolume": 5,
             "volumeStep": 0.01,
             "tradeMode": "full",
             "minStopDistance": 0,
@@ -161,26 +149,29 @@
         "filled": 0,
         "gone": 0
       },
-      "notes": []
+      "notes": [
+        "ticket 310363052: position 62489603 was absent from the BTCUSD read and the broker's own record says it closed at 2026-11-24T20:29:17.387Z; the mapping is retired to history and its slot is free",
+        "1 mapping(s) released to history on the broker's own record; 1 remain live"
+      ]
     }
   },
   "account": {
-    "balance": 23701.13,
-    "equity": 23699.84,
+    "balance": 23697.88,
+    "equity": 23697.88,
     "equity_basis": "broker balance plus the open positions marked at the broker's own reference price",
     "equity_estimated": true,
     "currency": "USD",
     "leverage": 100,
     "money_digits": 2,
-    "open_positions": 1,
+    "open_positions": 0,
     "pending_orders": 1,
-    "closed_trades": 22,
-    "read_at_utc": "2026-11-24T20:20:21.801Z"
+    "closed_trades": 23,
+    "read_at_utc": "2026-11-24T20:30:21.962Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-25T20:20:21.801Z",
-    "to_utc": "2026-11-24T20:20:21.801Z"
+    "from_utc": "2026-10-25T20:30:21.962Z",
+    "to_utc": "2026-11-24T20:30:21.962Z"
   },
   "closed_trades": [
     {
@@ -798,6 +789,34 @@
       "source_ticket": "310305463",
       "source_symbol": "BTCUSD",
       "digits": 2
+    },
+    {
+      "position_id": "62489603",
+      "symbol": "BTCUSD",
+      "side": "buy",
+      "volume_lots": 0.01,
+      "price_open": 59830.8,
+      "price_close": 59543.57,
+      "opened": {
+        "time_utc": "2026-11-24T17:14:51.610Z"
+      },
+      "closed": {
+        "time_utc": "2026-11-24T20:29:17.387Z"
+      },
+      "duration_seconds": 11666,
+      "profit": -2.87,
+      "commission": -0.57,
+      "swap": 0,
+      "net_profit": -3.44,
+      "deal_count": 2,
+      "comment": "lim-310363052",
+      "order_id": "178775799",
+      "dashboard_asset": "BTCUSD",
+      "copy_kind": "copy",
+      "copy_label": "Copied from FTMO-1",
+      "source_ticket": "310363052",
+      "source_symbol": "BTCUSD",
+      "digits": 2
     }
   ],
   "setup_tests": {
@@ -1159,22 +1178,23 @@
       "source_symbol": "BTCUSD",
       "symbol": "BTCUSD",
       "side": "buy",
-      "status": "open",
-      "status_detail": null,
+      "status": "closed",
+      "status_detail": "closed on the destination: destination_closed",
       "volume_lots": 0.01,
       "protocol_units": 1,
       "base_units": 0.01,
-      "entry_price": 59830.8,
+      "entry_price": null,
       "stop_price": 59544.77,
-      "target_price": 61290.61,
+      "target_price": null,
       "expiry_utc": null,
-      "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
+      "expiry_note": "market order: there was no expiry",
       "order_kind": "limit",
       "target_order_id": "178775799",
       "sltp_utc": null,
       "last_partial_utc": null,
       "request_id": "lim-310363052",
       "copied_utc": "2026-11-24T17:12:21.950Z",
+      "closed_utc": "2026-11-24T20:29:17.387Z",
       "reconciled": false
     }
   ],
@@ -1196,18 +1216,18 @@
   "verification": [
     {
       "behaviour": "Copying a filled FTMO-1 position",
-      "state": "broker_observed",
-      "detail": "broker read 2026-11-24T20:20:21.801Z: #62489603 BTCUSD buy 0.01 lot from source 310363052"
+      "state": "awaiting_live_proof",
+      "detail": "no copy is open on the destination in this read"
     },
     {
       "behaviour": "Size conversion through the destination contract",
-      "state": "broker_observed",
-      "detail": "the adapter regression sends 0.01 lot of EURUSD as 100,000 protocol units, XAUUSD as 100, BTCUSD as 1 and the index as 1 on this account; the open copies above read back at 0.01 lot"
+      "state": "tested",
+      "detail": "the adapter regression sends 0.01 lot of EURUSD as 100,000 protocol units, XAUUSD as 100, BTCUSD as 1 and the index as 1 on this account"
     },
     {
       "behaviour": "Stop carried at entry",
-      "state": "broker_observed",
-      "detail": "the broker holds the stop the copier sent, placed as a distance from the destination's own reference price, so it differs from the source stop by the fill"
+      "state": "tested",
+      "detail": "the market send carries a stop derived from the destination reference; no open copy proves it on this read"
     },
     {
       "behaviour": "Amending a stop or target after the copy",
@@ -1217,7 +1237,7 @@
     {
       "behaviour": "Copying a resting source order",
       "state": "broker_observed",
-      "detail": "the mapping for order 178348935 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178349950 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178453658 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178454788 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178464128 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178676877 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178696276 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178730908 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178775799 BTCUSD limit records a broker order the copier placed, still working"
+      "detail": "the mapping for order 178348935 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178349950 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178453658 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178454788 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178464128 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178676877 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178696276 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178730908 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178775799 BTCUSD limit records a broker order the copier placed, no longer working"
     },
     {
       "behaviour": "Cancelling a resting source order",
@@ -1232,7 +1252,7 @@
     {
       "behaviour": "Full close after a source exit",
       "state": "broker_observed",
-      "detail": "#62272218 XAUUSD closed at 3626.39 on 2026-11-19T21:42:26.546Z, net 40.77 in the account's own deals, from source 309101669; #62272219 EURUSD closed at 1.09847 on 2026-11-20T06:12:21.795Z, net -1 in the account's own deals, from source 309180633; #62308557 EURUSD closed at 1.09783 on 2026-11-20T15:05:27.748Z, net -0.08 in the account's own deals, from source 309462132; #62309024 XAUUSD closed at 3583.21 on 2026-11-20T15:00:11.833Z, net -14.36 in the account's own deals, from source 309464502; #62322343 EURUSD closed at 1.09775 on 2026-11-20T17:42:24.582Z, net -0.16 in the account's own deals, from source 309523908; #62322344 XAUUSD closed at 3566.62 on 2026-11-22T23:07:23.045Z, net 9.41 in the account's own deals, from source 309523915; #null BTCUSD closed in the account's own deals, from source 309636663; #62352837 BTCUSD closed at 59839.59 on 2026-11-22T08:31:26.477Z, net -0.58 in the account's own deals, from source 309640315; #62357296 XAUUSD closed at 3587.23 on 2026-11-23T02:09:53.976Z, net 18.5 in the account's own deals, from source 309663598; #62448129 BTCUSD closed at 59542.97 on 2026-11-24T10:49:22.881Z, net -3.47 in the account's own deals, from source 310153561; #62456195 BTCUSD closed at 59830.26 on 2026-11-24T15:15:22.642Z, net -0.59 in the account's own deals, from source 310196099; #62477067 BTCUSD closed at 59542.53 on 2026-11-24T16:02:55.527Z, net -2.42 in the account's own deals, from source 310305463"
+      "detail": "#62272218 XAUUSD closed at 3626.39 on 2026-11-19T21:42:26.546Z, net 40.77 in the account's own deals, from source 309101669; #62272219 EURUSD closed at 1.09847 on 2026-11-20T06:12:21.795Z, net -1 in the account's own deals, from source 309180633; #62308557 EURUSD closed at 1.09783 on 2026-11-20T15:05:27.748Z, net -0.08 in the account's own deals, from source 309462132; #62309024 XAUUSD closed at 3583.21 on 2026-11-20T15:00:11.833Z, net -14.36 in the account's own deals, from source 309464502; #62322343 EURUSD closed at 1.09775 on 2026-11-20T17:42:24.582Z, net -0.16 in the account's own deals, from source 309523908; #62322344 XAUUSD closed at 3566.62 on 2026-11-22T23:07:23.045Z, net 9.41 in the account's own deals, from source 309523915; #null BTCUSD closed in the account's own deals, from source 309636663; #62352837 BTCUSD closed at 59839.59 on 2026-11-22T08:31:26.477Z, net -0.58 in the account's own deals, from source 309640315; #62357296 XAUUSD closed at 3587.23 on 2026-11-23T02:09:53.976Z, net 18.5 in the account's own deals, from source 309663598; #62448129 BTCUSD closed at 59542.97 on 2026-11-24T10:49:22.881Z, net -3.47 in the account's own deals, from source 310153561; #62456195 BTCUSD closed at 59830.26 on 2026-11-24T15:15:22.642Z, net -0.59 in the account's own deals, from source 310196099; #62477067 BTCUSD closed at 59542.53 on 2026-11-24T16:02:55.527Z, net -2.42 in the account's own deals, from source 310305463; #62489603 BTCUSD closed at 59543.57 on 2026-11-24T20:29:17.387Z, net -3.44 in the account's own deals, from source 310363052"
     }
   ],
   "symbols": [
@@ -1267,7 +1287,7 @@
       "target_symbol": "BTCUSD",
       "mapped": true,
       "excluded": false,
-      "held": true,
+      "held": false,
       "digits": 2,
       "lot_units": 1,
       "protocol_units_per_lot": 100,
