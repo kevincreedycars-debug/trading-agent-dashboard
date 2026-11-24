@@ -19,6 +19,62 @@ It does not modify:
 - live dashboard rendering
 - live signal workflows
 
+## Current implementation status (measured 2026-11-21, re-verified 2026-11-22)
+
+The retrieval side of this plan is no longer a design. `lib/layer1_backtesting/input_retrieval.js` already
+reads the contract's declared sources, walks the committed panel and reports one row per key per morning in
+`data/usd-layer1-backtester/input-retrieval-v1.json`. The current count is 30 keys and 20,775 reconstructed
+values; challenger and challenger_v1 each declare 9 keys and 6,224 values, and fixture_constant declares 1
+key and 717 values. What none of them has is a contemporaneous receipt: the capture directory is empty, so
+every row says `reconstructed_panel` and `availability_claim: not_established`.
+
+That distinction is the boundary of this plan. The code can consume a capture corpus unchanged; the work
+below is acquiring the data, not writing a second retriever.
+
+| Need | Already present | Still missing | Acquisition that closes it |
+| --- | --- | --- | --- |
+| 05:00 macro inputs | contract v2, declared provider/series/transform, panel values, per-key clocks, staleness, conflict and late-capture states | a receipted capture taken at or before the cutoff | archive one `usd-l1-input-capture-v1` document per morning into `data/usd-layer1-backtester/captures/` |
+| Tests 3 and 4 (L2L) | path engine, account accounting and M5 coverage card | a bid/ask M5 tape and a level ladder marked before the session | acquire broker M5 bid/ask history and snapshot the marking tool at 04:55 London |
+| Test 1 and Factor 5 | labelled broker `DXY.cash` proxy, FRED broad-dollar substitute | licensed ICE cash DXY history | an ICE sample or licence; keep the proxy labelled until then |
+| H1 eligibility | rule resolutions and the gold/calendar blockers named | gold identity/licence and calendar vintage | settle D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md`, then populate the declared series |
+| Costs and equity | configurable `zero` and labelled `fixture_costs` schedules | a broker schedule with a source and date | commit the broker's commission and spread schedule, labelled as such |
+| Benchmark context | hourly ADR study under its own label | nothing required for this plan | keep it excluded from the four-tests figures |
+
+`data/usd-layer1-backtester/run-v1.json` is a 725-morning reconstruction, not an availability record. The
+M5 status card is a two-and-a-half-day sample with 0 bid/ask series and 0 pre-session ladders; the six
+verified EUR/USD trades prove that the tape can reproduce a recorded execution, not that a strategy was
+tested.
+
+### Capture document the retriever accepts
+
+The capture corpus is deliberately small and auditable. Each file is one morning:
+
+```json
+{
+  "schema_version": "usd-l1-input-capture-v1",
+  "date": "YYYY-MM-DD",
+  "cutoff_at_utc": "YYYY-MM-DDTHH:MM:SSZ",
+  "captured_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "entries": [
+    {
+      "key": "vix_level",
+      "value": 17.42,
+      "captured_at": "YYYY-MM-DDTHH:MM:SSZ",
+      "publication_at": "YYYY-MM-DDTHH:MM:SSZ",
+      "provider": "FRED",
+      "series": "VIXCLS",
+      "receipt_id": "provider-or-archive-receipt"
+    }
+  ]
+}
+```
+
+The harness treats a capture as usable only when its date is real, its schema matches, `captured_at` is at
+or before `cutoff_at_utc`, its value equals the committed panel value, and a `receipt_id` is present. A
+capture after the cutoff, a value that disagrees with the panel, a missing receipt and a `fixture: true`
+file are each reported as their own state rather than repaired. The capture is evidence of what was known;
+it is never back-dated, and a missing key remains missing.
+
 ## USD Phase 1 Logic Scope
 
 The current USD logic uses these main factor families:
@@ -737,13 +793,25 @@ Highest risks:
 
 ---
 
-## Exact Next Implementation Step
+## Exact Next Acquisition Steps
 
-After this plan, the next implementation step should be:
+The retrieval, specification-check, accounting and test-selection code is built. Do not duplicate it. The
+next work is acquisition, in this order:
 
-1. create the acquisition-tracking doc-backed source manifest plan for the minimum viable sources
-2. create the generic raw warehouse SQL tables
-3. import only the minimum viable USD raw series and curated event CSV
-4. then build the USD historical snapshot population logic
+1. **Receipted 05:00 captures.** Start with the nine keys the challenger declares. Write one
+   `usd-l1-input-capture-v1` file per morning, with provider receipt ids and `captured_at` before the cutoff.
+   Re-run `input_retrieval.js` and confirm the affected rows change from `reconstructed_panel` to
+   `contemporaneous_capture` without any other row moving.
+2. **Tests 3 and 4 data.** Obtain broker M5 bid/ask history for EUR/USD, gold, NAS100 and BTC/USD, plus a
+   pre-session ladder snapshot. Until both exist, the modules must stay `blocked_on_history`; do not relax the
+   readiness rule or price a trade from mid OHLC plus a spread column.
+3. **ICE DXY.** Licence or obtain a sample of the ICE cash DXY history for test 1. Keep the broker
+   `DXY.cash` and FRED `DTWEXBGS` substitutions labelled separately.
+4. **H1 eligibility inputs.** Settle the gold identity/licence and the calendar vintage (D5 and D6 in
+   `H1_RULE_RESOLUTIONS_20261120.md`), then populate the declared series and re-measure the 0-of-725 eligible
+   mornings.
+5. **Broker cost schedule.** Commit a dated, sourced schedule before any historical equity curve is called a
+   result; until then the fixture schedule stays labelled.
 
-Do not build verdict replay before the minimum viable raw source set exists.
+Only after those datasets exist should the next snapshot population run be treated as a historical verdict
+replay. Do not build verdict replay before the minimum viable raw source set exists.

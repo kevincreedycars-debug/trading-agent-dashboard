@@ -155,7 +155,17 @@ test("the controller accepts a caller's own adapter and does not require a built
   const report = controller.runBacktest({ dataset, adapter: constant, dates: ["2024-01-03"] });
   assert.equal(report.layer1.id, "test_constant");
   assert.equal(report.decisions[0].status, "allowed");
-  assert.deepEqual(report.decisions[0].results, { EURUSD: "hit", XAUUSD: "hit", BTCUSD: "hit", NAS100: "hit" });
+  // Every additional market the configured matrix declares is scored; the three with no cached series report
+  // no_outcome rather than disappearing from the result.
+  assert.deepEqual(report.decisions[0].results, {
+    EURUSD: "hit",
+    XAUUSD: "hit",
+    XAGUSD: "no_outcome",
+    NAS100: "hit",
+    BTCUSD: "hit",
+    WTIUSD: "no_outcome",
+    GBPUSD: "no_outcome"
+  });
   assert.throws(() => controller.resolveLayer1({ id: "broken" }), /missing label, version, evaluate\(\), inputKeys\[\]/);
 });
 
@@ -330,7 +340,8 @@ test("the n8n summary is the controller summary on allowed and blocked mornings"
     model: "challenger",
     from: "2024-01-02",
     to: "2024-01-31",
-    validation: "structural"
+    validation: "structural",
+    markets: dataset.market_matrix.additional_markets
   };
   const report = controller.runBacktest({
     dataset,
@@ -338,6 +349,7 @@ test("the n8n summary is the controller summary on allowed and blocked mornings"
     dates: ["2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-08", "2024-01-09"],
     includeDecisions: true
   });
+  console.error("DBG", report.decisions.length, JSON.stringify(report.decisions.map((d) => d.tests && d.tests.scored_markets ? d.tests.scored_markets.length : null)), JSON.stringify(Object.keys(report.summary.markets).length));
   const published = runSummariseCode(report.decisions, config);
   assert.deepEqual(JSON.parse(JSON.stringify(published.summary)), report.summary);
   assert.equal(published.summary.sessions, 6);

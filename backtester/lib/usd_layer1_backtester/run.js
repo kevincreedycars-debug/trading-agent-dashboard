@@ -32,6 +32,8 @@ const ruleWiring = require("./rule_wiring");
 const cutoffModule = require("./cutoff_study");
 const de2y = require("./de_2y");
 const levelProvenanceModule = require("./level_provenance");
+const levelSnapshotsModule = require("./level_snapshots");
+const marketMatrixModule = require("./market_matrix");
 const { buildExecutionDemo } = require("./demo");
 const votesModule = require("../../../lib/usd_l1_votes");
 
@@ -40,7 +42,14 @@ const LADDER_PATHS = Object.freeze([
   path.join("data", "l2l-levels.json"),
   path.join("backtester", "tmp", "usd-session-research", "raw", "main", "data__l2l-levels.json")
 ]);
-const TICK_SWEEP_PATH = path.join("data", "usd-layer1-backtester", "l2l-tick-sweep-v1.json");
+const TICK_SWEEP_PATH = path.join("data", "usd-layer1-backtester", "l2l-tick-sweep-v2.json");
+/** The sweep v2 replaced. v1 stays on disk byte for byte, and the record beside it says what moved. */
+const TICK_SWEEP_SUPERSEDED_PATH = path.join("data", "usd-layer1-backtester", "l2l-tick-sweep-v1.json");
+const TICK_SWEEP_SUPERSESSION_PATH = path.join(
+  "data",
+  "usd-layer1-backtester",
+  "l2l-tick-sweep-v1-supersession.json"
+);
 
 /**
  * Every derived value the two models read, saved beside each session so the day can be re-run from the
@@ -82,59 +91,57 @@ const SAVED_INPUT_KEYS = Object.freeze([
 /** The inputs the panel prints with their source and print date in the worked-call view. */
 const TRACED_INPUT_KEYS = Object.freeze([...new Set([...SAVED_INPUT_KEYS, "nasdaq100_price"])]);
 
-const MARKET_SERIES_FILES = Object.freeze({
-  EURUSD: "oanda_eur_usd_h1.csv",
-  XAUUSD: "oanda_xau_usd_h1.csv",
-  BTCUSD: "binance_btcusdt_1h.csv",
-  NAS100: "oanda_nas100_usd_h1.csv"
+/** Series the models read as inputs, independent of which markets are scored. */
+const MODEL_SERIES = Object.freeze({
+  gold: "oanda_xau_usd_h1.csv",
+  nasdaq100: "oanda_nas100_usd_h1.csv"
 });
 
-/** Load every series the run needs, and say which ones were absent. */
-function loadSeries(rootDir) {
-  const cacheDir = path.join(rootDir, "backtester", "tmp");
+/**
+ * Load every declared market's series, and the two model-input series.
+ *
+ * The matrix names every file, so a market added to the configuration is loaded without touching this
+ * function. A file that is absent is left null rather than borrowed from a neighbouring market: the
+ * readiness table reports that market's combinations as blocked with the missing file named.
+ */
+function loadSeries(rootDir, matrix) {
   const seriesByMarket = {};
   const provenance = [];
-  for (const market of contracts.MARKETS) {
-    const file = path.join(cacheDir, MARKET_SERIES_FILES[market.key]);
+  for (const market of matrix.markets) {
+    const file = path.resolve(rootDir, market.series_file);
     const series = inputs.readHourlySeries(file);
     seriesByMarket[market.key] = series;
     if (series) {
       provenance.push({
-        ...inputs.describeFile(file, `${market.label} one-hour closes, used for the session outcome`),
+        ...inputs.describeFile(
+          file,
+          market.series_role || `${market.label} one-hour closes, used for the session outcome`
+        ),
         rows: series.bars,
         start: series.first,
-        end: series.last
+        end: series.last,
+        market: market.key,
+        instrument_kind: market.instrument_kind,
+        ...(market.key === matrix.primary_market ? { is_official_cash_dxy: false } : {})
       });
     }
   }
-  const goldFile = path.join(cacheDir, MARKET_SERIES_FILES.XAUUSD);
-  const nasdaqFile = path.join(cacheDir, MARKET_SERIES_FILES.NAS100);
-  // The broker's DXY.cash tape is a separate lane, loaded from its own export and never mixed into the four
-  // markets. When the export is absent the lane reports that instead of borrowing another series.
-  const dxyFile = path.join(cacheDir, "ftmo_dxy_cash_h1.csv");
-  const dxyTape = dxySeries.loadSeries(dxyFile);
-  if (dxyTape) {
-    provenance.push({
-      ...inputs.describeFile(
-        dxyFile,
-        "DXY.cash one-hour closes (FTMO Global Markets spot CFD, UTC-stamped by the exporter); broker-DXY lane only"
-      ),
-      rows: dxyTape.bars,
-      start: dxyTape.first,
-      end: dxyTape.last,
-      instrument_kind: dxySeries.INSTRUMENT.kind,
-      is_official_cash_dxy: false
-    });
-  }
+  const cacheDir = path.join(rootDir, "backtester", "tmp");
+  const seriesOrFile = (key, file) => seriesByMarket[key] || inputs.readHourlySeries(path.join(cacheDir, file));
+  const primary = matrix.markets.find((market) => market.key === matrix.primary_market) || null;
   return {
     seriesByMarket,
     modelSeries: {
-      gold: seriesByMarket.XAUUSD,
-      nasdaq100: seriesByMarket.NAS100
+      gold: seriesOrFile("XAUUSD", MODEL_SERIES.gold),
+      nasdaq100: seriesOrFile("NAS100", MODEL_SERIES.nasdaq100)
     },
-    dxyTape,
+    dxyTape: seriesByMarket[matrix.primary_market] || null,
     provenance,
-    files: { goldFile, nasdaqFile, dxyFile }
+    files: {
+      goldFile: path.join(cacheDir, MODEL_SERIES.gold),
+      nasdaqFile: path.join(cacheDir, MODEL_SERIES.nasdaq100),
+      dxyFile: primary ? path.resolve(rootDir, primary.series_file) : null
+    }
   };
 }
 
@@ -242,7 +249,12 @@ function coverageByTest({ dates, outcomes, callsByModel, demo, flatBands, dxyBro
 
 /** The stage ladder the progress strip shows, with the current stage marked. */
 function buildProgress({ dates, coverage, tests }) {
-  const scoredTwo = tests.four_markets.models.challenger.markets.EURUSD.overall;
+  const firstMarket = (tests.four_markets.markets_configured || [])[0] || "EURUSD";
+  const scoredTwo =
+    (tests.four_markets.models.challenger.markets &&
+      tests.four_markets.models.challenger.markets[firstMarket] &&
+      tests.four_markets.models.challenger.markets[firstMarket].overall) ||
+    {};
   const stages = [
     {
       key: "engine",
@@ -436,6 +448,13 @@ function buildLeadNumbers({ broker, levelProvenance = null, tickSweep = null }) 
     ? levelProvenance.totals.sessions_eligible_for_all_four
     : 0) || 0;
   const sweepRules = (tickSweep && Array.isArray(tickSweep.rules) ? tickSweep.rules : null) || null;
+  const pricingSnapshot =
+    levelProvenance && Array.isArray(levelProvenance.snapshots)
+      ? levelProvenance.snapshots.find(
+          (entry) => entry.origin === "archived snapshot" && Array.isArray(entry.sessions_used) && entry.sessions_used.length
+        ) || null
+      : null;
+  const liveLadder = levelProvenance ? levelProvenance.live_file_cannot_establish_history || null : null;
 
   return [
     {
@@ -454,16 +473,31 @@ function buildLeadNumbers({ broker, levelProvenance = null, tickSweep = null }) 
       order: 2,
       key: "sessions_with_usable_original_levels",
       headline: allFour
-        ? `${allFour} sessions carry the original L2L levels on all four assets`
+        ? `${allFour} sessions carry the original L2L levels on all four L2L lanes`
         : "no session carries an original L2L level",
       value: allFour,
       unit: "sessions",
       per_asset: perAsset,
       source: "level_provenance.totals.sessions_with_usable_levels",
-      note: levelProvenance && levelProvenance.available
-        ? `the ladder is one hand-marked grid per asset stamped ${levelProvenance.ladder_stamp_utc}; only a ` +
-          "session that starts after that stamp can be priced by it"
-        : "data/l2l-levels.json is absent, so no session can be priced by an original level"
+      priced_by: pricingSnapshot
+        ? {
+            file: pricingSnapshot.file,
+            sha256: pricingSnapshot.sha256,
+            stamp_utc: pricingSnapshot.stamp_utc,
+            git_commit: pricingSnapshot.git_commit,
+            git_commit_at_utc: pricingSnapshot.git_commit_at_utc,
+            sessions_used: pricingSnapshot.sessions_used
+          }
+        : null,
+      live_file_prices_this_run: liveLadder ? liveLadder.sessions_it_can_price_in_this_run : null,
+      note: pricingSnapshot
+        ? `priced by the archived snapshot ${pricingSnapshot.file} (sha256 ${String(pricingSnapshot.sha256).slice(0, 12)}), ` +
+          `committed at ${pricingSnapshot.git_commit_at_utc || "an unrecorded time"} - before the first priced session. ` +
+          `The live file, stamped ${liveLadder && liveLadder.stamp_utc}, prices ${liveLadder ? liveLadder.sessions_it_can_price_in_this_run : 0} ` +
+          "of them: a ladder re-marked after a session cannot establish that session"
+        : levelProvenance && levelProvenance.available
+          ? `the ladder is stamped ${levelProvenance.ladder_stamp_utc}; only a session that starts after that stamp can be priced by it`
+          : "no level ladder and no archived snapshot are present, so no session can be priced by an original level"
     },
     {
       order: 3,
@@ -476,10 +510,35 @@ function buildLeadNumbers({ broker, levelProvenance = null, tickSweep = null }) 
       value: sweepRules ? sweepRules.reduce((total, rule) => total + (rule.fills || 0), 0) : null,
       unit: "fills",
       per_rule: sweepRules,
-      source: "data/usd-layer1-backtester/l2l-tick-sweep-v1.json",
+      per_exit_reason: sweepRules
+        ? {
+            targets: sweepRules.reduce((total, rule) => total + (rule.targets || 0), 0),
+            stops: sweepRules.reduce((total, rule) => total + (rule.stops || 0), 0),
+            session_end: sweepRules.reduce((total, rule) => total + (rule.session_end || 0), 0),
+            working: sweepRules.reduce((total, rule) => total + (rule.working || 0), 0),
+            cancelled_at_session_end: sweepRules.reduce(
+              (total, rule) =>
+                total + (rule.by_model || []).reduce((inner, model) => inner + (model.cancelled_at_session_end || 0), 0),
+              0
+            )
+          }
+        : null,
+      sessions_bounded: tickSweep && tickSweep.horizon && Array.isArray(tickSweep.horizon.sessions)
+        ? {
+            sessions: tickSweep.horizon.sessions.length,
+            rule: tickSweep.horizon.rule,
+            moved: tickSweep.horizon.moved
+          }
+        : null,
+      supersedes: tickSweep && tickSweep.supersedes ? tickSweep.supersedes : null,
+      source: "data/usd-layer1-backtester/l2l-tick-sweep-v2.json",
       note: sweepRules
         ? "one call per session per model, one percent of the running balance risked per filled trade on each " +
-          "£100,000 account"
+          `${
+            contracts.ACCOUNT.currency === "GBP" ? "\u00a3" : `${contracts.ACCOUNT.currency} `
+          }${contracts.ACCOUNT.starting_balance.toLocaleString("en-GB")} account; every trade is priced inside ` +
+          "its own 05:00-to-05:00 London session, so a target or stop that printed after the endpoint is not " +
+          "counted and a position still open is closed at the endpoint"
         : "run node backtester/scripts/run_l2l_tick_sweep.js --publish to produce it"
     }
   ];
@@ -492,12 +551,13 @@ function buildLeadNumbers({ broker, levelProvenance = null, tickSweep = null }) 
  * tables: every number here is the same numerator and denominator the tab shows, with the arithmetic
  * spelled out, and the panel re-derives each one from the session rows to prove it.
  */
-function buildResults({ tests, coverage, dates, demo, levelProvenance = null, tickSweep = null }) {
+function buildResults({ tests, coverage, dates, demo, levelProvenance = null, tickSweep = null, markets = null }) {
   const dxy = tests.dxy_direction || {};
   const broker = tests.dxy_direction_broker_cfd || null;
   const four = tests.four_markets || {};
-  const markets = {};
-  for (const market of contracts.MARKETS) {
+  const marketList = markets || (four.markets_configured || []).map((key) => ({ key, label: key }));
+  const marketRows = {};
+  for (const market of marketList) {
     const current = (four.models && four.models.current && four.models.current.markets
       ? four.models.current.markets[market.key]
       : null) || {};
@@ -507,7 +567,7 @@ function buildResults({ tests, coverage, dates, demo, levelProvenance = null, ti
     const comparison = (four.comparisons && four.comparisons.markets
       ? four.comparisons.markets[market.key]
       : null) || {};
-    markets[market.key] = {
+    marketRows[market.key] = {
       label: market.label,
       current: {
         hits: current.overall ? current.overall.hits || 0 : 0,
@@ -545,10 +605,10 @@ function buildResults({ tests, coverage, dates, demo, levelProvenance = null, ti
   };
 
   const fourScored = {};
-  for (const market of contracts.MARKETS) {
+  for (const market of marketList) {
     fourScored[market.key] = {
-      current: markets[market.key].current.scored,
-      challenger: markets[market.key].challenger.scored
+      current: marketRows[market.key].current.scored,
+      challenger: marketRows[market.key].challenger.scored
     };
   }
 
@@ -626,12 +686,13 @@ function buildResults({ tests, coverage, dates, demo, levelProvenance = null, ti
       {
         id: "four_markets",
         ordinal: 2,
-        label: "Four-market direction",
+        label: "Direction across the configured markets",
         status: four.usable_sessions ? "scored" : "blocked",
         status_label: `${four.usable_sessions || 0} sessions with a scorable move`,
         scored: { current: sumScores(fourScored, "current"), challenger: sumScores(fourScored, "challenger") },
         usable_sessions: four.usable_sessions || 0,
-        markets,
+        market_count: marketList.length,
+        markets: marketRows,
         scoring_note:
           "a session counts once per market per model: scored means a call and a move outside that market's frozen " +
           "flat band, so a model's scored count is its own calls minus its no-call and flat days",
@@ -650,7 +711,7 @@ function buildResults({ tests, coverage, dates, demo, levelProvenance = null, ti
         scored: { current: 0, challenger: 0 },
         usable_sessions: 0,
         missing_input: "5-minute tapes and pre-session level ladders for each market",
-        usable_dates: `0 of ${dates.length} sessions have an archived tape and ladder for all four markets`,
+        usable_dates: `0 of ${dates.length} sessions have an archived tape and ladder for every configured market`,
         demo: demoVariant("full"),
         note: "the two-day EUR/USD demo is labelled separately and is not a scored result"
       },
@@ -663,7 +724,7 @@ function buildResults({ tests, coverage, dates, demo, levelProvenance = null, ti
         scored: { current: 0, challenger: 0 },
         usable_sessions: 0,
         missing_input: "the same tapes and ladders, plus the midpoint grid they imply",
-        usable_dates: `0 of ${dates.length} sessions have an archived tape and ladder for all four markets`,
+        usable_dates: `0 of ${dates.length} sessions have an archived tape and ladder for every configured market`,
         demo: demoVariant("half"),
         note: "the half grid inherits every blocker of the full grid, since a midpoint needs an original pair first"
       }
@@ -780,14 +841,21 @@ function buildDxyWorkedExample({ dates, prices, callsByModel, band }) {
  * @param {object} [options]
  * @param {string} [options.rootDir] repository root.
  * @param {string} [options.generatedAt] ISO timestamp to stamp the artefact with.
+ * @param {string} [options.matrixPath] another market x test matrix document, for an alternative asset set.
  */
-function buildArtefact({ rootDir, generatedAt } = {}) {
+function buildArtefact({ rootDir, generatedAt, matrixPath } = {}) {
   const root = rootDir || path.resolve(__dirname, "../../..");
+  // The market x test matrix is configuration, not code: this document decides which markets are scored and
+  // every selected market receives the same three tests. Another asset configuration is another document.
+  const matrixLoad = marketMatrixModule.loadMatrix({ rootDir: root, file: matrixPath });
+  const matrix = matrixLoad.matrix;
+  const configuredMarkets = matrix.markets;
+  const additionalMarkets = configuredMarkets.filter((market) => market.role === "additional");
   // The German 2Y leg is joined onto the frame before any snapshot is built, so every morning reads the same
   // T-1 as-of rule for both legs and no later date's print can leak into a 05:00 decision.
   const frame = de2y.attachToFrame(inputs.readFrame());
   const inventory = inputs.readInventory();
-  const loaded = loadSeries(root);
+  const loaded = loadSeries(root, matrix);
   const snapshots = snapshotsModule.buildSnapshots({ frame, series: loaded.modelSeries });
   const dates = snapshots.map((snapshot) => snapshot.date);
   const stamp = generatedAt || new Date().toISOString();
@@ -814,9 +882,16 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
   callsByCutoff.benchmark_v0 = callsByModel.challenger;
 
   const developmentDates = dates.filter((date) => testsModule.splitOf(date).key === "development");
-  const moves = outcomesModule.readSessionMoves({ sessions: snapshots, seriesByMarket: loaded.seriesByMarket });
-  const flatBands = outcomesModule.freezeFlatBands(moves, developmentDates);
-  const outcomes = outcomesModule.classifyMoves(moves, flatBands);
+  // The primary market is priced by its own lane (`dxySeries`), with its own frozen band, so it is not read
+  // again here: the additional markets are the ones whose session moves this block owns. Reading the primary
+  // twice would put the same series in the band table under two names.
+  const moves = outcomesModule.readSessionMoves({
+    sessions: snapshots,
+    seriesByMarket: loaded.seriesByMarket,
+    markets: additionalMarkets
+  });
+  const flatBands = outcomesModule.freezeFlatBands(moves, developmentDates, additionalMarkets);
+  const outcomes = outcomesModule.classifyMoves(moves, flatBands, additionalMarkets);
 
   const demo = buildExecutionDemo({ rootDir: root });
   const cutoffStudy = cutoffModule.buildCutoffStudy({
@@ -952,7 +1027,13 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
   };
 
 
-  const test2 = testsModule.testFourMarkets({ dates, callsByModel, outcomes });
+  const test2 = testsModule.testFourMarkets({
+    dates,
+    callsByModel,
+    outcomes,
+    markets: additionalMarkets,
+    primaryMarket: matrix.primary_market
+  });
   const test3 = testsModule.testLineToLine({
     id: "l2l_full_5r",
     ordinal: 3,
@@ -961,7 +1042,8 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
       target: "next original level in the trade direction",
       stop: "entry-to-target distance divided by 5"
     },
-    demo
+    demo,
+    markets: configuredMarkets
   });
   const test4 = testsModule.testLineToLine({
     id: "l2l_half_3r",
@@ -971,7 +1053,8 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
       target: "next adjacent level on the combined grid",
       stop: "entry-to-target distance divided by three"
     },
-    demo
+    demo,
+    markets: configuredMarkets
   });
 
   const coverage = {
@@ -991,23 +1074,122 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
   });
   const progress = buildProgress({ dates, coverage, tests });
   const sourceLegend = { list: [], index: new Map() };
-  const sessions = buildSessionRows({ snapshots, callsByModel, outcomes, sourceLegend });
+  const sessions = buildSessionRows({
+    snapshots,
+    callsByModel,
+    outcomes,
+    sourceLegend,
+    markets: additionalMarkets
+  });
   const factorAccounting = factors.buildFactorAccounting();
   const assumptionLedger = factors.buildAssumptionLedger({ flatBands, splits: testsModule.SPLITS });
   const challengerStatus = factors.buildChallengerStatus({ accounting: factorAccounting });
   const reproduction = reproduce.buildReproduction({ rows: sessions, tests });
   const ladderCopy = readLadderFor(root);
+  const ladderArchive = levelSnapshotsModule.loadArchive({ rootDir: root });
   const levelProvenance = levelProvenanceModule.buildLevelProvenance({
     ladder: ladderCopy.ladder,
     dates,
-    source: ladderCopy.source
+    source: ladderCopy.source,
+    archive: ladderArchive
   });
   const tickSweep = readTickSweep(root);
-  const results = buildResults({ tests, coverage, dates, demo, levelProvenance, tickSweep });
+  const results = buildResults({
+    tests,
+    coverage,
+    dates,
+    demo,
+    levelProvenance,
+    tickSweep,
+    markets: additionalMarkets
+  });
   const factorSpec = dataPath.buildFactorSpec();
   const factorDataPath = dataPath.buildFactorDataPath({ snapshots, calls: callsByModel.challenger_v1, spec: factorSpec });
   const recovery = dataPath.buildRecovery({ snapshots, callsV1: callsByModel.challenger_v1, spec: factorSpec });
   const m5Coverage = dataPath.buildM5Coverage();
+  // The matrix carried by this run: the selection, its fingerprint, and one row per market per test. Each
+  // combination keeps its readiness and, where this run produced sessions, its own scored count.
+  const matrixDescription = marketMatrixModule.describeMatrix(matrix, matrixLoad);
+  // The tape a market can be replayed on comes from two places and they are not interchangeable: the
+  // committed M5 archive (mid-price, a handful of recent sessions) and the tick replay (both sides of the
+  // book, the six sessions the archived ladder can price). The replay's set is preferred where it exists,
+  // because it is the only one the two L2L tests could be priced on at all; its provenance travels with
+  // the row so a reader can see which tape a status rests on.
+  const replayTapes = {};
+  if (tickSweep && Array.isArray(tickSweep.per_symbol)) {
+    for (const block of tickSweep.per_symbol) {
+      replayTapes[block.symbol] = {
+        sessions: (block.usable_sessions || []).length,
+        mid_tape_sessions: 0,
+        bid_ask: true,
+        dates: (block.usable_sessions || []).slice(),
+        source: "tick_replay",
+        rule: tickSweep.horizon && tickSweep.horizon.rule ? tickSweep.horizon.rule.positions : null
+      };
+    }
+  }
+  const m5ByMarket = {};
+  for (const market of configuredMarkets) {
+    const wanted = [market.key, market.broker_symbol, market.ladder_symbol].filter(Boolean);
+    const row = (m5Coverage.instruments || []).find(
+      (instrument) => wanted.includes(instrument.key) || wanted.includes(instrument.feed_symbol)
+    );
+    const archive = row
+      ? {
+          sessions: (row.sessions_covered || []).length,
+          mid_tape_sessions: row.sessions_with_a_mid_tape || 0,
+          bid_ask: row.bid_ask === true,
+          dates: Array.isArray(row.sessions_covered) ? row.sessions_covered : [],
+          source: "m5_archive"
+        }
+      : null;
+    const replay = wanted.map((name) => replayTapes[name]).find(Boolean) || null;
+    const chosen = replay || archive;
+    if (!chosen) continue;
+    m5ByMarket[market.key] = {
+      ...chosen,
+      archive,
+      replay
+    };
+  }
+  const ladderByMarket = Object.fromEntries(
+    (levelProvenance.instruments || [])
+      .filter((instrument) => instrument.sessions_eligible > 0)
+      .map((instrument) => [
+        instrument.key,
+        { sessions: instrument.sessions_eligible, dates: instrument.usable_sessions }
+      ])
+  );
+  const matrixResults = {
+    direction: {
+      ...Object.fromEntries(
+        additionalMarkets.map((market) => [
+          market.key,
+          (tests.four_markets.models.challenger.markets[market.key] || {}).overall
+            ? tests.four_markets.models.challenger.markets[market.key].overall.scored
+            : 0
+        ])
+      ),
+      [matrix.primary_market]: tests.dxy_direction_broker_cfd
+        ? tests.dxy_direction_broker_cfd.models.challenger.overall.scored
+        : 0
+    },
+    l2l_full_5r: Object.fromEntries(
+      configuredMarkets.map((market) => [market.key, (tests.l2l_full_5r.markets[market.key] || {}).usable_sessions || 0])
+    ),
+    l2l_half_3r: Object.fromEntries(
+      configuredMarkets.map((market) => [market.key, (tests.l2l_half_3r.markets[market.key] || {}).usable_sessions || 0])
+    )
+  };
+  const readiness = marketMatrixModule.applyRunResults(
+    marketMatrixModule.evaluateReadiness({
+      matrix,
+      seriesByMarket: loaded.seriesByMarket,
+      m5ByMarket,
+      ladderByMarket
+    }),
+    matrixResults
+  );
   const shadowInputs = dataPath.buildShadowArms({
     snapshots,
     dates,
@@ -1022,7 +1204,7 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
     // The measured spec, not the bare one: the requirement table reports how often each staged input actually
     // carried a value, and only `buildFactorDataPath` fills `sessions_present` per input.
     factors: factorDataPath.factors,
-    markets: contracts.MARKETS.map((market) => market.key)
+    markets: additionalMarkets.map((market) => market.key)
   });
   const identityCheck = modelIdentity.buildIdentityCheck({
     factors: factorSpec,
@@ -1037,6 +1219,17 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
     labels: contracts.LABELS,
     run: {
       run_version: contracts.RUN_VERSION,
+      artefact_version: "usd-l1-run-v2",
+      supersedes: {
+        artefact_version: "usd-l1-run-v1",
+        preserved_at: "data/usd-layer1-backtester/run-v1-superseded-20261114.json",
+        why:
+          "v2 carries the configurable market x test matrix and resolves level eligibility against the archived " +
+          "2026-10-04 snapshot instead of an ignored working copy; the v1 build is preserved byte for byte"
+      },
+      market_matrix_id: matrixDescription.id,
+      market_matrix_fingerprint: matrixDescription.fingerprint,
+      market_matrix_source: matrixLoad.source,
       challenger_version: challenger.VERSION,
       challenger_frozen_on: challenger.FROZEN_ON,
       challenger_frozen_before: challenger.FROZEN_BEFORE,
@@ -1044,7 +1237,17 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
       session_contract: contracts.SESSION_CONTRACT,
       account: contracts.ACCOUNT,
       conviction: contracts.CONVICTION,
-      markets: contracts.MARKETS,
+      markets: configuredMarkets.map((market) => ({
+        key: market.key,
+        role: market.role,
+        label: market.label,
+        outcome_series: market.series_file,
+        quote_convention: market.quote_convention,
+        usd_bullish_predicts: market.usd_bullish_predicts,
+        digits: market.digits,
+        broker_symbol: market.broker_symbol,
+        ladder_symbol: market.ladder_symbol
+      })),
       splits: testsModule.SPLITS,
       flat_bands: flatBands,
       date_range: { start: dates[0], end: dates[dates.length - 1] },
@@ -1123,8 +1326,30 @@ function buildArtefact({ rootDir, generatedAt } = {}) {
     factor_data_path: factorDataPath,
     recovery,
     m5_coverage: m5Coverage,
+    market_matrix: {
+      ...matrixDescription,
+      readiness,
+      experiment_identity: {
+        matrix_id: matrixDescription.id,
+        fingerprint: matrixDescription.fingerprint,
+        source: matrixLoad.source,
+        sha256: matrixLoad.sha256,
+        note:
+          "the selection is part of the experiment identity: two runs that score different markets are different " +
+          "experiments even when the model, cutoff and validation mode are identical"
+      }
+    },
     level_provenance: levelProvenance,
     l2l_tick_sweep: tickSweep,
+    l2l_tick_sweep_lineage: {
+      current: TICK_SWEEP_PATH.split(path.sep).join("/"),
+      superseded: TICK_SWEEP_SUPERSEDED_PATH.split(path.sep).join("/"),
+      supersession_record: TICK_SWEEP_SUPERSESSION_PATH.split(path.sep).join("/"),
+      why:
+        "the sweep was re-priced inside the 05:00-to-05:00 London session: a fill that landed in a later session " +
+        "is cancelled, and a position open at the endpoint is closed there rather than carried. Both files are " +
+        "kept so the correction can be audited against what was published before it."
+    },
     shadow_inputs: shadowInputs,
     cutoff_study: cutoffStudy,
     assumption_ledger: assumptionLedger,
@@ -1342,7 +1567,13 @@ function buildInputMeta(snapshot, sourceLegend) {
  * `saved_inputs` block is the complete set of values both models read that morning, so the panel can re-run
  * the call from the row itself; `input_meta` carries the print date and staleness of each of those values.
  */
-function buildSessionRows({ snapshots, callsByModel, outcomes, sourceLegend = { list: [], index: new Map() } }) {
+function buildSessionRows({
+  snapshots,
+  callsByModel,
+  outcomes,
+  sourceLegend = { list: [], index: new Map() },
+  markets = contracts.MARKETS
+}) {
   return snapshots.map((snapshot) => {
     const date = snapshot.date;
     const currentCall = callsByModel.current.get(date);
@@ -1351,7 +1582,7 @@ function buildSessionRows({ snapshots, callsByModel, outcomes, sourceLegend = { 
     const split = testsModule.splitOf(date);
 
     const perMarket = {};
-    for (const market of contracts.MARKETS) {
+    for (const market of markets) {
       const outcome = outcomes[date] ? outcomes[date][market.key] : null;
       perMarket[market.key] = {
         direction: outcome ? outcome.direction : null,
@@ -1368,7 +1599,7 @@ function buildSessionRows({ snapshots, callsByModel, outcomes, sourceLegend = { 
       ["challenger", challengerCall],
       ["challenger_v1", v1Call]
     ]) {
-      for (const market of contracts.MARKETS) {
+      for (const market of markets) {
         const outcome = outcomes[date] ? outcomes[date][market.key] : null;
         if (!call || call.direction === "NO_CALL") results[model][market.key] = "no_call";
         else if (!outcome || !outcome.direction) results[model][market.key] = "no_outcome";
@@ -1461,7 +1692,7 @@ function buildSessionRows({ snapshots, callsByModel, outcomes, sourceLegend = { 
 }
 
 module.exports = {
-  MARKET_SERIES_FILES,
+  MODEL_SERIES,
   loadSeries,
   modelCoverage,
   coverageByTest,

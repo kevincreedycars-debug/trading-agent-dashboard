@@ -16,7 +16,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const { LABELS } = require("./contracts");
+const { ACCOUNT, LABELS } = require("./contracts");
 const { runFourAccounts, FOUR_ACCOUNTS } = require("./accounts");
 
 const REPLAY_DIR = path.join("backtester", "tmp", "usd-session-research", "replays");
@@ -122,8 +122,8 @@ function buildExecutionDemo({ rootDir }) {
         "demo call: the direction of the live fill record for these dates, identical for both model slots because " +
         "no reconstructed 05:00 call exists for 2026-11-05 or 2026-11-06"
     })),
-    startingBalance: 100000,
-    riskPct: 1,
+    startingBalance: ACCOUNT.starting_balance,
+    riskPct: ACCOUNT.risk_per_trade_pct,
     instrument: { lotStep: instrument.lot_step || 0.01, minLot: instrument.min_lot || 0.01 }
   });
 

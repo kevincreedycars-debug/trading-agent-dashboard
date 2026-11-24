@@ -375,19 +375,45 @@ function emptyCall() {
 }
 
 /**
+ * The market definitions a dataset declares, or null when it carries no matrix.
+ *
+ * The published artefact now carries `market_matrix`, so the controller can score the configured additional
+ * markets without a code change: the selection decides which of them run, and each entry carries its own
+ * `usd_bullish_predicts` sign. The primary market is excluded here because its direction is the USD-call lane
+ * itself, priced by the caller's own instrument, not a market the call is scored against.
+ */
+function marketDefinitionsFromDataset(dataset) {
+  const matrix = dataset && dataset.market_matrix ? dataset.market_matrix : null;
+  if (!matrix || !Array.isArray(matrix.markets)) return null;
+  const markets = matrix.markets
+    .filter((market) => market.role !== "primary")
+    .map((market) => ({
+      key: market.key,
+      label: market.label,
+      outcome_series: market.series_file,
+      quote_convention: market.quote_convention,
+      usd_bullish_predicts: market.usd_bullish_predicts,
+      digits: market.digits
+    }));
+  return markets.length ? markets : null;
+}
+
+/**
  * Decide one morning: validate, evaluate, score. The model is never called on a morning the structural
  * gate refused, and a model exception is reported as a blocked decision rather than crashing a batch.
  *
  * `options.testModules` is the run's test selection. It decides which markets are scored and is recorded
  * per module, so a selection is an executed decision rather than a caption: asking for test 2 alone scores
- * the four markets, asking for tests 3 and 4 alone scores no market outcome and records both modules as
- * blocked on their missing tape.
+ * the configured markets, asking for tests 3 and 4 alone scores no market outcome and records both modules
+ * as blocked on their missing tape. `options.markets` is the dataset's own market list, so a matrix with more
+ * markets is scored as configured rather than against a fixed four.
  */
 function decideMorning(session, modelId = "current", options = {}) {
   const adapter = resolveLayer1(modelId);
   const selection = testModules.resolveModules(options.testModules);
-  const marketKeys = testModules.marketsFor(selection, contracts.MARKETS.map((market) => market.key));
-  const scoredMarkets = contracts.MARKETS.filter((market) => marketKeys.includes(market.key));
+  const definitions = Array.isArray(options.markets) && options.markets.length ? options.markets : contracts.MARKETS;
+  const marketKeys = testModules.marketsFor(selection, definitions.map((market) => market.key));
+  const scoredMarkets = definitions.filter((market) => marketKeys.includes(market.key));
   const date = session && session.date ? session.date : null;
   const values = session ? (session.saved_inputs || session.values || {}) : {};
   const snapshot = {
@@ -490,10 +516,11 @@ function summarise(decisions, options = {}) {
     receipted_incomplete: 0
   };
   const restricted = Array.isArray(options.markets);
+  const catalog = Array.isArray(options.catalog) && options.catalog.length ? options.catalog : contracts.MARKETS;
   const scoredMarketKeys = restricted
     ? options.markets.map((market) => (typeof market === "string" ? market : market.key))
-    : contracts.MARKETS.map((market) => market.key);
-  const marketList = contracts.MARKETS.filter((market) => scoredMarketKeys.includes(market.key));
+    : catalog.map((market) => market.key);
+  const marketList = catalog.filter((market) => scoredMarketKeys.includes(market.key));
   const markets = {};
   for (const market of marketList) markets[market.key] = emptyMarketTally();
   const pooled = emptyMarketTally();
@@ -530,7 +557,7 @@ function summarise(decisions, options = {}) {
     markets,
     pooled,
     participation: round(statuses.allowed / Math.max(1, statuses.allowed + statuses.abstained), 4)
-  }, marketList.length === contracts.MARKETS.length ? {} : { scored_markets: marketList.map((market) => market.key) });
+  }, marketList.length === catalog.length ? {} : { scored_markets: marketList.map((market) => market.key) });
 }
 
 function sessionWindow(decisions) {
@@ -621,12 +648,14 @@ function runBacktest({
   }
   const layer1 = resolveLayer1(adapter || model);
   const selection = testModules.resolveModules(requestedTests);
-  const scoredMarketKeys = testModules.marketsFor(selection, contracts.MARKETS.map((market) => market.key));
+  const matrix = dataset && dataset.market_matrix ? dataset.market_matrix : null;
+  const marketDefinitions = marketDefinitionsFromDataset(dataset) || contracts.MARKETS;
+  const scoredMarketKeys = testModules.marketsFor(selection, marketDefinitions.map((market) => market.key));
   const normalised = normaliseDataset(dataset, datasetPath);
   const selected = selectSessions(normalised.sessions, { dates, from, to });
   const decisions = selected.map((session) => {
     if (!session) return null;
-    const decision = decideMorning(session, layer1, { testModules: selection });
+    const decision = decideMorning(session, layer1, { testModules: selection, markets: marketDefinitions });
     if (validationMode === "receipted" && decision.validation.accepted && !decision.validation.receipted.complete) {
       decision.status = "blocked";
       decision.call.reason = "receipted gate: not every consumed input carries a full timestamp before the cutoff";
@@ -660,10 +689,21 @@ function runBacktest({
       modules: testModules.idsOf(selection),
       defaulted: requestedTests === undefined || requestedTests === null || requestedTests === "",
       scored_markets: scoredMarketKeys,
-      simulations: testModules.simulationsFor(selection)
+      simulations: testModules.simulationsFor(selection),
+      market_matrix: matrix
+        ? {
+            id: matrix.id || null,
+            fingerprint: matrix.fingerprint || null,
+            primary_market: matrix.primary_market || null,
+            additional_markets: Array.isArray(matrix.additional_markets) ? matrix.additional_markets.slice() : [],
+            combination_count: matrix.combination_count === undefined ? null : matrix.combination_count,
+            tests: Array.isArray(matrix.tests) ? matrix.tests.map((test) => test.id) : [],
+            source: "dataset.market_matrix (the artefact the run fetched)"
+          }
+        : null
     },
     window: sessionWindow(decisions),
-    summary: summarise(decisions, { markets: scoredMarketKeys }),
+    summary: summarise(decisions, { markets: scoredMarketKeys, catalog: marketDefinitions }),
     decisions: includeDecisions ? decisions : undefined
   };
 }
@@ -848,6 +888,7 @@ module.exports = {
   parseIsoDate,
   validateSnapshot,
   scoreCall,
+  marketDefinitionsFromDataset,
   decideMorning,
   summarise,
   runBacktest,

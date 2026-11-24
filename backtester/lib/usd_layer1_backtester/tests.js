@@ -244,26 +244,30 @@ function testDxyDirection({ dates, callsByModel, prices = null, flatBandPct = nu
 
 
 /**
- * Test 2. The four markets, using the USD call alone.
+ * Test 2. Directional accuracy on every configured additional market, using the USD call alone.
  *
  * Two columns are produced for each model: accuracy on every scored call, and accuracy restricted to the
  * calls DXY later proved right. The second column can only be filled when licensed DXY prices exist, so it
  * is reported as blocked rather than quietly left out.
+ *
+ * `markets` is the configured additional markets, so the lane's columns are the configuration's columns
+ * and not a fixed list. A market with no cached series still appears, with its own zero sample and its own
+ * reason, rather than being dropped from the table.
  */
-function testFourMarkets({ dates, callsByModel, outcomes, dxyPrices = null }) {
+function testFourMarkets({ dates, callsByModel, outcomes, dxyPrices = null, markets = MARKETS, primaryMarket = null }) {
   const models = {};
   for (const [model, calls] of Object.entries(callsByModel)) {
-    const markets = {};
-    for (const market of MARKETS) {
-      markets[market.key] = scoreMarketDirection({ market, calls, outcomes, dates });
+    const marketRows = {};
+    for (const market of markets) {
+      marketRows[market.key] = scoreMarketDirection({ market, calls, outcomes, dates });
     }
-    models[model] = { markets };
+    models[model] = { markets: marketRows };
   }
 
   const comparisons = {};
   if (models.current && models.challenger) {
     comparisons.markets = {};
-    for (const market of MARKETS) {
+    for (const market of markets) {
       comparisons.markets[market.key] = compareModels({
         market,
         currentCalls: callsByModel.current,
@@ -280,7 +284,13 @@ function testFourMarkets({ dates, callsByModel, outcomes, dxyPrices = null }) {
   return {
     id: "four_markets",
     ordinal: 2,
-    question: TESTS[1].question,
+    label: "Direction across the configured markets",
+    question:
+      `Using the USD call alone, how often did ${markets.map((market) => market.label).join(", ")} move the ` +
+      "way the call predicted over the same session?",
+    markets_configured: markets.map((market) => market.key),
+    market_count: markets.length,
+    primary_market: primaryMarket,
     usable_sessions: scoredSessions.length,
     sessions_with_any_outcome: dates.filter((date) =>
       Object.values(outcomes[date] || {}).some((entry) => entry && entry.present)).length,
@@ -288,24 +298,30 @@ function testFourMarkets({ dates, callsByModel, outcomes, dxyPrices = null }) {
       ? { status: "scored" }
       : { status: "blocked", reason: BLOCKERS.no_official_dxy, owner: OFFICIAL_DXY.blocker_owner },
     outcome_reads:
-      "up means the market rose over the session; a USD-bullish call predicts down for every one of the four",
+      "up means the market rose over the session; each market's own matrix entry says which way a USD-bullish " +
+      "call predicts it, and a market with no cached series is reported with its reason rather than a zero",
     models,
     comparisons
   };
 }
 
 /**
- * Tests 3 and 4. Line-to-line execution.
+ * Tests 3 and 4. Line-to-line execution, per configured market.
  *
  * The scored grid needs a 5-minute tape and a level ladder for each market and date that were both in hand
  * before the setup; neither exists in this checkout beyond the two-day EUR/USD execution demo, so the lane
  * reports its blocked state, the per-market reason, and the demo accounts it can actually run.
+ *
+ * `markets` is the configured set, so a market added to the configuration appears here with its own status
+ * and its own missing-data reason without a code change.
  */
-function testLineToLine({ id, ordinal, geometry, demo }) {
+function testLineToLine({ id, ordinal, geometry, demo, markets = MARKETS }) {
   const index = ordinal - 1;
-  const markets = {};
-  for (const market of MARKETS) {
-    markets[market.key] = {
+  const marketRows = {};
+  for (const market of markets) {
+    marketRows[market.key] = {
+      label: market.label,
+      broker_symbol: market.broker_symbol || null,
       status: "blocked",
       usable_sessions: 0,
       blockers: [BLOCKERS.no_m5_tape, BLOCKERS.no_level_ladder],
@@ -321,7 +337,9 @@ function testLineToLine({ id, ordinal, geometry, demo }) {
     geometry,
     status: "blocked",
     usable_sessions: 0,
-    markets,
+    markets_configured: markets.map((market) => market.key),
+    market_count: markets.length,
+    markets: marketRows,
     accounts: demo ? demo.accounts : null,
     demo: demo || null,
     blockers: [BLOCKERS.no_m5_tape, BLOCKERS.no_level_ladder]

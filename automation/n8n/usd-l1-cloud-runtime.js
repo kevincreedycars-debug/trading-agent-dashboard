@@ -8,11 +8,11 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   const BUNDLE_VERSION = "usd-l1-cloud-runtime-v3";
-  const BUNDLE_SHA256 = "bb92e002976270d9016b9d584599c9bb01d2e6fee61d2b59205699bc6b7fd69b";
+  const BUNDLE_SHA256 = "544b24b495727a49b3da3e3d4fdbc8624faac1d5a9425291228c12679a9d2ef3";
   const SOURCE_FILES = [
   {
     "path": "backtester/lib/usd_layer1_backtester/backtest_controller.js",
-    "sha256": "99659c4c29abbf9db9d05a759919ab1a6b94396bb3ecd25ba9f2dffbcb579d4e",
+    "sha256": "116aa956048c98ce2f51c96ca680b335db90dcb924dfd1279c4d8cf0aa9fe7c0",
     "stub": false
   },
   {
@@ -42,7 +42,7 @@
   },
   {
     "path": "lib/layer1_backtesting/test_modules.js",
-    "sha256": "bdc617d3266c6cea1a4fc9c8a4a048174e9e6dd3ab9a51c54cb9e2477d009716",
+    "sha256": "c663c50fb4b6634c52ec9ca946cef7b43d95eaf49caeeebc2a4af5181c596d7e",
     "stub": false
   },
   {
@@ -52,7 +52,7 @@
   },
   {
     "path": "backtester/lib/usd_session_engine_interface.js",
-    "sha256": "3aa41dc91adc52bdae446aec7ee89e9747652db6cb916b58b1ca882d8b408435",
+    "sha256": "73ba4fc1d1812db7c4df5006214d80024c5a08ec5003664fd3ff00b15a23c808",
     "stub": false
   },
   {
@@ -440,19 +440,45 @@
       }
       
       /**
+       * The market definitions a dataset declares, or null when it carries no matrix.
+       *
+       * The published artefact now carries `market_matrix`, so the controller can score the configured additional
+       * markets without a code change: the selection decides which of them run, and each entry carries its own
+       * `usd_bullish_predicts` sign. The primary market is excluded here because its direction is the USD-call lane
+       * itself, priced by the caller's own instrument, not a market the call is scored against.
+       */
+      function marketDefinitionsFromDataset(dataset) {
+        const matrix = dataset && dataset.market_matrix ? dataset.market_matrix : null;
+        if (!matrix || !Array.isArray(matrix.markets)) return null;
+        const markets = matrix.markets
+          .filter((market) => market.role !== "primary")
+          .map((market) => ({
+            key: market.key,
+            label: market.label,
+            outcome_series: market.series_file,
+            quote_convention: market.quote_convention,
+            usd_bullish_predicts: market.usd_bullish_predicts,
+            digits: market.digits
+          }));
+        return markets.length ? markets : null;
+      }
+      
+      /**
        * Decide one morning: validate, evaluate, score. The model is never called on a morning the structural
        * gate refused, and a model exception is reported as a blocked decision rather than crashing a batch.
        *
        * `options.testModules` is the run's test selection. It decides which markets are scored and is recorded
        * per module, so a selection is an executed decision rather than a caption: asking for test 2 alone scores
-       * the four markets, asking for tests 3 and 4 alone scores no market outcome and records both modules as
-       * blocked on their missing tape.
+       * the configured markets, asking for tests 3 and 4 alone scores no market outcome and records both modules
+       * as blocked on their missing tape. `options.markets` is the dataset's own market list, so a matrix with more
+       * markets is scored as configured rather than against a fixed four.
        */
       function decideMorning(session, modelId = "current", options = {}) {
         const adapter = resolveLayer1(modelId);
         const selection = testModules.resolveModules(options.testModules);
-        const marketKeys = testModules.marketsFor(selection, contracts.MARKETS.map((market) => market.key));
-        const scoredMarkets = contracts.MARKETS.filter((market) => marketKeys.includes(market.key));
+        const definitions = Array.isArray(options.markets) && options.markets.length ? options.markets : contracts.MARKETS;
+        const marketKeys = testModules.marketsFor(selection, definitions.map((market) => market.key));
+        const scoredMarkets = definitions.filter((market) => marketKeys.includes(market.key));
         const date = session && session.date ? session.date : null;
         const values = session ? (session.saved_inputs || session.values || {}) : {};
         const snapshot = {
@@ -555,10 +581,11 @@
           receipted_incomplete: 0
         };
         const restricted = Array.isArray(options.markets);
+        const catalog = Array.isArray(options.catalog) && options.catalog.length ? options.catalog : contracts.MARKETS;
         const scoredMarketKeys = restricted
           ? options.markets.map((market) => (typeof market === "string" ? market : market.key))
-          : contracts.MARKETS.map((market) => market.key);
-        const marketList = contracts.MARKETS.filter((market) => scoredMarketKeys.includes(market.key));
+          : catalog.map((market) => market.key);
+        const marketList = catalog.filter((market) => scoredMarketKeys.includes(market.key));
         const markets = {};
         for (const market of marketList) markets[market.key] = emptyMarketTally();
         const pooled = emptyMarketTally();
@@ -595,7 +622,7 @@
           markets,
           pooled,
           participation: round(statuses.allowed / Math.max(1, statuses.allowed + statuses.abstained), 4)
-        }, marketList.length === contracts.MARKETS.length ? {} : { scored_markets: marketList.map((market) => market.key) });
+        }, marketList.length === catalog.length ? {} : { scored_markets: marketList.map((market) => market.key) });
       }
       
       function sessionWindow(decisions) {
@@ -686,12 +713,14 @@
         }
         const layer1 = resolveLayer1(adapter || model);
         const selection = testModules.resolveModules(requestedTests);
-        const scoredMarketKeys = testModules.marketsFor(selection, contracts.MARKETS.map((market) => market.key));
+        const matrix = dataset && dataset.market_matrix ? dataset.market_matrix : null;
+        const marketDefinitions = marketDefinitionsFromDataset(dataset) || contracts.MARKETS;
+        const scoredMarketKeys = testModules.marketsFor(selection, marketDefinitions.map((market) => market.key));
         const normalised = normaliseDataset(dataset, datasetPath);
         const selected = selectSessions(normalised.sessions, { dates, from, to });
         const decisions = selected.map((session) => {
           if (!session) return null;
-          const decision = decideMorning(session, layer1, { testModules: selection });
+          const decision = decideMorning(session, layer1, { testModules: selection, markets: marketDefinitions });
           if (validationMode === "receipted" && decision.validation.accepted && !decision.validation.receipted.complete) {
             decision.status = "blocked";
             decision.call.reason = "receipted gate: not every consumed input carries a full timestamp before the cutoff";
@@ -725,10 +754,21 @@
             modules: testModules.idsOf(selection),
             defaulted: requestedTests === undefined || requestedTests === null || requestedTests === "",
             scored_markets: scoredMarketKeys,
-            simulations: testModules.simulationsFor(selection)
+            simulations: testModules.simulationsFor(selection),
+            market_matrix: matrix
+              ? {
+                  id: matrix.id || null,
+                  fingerprint: matrix.fingerprint || null,
+                  primary_market: matrix.primary_market || null,
+                  additional_markets: Array.isArray(matrix.additional_markets) ? matrix.additional_markets.slice() : [],
+                  combination_count: matrix.combination_count === undefined ? null : matrix.combination_count,
+                  tests: Array.isArray(matrix.tests) ? matrix.tests.map((test) => test.id) : [],
+                  source: "dataset.market_matrix (the artefact the run fetched)"
+                }
+              : null
           },
           window: sessionWindow(decisions),
-          summary: summarise(decisions, { markets: scoredMarketKeys }),
+          summary: summarise(decisions, { markets: scoredMarketKeys, catalog: marketDefinitions }),
           decisions: includeDecisions ? decisions : undefined
         };
       }
@@ -913,6 +953,7 @@
         parseIsoDate,
         validateSnapshot,
         scoreCall,
+        marketDefinitionsFromDataset,
         decideMorning,
         summarise,
         runBacktest,
@@ -1997,8 +2038,9 @@
         Object.freeze({
           id: "four_markets",
           ordinal: 2,
-          label: "USD-only opposite-direction mapping in four markets",
-          markets: Object.freeze(["EURUSD", "XAUUSD", "BTCUSD", "NAS100"]),
+          label: "USD-only opposite-direction mapping across the configured markets",
+          markets: Object.freeze(["*"]),
+          market_scope: "all_configured",
           per_record: "market_outcomes",
           requires: Object.freeze([]),
           reason: null
@@ -2058,13 +2100,26 @@
         return ids.map(byId);
       }
       
-      /** The markets the selection scores, in the contract order the panel publishes. */
+      /** The committed market order a caller gets when it passes no configuration of its own. */
+      const DEFAULT_MARKET_ORDER = Object.freeze(["EURUSD", "XAUUSD", "BTCUSD", "NAS100"]);
+      
+      /**
+       * The markets the selection scores, in the order the caller declares.
+       *
+       * A module that declares `"*"` scores every configured market, so a run whose dataset carries the eight-market
+       * matrix is scored on eight and a run whose dataset declares four is scored on four. A module that names its
+       * markets scores only those. Nothing here knows a market by heart.
+       */
       function marketsFor(modules, marketOrder) {
+        const order = Array.isArray(marketOrder) && marketOrder.length ? marketOrder : DEFAULT_MARKET_ORDER;
         const wanted = new Set();
         for (const module of modules) {
+          if (module.markets.includes("*")) {
+            for (const market of order) wanted.add(market);
+            continue;
+          }
           for (const market of module.markets) wanted.add(market);
         }
-        const order = Array.isArray(marketOrder) ? marketOrder : ["EURUSD", "XAUUSD", "BTCUSD", "NAS100"];
         return order.filter((market) => wanted.has(market));
       }
       
@@ -2093,7 +2148,12 @@
           : null;
         return selected.map((module) => {
           if (module.per_record === "market_outcomes") {
-            const scored = module.markets
+            const declared = module.markets.includes("*")
+              ? rows.length
+                ? [...new Set(rows.map((row) => row.market))]
+                : Object.keys((session && session.outcomes) || {})
+              : module.markets.slice();
+            const scored = declared
               .map((market) => rows.find((row) => row && row.market === market))
               .filter(Boolean);
             const anyOutcome = scored.some((row) => ["hit", "miss", "flat"].includes(row.result));
@@ -2101,7 +2161,7 @@
               id: module.id,
               ordinal: module.ordinal,
               state: anyOutcome ? "scored" : "no_outcome",
-              markets: module.markets.slice(),
+              markets: declared,
               reason: anyOutcome ? null : "no selected market had a readable outcome for this morning"
             };
           }
@@ -2131,6 +2191,7 @@
         MODULES,
         MODULE_IDS,
         DEFAULT_SELECTION,
+        DEFAULT_MARKET_ORDER,
         byId,
         resolveModules,
         marketsFor,
@@ -2287,14 +2348,19 @@
       "use strict";
       
       /**
-       * Session-target and as-of-cutoff interfaces for the USD session engine (research only, 2026-10-13).
+       * Session-target and as-of-cutoff interfaces for the USD session engine (research only, 2026-10-13;
+       * session horizon corrected to 05:00 London to 05:00 London on 2026-10-14).
        *
        * This file is an interface contract, not the engine. It exists so that every later implementation of a
        * historical or prospective run resolves the two endpoints and the as-of rule in one place, and so a
        * leakage mistake is caught by construction rather than by review.
        *
-       * The two time zones are handled separately, as the brief requires. Offsets are derived from declared
-       * transition instants, never from a fixed hour count, because London and New York change on different dates.
+       * Both ends of the session are wall-clock local times in Europe/London: the session runs from 05:00 London
+       * on its own local date to 05:00 London on the next local date. Offsets are derived from declared
+       * transition instants, never from a fixed hour count.
+       *
+       * America/New_York is no longer part of the session definition. Its transitions are kept in
+       * ZONE_TRANSITIONS only because the macro as-of builder times the Fed's H.10 release in that zone.
        *
        * Nothing here reads the network, the warehouse, the dispatcher or a production path.
        */
@@ -2302,8 +2368,12 @@
       const SESSION_CONTRACT = Object.freeze({
         cutoff_local: "05:00",
         cutoff_zone: "Europe/London",
-        endpoint_local: "17:00",
-        endpoint_zone: "America/New_York"
+        endpoint_local: "05:00",
+        endpoint_zone: "Europe/London",
+        endpoint_day_offset: 1,
+        nominal_hours: 24,
+        session_start_weekdays: [1, 2, 3, 4, 5],
+        session_start_rule: "a session starts on Monday to Friday only, so the Saturday and Sunday starts are never sessions; the Saturday start is the only one that can contain a London DST transition, which is why every eligible session is exactly 24 hours"
       });
       
       /**
@@ -2370,20 +2440,43 @@
       }
       
       /**
-       * Resolve one session's cutoff and endpoint.
+       * Whether the session starting on this local date is an eligible session.
+       *
+       * A London local date is the same calendar date as its UTC date: at 05:00 London the UTC clock reads 05:00Z on
+       * GMT or 04:00Z on BST, so the date never rolls over and the weekday can be read straight off the UTC date.
        *
        * @param {number} dayUtcMs UTC midnight of the session's local date.
-       * @returns {object} instants, offset abbreviations and the nominal window length.
+       * @returns {boolean} true for a Monday-to-Friday start, false for a Saturday or Sunday start.
+       */
+      function isSessionStart(dayUtcMs) {
+        const weekday = new Date(dayUtcMs).getUTCDay();
+        return SESSION_CONTRACT.session_start_weekdays.includes(weekday);
+      }
+      
+      /**
+       * Resolve one session's cutoff and endpoint.
+       *
+       * Both instants are resolved from declared London transitions. The EU change happens at 01:00 UTC on the
+       * last Sunday of March and October, which always falls inside the session that starts on the preceding
+       * Saturday (05:00 Saturday to 05:00 Sunday), so that start measures 23 hours in spring and 25 in autumn.
+       * A Saturday start is not an eligible session, and no Monday-to-Friday start ever contains a transition.
+       *
+       * @param {number} dayUtcMs UTC midnight of the session's local date.
+       * @returns {object} instants, offset abbreviations, the nominal length, the measured length and whether
+       *   the start is an eligible session.
        */
       function resolveSession(dayUtcMs) {
         const cutoffMs = instantForLocalTime(dayUtcMs, 5, 0, SESSION_CONTRACT.cutoff_zone);
-        const endpointMs = instantForLocalTime(dayUtcMs, 17, 0, SESSION_CONTRACT.endpoint_zone);
+        const endpointDayMs = dayUtcMs + SESSION_CONTRACT.endpoint_day_offset * 24 * HOUR_MS;
+        const endpointMs = instantForLocalTime(endpointDayMs, 5, 0, SESSION_CONTRACT.endpoint_zone);
         return {
           cutoff_at_utc: new Date(cutoffMs).toISOString(),
           cutoff_offset_abbrev: offsetMinutesAt(cutoffMs, SESSION_CONTRACT.cutoff_zone).abbrev,
           endpoint_at_utc: new Date(endpointMs).toISOString(),
           endpoint_offset_abbrev: offsetMinutesAt(endpointMs, SESSION_CONTRACT.endpoint_zone).abbrev,
-          window_hours: (endpointMs - cutoffMs) / HOUR_MS
+          nominal_hours: SESSION_CONTRACT.nominal_hours,
+          window_hours: (endpointMs - cutoffMs) / HOUR_MS,
+          session_starts_weekday: isSessionStart(dayUtcMs)
         };
       }
       
@@ -2434,7 +2527,7 @@
           factor_verdicts: factor_verdicts || [],
           combination: combination || null,
           decision: decision || null,
-          engine_version: "usd-session-engine-interface-v1",
+          engine_version: "usd-session-engine-interface-v2",
           note: "interface placeholder: the numeric engine is not implemented in this checkpoint"
         };
       }
@@ -2445,6 +2538,7 @@
         SessionContractError,
         offsetMinutesAt,
         instantForLocalTime,
+        isSessionStart,
         resolveSession,
         assertAsOf,
         buildAsOfSnapshot,

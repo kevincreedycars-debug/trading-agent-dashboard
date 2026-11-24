@@ -36,13 +36,15 @@ const DOC_SUMMARY = "Old documentation";
 const GROUPS = ["Operate", "Live", "Evidence", "System"];
 const RAIL_LABELS = [
   "Overview", "USD", "EUR", "Gold", "Silver", "NQ", "BTC", "WTI", "GBP", "Pair Analysis",
-  "Live Trading", "Research Library", "Backtesting", "Backtest / Accuracy", "Backtest Engine",
-  "Research Proof Map", "Factor Edge Lab", "Shadow Logic Backtest", "Architecture", "Live Trade Logic",
+  "Live Trading", "Live cTrader Copier", "Research Library", "Backtesting", "Backtest / Accuracy",
+  "Backtest Engine", "Research Proof Map", "Factor Edge Lab", "Shadow Logic Backtest", "Architecture",
+  "Live Trade Logic",
 ];
 const RAIL_TABS = [
   "overview", "USD", "EUR", "GOLD", "SILVER", "NQ", "BTC", "WTI", "GBP", "layer2",
-  "live-trading", "research-library", "usd-layer1-backtester", "backtest", "backtest-engine",
-  "research-proof-map", "factor-edge-lab", "shadow-logic-backtest", "architecture", "live-trade-logic",
+  "live-trading", "live-ctrader-copier", "research-library", "usd-layer1-backtester", "backtest",
+  "backtest-engine", "research-proof-map", "factor-edge-lab", "shadow-logic-backtest", "architecture",
+  "live-trade-logic",
 ];
 // Off the dashboard the gold entry is the gold tabs page rather than the dashboard's own gold view: that page
 // is what the label names, and its hash handling already works with no script of its own. Backtesting's public
@@ -140,7 +142,7 @@ test("every page carries the partial's render byte for byte, in the page's own l
   } catch (error) {
     report = error.stdout || "";
   }
-  assert.match(report, /--check: 14 pages, 20 rail entries, 8 outbound, 0 change\(s\)/, "--check must find all fourteen pages current");
+  assert.match(report, /--check: 14 pages, 21 rail entries, 8 outbound, 0 change\(s\)/, "--check must find all fourteen pages current");
   assert.doesNotMatch(report, /: (refreshed|placed)$/m, "no page may still need the block written into it");
   nav.PAGES.forEach(page => {
     const source = read(page.file);
@@ -190,7 +192,7 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     assert.ok(block.includes(FOOT), `the ${variant} rail must carry its foot`);
     assert.ok(block.includes('<style id="shared-nav-css">'), `the ${variant} block must carry its own styling`);
     const entries = rows(block, /<(?:button|a) class="tab-button[^"]*" (data-tab|href)="([^"]+)"[^>]*>([^<]+)<\/(?:button|a)>/g);
-    assert.deepEqual(entries.map(entry => entry[2]), RAIL_LABELS, `the ${variant} rail must offer the same twenty labels in order`);
+    assert.deepEqual(entries.map(entry => entry[2]), RAIL_LABELS, `the ${variant} rail must offer the same twenty-one labels in order`);
 
     // The eight retired bar links are one disclosure, closed until a reader opens it. They leave the dashboard
     // set, so they are anchors in both variants, carry no data-tab and carry target="_top" for the gold frames.
@@ -264,7 +266,7 @@ test("all fourteen served pages show one bar and one rail, and every link it off
       assert.deepEqual(seen.groups, GROUPS, `${where} must group the entries the same way`);
       assert.equal(seen.foot, FOOT, `${where} must carry the rail's foot`);
       assert.equal(seen.dots, 1, `${where} must show one status dot`);
-      assert.deepEqual(seen.entries.map(entry => entry.label), RAIL_LABELS, `${where} must offer the same twenty labels in order`);
+      assert.deepEqual(seen.entries.map(entry => entry.label), RAIL_LABELS, `${where} must offer the same twenty-one labels in order`);
       assert.equal(seen.docsSummary, DOC_SUMMARY, `${where} must keep the retired bar links under one disclosure`);
       assert.equal(seen.docsOpen, false, `${where} must keep Old documentation closed until a reader opens it`);
       assert.deepEqual(

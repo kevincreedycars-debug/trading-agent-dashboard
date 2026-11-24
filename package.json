@@ -54,8 +54,10 @@
     "test:unit": "node scripts/test-local.js unit",
     "test:browser": "node scripts/test-local.js browser",
     "compare:usd-l1-models": "node scripts/build_usd_l1_model_comparison.js",
-    "test:l2l-simulation": "node --test tests/l2l_simulation.test.js tests/model_comparison.test.js",
-    "test:usd-l1-platform": "node --test tests/test_modules.test.js tests/input_retrieval.test.js tests/spec_check.test.js tests/execution_accounting.test.js tests/backtesting_morning_trace.test.js",
+    "test:l2l-simulation": "node --test tests/l2l_simulation.test.js tests/l2l_session_horizon.test.js tests/model_comparison.test.js",
+    "test:usd-l1-platform": "node --test tests/test_modules.test.js tests/input_retrieval.test.js tests/spec_check.test.js tests/execution_accounting.test.js tests/backtesting_morning_trace.test.js backtester/tests/usd_l1_market_matrix.test.js backtester/tests/usd_l1_level_snapshots.test.js backtester/tests/usd_l1_tick_sweep_bounds.test.js",
+    "rebuild:l2l-tick-sweep": "node scripts/rebuild_l2l_tick_sweep_session_bounded.js",
+    "check:l2l-tick-sweep": "node scripts/rebuild_l2l_tick_sweep_session_bounded.js --check",
     "build:usd-l1-platform": "node scripts/build_usd_l1_platform_evidence.js",
     "check:usd-l1-platform": "node scripts/build_usd_l1_platform_evidence.js --check",
     "verify:usd-l1-test-selection": "node scripts/verify_usd_l1_test_selection.js"

@@ -13,6 +13,8 @@ const ledgerLib = require(path.join(ROOT, "lib", "backtesting_n8n_run_ledger"));
 const dataset = require(path.join(ROOT, "data", "usd-layer1-backtester", "run-v1.json"));
 
 const DATE = "2024-01-10";
+// The configured additional markets, read from the artefact rather than retyped.
+const CONFIGURED = dataset.market_matrix.additional_markets;
 
 function run(testModules) {
   return controller.runBacktest({
@@ -38,10 +40,10 @@ test("the module contract names four modules, their markets and their history ne
   assert.throws(() => modules.resolveModules([]), /at least one test module/);
 });
 
-test("selecting test 2 alone scores the four markets; selecting 3 and 4 scores none", () => {
+test("selecting test 2 alone scores every configured market; selecting 3 and 4 scores none", () => {
   const four = run("four_markets");
-  assert.deepEqual(Object.keys(four.decisions[0].results), ["EURUSD", "XAUUSD", "BTCUSD", "NAS100"]);
-  assert.deepEqual(four.test_configuration.scored_markets, ["EURUSD", "XAUUSD", "BTCUSD", "NAS100"]);
+  assert.deepEqual(Object.keys(four.decisions[0].results), CONFIGURED);
+  assert.deepEqual(four.test_configuration.scored_markets, CONFIGURED);
   assert.equal(four.test_configuration.defaulted, false);
 
   const paths = run(["l2l_full_5r", "l2l_half_3r"]);
@@ -79,7 +81,7 @@ test("a session that carries a tape lets the path modules execute", () => {
 
 test("the summary reports only the markets that were scored", () => {
   const restricted = run("four_markets");
-  assert.deepEqual(Object.keys(restricted.summary.markets), ["EURUSD", "XAUUSD", "BTCUSD", "NAS100"]);
+  assert.deepEqual(Object.keys(restricted.summary.markets), CONFIGURED);
   assert.equal(restricted.summary.pooled.scored > 0, true);
   const paths = run("l2l_full_5r");
   assert.deepEqual(paths.summary.markets, {});

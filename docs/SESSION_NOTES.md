@@ -1,5 +1,130 @@
 # Session Notes
 
+2026-11-23 (third build), USD Layer 1 lane, same branch - the tick sweep was re-priced inside the 05:00 session and readiness was reconciled per session.
+
+The sweep first. `l2l-tick-sweep-v1.json` was produced on 2026-11-12 by one continuous walk of the six
+sessions, so a limit that was not touched kept working into later sessions and a position was carried past
+the following 05:00 London. Measured from the stored artefact: 4 of 157 fills are stamped after their own
+session had ended (one three days later) and 24 exits are at or after the following 05:00, 4 of which have
+no exit at all. The earlier note that the ladder hash made the sweep unaffected is withdrawn: the same hash
+establishes the same lines, not the same execution outcomes.
+
+`backtester/lib/usd_layer1_backtester/tick_sweep_bounds.js` and
+`scripts/rebuild_l2l_tick_sweep_session_bounded.js` re-price v1's own decisions. The script reproduces v1
+first - totals, sixteen account blocks and sixteen model summaries to the recorded precision - and refuses
+to write if it cannot; then a fill outside its own session window is cancelled at that endpoint
+(`cancelled_at_session_end`, not counted as a trade) and a position with no in-window exit is closed at the
+last M5 bar inside the window on the side of the book that would have paid it (`session_end`). Every other
+trade keeps the price, instant and R it was recorded with.
+
+What moved: targets 33 to 24, stops 120 to 109, session-end closes 0 to 20, working 4 to 0, fills cancelled
+4, closed trades unchanged at 153 (the four working positions became endpoint closes as the four late fills
+were cancelled). R for the full 5R rule -11 to -5.1936 and for the half 3R rule +4 to +2.7508. Ten of the
+sixteen accounts moved; the list is in the supersession record.
+
+What the correction does not do: it does not re-derive a decision, so an order that never filled is not
+re-placed and a slot freed by an earlier 05:00 close is not re-filled, because v1 recorded only the fills
+it took. The tapes are local evidence - the artefact carries each one's sha256, window, bar count and
+endpoint close, so the endpoint prices can be audited, but re-streaming needs broker access.
+
+Readiness. `evaluateReadiness` now keeps levels, tape and shared session apart and copies a `sessions`
+block into every test cell. EURUSD, XAUUSD, NAS100 and BTCUSD hold 22 archived levels and a bid/ask tape
+over the same six sessions, so their two L2L cells read `measured_tick_replay` (6 of 6) rather than
+"no bid/ask tape". The committed M5 archive is a different dataset - mid-price, 2026-11-04 to 2026-11-06 -
+and is carried as such. Counts: 4 scored, 1 proxy-scored, 8 measured, 11 blocked, 24 total.
+
+Verified after the rebuild: run artefact 7,090,881 bytes sha256 `90800e10...3ebf39`; screen payload
+`e576276c...2adb3`; `check:l2l-tick-sweep`, `check:usd-l1-platform`, `check:usd-l1-ledger`,
+`report:layer1:check`, `report:morning:check` and `screen:backtesting:check` reproduce; suites 48/48,
+34/34, 17/17, 15/15, 118/118, 32/32, and the browser factory guard 15/15. The browser suite's six failures
+are the ones this machine already had; the H1 one was re-run against HEAD's payloads to confirm it.
+
+Not claimed: predictive advantage for any rule, model or market.
+
+2026-11-23 (second build), USD Layer 1 lane, same branch - the four-market arrangement became configuration and
+the L2L ladder's history became evidence. `backtester/config/usd_layer1_market_matrix.json` declares a primary
+market (`DXY`) and seven additional markets, and every selected market receives three tests: directional
+accuracy, original L2L 5R and 0.5 L2L 3R. That is 24 combinations per strategy, and the new `market_matrix.js`
+validates the document (one primary; a duplicate primary is refused; no unknown test; a declared sign per
+market), fingerprints it for experiment identity, and evaluates each combination against the data that exists.
+The published run scores 5 combinations and blocks 19 with a named missing dataset - three markets have no
+cached one-hour series, the M5 sample is mid-price only with no bid/ask, and no session has both a tape and a
+pre-session ladder - and a blocked combination is never rendered as a zero, on the artefact, in the ledger, in
+the n8n `test_configuration` or on the Tests tab. The configuration travels: `run.markets`, `market_matrix`,
+`market_matrix_id`/fingerprint, the ledger's configuration digest, the per-market comparisons, the screen
+payload and the dashboard table. The session-horizon fix now has its endpoint proof as well as its resolver
+tests: pricing reads the following 05:00 London close and ignores the next session's bar; `sessionTape` cuts a
+tape to `[cutoff, endpoint)` and `simulateSessionPath` closes an open position at the last in-session close, so
+a target that prints at the endpoint is dropped and counted, and the clock-change sessions either side of both
+2026 and 2027 transitions measure exactly 24 hours while the Saturday starts measure 23 and 25 and are refused.
+Level provenance was the other correction. The live ladder had been re-marked automatically at
+`2026-11-23T16:20:57.042Z`, so dating the six sessions against the file on disk priced none of them. The 22-level
+ladder those sessions were actually traded against was recovered intact (sha256 `a5dc10a3...`, matching the
+published tick sweep's own record), its git commit `5262f8d2` (`2026-10-04T19:02:52Z`) and its internal stamp
+`2026-10-04T16:14:19Z` both precede the first session start `2026-10-05T04:00:00Z`, and it is now committed
+under `data/usd-layer1-backtester/level-snapshots/` with an index that records the hash, the commit and the
+timing. Eligibility is resolved against the latest archived snapshot that precedes a session, so the six
+sessions are priced from the archive and the live file prices zero of them: approval cannot make an unavailable
+historical level contemporaneous, and a re-mark can no longer back-date history. The v1 artefact is preserved
+byte for byte (`run-v1-superseded-20261114.json`, `0fea0347...61f3`) with `run-v1-supersession.json` recording
+what changed and what did not; the v2 build is `adad65fd...dc7`, 7,056,949 bytes. The ledger check was pinned to
+the preserved v1 dataset for the same reason: re-merging old captures against v2 recomputed every record's
+configuration digest and doubled the rows, so that run was reverted and the check now names its dataset. Green
+after the rebuild: platform check exit 0 (four artefacts reproduce, verdict pass), ledger reproduces,
+platform 40/40, n8n 34/34, controller 17/17, l2l simulation 15/15, usd-session 118/118, engine 32/32, native and
+browser backtesting 26/26, and the report, screen and morning-run checks. H1's 0 of 725 is a measured result, not
+an owner decision: what is pending there is the gold identity/licence and the calendar vintage (D5, D6), and the
+0 stands if those inputs never exist. Full detail: `docs/research/usd-session/v1/MARKET_MATRIX_AND_READINESS.md`
+and checklist sections 5, 5b and 5c.
+
+
+2026-11-23, USD Layer 1 lane (branch `backtesting/usd-l1-session-horizon-20261123`, cut from `origin/main`
+`0288994a`) - the session-engine interface was ending a session at 17:00 `America/New_York` while the contract
+it serves, the four test definitions and every published artefact say 05:00 London to 05:00 London on the next
+local day, so the one module whose whole job is to place those two instants was measuring a window of 16 or 17
+hours. Across 2026's 261 Monday-to-Friday starts the old endpoint gave 17 hours on 241 of them and 16 on the 20
+that fall in the two weeks a year when London and New York are on different offsets; nothing failed, because
+nothing else read the module, which is exactly why it was worth correcting before an implementation inherited
+it. Both ends are now 05:00 `Europe/London` with `endpoint_day_offset` 1, `nominal_hours` 24,
+`session_start_weekdays` Monday to Friday and the rule written out in `session_start_rule`; `isSessionStart()`
+refuses a Saturday or Sunday start, `resolveSession()` returns the measured window and the weekday flag beside
+the two instants, the version is `usd-session-engine-interface-v2`, and `America/New_York` stays in the
+transition table only because the macro as-of builder times the Fed's H.10 release in it. All 261 weekday
+starts now measure exactly 24 hours, and the 2026 Saturday starts measure 23 (2026-03-28) and 25 (2026-10-24)
+hours - the two EU transitions, both refused - so no eligible session can contain one. The Cloud runtime was
+re-cut around the corrected interface: `node scripts/build_usd_l1_n8n_cloud_workflows.js` rewrote all six files
+to identical bytes at `bundle_sha256` `73215c1e4785b6029e6ead99a7b7a9783f96497833f01acebfe0dbba01b6d787`,
+119,268 bytes, with the interface source at `73ba4fc1d181…c808`, the three child ids (`giGJKNQw5WLh1xbX`,
+`42sxXHScRvE3qSTX`, `kaWqy2iYIz8UzPRS`) and the header-auth credential preserved; nothing was uploaded or
+executed on n8n Cloud in this session.
+
+Landed with it on the same branch, each with its own evidence: `contracts.ACCOUNT` is now the only
+machine-readable account - `usd_layer1_backtester/accounts.js#runAccount` defaults, the demo call and the
+panel's account note read it instead of retyping GBP 100,000 and 1%, and `tests/execution_accounting.test.js`
+asserts they agree; the M5 archive has a verifier (`backtester/scripts/verify_m5_archive.js`, 4 of 4 markets
+hold five-minute bars, 0 hold bid/ask, 4 hold a marked ladder, 6 of 6 recorded EUR/USD trades re-derived on
+2026-11-05 with 0 failures) and a guard (`backtester/tests/usd_layer1_m5_archive.test.js`, 5 of 5); and the
+research artefacts this lane reads are committed (`data/usd-24h-research-dataset.json`,
+`data/usd-24h-baseline-comparison.json`, `data/usd-layer1-backtester/l2l-tick-sweep-v1.json`,
+`data/usd-layer1-backtester/m5-archive-status.json`). Verified on this base: `check:usd-l1-platform` exit 0 with
+all four artefacts `reproduces` and `verdict: pass`, `test:usd-l1-platform` 29 of 29, `test:usd-l1-n8n` 34 of
+34, `test:usd-session` 117 of 117, `execution_accounting` 8 of 8, `check:usd-l1-ledger` `ledger reproduces`
+with no verification failures, `report:layer1:check`, `report:morning:check` and `screen:backtesting:check`
+each reproducing their artefact, and the four browser suites 23 of 23 (`site_nav_consistency` 6,
+`usd_layer1_logic_page` 6, `layer1_call_flow` 5, `usd_layer1_call_flow` 6). The commit also refreshes
+`run-v1.json`'s recorded provenance - the ladder source is named as the tracked `data/l2l-levels.json` rather
+than the ignored raw copy, and two input hashes are updated to the catalogue and macro inventory as they stand
+on `main` - with no result moving. One thing was found and deliberately not acted on: re-running the artefact
+builder now yields SHA-256 `390b6118…1af7` instead of the committed `0fea0347…61f3`, with all 51 differing
+leaves in `results.lead_numbers[1]` and `level_provenance`, because `origin/main` published a re-marked L2L
+ladder today (`a04cc73a`, stamped `2026-11-23T16:20:57.042Z`, automatic coverage, 30 levels per asset against
+22) over the 2026-10-04 hand-marked ladder the artefact was built from. Every session is dated against the
+ladder stamp, so the rebuild prices 0 sessions with original levels where the committed artefact records 6
+(2026-10-05 onward): republishing would move the panel's lead number from 6 to 0 and withdraw the only
+original-level coverage there is, so it is recorded as the owner decision it is in
+`docs/research/usd-session/v1/PLATFORM_COMPLETION_CHECKLIST.md` section 11 rather than folded into this fix. No
+rule, weight, threshold, workflow, order, size, feed, lane or runtime table was touched, and nothing live moved.
+
 2026-11-23, live-trading coverage row published and FTMO 2 audited - the `Ladder coverage` row the 21 November record
 asked for is live on the lane card and in the status panel (`main` `f30deafa`, buster
 `script.js?v=20261123-ladder-coverage-row`), and the published `script.js` is the committed file byte for byte (HTTP 200,
@@ -22,6 +147,8 @@ lane 1's EURUSD put-back at 2026-11-22T22:06Z from a window opened 2026-11-20T17
 recorded, not changed: the market-closure test is keyed on `requireDeviation`, so a lane trading ordinary crossings can
 state a limit from a pre-closure candle while a Layer 1 call is still live. Record:
 `docs/live-trading/TRADER_COVERAGE_NO_DAILY_CAP_20261122.md` sections 8 and 9.
+
+
 
 2026-11-22, live-trading trader lane - the trader half of the L2L coverage work shipped to all three FTMO accounts, and
 the daily entry cap came off the two lanes still carrying it. The three checkouts were on three different revisions

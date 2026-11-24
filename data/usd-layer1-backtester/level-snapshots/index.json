@@ -1,0 +1,36 @@
+{
+  "schema_version": "usd-l1-level-snapshots-v1",
+  "created_at": "2026-11-23",
+  "rule": "A session may be priced only by the latest archived snapshot whose own stamp (and, where recorded, whose git commit) is earlier than that session's 05:00 London start. A snapshot marked after a session can never price it, so re-marking the ladder cannot back-date history.",
+  "why_this_exists": "data/l2l-levels.json is a live marking tool file: it is re-marked in place, so today's copy cannot establish what was in the file before an old session. The snapshots below are the dated copies that can.",
+  "snapshots": [
+    {
+      "file": "l2l-levels-2026-10-04T16-14-19Z.json",
+      "sha256": "a5dc10a32e0ccb50a0eb816b649d1e6cb0dd35a647c04c1e6f03dfb4b4793704",
+      "generated_at_utc": "2026-10-04T16:14:19Z",
+      "marked_by": "local marking tool (scripts/l2l-levels-tool.js)",
+      "levels_per_instrument": {
+        "EURUSD": 22,
+        "XAUUSD": 22,
+        "US100.cash": 22,
+        "BTCUSD": 22
+      },
+      "marking_dates": ["2026-10-03", "2026-10-04"],
+      "latest_mark_at_utc": "2026-10-04T15:28:46.601Z",
+      "git_path": "data/l2l-levels.json",
+      "git_commit": "5262f8d28d87062897aa981eecb848e02bf1b6aa",
+      "git_commit_at_utc": "2026-10-04T19:02:52Z",
+      "recovered_from": "backtester/tmp/usd-session-research/raw/main/data__l2l-levels.json (ignored local copy, byte-identical, sha256 verified)",
+      "first_session_this_can_price": "2026-10-05",
+      "evidence": {
+        "tick_sweep_record": "data/usd-layer1-backtester/l2l-tick-sweep-v1.json records this exact sha256 as the ladder it replayed, and six sessions 2026-10-05 to 2026-10-12",
+        "git_blob_check": "git cat-file blob 5262f8d2:data/l2l-levels.json hashes to a5dc10a32e0ccb50a0eb816b649d1e6cb0dd35a647c04c1e6f03dfb4b4793704",
+        "timing": "the stamp (2026-10-04T16:14:19Z), the latest hand mark (2026-10-04T15:28:46.601Z) and the commit (2026-10-04T19:02:52Z) all precede the first priced session start, 2026-10-05T04:00:00Z"
+      }
+    }
+  ],
+  "not_a_snapshot": {
+    "path": "data/l2l-levels.json",
+    "why": "the live file was automatically re-marked on 2026-11-23 (stamp 2026-11-23T16:20:57.042Z, 30 levels per asset). It is a candidate for future sessions only and cannot establish eligibility for any session before its stamp."
+  }
+}

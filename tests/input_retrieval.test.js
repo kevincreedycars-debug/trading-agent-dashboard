@@ -17,6 +17,7 @@ const dataset = require(path.join(ROOT, "data", "usd-layer1-backtester", "run-v1
 const entry = registry.requireModel("challenger_v1");
 const contract = entry.input_contract;
 const fullSession = dataset.sessions.find((session) => entry.input_keys.every((key) => Number.isFinite(session.saved_inputs[key])));
+const n8nFixture = require(path.join(ROOT, "data", "usd-layer1-backtester", "n8n", "execution-5471-structural.json"));
 
 function tempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "usd-l1-captures-"));
@@ -146,4 +147,34 @@ test("the retrieval artefact reports an empty corpus as empty and never invents 
   assert.equal(model.mornings.panel, dataset.sessions.length);
   assert.match(model.statement, /Reconstruction is not retrieval/);
   assert.ok(model.keys.every((key) => key.source.known === true));
+});
+
+test("the committed artefact and the recorded n8n execution retrieve the same morning", () => {
+  // The n8n capture is a record of the gate, not a copy of the panel's values: it says how many declared
+  // keys were present, how many carried a clock before the cutoff, and whether any receipt completed the
+  // set. Reading the production artifact through the same contract must reproduce those counts exactly.
+  // That is the proof that retrieval is wired to the published morning rather than to a test-only shape.
+  assert.equal(n8nFixture.date, fullSession.date);
+  assert.equal(n8nFixture.dataset.run_version, dataset.run.run_version);
+  for (const modelKey of ["challenger", "challenger_v1"]) {
+    const model = registry.requireModel(modelKey);
+    const recorded = n8nFixture.input_availability_by_model[modelKey];
+    const morning = retrieval.retrieveMorning({
+      date: fullSession.date,
+      session: fullSession,
+      contract: model.input_contract
+    });
+    assert.equal(morning.summary.keys, recorded.declared_inputs, `${modelKey}: every declared key is retrieved`);
+    assert.equal(morning.summary.present, recorded.present_inputs, `${modelKey}: the present count matches the n8n gate`);
+    assert.equal(morning.summary.missing, recorded.missing_inputs, `${modelKey}: the missing count matches the n8n gate`);
+    assert.deepEqual(
+      morning.keys.filter((key) => !key.present).map((key) => key.key),
+      recorded.missing_keys,
+      `${modelKey}: a missing key is named, not dropped`
+    );
+    assert.equal(morning.summary.timestamped, recorded.stamped_before_cutoff, `${modelKey}: the clock count matches the n8n gate`);
+    assert.equal(morning.summary.contemporaneous, 0, `${modelKey}: the n8n record carries no receipt either`);
+    assert.equal(recorded.receipted_complete, false, `${modelKey}: the recorded gate is not receipted`);
+    assert.equal(morning.summary.claim, "availability_not_established", `${modelKey}: reconstruction is not availability`);
+  }
 });

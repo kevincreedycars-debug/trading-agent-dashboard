@@ -109,6 +109,47 @@ function build() {
   const decisions = runDecisions({ run, engine, models });
   const readiness = buildReadiness({ run, engine });
   const flatBands = proposedFlatBands({ run, frozen_at: engine.book_detail && engine.book_detail.frozen_on });
+  // The market x test matrix as the page shows it: the selection, its fingerprint and one row per market per
+  // test, with each blocked combination naming the dataset it is missing. Read from the artefact, never
+  // recomputed here, so the dashboard cannot disagree with the run.
+  const matrixBlock = run.market_matrix && run.market_matrix.readiness
+    ? {
+        id: run.market_matrix.id,
+        fingerprint: run.market_matrix.fingerprint,
+        primary_market: run.market_matrix.primary_market,
+        additional_markets: run.market_matrix.additional_markets,
+        market_count: run.market_matrix.market_count,
+        test_count: run.market_matrix.test_count,
+        combination_count: run.market_matrix.combination_count,
+        tests: (run.market_matrix.tests || []).map((test) => ({ id: test.id, label: test.label, ordinal: test.ordinal })),
+        counts: run.market_matrix.readiness.run_counts || run.market_matrix.readiness.counts,
+        rows: (run.market_matrix.readiness.rows || []).map((row) => ({
+          market: row.market,
+          label: row.label,
+          role: row.role,
+          broker_symbol: row.broker_symbol,
+          broker_symbol_confirmed: row.broker_symbol_confirmed,
+          tests: Object.fromEntries(
+            Object.entries(row.tests || {}).map(([id, entry]) => [
+              id,
+              {
+                status: entry.status,
+                reason: entry.reason || null,
+                scored: entry.scored === undefined ? null : entry.scored,
+                sessions_with_tape_and_ladder: entry.sessions_with_tape_and_ladder === undefined ? null : entry.sessions_with_tape_and_ladder,
+                // The three data axes kept apart: the levels, the tape and the sessions they share. A blocked
+                // cell can then say which of the three is missing instead of the page guessing at one.
+                sessions: entry.sessions || null,
+                blockers: entry.blockers || null
+              }
+            ])
+          )
+        })),
+        note:
+          "every selected market receives the same three tests; a blocked combination names the missing dataset " +
+          "and is never shown as a scored zero"
+      }
+    : null;
   const packageInfo = verifyRequestedPackage({ root: ROOT });
   const mapping = reviewAdjudications({
     book,
@@ -174,6 +215,7 @@ function build() {
     tests: report.tests,
     generatedAt,
     flatBands,
+    marketMatrix: matrixBlock,
     packageInfo,
     mapping,
     h1,

@@ -1,6 +1,6 @@
 # Layer 1 backtesting: first evidence report
 
-Schema `layer1-backtest-report.v1`, research only, generated from the stored artefacts on `2026-11-14T00:00:00.000Z`.
+Schema `layer1-backtest-report.v1`, research only, generated from the stored artefacts on `2026-11-23T22:10:00.000Z`.
 
 > One engine now takes both models over the same 725 mornings. No morning is valid for the intended model, the only scored directional test is a broker proxy and sits at a coin flip, and the published artefacts flag more trades than they allow.
 
@@ -185,7 +185,7 @@ Evidence:
 
 ### F7
 
-Four-market confirmation is published market by market, never as one aggregate: 1 of 8 market/model cells clear it (XAUUSD/control at 55.68% with a lower bound of 51.1%), and of the 4 candidate cells, 0 clear it.
+Four-market confirmation is published market by market, never as one aggregate: 1 of 8 market/model cells clear it (XAUUSD/control at 55.68% with a lower bound of 51.1%), and of the 7 candidate cells, 0 clear it.
 
 Numbers:
 
@@ -201,19 +201,37 @@ Numbers:
 - per_market.XAUUSD.candidate.scored: 344
 - per_market.XAUUSD.candidate.accuracy_pct: 51.16
 - per_market.XAUUSD.candidate.lower_bound_pct: 45.9
-- per_market.BTCUSD.control.scored: 536
-- per_market.BTCUSD.control.accuracy_pct: 50
-- per_market.BTCUSD.control.lower_bound_pct: 45.78
-- per_market.BTCUSD.candidate.scored: 385
-- per_market.BTCUSD.candidate.accuracy_pct: 48.57
-- per_market.BTCUSD.candidate.lower_bound_pct: 43.62
+- per_market.XAGUSD.control.scored: 0
+- per_market.XAGUSD.control.accuracy_pct: —
+- per_market.XAGUSD.control.lower_bound_pct: —
+- per_market.XAGUSD.candidate.scored: 0
+- per_market.XAGUSD.candidate.accuracy_pct: —
+- per_market.XAGUSD.candidate.lower_bound_pct: —
 - per_market.NAS100.control.scored: 454
 - per_market.NAS100.control.accuracy_pct: 52.86
 - per_market.NAS100.control.lower_bound_pct: 48.27
 - per_market.NAS100.candidate.scored: 331
 - per_market.NAS100.candidate.accuracy_pct: 51.96
 - per_market.NAS100.candidate.lower_bound_pct: 46.59
-- cells: 8
+- per_market.BTCUSD.control.scored: 536
+- per_market.BTCUSD.control.accuracy_pct: 50
+- per_market.BTCUSD.control.lower_bound_pct: 45.78
+- per_market.BTCUSD.candidate.scored: 385
+- per_market.BTCUSD.candidate.accuracy_pct: 48.57
+- per_market.BTCUSD.candidate.lower_bound_pct: 43.62
+- per_market.WTIUSD.control.scored: 0
+- per_market.WTIUSD.control.accuracy_pct: —
+- per_market.WTIUSD.control.lower_bound_pct: —
+- per_market.WTIUSD.candidate.scored: 0
+- per_market.WTIUSD.candidate.accuracy_pct: —
+- per_market.WTIUSD.candidate.lower_bound_pct: —
+- per_market.GBPUSD.control.scored: 0
+- per_market.GBPUSD.control.accuracy_pct: —
+- per_market.GBPUSD.control.lower_bound_pct: —
+- per_market.GBPUSD.candidate.scored: 0
+- per_market.GBPUSD.candidate.accuracy_pct: —
+- per_market.GBPUSD.candidate.lower_bound_pct: —
+- cells: 14
 - cells_with_lower_bound_at_or_above_50: XAUUSD/control
 - best_point_accuracy.market: XAUUSD
 - best_point_accuracy.label: control
@@ -292,8 +310,8 @@ on nearly all of them.
 | --- | --- | --- | --- | --- | --- |
 | 1 | USD direction on the broker DXY.cash series | historical_coverage | scored on a broker proxy series, not on the official index | 360 | 725 |
 | 2 | USD-only opposite-direction mapping in four markets | historical_coverage | scored market by market; no cross-market aggregate is published or reported | 685 | 725 |
-| 3 | Original Layer 2 levels with the frozen 5R rules | historical_coverage | blocked on history: the only evidence is a worked demonstration | 0 | 725 |
-| 4 | Original levels plus midpoints with the frozen 3R rules | historical_coverage | blocked on history: the only evidence is a worked demonstration | 0 | 725 |
+| 3 | Original Layer 2 levels with the frozen 5R rules | historical_coverage | blocked on history: the simulation is implemented and unit-tested, but no 5-minute tape or level ladder exists | 0 | 725 |
+| 4 | Original levels plus midpoints with the frozen 3R rules | historical_coverage | blocked on history: the simulation is implemented and unit-tested, but no 5-minute tape or level ladder exists | 0 | 725 |
 
 ### 1. USD direction on the broker DXY.cash series
 
@@ -338,12 +356,12 @@ Market XAUUSD:
 | control | 458 | 255 | 203 | 55.68% | 51.1% | flat window inside the flat band: 100; the model made no call: 11; no readable outcome: 156 |
 | candidate | 344 | 176 | 168 | 51.16% | 45.9% | flat window inside the flat band: 67; the model made no call: 210; no readable outcome: 104 |
 
-Market BTCUSD:
+Market XAGUSD:
 
 | Model | Scored | Hits | Misses | Accuracy | Lower bound | Exclusions |
 | --- | --- | --- | --- | --- | --- | --- |
-| control | 536 | 268 | 268 | 50% | 45.78% | flat window inside the flat band: 178; the model made no call: 11; no readable outcome: 0 |
-| candidate | 385 | 187 | 198 | 48.57% | 43.62% | flat window inside the flat band: 130; the model made no call: 210; no readable outcome: 0 |
+| control | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 11; no readable outcome: 714 |
+| candidate | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 210; no readable outcome: 515 |
 
 Market NAS100:
 
@@ -352,12 +370,33 @@ Market NAS100:
 | control | 454 | 240 | 214 | 52.86% | 48.27% | flat window inside the flat band: 104; the model made no call: 11; no readable outcome: 156 |
 | candidate | 331 | 172 | 159 | 51.96% | 46.59% | flat window inside the flat band: 80; the model made no call: 210; no readable outcome: 104 |
 
+Market BTCUSD:
+
+| Model | Scored | Hits | Misses | Accuracy | Lower bound | Exclusions |
+| --- | --- | --- | --- | --- | --- | --- |
+| control | 536 | 268 | 268 | 50% | 45.78% | flat window inside the flat band: 178; the model made no call: 11; no readable outcome: 0 |
+| candidate | 385 | 187 | 198 | 48.57% | 43.62% | flat window inside the flat band: 130; the model made no call: 210; no readable outcome: 0 |
+
+Market WTIUSD:
+
+| Model | Scored | Hits | Misses | Accuracy | Lower bound | Exclusions |
+| --- | --- | --- | --- | --- | --- | --- |
+| control | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 11; no readable outcome: 714 |
+| candidate | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 210; no readable outcome: 515 |
+
+Market GBPUSD:
+
+| Model | Scored | Hits | Misses | Accuracy | Lower bound | Exclusions |
+| --- | --- | --- | --- | --- | --- | --- |
+| control | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 11; no readable outcome: 714 |
+| candidate | 0 | 0 | 0 | — | — | flat window inside the flat band: 0; the model made no call: 210; no readable outcome: 515 |
+
 - This is the agreed test 2: one model call against four market outcomes, not a pair-combination measure.
 - Each market carries its own denominator; an aggregate across markets is not reported.
 
 ### 3. Original Layer 2 levels with the frozen 5R rules
 
-Type: historical_coverage. Outcome source: one-hour closes with the original layer-2 level grid and 5R management. Status: blocked on history: the only evidence is a worked demonstration.
+Type: historical_coverage. Outcome source: one-hour closes with the original layer-2 level grid and 5R management. Status: blocked on history: the simulation is implemented and unit-tested, but no 5-minute tape or level ladder exists.
 
 Question: When a Layer 1 call was handed to the original Layer 2 levels, did the frozen 5R path reach its target before its stop?
 
@@ -373,11 +412,12 @@ The path test needs a 5-minute tape and a level ladder archived before the setup
 | l2l_full_5r | Current / half 3R | control | 10 | 4 | 4 | 8 |
 
 - This is the agreed test 3. It needs a trade-qualified call, contemporaneous levels and an actionable bid/ask M5 replay.
+- The path rule engine is implemented and unit-tested on synthetic tapes (lib/layer1_backtesting/l2l_simulation.js). That is a statement about the simulator, not a measured result.
 - The grid does not yet exist for these markets, so the test is blocked on history, not scored at zero.
 
 ### 4. Original levels plus midpoints with the frozen 3R rules
 
-Type: historical_coverage. Outcome source: one-hour closes with the levels-plus-midpoints grid and 3R management. Status: blocked on history: the only evidence is a worked demonstration.
+Type: historical_coverage. Outcome source: one-hour closes with the levels-plus-midpoints grid and 3R management. Status: blocked on history: the simulation is implemented and unit-tested, but no 5-minute tape or level ladder exists.
 
 Question: With midpoints added to the original levels, did the frozen 3R path reach its target before its stop?
 
@@ -394,6 +434,7 @@ The path test needs a 5-minute tape and a level ladder archived before the setup
 
 - This is the agreed test 4, a separately frozen geometry and management rule, not a sensitivity check on test 3.
 - It needs the same tape and ladder evidence as test 3 plus the midpoint geometry.
+- The midpoint ladder and the 3R path are implemented and unit-tested on synthetic tapes; the historical inputs are absent.
 
 ### Pair combination: `definition_recorded_not_scored`
 
@@ -506,12 +547,12 @@ Does not license: It does not license treating reconstructed calls as valid call
 
 | Input | Bytes | sha256 |
 | --- | --- | --- |
-| `data/usd-layer1-backtester/run-v1.json` | 6584003 | `20ef865c8e6760d1a37a7943aa5c261dd4fc74e9ff7b940921ed4bf6f25b970e` |
-| `data/usd-layer1-backtester/engine-v1.json` | 927740 | `f4290bae4ff91a41727f717f0f7138dffedbf8b3e2a3dc824dcdceeb7aeab6c8` |
+| `data/usd-layer1-backtester/run-v1.json` | 7090881 | `90800e10572ac47e83a233c94212953ea43b10f09b4f2add262d4c6b823ebf39` |
+| `data/usd-layer1-backtester/engine-v1.json` | 927740 | `9200982a8cf653fd46ce138c52c29ba1d8dbdbe054ce4400f0279468532cbbb5` |
 | `config/usd_l1_factor_rulebook_v1.json` | 38281 | `1f12c64f019e38056330a8beb3ffb85314e2ff5a25c46af91c18bf078cf9f6a0` |
 | `config/usd_l1_decision_rules_v1.json` | 10240 | `015155d3092d8a6786ce5ce18c2150155bf13c01a37328cfb19336484b974cc8` |
 
-Report digest: `a458d02a409ed53480de7eb2921bf4bebcddadd1235e5bbe353af0023f157024`.
+Report digest: `97d04591be93af3236122194948b934e5e3a68a54156e1b5e6c0d6971891dd22`.
 
 The digest is taken over the body before this block; rebuilding the report from the same artefacts reproduces it.
 
