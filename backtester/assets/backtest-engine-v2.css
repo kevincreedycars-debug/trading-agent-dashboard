@@ -300,8 +300,8 @@
 .cr-chip[data-state="unknown"] { border-color: rgba(165, 181, 199, 0.4); background: rgba(80, 96, 112, 0.18); color: var(--cr-unknown); }
 .cr-chip[data-state="inactive"] { border-color: rgba(142, 159, 176, 0.4); background: rgba(60, 74, 88, 0.18); color: var(--cr-inactive); }
 
-/* The three readiness pips: software, data, research, in that order. They wrap rather than push their
-   node wider, because each pip carries a three-letter word, not just a dot. */
+/* The readiness pips: one per dimension the manifest declares, in its order. They wrap rather than push
+   their node wider, because each pip carries a three-letter word, not just a dot. */
 .cr-pips { display: flex; flex-wrap: wrap; gap: 4px; }
 .cr-pip {
   display: inline-flex;
@@ -332,6 +332,36 @@
 .cr-node.is-origin .cr-port-in { display: none; }
 
 /* Legend ---------------------------------------------------------------- */
+/* The dimension key: names each axis a badge is read on, beside the state legend. */
+.cr-dimensions {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--cr-line);
+  border-radius: 10px;
+  background: rgba(10, 17, 25, 0.55);
+}
+.cr-dimensions-title {
+  margin: 0 0 6px;
+  color: var(--cr-ink-faint);
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: var(--cr-label-size);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.cr-dimensions-list { display: grid; gap: 6px 20px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.cr-dimension { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: baseline; gap: 2px 8px; }
+.cr-dimension-short {
+  color: var(--cr-ink-faint);
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: var(--cr-label-size);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.cr-dimension-name { color: var(--cr-ink); font-size: var(--cr-label-size); font-weight: 600; }
+.cr-dimension-summary { grid-column: 2; color: var(--cr-ink-faint); font-size: var(--cr-body-size); line-height: 1.45; }
+
 .cr-legend {
   display: flex;
   flex-wrap: wrap;

@@ -9,9 +9,14 @@ without anyone editing UI text.
 
 `backtest-engine-v2.html` loads `backtester/assets/backtest-engine-v2.manifest.json` and then the
 ten artefacts the manifest's `sources` block names. Nothing on the page is typed in by hand. A step's
-chip is the worst of its three dimensions (`software`, `data`, `research`); each dimension is decided
-by the first rule in the manifest that matches, in the order the manifest writes them. A rule is
-`exists`, `eq`, `gt`, `eqPath`, or `olderThanPath`.
+chip is the worst of its dimensions, and the dimensions are declared in the manifest's `dimensions`
+block: `software`, `deployed`, `data` and `research`, in that order. Each dimension is decided by the
+first rule in the manifest that matches, in the order the manifest writes them. A rule is `exists`,
+`eq`, `gt`, `eqPath`, or `olderThanPath`, and a path may index an array (`children[0].url`) or select a
+record by one of its fields (`child_executions[model=challenger].execution_id`). A step that does not
+write a dimension takes the manifest's `defaults.readiness` entry for it; the released manifest gives
+`deployed` the default `inactive` with the note that the step runs in the checkout rather than as a
+deployed Cloud workflow, so no step can borrow a deployment it does not have.
 
 The artefact addresses are declared once, in `sources`:
 
@@ -43,6 +48,20 @@ guessed.
 | The model logic behind it | `evidence.claims.model_logic.status eq not_established` | `pending` (research) |
 | Published readiness has blocked cells | `readiness.published.counts.blocked gt 0` | `pending` (data) |
 | Live parity | `parity.ok eq true` / `parity.decision_mismatches gt 0` | unchanged |
+| The parent that ran is the one deployed | `freshcall.deployed_identity.parent_workflow_id exists` | `complete` (deployed) |
+| The pinned bundle answered | `freshcall.live_call.execution.id exists` | `complete` (deployed) |
+| Challenger v0 answered in Cloud | `freshcall.live_call.child_executions[model=challenger].execution_id exists` | `complete` (deployed) |
+| Challenger v1 answered in Cloud | `freshcall.live_call.child_executions[model=challenger_v1].execution_id exists` | `complete` (deployed) |
+| The fixture is deployed and active | `evidence.workflows.children.2.active eq true` | `complete` (deployed) |
+
+Deployment is the dimension this release separated out. Before it, the controller's `software` note
+said "the parent is deployed" and the fresh-call `software` note said "the captured execution agrees
+with the rehearsal": both statements are about a deployment, and neither was visible as its own state.
+Now `software` is what exists and is checked in this checkout, `deployed` is what the captured
+execution proves ran in Cloud (parent `89uk5JnPbWPL5lGD`, bundle `usd-l1-cloud-runtime-v3`, parent
+execution 7260, children 7261 and 7262), and the seven steps that are not Cloud workflows take the
+`defaults.readiness.deployed` entry, which reads `inactive` and says why. The chip remains the worst
+of the four, so adding a complete deployment can never lift a step whose data or research is not done.
 
 The fresh-call step is labelled `Fresh-call proof`, shows the eight cases, the 8/8 call agreement,
 the 4/4 scored-case agreement, 27/110 probes and executions **7260** (parent), **7261** and **7262**
