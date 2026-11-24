@@ -224,16 +224,109 @@ Lane 3's names its own rule (`"rule": "blind"`, `"call_read": "none"`) and `iden
 
 ## 7. Open items
 
-- **The dashboard chip.** The heartbeat now carries the coverage block the 21 November record asked for, but no page
-  renders it yet: the lane card states the caps and the rule, not the floor. That is page work, and it is the one piece
-  of the original plan still open.
+- **The dashboard chip is closed** (section 8): the lane card and the status panel both carry a `Ladder coverage` row
+  from `script.js?v=20261123-ladder-coverage-row`, published on `main` as `f30deafa` and read back headless.
 - **Lane 1 must be re-registered with `-Elevated`.** Its `tmp` journal and state files admit Administrators and SYSTEM
   only, so a plain registration leaves it unable to write them; the deploy found this the hard way.
 - **Lane 3's registration must still pass `-Published C:\live-trading\publisher`**, as the 21 November record says; its
   current wrapper does.
-- **Lane 2 now runs a revision it did not run before**, so it also carries the session-expiry rule for a deviation
-  (`43c48316`) and the blind lane's ordered legs. Both were reviewed on lane 3's line and both are covered by tests; they
-  are rule changes on a live account and are recorded here as such rather than presented as part of the coverage work.
+- **Lane 2 runs one revision a week old and it carries code it does not run.** Its trader and strategy library are
+  byte-identical to `main`'s (`74b0cd18…` and `db164d85…`), so the session-expiry rule for a deviation (`43c48316`) and
+  the blind lane's ordered three-leg reading (`e75757f4`) ship to it - but both sit behind `requireDeviation`, and lane
+  2's wrapper passes `--reentry-crossing` and no `--require-deviation`, so on lane 2 they are dormant. Section 9 states
+  what lane 2 does run, and the one case in the recorded history that would have been refused by a rule it does not have.
 - **`C:\live-trading\runtime\data\l2l-levels.json`, `C:\ftmo2\…`, `C:\ftmo3\…` are still unread copies.** Nothing reads
   them; they can be deleted whenever someone is next in those checkouts.
+
+## 8. The Ladder coverage row, published
+
+The page work the 21 November record asked for is done and live. One row, stated the same way on the lane card and in
+the status panel, read from the heartbeat's own `coverage` block rather than from the lanes file, so a lane whose run
+did not state a floor says so instead of borrowing its neighbour's number.
+
+- **Committed and published.** `f30deafa`, "live-trading: the lane card and the status panel state the ladder's
+  coverage floor", pushed to `main` (`origin/main` pointed at that commit when read on the evening of 23 November; two
+  data-only publish commits have landed on top since). `index.html` carries
+  `script.js?v=20261123-ladder-coverage-row`.
+- **The published bytes are the committed bytes.**
+  `https://kevincreedycars-debug.github.io/trading-agent-dashboard/script.js?v=20261123-ladder-coverage-row` answers
+  HTTP 200, 1,215,467 bytes, sha256
+  `35BA4E6E8BEA39E1110E406A7316814C9A7B10C5C1DC2FD9FEA839A9AA4452E6` - the same hash as the worktree's `script.js`
+  after line-ending normalisation, and the same bytes as `raw.githubusercontent.com/…/main/script.js`. The buster is
+  live: the hosted `index.html` (37,299 bytes) serves that query string.
+- **The block it reads.** The three hosted heartbeats state exactly the fields the page asks for: `status`,
+  `checked_at_utc`, `extended`, `levels_available_at_utc`, `min_per_side`, `short[]`, `failures[]`, `entries_withheld[]`.
+  The earlier "schema not confirmed against the publisher" risk is closed: the publisher's own output was read at
+  20:56Z, `{"status":"covered","checked_at_utc":"2026-11-23T20:56:30.019Z","extended":false,
+  "levels_available_at_utc":null,"min_per_side":10,"short":[],"failures":[],"entries_withheld":[]}` on all three lanes,
+  beside `armed: true`, `caps.max_per_day: null`, `capped: false` and `entries_today` 3 / 9 / 24.
+- **Read from the hosted page, headless.** The probe opens the Live Trading tab and the status panel at
+  2026-11-23T20:56:30Z, reads each lane's `Ladder coverage` `dd`, records the row order and any page error, and prints
+  JSON (`.local/wt/coverage-cap-20261122/tmp/live-coverage-row-check.js`, deliberately read-only - it clicks tabs and
+  lane selectors and never sends, closes or publishes). Result: three cards, each reading `held at 10 full lines each
+  side`; status-panel rows in order `ACCOUNT`, `LAST BROKER UPDATE`, `LAST STRATEGY TICK (UK)`, `STRATEGY`,
+  `TICK OUTCOME`, `TRADING PERMISSION`, `LOADED RULES`, `LADDER COVERAGE`, `EFFECTIVE CAP`, `IDENTITY CHECK` on all
+  three lanes; `errors: []`; diagnostics 3 cards and 40 lane rows.
+- **What it will not say.** A heartbeat with no coverage block reads `not stated by this heartbeat`; a lane with no
+  heartbeat reads `no heartbeat published`; a short side is named with its above/below counts and the instruments whose
+  entries were withheld; a missing count is never rendered as `0`. The tooltip carries the reassurance that everything
+  already working on the account was still reviewed, moved and exited.
+- **Tests.** `node --check script.js` clean; `tests/live_trading_accounts.browser.test.js` and
+  `tests/live_trading_lane_status.browser.test.js` 15 of 15; the ten trader/lane/L2L suites (`live_trading_trader`,
+  `live_trading_lane2`, `live_trading_blind_lane`, `live_trading_deviation_sequence`, `live_trading_lanes_publish`,
+  `live_trading_task_registration`, `l2l_strategy`, `l2l_coverage`, `l2l_half_grid`, `l2l_levels`) 330 of 330; the eleven
+  remaining live-trading browser suites 36 of 37, the one failure being `the M5 pane zooms, and two marked levels each
+  side survive every step`, which fails identically in a clean worktree at `d9018198` (the commit before this one) and is
+  the `origin/main` chart-zoom failure the 21 November record already names.
+
+## 9. FTMO 2 audit: the ordered legs, the session expiry, the Blind reset
+
+The question was whether lane 2 runs the ordered M5 reading, the session-expiry rule and a market-closure reset
+inherited from the blind model. It runs none of the three, and the reason is one flag.
+
+- **What the three checkouts hold.** All three lanes run the same two files:
+  `scripts/run-live-trading-trader.js` sha256
+  `74b0cd18b06578cc456ada35f0900587b2b95dfc6b128637b207c00d55eb8ee0` and `lib/l2l_strategy.js` sha256
+  `db164d858e42c1c9ae03076e2cc9474cbc888de0b647d79bfd17755f30ce59ec`, byte-identical to `main`'s copies after
+  line-ending normalisation, on checkouts that report `checkout_head: e3406286`; neither file changed between
+  `e3406286` and `f30deafa`. The scheduled tasks are `LiveTradingTraderTick019` (lane 1, root
+  `C:\live-trading\runtime`), `LiveTradingTraderTick-ftmo2` and `LiveTradingTraderTick-ftmo3`.
+- **What each wrapper asks for.** Lane 1: `--once --align --settle-seconds 90 --confirm-live --lane ftmo-1
+  --max-per-day unlimited` (no grid or R flag, so the full ladder at five to one). Lane 2: the same plus `--grid half
+  --r-multiple 3 --reentry-crossing --expect-identity …`. Lane 3: `--blind --max-per-day unlimited`. Only lane 3 asks
+  for the deviation.
+- **Where the gate is.** `--require-deviation` sets `requireDeviation` (`scripts/run-live-trading-trader.js:577`);
+  `--blind` forces it true (`:669`) and the library's blind plan forces it again unless a caller says otherwise
+  (`lib/l2l_strategy.js:1397`). Everything the audit asked about sits behind that one boolean: the market-closure
+  expiry of the judged candle (`lib:584`), the ordered three-leg reading `levelWasLeft` (`lib:694`), the session legs on
+  the put-back gate (`lib:1009`-`:1015`), and the `deviation` object itself (`lib:678`). On lane 2 all of them are
+  skipped, so `deviation` is `null` and the heartbeat's `require_deviation` is `false`.
+- **What lane 2 does run.** A fresh entry is a close beyond a cleared level with the close before it on the near side,
+  read from the newest completed five-minute bars (`closedBars` against the run's own clock). A put-back is gated by
+  `--reentry-crossing` alone (`crossingRequired`, `scripts/…:1198`), which calls `crossedSince` with
+  `requireDeviation: false` (`:1221`-`:1230`) and so reads the crossing candle and the one before it since
+  `max(exit, call seal)` - no session leg, no closure leg, and it may replay an older close, which is what the comment
+  at `:1193` says the deviation flag exists to stop.
+- **The inherited Blind reset.** `blindWatchPairs` re-selects a pair when the previous selection belongs to an earlier
+  Prague trade day (`newDay`, `scripts/…:2396`-`:2406`) - a *selection* reset, not a market-closure reset - and it is
+  called only on the blind branch (`:3149`). Lane 2 keeps no pair state at all (no `state.blind`, no watched lines), so
+  there is nothing of it to inherit, and the day-boundary rule cannot be what resets lane 2 across a weekend.
+- **What the deployed record shows.** Read read-only from the three state files at 2026-11-23: lane 2 has 90 placed
+  tickets - 32 fresh entries and 34 put-backs among the 66 that name an event - and every put-back re-armed within 24
+  hours of its exit, every crossing it cites being the newest completed candle (largest lag 1.6 minutes past that
+  candle's close; 56 tickets state no crossing bar because their records predate the gate or are fresh entries). Lane 3:
+  42 tickets, 36 fresh entries, 6 put-backs, same picture. No ticket on any lane was placed while its market was shut:
+  of 23 weekend placements (12 / 5 / 6), every one is BTCUSD, which trades through the weekend, or is stamped after the
+  22:00Z Sunday reopen (EURUSD 22:06Z and 22:11Z, XAUUSD 23:11Z and 23:16Z on 2026-11-22).
+- **The one case a rule lane 2 does not have would have refused - and it is on lane 1.** EURUSD put-back placed
+  2026-11-22T22:06:33.994Z from a window opened 2026-11-20T17:41:34Z: 52.4 hours across the weekend. Lane 1 has no
+  crossing gate at all, so that put-back is the lane's stated rule ("puts its level back whatever the candles are
+  doing") rather than a gate that failed, and the market was open again when the limit went out. It matters here because
+  it shows a weekend-spanning re-arm is not hypothetical on an account that trades ordinary crossings.
+- **Open risk, recorded rather than changed.** The market-closure test at `lib:584` is keyed on `requireDeviation`, not
+  on "the caller stated a clock", so the two lanes that trade ordinary crossings can in principle state a limit from a
+  candle that closed before the market closed; the only thing between a weekend bar and a ticket there is the Layer 1
+  call's own validity (`layer1Call`, `scripts/…:729`-`:745`, which requires `expiry > now` and a status other than
+  `EXPIRED`). It has not fired in the recorded history, and moving the guard out from behind the flag is a rule change
+  on two live accounts, so it is put to the owner instead of being slipped in.
 

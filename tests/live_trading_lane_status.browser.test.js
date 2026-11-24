@@ -36,7 +36,7 @@ function snapshot({ login, server = "FTMO-Server", ageSeconds = 0, connected = t
   return copy;
 }
 
-function heartbeat({ lane, writtenAt, armed, status = "nothing_to_place", grid, rMultiple, magic, paused = false, cap = null, login }) {
+function heartbeat({ lane, writtenAt, armed, status = "nothing_to_place", grid, rMultiple, magic, paused = false, cap = null, login, coverage = null }) {
   const at = writtenAt || new Date().toISOString();
   const document = {
     schema_version: "live-trading-trader-status-v1",
@@ -56,6 +56,7 @@ function heartbeat({ lane, writtenAt, armed, status = "nothing_to_place", grid, 
   if (cap !== null) {
     document.caps = { expire_minutes: null, max_open: null, max_per_day: cap, trade_day: "2026-11-09", trade_day_timezone: "Europe/Prague" };
   }
+  if (coverage !== null) document.coverage = coverage;
   return document;
 }
 
@@ -380,6 +381,120 @@ test("a fresh blind feed with no heartbeat reads connected with the strategy una
     assert.match(ruleCard, /0\.01 lot/i);
     assert.match(ruleCard, /no daily entry cap/i);
 
+    assert.deepEqual(errors, []);
+    await page.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+// The floor belongs beside the cap. Both are facts about what the last run was allowed to do rather than about the
+// market, and a reader who can see the cap but not the ladder is left to guess why a watched pair carries no ticket.
+// The three cases below are one lane whose ladder reached the floor, one that fell short with the entry withheld,
+// and one lane whose record never stated the floor at all - each read from the panel's own rows.
+test("the panel states the ladder's floor beside the cap, and says which of the three facts it is looking at", async () => {
+  const harness = await createHarness({
+    lanes: lanesDocument(),
+    laneOne: snapshot({ login: "***614" }),
+    laneTwo: snapshot({ login: "***222", server: "FTMO-Server3" }),
+    heartbeats: {
+      "ftmo-1": heartbeat({
+        lane: "ftmo-1",
+        armed: true,
+        grid: "full",
+        rMultiple: 5,
+        magic: 20261004,
+        login: "***614",
+        coverage: {
+          status: "covered",
+          checked_at_utc: new Date().toISOString(),
+          extended: false,
+          levels_available_at_utc: null,
+          min_per_side: 10,
+          short: [],
+          failures: [],
+          entries_withheld: []
+        }
+      }),
+      // The audit's case: the floor did not hold on EURUSD, so this run took no new entry there.
+      "ftmo-2": heartbeat({
+        lane: "ftmo-2",
+        armed: true,
+        grid: "half",
+        rMultiple: 3,
+        magic: 20261005,
+        login: "***222",
+        coverage: {
+          status: "failed",
+          checked_at_utc: new Date().toISOString(),
+          extended: false,
+          levels_available_at_utc: null,
+          min_per_side: 10,
+          short: [{ symbol: "EURUSD", asset: "EURUSD", above: 10, below: 3, reason: "the ladder stops close to the price" }],
+          failures: [{ symbol: "EURUSD", asset: "EURUSD", lane: "ftmo-2", reason: "the ladder stops close to the price" }],
+          entries_withheld: ["EURUSD"]
+        }
+      })
+    }
+  });
+  try {
+    const { page, errors } = await openLiveTrading(harness);
+    await page.locator("#liveTradingPanel .live-trading-status-button").click();
+
+    // Lane 1: the floor held, so the row says the number the run aimed at rather than only praise.
+    const laneOneRow = page.locator("#liveTradingStatusPanel .live-trading-lane-row", { hasText: "Ladder coverage" });
+    assert.equal((await laneOneRow.locator("dd").textContent()).trim(), "held at 10 full lines each side");
+    assert.equal(
+      await laneOneRow.getAttribute("class"),
+      "live-trading-lane-row",
+      "a floor that held is drawn without a warning tone"
+    );
+    // The row sits between the rules and the cap: the three facts a reader reads in the same breath.
+    const laneOnePanel = await page.locator("#liveTradingStatusPanel").innerText();
+    assert.match(laneOnePanel, /loaded rules[\s\S]*ladder coverage[\s\S]*effective cap/i);
+
+    // Lane 2: short below the price, with the withheld entry stated in the same row.
+    await selectLane(page, "ftmo-2", "222");
+    const laneTwoRow = page.locator("#liveTradingStatusPanel .live-trading-lane-row", { hasText: "Ladder coverage" });
+    const value = (await laneTwoRow.locator("dd").textContent()).trim();
+    assert.match(value, /^short - EURUSD 10 above \/ 3 below/, "the panel states the instrument and both counts");
+    assert.match(value, /no new entry on EURUSD this run/, "and the entry that was withheld because of it");
+    assert.match(await laneTwoRow.getAttribute("class"), /is-stale/, "a shortfall is drawn as a warning");
+    assert.match(
+      await laneTwoRow.locator("dd").getAttribute("title"),
+      /still reviewed, moved and exited/,
+      "the tooltip keeps the account managed, whatever the ladder withheld"
+    );
+    assert.deepEqual(errors, []);
+    await page.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+// A record written before the block existed says that, rather than leaving the row empty or, worse, drawing a zero
+// count that would read as a measured shortfall. A lane with no heartbeat at all says which of the two it is.
+test("a record that never stated its ladder's floor says so, and a lane with no record says that instead", async () => {
+  const harness = await createHarness({
+    lanes: lanesDocument(),
+    laneOne: snapshot({ login: "***614" }),
+    laneTwo: snapshot({ login: "***222", server: "FTMO-Server3" }),
+    heartbeats: {
+      "ftmo-1": heartbeat({ lane: "ftmo-1", armed: true, grid: "full", rMultiple: 5, magic: 20261004, login: "***614" })
+    }
+  });
+  try {
+    const { page, errors } = await openLiveTrading(harness);
+    await page.locator("#liveTradingPanel .live-trading-status-button").click();
+    const stated = page.locator("#liveTradingStatusPanel .live-trading-lane-row", { hasText: "Ladder coverage" });
+    assert.equal((await stated.locator("dd").textContent()).trim(), "not stated by this heartbeat");
+    assert.match(await stated.getAttribute("class"), /is-muted/, "an unstated floor is quiet, not amber");
+
+    // Lane 2 has a snapshot and no heartbeat: the row names the absence rather than borrowing lane 1's floor.
+    await selectLane(page, "ftmo-2", "222");
+    const absent = page.locator("#liveTradingStatusPanel .live-trading-lane-row", { hasText: "Ladder coverage" });
+    assert.equal((await absent.locator("dd").textContent()).trim(), "no heartbeat published");
+    assert.match(await page.locator("#liveTradingStatusPanel").innerText(), /ladder coverage[\s\S]*no heartbeat published/i);
     assert.deepEqual(errors, []);
     await page.close();
   } finally {

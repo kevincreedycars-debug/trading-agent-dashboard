@@ -1,5 +1,46 @@
 # Session Notes
 
+2026-11-23 (third build), USD Layer 1 lane, same branch - the tick sweep was re-priced inside the 05:00 session and readiness was reconciled per session.
+
+The sweep first. `l2l-tick-sweep-v1.json` was produced on 2026-11-12 by one continuous walk of the six
+sessions, so a limit that was not touched kept working into later sessions and a position was carried past
+the following 05:00 London. Measured from the stored artefact: 4 of 157 fills are stamped after their own
+session had ended (one three days later) and 24 exits are at or after the following 05:00, 4 of which have
+no exit at all. The earlier note that the ladder hash made the sweep unaffected is withdrawn: the same hash
+establishes the same lines, not the same execution outcomes.
+
+`backtester/lib/usd_layer1_backtester/tick_sweep_bounds.js` and
+`scripts/rebuild_l2l_tick_sweep_session_bounded.js` re-price v1's own decisions. The script reproduces v1
+first - totals, sixteen account blocks and sixteen model summaries to the recorded precision - and refuses
+to write if it cannot; then a fill outside its own session window is cancelled at that endpoint
+(`cancelled_at_session_end`, not counted as a trade) and a position with no in-window exit is closed at the
+last M5 bar inside the window on the side of the book that would have paid it (`session_end`). Every other
+trade keeps the price, instant and R it was recorded with.
+
+What moved: targets 33 to 24, stops 120 to 109, session-end closes 0 to 20, working 4 to 0, fills cancelled
+4, closed trades unchanged at 153 (the four working positions became endpoint closes as the four late fills
+were cancelled). R for the full 5R rule -11 to -5.1936 and for the half 3R rule +4 to +2.7508. Ten of the
+sixteen accounts moved; the list is in the supersession record.
+
+What the correction does not do: it does not re-derive a decision, so an order that never filled is not
+re-placed and a slot freed by an earlier 05:00 close is not re-filled, because v1 recorded only the fills
+it took. The tapes are local evidence - the artefact carries each one's sha256, window, bar count and
+endpoint close, so the endpoint prices can be audited, but re-streaming needs broker access.
+
+Readiness. `evaluateReadiness` now keeps levels, tape and shared session apart and copies a `sessions`
+block into every test cell. EURUSD, XAUUSD, NAS100 and BTCUSD hold 22 archived levels and a bid/ask tape
+over the same six sessions, so their two L2L cells read `measured_tick_replay` (6 of 6) rather than
+"no bid/ask tape". The committed M5 archive is a different dataset - mid-price, 2026-11-04 to 2026-11-06 -
+and is carried as such. Counts: 4 scored, 1 proxy-scored, 8 measured, 11 blocked, 24 total.
+
+Verified after the rebuild: run artefact 7,090,881 bytes sha256 `90800e10...3ebf39`; screen payload
+`e576276c...2adb3`; `check:l2l-tick-sweep`, `check:usd-l1-platform`, `check:usd-l1-ledger`,
+`report:layer1:check`, `report:morning:check` and `screen:backtesting:check` reproduce; suites 48/48,
+34/34, 17/17, 15/15, 118/118, 32/32, and the browser factory guard 15/15. The browser suite's six failures
+are the ones this machine already had; the H1 one was re-run against HEAD's payloads to confirm it.
+
+Not claimed: predictive advantage for any rule, model or market.
+
 2026-11-23 (second build), USD Layer 1 lane, same branch - the four-market arrangement became configuration and
 the L2L ladder's history became evidence. `backtester/config/usd_layer1_market_matrix.json` declares a primary
 market (`DXY`) and seven additional markets, and every selected market receives three tests: directional
@@ -83,6 +124,31 @@ ladder stamp, so the rebuild prices 0 sessions with original levels where the co
 original-level coverage there is, so it is recorded as the owner decision it is in
 `docs/research/usd-session/v1/PLATFORM_COMPLETION_CHECKLIST.md` section 11 rather than folded into this fix. No
 rule, weight, threshold, workflow, order, size, feed, lane or runtime table was touched, and nothing live moved.
+
+2026-11-23, live-trading coverage row published and FTMO 2 audited - the `Ladder coverage` row the 21 November record
+asked for is live on the lane card and in the status panel (`main` `f30deafa`, buster
+`script.js?v=20261123-ladder-coverage-row`), and the published `script.js` is the committed file byte for byte (HTTP 200,
+1,215,467 bytes, sha256 `35BA4E6E…52E6`, equal to the worktree's copy after line-ending normalisation and to
+`raw.githubusercontent.com/…/main/script.js`). A read-only Playwright probe opened the hosted page at 20:56:30Z and read
+all three lanes: each card states `held at 10 full lines each side`, the status panel carries the row between
+`LOADED RULES` and `EFFECTIVE CAP` on every lane, and no page error was raised; the hosted heartbeats were read beside it
+and state exactly the fields the page reads, which closes the "schema not confirmed" risk, with `armed: true`,
+`max_per_day: null`, `capped: false` and `entries_today` 3 / 9 / 24. Tests: `node --check` clean, the two touched browser
+files 15 of 15, the ten trader/lane/L2L suites 330 of 330, the eleven other live-trading browser suites 36 of 37 with the
+chart-zoom failure, which fails identically in a clean worktree at `d9018198`. The audit then answered the FTMO 2
+question: all three lanes run the same two files (trader `74b0cd18…`, library `db164d85…`, checkouts on `e3406286`, both
+files unchanged up to `f30deafa`), so lane 2 *has* the session-expiry rule (`43c48316`) and the ordered three-leg reading
+(`e75757f4`) but runs neither, because both sit behind `requireDeviation` and its wrapper passes `--reentry-crossing` and
+no `--require-deviation`; only lane 3 (`--blind`) asks for it. The Blind day-boundary re-selection is blind-only and is a
+selection reset, and lane 2 keeps no pair state, so there is nothing of it to inherit. The record agrees: lane 2's 90
+placed tickets include 34 put-backs, every one re-armed within 24 h of its exit and quoting the newest completed candle
+(largest lag 1.6 min), and no lane placed a ticket on a shut market; the one weekend-spanning re-arm in the history is
+lane 1's EURUSD put-back at 2026-11-22T22:06Z from a window opened 2026-11-20T17:41Z, which lane 1's rule allows. Open risk
+recorded, not changed: the market-closure test is keyed on `requireDeviation`, so a lane trading ordinary crossings can
+state a limit from a pre-closure candle while a Layer 1 call is still live. Record:
+`docs/live-trading/TRADER_COVERAGE_NO_DAILY_CAP_20261122.md` sections 8 and 9.
+
+
 
 2026-11-22, live-trading trader lane - the trader half of the L2L coverage work shipped to all three FTMO accounts, and
 the daily entry cap came off the two lanes still carrying it. The three checkouts were on three different revisions

@@ -28,7 +28,7 @@ const TRADER_CODE = {
   checkout_head: "c5abd0ac"
 };
 
-function heartbeat({ writtenAtMs, armed = true, status = "nothing_to_place", host = "PC-DESKTOP-A17", code = TRADER_CODE }) {
+function heartbeat({ writtenAtMs, armed = true, status = "nothing_to_place", host = "PC-DESKTOP-A17", code = TRADER_CODE, coverage = null }) {
   return {
     schema_version: "live-trading-trader-status-v1",
     lane: "ftmo-1",
@@ -43,7 +43,25 @@ function heartbeat({ writtenAtMs, armed = true, status = "nothing_to_place", hos
     account: { login_masked: "***614", server: "FTMO-Server" },
     terminal: { positions_open: 1, orders_open: 0, ours: 1 },
     close_requests: { enabled: true, error: null, taken: null },
+    ...(coverage === null ? {} : { coverage }),
     duration_seconds: 1.67
+  };
+}
+
+// The coverage block as the trader publishes it: the floor it aimed at, the rows it planned, and - when the floor
+// did not hold - the asset and the reason, in the run's own words. `short` is the subset with lines that still fall
+// below the floor, and the withheld entries are the symbols that took no new ticket because of it.
+function coverageBlock({ status = "covered", extended = false, minPerSide = 10, short = [], failures = [], withheld = [] } = {}) {
+  return {
+    lane: "ftmo-1",
+    status,
+    checked_at_utc: "2026-11-23T18:36:30.000Z",
+    extended,
+    levels_available_at_utc: extended ? "2026-11-23T18:36:30.000Z" : null,
+    min_per_side: minPerSide,
+    short,
+    failures,
+    entries_withheld: withheld
   };
 }
 
@@ -228,7 +246,101 @@ test("a card names the code its heartbeat was written by, and says so plainly wh
   }
 });
 
-// The owner's naming rule of 2026-11-13, held as one case: the persistent strip reads the model, the state is a
+// The ladder's floor, on the card. A short side is not a market with no signals - it is a rule with no next line to
+// aim at - so the row states the instrument and the counts the run measured rather than leaving the silence to be
+// read as a verdict on the pair. The three shapes here are a floor that held, a ladder that fell short with the
+// entry withheld, and a record written before the block existed; the fourth is a malformed block, which must leave
+// the card drawn and the rest of its rows intact.
+test("the card states the ladder's floor and names a short ladder as short, not as a quiet market", async () => {
+  const now = Date.now();
+
+  const held = heartbeat({ writtenAtMs: now - 60_000, coverage: coverageBlock() });
+  const heldHarness = await createHarness({ lanes: lanesWith(held), trader: held });
+  try {
+    const context = await heldHarness.createContext();
+    const { page, errors } = await openLiveTrading(context, heldHarness.origin);
+    assert.deepEqual(errors, [], "a covered ladder must not raise a script error");
+    const row = page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-1"] .live-trading-lane-row', { hasText: "Ladder coverage" });
+    assert.equal((await row.locator("dd").textContent()).trim(), "held at 10 full lines each side");
+    assert.equal(await row.getAttribute("class"), "live-trading-lane-row", "a floor that held is drawn without a warning tone");
+    assert.match(
+      await row.locator("dd").getAttribute("title"),
+      /a next line to aim at in both directions/,
+      "the tooltip says what a full ladder buys the rule"
+    );
+    await page.close();
+  } finally {
+    await heldHarness.close();
+  }
+
+  // The audit's own case: EURUSD has ten lines above and three below, so the rule has no next target under the
+  // price and the run took no new entry there - while everything already working stayed reviewed, moved and exited.
+  const reason = "the ladder stops 7 lines below the newest close and the step cap would not reach the floor";
+  const short = heartbeat({
+    writtenAtMs: now - 60_000,
+    coverage: coverageBlock({
+      status: "failed",
+      short: [{ symbol: "EURUSD", asset: "EURUSD", above: 10, below: 3, reason }],
+      failures: [{ symbol: "EURUSD", asset: "EURUSD", lane: "ftmo-1", reason }],
+      withheld: ["EURUSD"]
+    })
+  });
+  const shortHarness = await createHarness({ lanes: lanesWith(short), trader: short });
+  try {
+    const context = await shortHarness.createContext();
+    const { page, errors } = await openLiveTrading(context, shortHarness.origin);
+    assert.deepEqual(errors, [], "a short ladder must not raise a script error");
+    const row = page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-1"] .live-trading-lane-row', { hasText: "Ladder coverage" });
+    const value = (await row.locator("dd").textContent()).trim();
+    assert.match(value, /^short - EURUSD 10 above \/ 3 below/, "the row states the instrument and both measured counts");
+    assert.match(value, /no new entry on EURUSD this run/, "the row states the withheld entry beside the shortfall");
+    assert.match(await row.getAttribute("class"), /is-stale/, "a shortfall is drawn as a warning, not as a quiet fact");
+    const title = await row.locator("dd").getAttribute("title");
+    assert.match(title, /does not reach the floor on one instrument/);
+    assert.match(title, new RegExp(`EURUSD has 10 above / 3 below \\(${reason.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\)`));
+    assert.match(title, /still reviewed, moved and exited/, "a withheld entry is never presented as an unmanaged account");
+    await page.close();
+  } finally {
+    await shortHarness.close();
+  }
+
+  // A record written before the block existed states that plainly. It is not evidence of a shortfall, and it is not
+  // drawn as a fault: the card is still the running lane's card.
+  const older = heartbeat({ writtenAtMs: now - 60_000 });
+  const olderHarness = await createHarness({ lanes: lanesWith(older), trader: older });
+  try {
+    const context = await olderHarness.createContext();
+    const { page, errors } = await openLiveTrading(context, olderHarness.origin);
+    assert.deepEqual(errors, [], "an older heartbeat must not raise a script error");
+    const row = page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-1"] .live-trading-lane-row', { hasText: "Ladder coverage" });
+    assert.equal((await row.locator("dd").textContent()).trim(), "not stated by this heartbeat");
+    assert.match(await row.getAttribute("class"), /is-muted/, "an unstated floor is drawn quietly, not as a fault");
+    assert.match(await cardText(page, "ftmo-1"), /ACTIVE/, "the lane is still a running lane, whatever it can say about its ladder");
+    await page.close();
+  } finally {
+    await olderHarness.close();
+  }
+
+  // A block of the wrong shape: nothing is inferred from it, nothing throws, and the rows around it are still drawn.
+  const malformed = heartbeat({
+    writtenAtMs: now - 60_000,
+    coverage: { status: 42, min_per_side: -3, short: "nope", failures: [null, 7], entries_withheld: { a: 1 } }
+  });
+  const malformedHarness = await createHarness({ lanes: lanesWith(malformed), trader: malformed });
+  try {
+    const context = await malformedHarness.createContext();
+    const { page, errors } = await openLiveTrading(context, malformedHarness.origin);
+    assert.deepEqual(errors, [], "a malformed coverage block must not take the card down");
+    const row = page.locator('#liveTradingPanel .live-trading-lane-card[data-lane="ftmo-1"] .live-trading-lane-row', { hasText: "Ladder coverage" });
+    assert.equal((await row.locator("dd").textContent()).trim(), "the run stated no floor");
+    assert.match(await cardText(page, "ftmo-1"), /Last strategy tick/, "the rows around it are still drawn");
+    await page.close();
+  } finally {
+    await malformedHarness.close();
+  }
+});
+
+
 // separate word beside it, and the account and its R sit beneath it as secondary detail. A case that only checked
 // that "FTMO" was gone from the headline would not notice the account creeping back in, so each of the four parts
 // is read from its own element. The two files that carry the same naming choice - this page and the lanes

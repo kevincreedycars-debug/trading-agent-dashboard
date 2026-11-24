@@ -16410,6 +16410,7 @@ function liveTradingLaneStatus(view = liveTradingLaneView(), options = {}) {
     capUnlimited,
     capStated,
     entriesToday,
+    coverage: heartbeat.coverage,
     rules,
     permission,
     account: {
@@ -16552,6 +16553,9 @@ function liveTradingStatusMarkup(status) {
       ? `${status.permission.label} (the broker's own limit on a read-only login is not visible to the terminal)`
       : status.permission.label, permissionTone),
     liveTradingLaneRow("Loaded rules", liveTradingStatusRuleText(status), ruleTone),
+    // The ladder's floor, beside the cap: both are states of the run rather than of the market, and a short
+    // ladder is why an instrument can be watched and still carry no ticket.
+    liveTradingCoverageRow("Ladder coverage", status.coverage, status.tick.present && !status.tick.fresh, status.tick.present),
     liveTradingLaneRow("Effective cap", liveTradingStatusCapText(status)),
     liveTradingLaneRow("Identity check", status.tick.identityChecked === true
       ? "verified against the lane's private identity file before every send"
@@ -16811,6 +16815,153 @@ function liveTradingHeartbeatCode(facts) {
   };
 }
 
+// ---- The ladder's coverage floor -------------------------------------------------------------------------
+// Every run plans the ladder to a floor of full lines each side of the newest close and states in its heartbeat
+// whether it got there. Two facts make that worth a row of its own. The first is that a short side is not an
+// absence of signals: the rule cannot name a next target where no line is marked, so a reader who cannot see the
+// floor reads a ladder that stopped short as a market with nothing to say - the audit's own complaint. The second
+// is that a run whose ladder is short takes no new entry on that instrument, though it still reviews, moves and
+// exits everything already working, so "why is there no ticket on EURUSD" has an answer here rather than in a log.
+//
+// Nothing is inferred. The floor, the per-instrument counts, the withheld instruments and the reasons are the
+// run's own words, and a heartbeat written before the block existed says so rather than leaving the row blank.
+function liveTradingCoverageCount(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const counted = Number(value);
+  return Number.isFinite(counted) && counted >= 0 ? counted : null;
+}
+
+function liveTradingHeartbeatCoverage(facts) {
+  const block = facts && typeof facts.coverage === "object" && facts.coverage ? facts.coverage : null;
+  if (!block) return null;
+  const short = (Array.isArray(block.short) ? block.short : [])
+    .filter(row => row && typeof row === "object")
+    .map(row => ({
+      symbol: typeof row.symbol === "string" && row.symbol ? row.symbol : null,
+      asset: typeof row.asset === "string" && row.asset ? row.asset : null,
+      above: liveTradingCoverageCount(row.above),
+      below: liveTradingCoverageCount(row.below),
+      reason: typeof row.reason === "string" && row.reason ? row.reason : null
+    }));
+  // A failure is the plan not being made at all - an instrument the file cannot measure, the step cap - which is
+  // a different fact from a ladder that was planned and came up short. Both are carried, and the text below keeps
+  // them apart: a failure naming an instrument the `short` rows already state is not said twice.
+  const failures = (Array.isArray(block.failures) ? block.failures : [])
+    .map(failure => {
+      if (typeof failure === "string") return { symbol: null, reason: failure };
+      if (!failure || typeof failure !== "object") return null;
+      return {
+        symbol: typeof failure.symbol === "string" && failure.symbol ? failure.symbol : null,
+        reason: typeof failure.reason === "string" && failure.reason
+          ? failure.reason
+          : typeof failure.message === "string" && failure.message ? failure.message : null
+      };
+    })
+    .filter(failure => failure && (failure.reason || failure.symbol));
+  const withheld = (Array.isArray(block.entries_withheld) ? block.entries_withheld : [])
+    .filter(symbol => typeof symbol === "string" && symbol);
+  const floor = liveTradingCoverageCount(block.min_per_side);
+  return {
+    status: typeof block.status === "string" && block.status ? block.status : null,
+    checkedAt: typeof block.checked_at_utc === "string" && block.checked_at_utc ? block.checked_at_utc : null,
+    extended: block.extended === true,
+    levelsAvailableAt: typeof block.levels_available_at_utc === "string" ? block.levels_available_at_utc : null,
+    minPerSide: floor !== null && floor > 0 ? floor : null,
+    short,
+    failures,
+    withheld
+  };
+}
+
+// The instrument as the run named it: the pair for a chart row, the symbol when the reading had no pair, and a
+// plain "an instrument" only when the record named neither. A side with no count is stated as unstated rather
+// than as zero, because `Number(null)` is 0 and "0 above" would read as a measured shortfall.
+function liveTradingCoverageInstrument(row) {
+  return row.asset || row.symbol || "an instrument";
+}
+
+function liveTradingCoverageSides(row) {
+  const above = row.above === null ? "an unstated number" : String(row.above);
+  const below = row.below === null ? "an unstated number" : String(row.below);
+  return `${above} above / ${below} below`;
+}
+
+// The row's value is one line a reader can take in beside the lane; the tooltip is where the reasons and the
+// withheld instruments live, the same division the code row makes between a short digest and its whole ones.
+function liveTradingCoverageText(coverage, stale = false, present = true) {
+  if (!present) {
+    return {
+      value: "no heartbeat published",
+      tone: "muted",
+      title: "No trader heartbeat has been published for this lane, so nothing here says how many full lines each side of the newest close its ladder held."
+    };
+  }
+  if (!coverage) {
+    return {
+      value: "not stated by this heartbeat",
+      tone: "muted",
+      title: "This heartbeat was written before the run stated the ladder's floor, so nothing here says how many full lines each side of the newest close every instrument held."
+    };
+  }
+  const floor = coverage.minPerSide === null ? null : `${coverage.minPerSide} full lines each side`;
+  const shortList = coverage.short.map(row => `${liveTradingCoverageInstrument(row)} ${liveTradingCoverageSides(row)}`);
+  // A failure about an instrument already named by a `short` row is that same fact twice, so only the failures
+  // that stand on their own are stated - a ladder that could not be planned at all, for want of a price or for
+  // the step cap.
+  const shortSymbols = new Set(coverage.short.map(row => row.symbol).filter(Boolean));
+  const unplanned = coverage.failures.filter(failure => !failure.symbol || !shortSymbols.has(failure.symbol));
+  const failureText = unplanned.map(failure => failure.reason || `${failure.symbol} could not be measured`);
+  const value = [];
+  if (shortList.length) {
+    value.push(`short - ${shortList.join(", ")}`);
+  } else if (failureText.length) {
+    value.push(`could not be planned - ${failureText[0]}`);
+  } else if (coverage.status === "covered" || coverage.status === "extended") {
+    value.push(coverage.minPerSide === null
+      ? `${coverage.status === "extended" ? "extended" : "held"} - the run stated no floor number`
+      : `${coverage.status === "extended" ? "extended to" : "held at"} ${floor}`);
+  } else if (coverage.status) {
+    value.push(`${coverage.status.replace(/_/g, " ")} - no verdict this page can read`);
+  } else {
+    value.push("the run stated no floor");
+  }
+  if (coverage.withheld.length) {
+    value.push(`no new entry on ${coverage.withheld.join(", ")} this run`);
+  }
+  const detail = [];
+  if (coverage.short.length) {
+    detail.push(`The ladder does not reach the floor on ${coverage.short.length === 1 ? "one instrument" : `${coverage.short.length} instruments`}: ${coverage.short
+      .map(row => `${liveTradingCoverageInstrument(row)} has ${liveTradingCoverageSides(row)}${row.reason ? ` (${row.reason})` : ""}`)
+      .join("; ")}.`);
+  }
+  if (unplanned.length) {
+    detail.push(`A ladder could not be planned at all: ${failureText.join("; ")}.`);
+  }
+  if (coverage.withheld.length) {
+    detail.push(`No new entry was taken on ${coverage.withheld.join(", ")} this run, because a short ladder takes none; everything already working on the account was still reviewed, moved and exited.`);
+  }
+  if (!coverage.short.length && !unplanned.length) {
+    detail.push(coverage.minPerSide === null
+      ? "The run states the floor held, without a number for it."
+      : `Every instrument the ladder marks held at least ${floor} of the newest close, so the rule had a next line to aim at in both directions${coverage.extended ? ", and lines were added on this run to reach that floor" : ""}.`);
+  }
+  if (coverage.checkedAt) detail.push(`Read at ${coverage.checkedAt} by the run that wrote this heartbeat.`);
+  if (stale) {
+    detail.push("The run that read it is not current, so this is what the floor was rather than what it is now.");
+  }
+  const short = coverage.short.length > 0 || unplanned.length > 0;
+  return {
+    value: value.join("; "),
+    tone: short ? "stale" : stale ? "stale" : coverage.status === "covered" || coverage.status === "extended" ? "" : "muted",
+    title: detail.join(" ")
+  };
+}
+
+function liveTradingCoverageRow(label, coverage, stale = false, present = true) {
+  const text = liveTradingCoverageText(coverage, stale, present);
+  return liveTradingLaneRow(label, text.value, text.tone, text.title);
+}
+
 // One heartbeat, from the artifact when this page could read it and from the lanes document when it could not.
 // The publisher copies the same facts into the lane's row, so a device holding an older commit still sees what
 // the loop last said instead of an empty card.
@@ -16842,7 +16993,8 @@ function liveTradingLaneHeartbeat(lane) {
       capUnlimited: false,
       capStated: false,
       entriesToday: null,
-      caps: null
+      caps: null,
+      coverage: null
     };
   }
   // Three missed ticks is the window, and no less than fifteen minutes: the loop runs on the M5 clock, so a
@@ -16899,7 +17051,8 @@ function liveTradingLaneHeartbeat(lane) {
     account: facts.account && typeof facts.account === "object" ? facts.account : null,
     strategy: facts.strategy && typeof facts.strategy === "object" ? facts.strategy : null,
     entriesPaused: facts.entries_paused === true,
-    caps: facts.caps && typeof facts.caps === "object" ? facts.caps : null
+    caps: facts.caps && typeof facts.caps === "object" ? facts.caps : null,
+    coverage: liveTradingHeartbeatCoverage(facts)
   };
 }
 
@@ -17017,6 +17170,7 @@ function liveTradingLaneCard(lane) {
     ),
     liveTradingLaneRow("Last strategy tick", heartbeatValue, heartbeat.stale ? "stale" : heartbeat.present ? "" : "muted"),
     liveTradingLaneRow("Last result", resultValue),
+    liveTradingCoverageRow("Ladder coverage", heartbeat.coverage, heartbeat.stale, heartbeat.present),
     liveTradingLaneRow("Last broker update", snapshotValue, snapshot ? "" : "muted"),
     liveTradingLaneRow("Trader host", hostValue, heartbeat.host ? "" : "muted"),
     liveTradingLaneRow("Trader code", codeValue, heartbeat.code ? "" : "muted", codeTitle)
