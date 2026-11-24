@@ -282,6 +282,7 @@
     button.type = "button";
     button.dataset.node = node.id;
     button.dataset.state = state.state;
+    button.dataset.kind = node.kind || "step";
     button.style.setProperty("--cr-span", String(node.span || 6));
     button.setAttribute("aria-pressed", "false");
     if (node.id === "fixture") button.classList.add("is-fixture");
