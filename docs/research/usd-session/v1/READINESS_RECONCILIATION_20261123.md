@@ -109,3 +109,31 @@ block (`levels`, `tape`, `shared`, `levels_dates`, `tape_dates`, `shared_dates`,
 `tape_source`). The screen payload copies those fields, so the Tests tab shows the same reconciliation
 the artefact holds. The statuses are produced by `backtester/lib/usd_layer1_backtester/market_matrix.js`
 and the tape evidence comes from `l2l-tick-sweep-v2.json` via `backtester/lib/usd_layer1_backtester/run.js`.
+
+## Update, 2026-11-24: the three missing series exist, outside the repository
+
+The XAGUSD, WTIUSD and GBPUSD one-hour series this note lists as missing were acquired on 2026-11-24 and
+sit in `backtester/tmp/oanda_{xag,wti,gbp}_usd_h1.csv` (17,149 / 17,139 / 18,026 H1 rows), gitignored
+because they are a licensed quote history rather than a free download. Run with them present, the same
+build prices the three directional cells:
+
+| market | sessions with both 05:00 endpoints | directional score | cells that stay blocked |
+| --- | --- | --- | --- |
+| XAGUSD | 569 | 325 | both L2L cells: no ladder, no tape |
+| WTIUSD | 568 | 330 | both L2L cells: no ladder, no tape |
+| GBPUSD | 572 | 317 | both L2L cells: no ladder, no tape |
+
+That moves the counts above to `scored` 7, `proxy_scored` 1, `measured_tick_replay` 8, `blocked` 8 - but
+only as a local measurement. The published artefact in this checkout still reports the three cells
+blocked, and it should, until there is a licence decision that the rows may be committed or a documented
+download step a reader can follow.
+
+One property of the three files belongs to the calendar, not to the data: a Friday session ends at the
+next 05:00 London, which is a Saturday, so no Friday morning has an endpoint bar and none of the 145
+Friday sessions can be scored. Seven, eight and four further sessions end on Christmas Day, New Year's Day
+or Good Friday (the WTI file also 2025-11-27, Thanksgiving); four sessions in each file open on Christmas
+Day or New Year's Day; and Good Friday is shut outright in the XAG and WTI files. So neither end can be
+priced, and the dates are listed in `OANDA_H1_ACQUISITION_20261124.md`. The 569, 568 and 572 above are what
+remains, and any coverage figure for these markets has to say so before it is compared with a market that
+prints on Saturday.
+

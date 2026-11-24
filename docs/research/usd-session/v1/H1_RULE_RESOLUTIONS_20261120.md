@@ -18,7 +18,7 @@ measured, not projected.
 | `ice` | 455 of 725 | amended source, DXY.cash broker CFD under H1-A01 (accepted) |
 | `gold` | 0 of 725 | identity mismatch: the legacy field is a broker XAU/USD quote, the contract asks for LBMA Gold Price PM |
 | `qqq` | 725 of 725 | verified original, Nasdaq official close |
-| `calendar` | 0 of 725 | incomplete: no vintage-stamped release schedule imported |
+| `calendar` | 0 of 725 | incomplete: no release schedule archived with the instant it became public (D6) |
 
 **Ready mornings: 0 of 725. `earliest_eligible`: `null`. Sealed replay: 0 of 725** (no receipts exist, as
 expected for historical reconstruction).
@@ -77,14 +77,24 @@ Six decisions. Each one names the recommendation, the measurement behind it, and
 | # | Decision | Recommendation | Measured basis | Cost of refusal / delay |
 | --- | --- | --- | --- | --- |
 | **D1** | `broad` freshness: measure the H.10 release clock instead of the observation date (H1-C01) | **Adopt as a measured variant** | 564 → 725 fresh, 161 gained (145 Mondays, 16 post-holiday Tuesdays), 0 lost; the release is the newest available on all 725 mornings; publication age max 175.75 h against a 192 h window | 161 mornings stay blocked although the newest release is in hand |
-| **D2** | `calendar` freshness: applicability instead of a 24-hour decay (H1-C02) | **Adopt the wording; import evidence next** | Unmeasurable today: no vintage-stamped schedule has been imported, so the candidate ships `measurable: false` and no gain is claimed | Adopting it alone unblocks nothing; the missing input is the schedule, not the rule |
+| **D2** | `calendar` freshness: applicability instead of a 24-hour decay (H1-C02) | **Adopt the wording; import evidence next** | Unmeasurable today: no release schedule has been archived with its publication stamp, so the candidate ships `measurable: false` and no gain is claimed | Adopting it alone unblocks nothing; the missing input is the schedule, not the rule |
 | **D3** | Bundesbank publication clock: strict T+1 23:59 Europe/Berlin, or same-day on a captured stamp (H1-C03) | **Keep the strict bound** | Two observed BBSIS stamps are same-day (2026-11-19 12:22:17 and 2026-11-20 12:29:01), but neither is a 2024 stamp; the bound costs 28 mornings (worst age 151 h) and is later than every refresh it was checked against | Same-day relaxation could return at most 28 mornings and would rest on an unproven 2024 pattern |
 | **D4** | H1-A02: Treasury as publisher of record for the real yield | **Accept** | 540 of 541 clean-week mornings identical within 0.005 bp; 12 of 120 windows spanning a Treasury non-publication day identical, max 13 bp, mean 3.67 bp; the difference is the legacy holiday fill, not the instrument | `real` reverts to 0 of 725 and the amendment stays pending in the payload |
 | **D5** | `gold` access | **Decide between buying an IBA licence and accepting `gold` stays absent** | The LBMA prices page read on 2026-11-20 states that historical benchmark data moved to MyLBMA and that "A licence from IBA is required in order to obtain, use or redistribute real-time or historical benchmark data"; the price host answered 403 on every attempt from this environment | `gold` blocks all 725 mornings; no substitute passes the identity rung, and OANDA XAU/USD is not the contract's instrument |
-| **D6** | `calendar` evidence | **Import vintage-stamped schedules for the five required release types** | Required types: CPI, Employment Situation, advance GDP, Personal Income and Outlays, FOMC policy decision. The schedules are readable; none has been archived with a publication timestamp | `calendar` blocks all 725 mornings; a zero event count is not evidence (P-06) |
+| **D6** | `calendar` evidence | **Import the five release schedules as they stood before each cutoff — a calendar capture, not a value vintage** | Required types: CPI, Employment Situation, advance GDP, Personal Income and Outlays, FOMC policy decision. The schedules are readable; none has been archived with the instant it became public, which is the one property the gate reads besides the date and time themselves | `calendar` blocks all 725 mornings; a zero event count is not evidence (P-06) |
 
 D5 and D6 are the only decisions that can move ready mornings off zero. D1, D3 and D4 set how many mornings
 survive once the two inputs exist; D2 is the rule the calendar evidence has to be imported under.
+
+**Wording correction, 2026-11-24.** D6 and the `calendar` row in section 1 used to say "vintage-stamped
+schedules". A *vintage*, in this repository, is a property of a released value: the same statistic as it was
+first published and as it was revised (`docs/research/usd-session/h1/v0.1.1/GAP_REGISTER.md` uses it that
+way, and so does every FRED/ALFRED extract behind `broad`, `front`, `spread` and `real`). A release
+*schedule* has no such thing. What the event gate reads is the scheduled date and time of a release and the
+instant that schedule became public, so a morning can be judged on the calendar knowable at its 05:00
+cutoff rather than on a page read today. The object D6 asks for is therefore a capture of a dated page, not
+a vintage of a released number; the recommendation, the five required release types, the missing evidence
+and the 0 of 725 are otherwise unchanged.
 
 ## 5. What this does not do
 

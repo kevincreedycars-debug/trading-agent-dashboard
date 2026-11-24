@@ -1,0 +1,89 @@
+{
+ "schema_version": "usd-l1-fresh-call-live-v1",
+ "captured_at": "2026-11-24T06:43:03Z",
+ "research_only": true,
+ "instance": {
+  "base_url": "https://silver17.app.n8n.cloud"
+ },
+ "workflow": {
+  "id": "89uk5JnPbWPL5lGD",
+  "name": "USD Layer 1 - paired controller (Cloud)",
+  "url": "https://silver17.app.n8n.cloud/workflow/89uk5JnPbWPL5lGD",
+  "was_active": false,
+  "activated_for_capture": true,
+  "deactivated_after_capture": true
+ },
+ "request": {
+  "dates": [
+   "2024-01-10"
+  ],
+  "models": [
+   "challenger",
+   "challenger_v1"
+  ],
+  "validation": "structural",
+  "dataset_url": "https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/data/usd-layer1-backtester/run-v1.json"
+ },
+ "http": {
+  "status": 200,
+  "bytes": 15636
+ },
+ "execution": {
+  "id": "7260",
+  "url": "https://silver17.app.n8n.cloud/execution/7260",
+  "workflow_id": "89uk5JnPbWPL5lGD",
+  "workflow_name": "USD Layer 1 - paired controller (Cloud)"
+ },
+ "calls": [
+  {
+   "date": "2024-01-10",
+   "model": "challenger",
+   "status": "allowed",
+   "validation_accepted": true,
+   "direction": "BULLISH",
+   "direction_label": "BULLISH",
+   "conviction": 2,
+   "reason": "9 of 9 mechanisms live, net +3 (33% agreement, 100% participation)",
+   "results": {
+    "EURUSD": "miss",
+    "XAUUSD": "miss",
+    "XAGUSD": "no_outcome",
+    "NAS100": "miss",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "child_execution_id": "7261",
+   "child_execution_url": "https://silver17.app.n8n.cloud/execution/7261",
+   "child_workflow_id": "giGJKNQw5WLh1xbX"
+  },
+  {
+   "date": "2024-01-10",
+   "model": "challenger_v1",
+   "status": "allowed",
+   "validation_accepted": true,
+   "direction": "BULLISH",
+   "direction_label": "BULLISH",
+   "conviction": 2,
+   "reason": "9 of 9 mechanisms live, net +2.5 (36% agreement, 100% participation)",
+   "results": {
+    "EURUSD": "miss",
+    "XAUUSD": "miss",
+    "XAGUSD": "no_outcome",
+    "NAS100": "miss",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "child_execution_id": "7262",
+   "child_execution_url": "https://silver17.app.n8n.cloud/execution/7262",
+   "child_workflow_id": "42sxXHScRvE3qSTX"
+  }
+ ],
+ "capture_file": "data/usd-layer1-backtester/n8n/execution-7260-fresh-call.json",
+ "capture_sha256": "5b7147180f912e4055128c496cbcec403baef8ac221c97c2e968cbfec13e89e1",
+ "read_it_back": [
+  "this file carries the instance, both workflow ids, the parent execution url and each child execution url",
+  "node scripts/prove_usd_l1_fresh_call.js --check compares these calls with a local recomputation of the same morning"
+ ]
+}

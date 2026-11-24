@@ -110,7 +110,7 @@ to resolve the two instants for a later implementation resolved something else.
 | Outcome pricing stops at the endpoint | **works** | `tests/l2l_session_horizon.test.js`: the close is the bar opening at the following 05:00 London, and a bar from the next session (500 against 90 in the fixture) is never read as this session's close |
 | Both execution simulations stop at the endpoint | **works** | `l2l_simulation.js#sessionTape` cuts a tape to `[cutoff, endpoint)` and `#simulateSessionPath` closes an open position at the last in-session close; a candle at the endpoint that would reach the target is dropped, counted, and cannot produce a target |
 | The clock-change cases are explicit | **works** | 2026-03-27/30, 2026-10-23/26, 2027-03-26/29 each measure 24 hours with both ends at 05:00 London; the Saturday starts measure 23 (2026-03-28) and 25 (2026-10-24) and are refused; 261 of 261 2026 weekday starts measure 24 |
-| What was recomputed is named, not implied | **works** | the run artefact became v2 (matrix + snapshot-pinned provenance) and the artefacts derived from it were rebuilt; the 725 calls, outcomes, flat bands and lead numbers did not move, and the tick sweep was not re-run because its ladder hash and its six sessions are unchanged |
+| What was recomputed is named, not implied | **works** | the run artefact became v2 (matrix + snapshot-pinned provenance) and the artefacts derived from it were rebuilt; the 725 calls, outcomes, flat bands and lead numbers did not move, and the tick sweep was re-priced inside each session (`l2l-tick-sweep-v2.json`, fills and exits cut at the window endpoint) rather than re-run from the tape, because its ladder hash and its six sessions are unchanged |
 
 No recorded result moved. The 725 panel mornings, the four test definitions, the ledger and the coverage table
 are identical, because they were already built on the contract's 05:00-to-05:00 day: this correction changes
@@ -137,8 +137,11 @@ The engine reads `backtester/config/usd_layer1_market_matrix.json`: one primary 
 additional markets (`EURUSD`, `XAUUSD`, `XAGUSD`, `NAS100`, `BTCUSD`, `WTIUSD`, `GBPUSD`), each receiving
 directional accuracy, original L2L 5R and 0.5 L2L 3R — 24 combinations per strategy. Another asset set is
 another document, not a patch; a duplicate primary is refused. Readiness is 5 scored (DXY as a labelled proxy,
-plus the four markets with a cached series) and 19 blocked, each naming its missing dataset. The full table,
-the surfaces it travels through and the dependencies are in `MARKET_MATRIX_AND_READINESS.md`.
+plus the four markets with a cached series), 8 measured on the tick replay (the two L2L tests for those four
+markets, from `l2l-tick-sweep-v2.json` inside their own sessions) and 11 blocked, each naming its missing
+dataset. The full table, the surfaces it travels through and the dependencies are in
+`MARKET_MATRIX_AND_READINESS.md`; the per-cell sense of `measured_tick_replay` is in
+`READINESS_RECONCILIATION_20261123.md`.
 
 ## 5c. Level provenance: the snapshot, not the live file
 
@@ -147,6 +150,30 @@ session. The archive at `data/usd-layer1-backtester/level-snapshots/` holds the 
 each hash and its git commit, and the loader refuses an edited snapshot. `level_provenance.js` prices a session
 only with the latest snapshot that precedes its 05:00 London start, so re-marking cannot back-date history.
 The earlier result is preserved and bound to the snapshot that produced it, not withdrawn.
+
+## 5d. The child computes the call, not repeats it
+
+A morning's inputs and the call they produced sit on the same row of `run-v1.json`, so agreement between
+the child and that row proves nothing on its own. `scripts/prove_usd_l1_fresh_call.js` sends each case
+without `models` and without `results` and compares what the child derives; one real Cloud execution is
+kept beside that rehearsal rather than a claim that one exists.
+
+| Criterion | Status | Evidence |
+| --- | --- | --- |
+| No prediction travels in the payload | **works** | `rehearsal.child_inputs_are_production_shaped` is `true`; `prediction_fields_present` is empty in all 8 cases, and the payload keys the child received are recorded per case in the record's `payload_inspection` |
+| The recomputed call equals the published call | **works** | 8 of 8: both mornings (2024-01-10 BULLISH 2, 2024-03-26 BEARISH 2) for both challenger builds, `call_only` and scored |
+| Scoring is recomputed from outcomes, not copied | **works** | 4 of 4 scored cases reproduce all seven per-market results from the attached outcomes |
+| A changed input changes the call | **works** | 110 single-input probes, 27 move direction, conviction or status, across 8 named inputs - a lookup would be unmoved by all 110 |
+| A real execution, not only a rehearsal | **works** | parent `89uk5JnPbWPL5lGD` activated for the call and deactivated after it; [7260](https://silver17.app.n8n.cloud/execution/7260) with children [7261](https://silver17.app.n8n.cloud/execution/7261)/7262, captured `2026-11-24T06:43:03Z`, sha256 `5b714718…89e1` |
+| The Cloud call is the recomputed call | **works** | `live_call_agrees_with_recomputation: true`: BULLISH 2 `allowed` and the same seven outcomes, per model; a mismatch is a blocking reason in `verdict.blocking`, not a footnote |
+| The identity is pinned, with its source named | **works** | bundle `usd-l1-cloud-runtime-v3`, 124,084 bytes, sha256 `9c722a0e…ad7e1`; the committed parent file carries no `id`, so `parent_workflow_id_source` names the capture |
+
+The claims this does not make are in the record's own `not_claimed` list: no accuracy or edge, one morning
+rather than a survey, the parent's HTTP node not exercised by the rehearsal, and saved inputs not shown to
+be pre-cutoff (that is the receipted mode's question). The full note is
+`FRESH_CALL_PROOF_20261124.md`; reproduce with `npm run capture:usd-l1-fresh-call`,
+`npm run prove:usd-l1-fresh-call`, `npm run check:usd-l1-fresh-call` and `npm run test:usd-l1-n8n`
+(41 tests, 7 of them in `tests/usd_l1_fresh_call.test.js`).
 
 ## 6. Costs, sizing, equity and drawdown
 
@@ -254,8 +281,8 @@ rebuilt and reproduce.
 | Contemporaneous input captures | **data dependency** | the retrieval path is implemented, but no capture corpus exists, so every value is a reconstruction | archive a 05:00 receipt set for each declared key; the code already accepts it. The document shape and acquisition order are in `backtester/docs/usd_historical_data_acquisition_plan.md` |
 | Tests 3 and 4 on history | **data dependency** | the simulator (now session-bounded) and the account are implemented and tested; there is no contemporaneous level ladder and no actionable bid/ask M5 tape | acquire the ladder and tape; do not relax the readiness rule |
 | ICE DXY for test 1 | **licence / source decision** | the official series is not licensed in this checkout; the broker `DXY.cash` CFD is a separate, labelled lane and does not satisfy it | ICE sample or licence with 05:00 and next-05:00 London prints; the broker proxy stays labelled |
-| XAGUSD, WTIUSD and GBPUSD series | **data dependency** | the matrix now scores them in principle; no cached one-hour series exists, so their direction combinations are blocked | cache the three series; no code change |
-| H1 eligibility | **measured result, with two rule/source decisions behind it** | 0 of 725 is what the population measures today. It is not itself a decision: the inputs that could move it are the gold identity/licence and the calendar vintage | settle D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md`, then re-measure; if the inputs do not exist, the 0 stands |
+| XAGUSD, WTIUSD and GBPUSD series | **data dependency, then a licence decision** | the matrix scores them in principle and their direction combinations are still blocked in the published run; the three one-hour series were acquired on 2026-11-24 into `backtester/tmp/` (licensed quote history, excluded from the repository), and with them present the same build scores 325 / 330 / 317 sessions over the 569 / 568 / 572 that hold both 05:00 endpoints | either decide that the rows may be committed or document a download step a reader can follow, then rebuild and republish; nothing in the code changes. With the series present, readiness moves from 4 `scored` / 11 `blocked` to 7 `scored` / 8 `blocked` in the ledger, and the headline that counts the DXY proxy with the scored cells moves from 5 to 8. No Friday session can be scored in these series, because its endpoint is a Saturday; 7, 8 and 4 further sessions end on Christmas Day, New Year's Day or Good Friday (2025-11-27, Thanksgiving, for WTI) and four in each file open on Christmas Day or New Year's Day, which is the calendar, not a gap in the data |
+| H1 eligibility | **measured result, with two rule/source decisions behind it** | 0 of 725 is what the population measures today. It is not itself a decision: the inputs that could move it are the gold identity/licence and the calendar capture (D6 now asks for each release schedule with the instant it became public, which is not a value vintage) | settle D5 and D6 in `H1_RULE_RESOLUTIONS_20261120.md`, then re-measure; if the inputs do not exist, the 0 stands |
 | Broker cost schedule | **data dependency** | the accounting runs on a labelled fixture schedule | commit a broker schedule with a source and date |
 | Level provenance and republish of the run | **done** | the six sessions are now priced from the archived snapshot, not from the live re-marked file, and the v1 build is preserved beside the v2 build | no decision outstanding: a change to the ladder going forward is a new snapshot, which the same rule dates automatically |
 | Test selection as a market matrix | **done** | primary + seven markets, 24 combinations, per-combination readiness, carried through the engine, artefact, identity, ledger, screen and n8n | a different asset set is a new config document |

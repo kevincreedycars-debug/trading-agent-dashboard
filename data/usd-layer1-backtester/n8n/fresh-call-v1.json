@@ -1,0 +1,1546 @@
+{
+ "schema_version": "usd-l1-fresh-call-proof-v1",
+ "created_at": "2026-11-24T06:50:26Z",
+ "research_only": true,
+ "question": "does the n8n Cloud child compute direction, conviction, eligibility and the per-market result from the morning's cutoff inputs, or read a stored prediction?",
+ "answer": "it computes them: the child returns the same call and the same per-market results with `models` and `results` removed from the row, and the call moves when one saved input is negated; the one captured Cloud execution (7260) returned the same call and the same per-market results",
+ "verdict": {
+  "status": "recomputed_from_cutoff_inputs",
+  "child_computes_call": true,
+  "payload_carried_no_prediction": true,
+  "scoring_recomputed_from_outcomes": true,
+  "call_changed_when_an_input_changed": true,
+  "live_call_agrees_with_recomputation": true,
+  "blocking": []
+ },
+ "source": {
+  "file": "data/usd-layer1-backtester/run-v1.json",
+  "sha256": "90800e10572ac47e83a233c94212953ea43b10f09b4f2add262d4c6b823ebf39",
+  "generated_at": "2026-11-23T22:10:00.000Z",
+  "run_version": "usd-l1-backtester-r1",
+  "market_matrix_fingerprint": "1f943a83989d2ec65ba31b4f01ff85515fc3e94473b5c4f9204de9215590f06f",
+  "sessions_in_dataset": 725
+ },
+ "deployed_identity": {
+  "bundle_version": "usd-l1-cloud-runtime-v3",
+  "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1",
+  "bundle_bytes": 124084,
+  "source_files": [
+   "backtester/lib/usd_layer1_backtester/backtest_controller.js",
+   "backtester/lib/usd_layer1_backtester/contracts.js",
+   "backtester/lib/usd_layer1_backtester/model_registry.js",
+   "backtester/lib/usd_layer1_backtester/fixture_constant.js",
+   "backtester/lib/usd_layer1_backtester/challenger.js",
+   "backtester/lib/usd_layer1_backtester/challenger_v1.js",
+   "lib/layer1_backtesting/test_modules.js",
+   "lib/usd_l1_votes.js",
+   "backtester/lib/usd_session_engine_interface.js",
+   "backtester/lib/usd_layer1_backtester/current_model.js",
+   "automation/n8n/templates/usd-l1-cloud-runtime.tmpl",
+   "automation/n8n/templates/usd-l1-parent-config.js",
+   "automation/n8n/templates/usd-l1-parent-select.js",
+   "automation/n8n/templates/usd-l1-parent-bind.js",
+   "automation/n8n/templates/usd-l1-parent-combine.js",
+   "automation/n8n/templates/usd-l1-child-wrapper.js"
+  ],
+  "parent_workflow_id": "89uk5JnPbWPL5lGD",
+  "parent_workflow_id_source": "the captured execution 7260",
+  "parent_workflow_name": "USD Layer 1 - paired controller (Cloud)",
+  "parent_webhook_path": "usd-l1-paired-controller",
+  "child_workflows": [
+   {
+    "model": "challenger",
+    "workflow_id": "giGJKNQw5WLh1xbX",
+    "name": "USD Layer 1 - Challenger v0 (Cloud adapter)"
+   },
+   {
+    "model": "challenger_v1",
+    "workflow_id": "42sxXHScRvE3qSTX",
+    "name": "USD Layer 1 - Challenger v1 (Cloud adapter)"
+   },
+   {
+    "model": "fixture_constant",
+    "workflow_id": "kaWqy2iYIz8UzPRS",
+    "name": "USD Layer 1 - Fixture - constant USD bullish (not a research model) (Cloud adapter)"
+   }
+  ]
+ },
+ "rehearsal": {
+  "execution_context": "local: the committed parent nodes and child wrapper were executed in this checkout",
+  "http_node": "replaced by a local read of run-v1.json; the child received the payload the select and bind nodes produce from a dataset document",
+  "execution_fields": "the child wrapper's execution_id and execution_url are omitted because a rehearsal spends no Cloud execution",
+  "child_inputs_are_production_shaped": true
+ },
+ "cases": [
+  {
+   "date": "2024-01-10",
+   "model": "challenger",
+   "case": "call_only",
+   "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+   "published": {
+    "direction": "BULLISH",
+    "direction_label": null,
+    "conviction": 2
+   },
+   "recomputed": {
+    "direction": "BULLISH",
+    "direction_label": "BULLISH",
+    "conviction": 2,
+    "reason": "9 of 9 mechanisms live, net +3 (33% agreement, 100% participation)"
+   },
+   "status": "allowed",
+   "validation_accepted": true,
+   "results": {
+    "EURUSD": "no_outcome",
+    "XAUUSD": "no_outcome",
+    "XAGUSD": "no_outcome",
+    "NAS100": "no_outcome",
+    "BTCUSD": "no_outcome",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "published_results": null,
+   "matches_published_call": true,
+   "scoring_recomputed_from_outcomes": null,
+   "prediction_fields_present": [],
+   "bundle_version": "usd-l1-cloud-runtime-v3",
+   "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1"
+  },
+  {
+   "date": "2024-01-10",
+   "model": "challenger_v1",
+   "case": "call_only",
+   "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+   "published": {
+    "direction": "BULLISH",
+    "direction_label": null,
+    "conviction": 2
+   },
+   "recomputed": {
+    "direction": "BULLISH",
+    "direction_label": "BULLISH",
+    "conviction": 2,
+    "reason": "9 of 9 mechanisms live, net +2.5 (36% agreement, 100% participation)"
+   },
+   "status": "allowed",
+   "validation_accepted": true,
+   "results": {
+    "EURUSD": "no_outcome",
+    "XAUUSD": "no_outcome",
+    "XAGUSD": "no_outcome",
+    "NAS100": "no_outcome",
+    "BTCUSD": "no_outcome",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "published_results": null,
+   "matches_published_call": true,
+   "scoring_recomputed_from_outcomes": null,
+   "prediction_fields_present": [],
+   "bundle_version": "usd-l1-cloud-runtime-v3",
+   "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1"
+  },
+  {
+   "date": "2024-01-10",
+   "model": "challenger",
+   "case": "call_and_scoring",
+   "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+   "published": {
+    "direction": "BULLISH",
+    "direction_label": null,
+    "conviction": 2
+   },
+   "recomputed": {
+    "direction": "BULLISH",
+    "direction_label": "BULLISH",
+    "conviction": 2,
+    "reason": "9 of 9 mechanisms live, net +3 (33% agreement, 100% participation)"
+   },
+   "status": "allowed",
+   "validation_accepted": true,
+   "results": {
+    "EURUSD": "miss",
+    "XAUUSD": "miss",
+    "XAGUSD": "no_outcome",
+    "NAS100": "miss",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "published_results": {
+    "EURUSD": "miss",
+    "XAUUSD": "miss",
+    "XAGUSD": "no_outcome",
+    "NAS100": "miss",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "matches_published_call": true,
+   "scoring_recomputed_from_outcomes": true,
+   "prediction_fields_present": [],
+   "bundle_version": "usd-l1-cloud-runtime-v3",
+   "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1"
+  },
+  {
+   "date": "2024-01-10",
+   "model": "challenger_v1",
+   "case": "call_and_scoring",
+   "cutoff_at_utc": "2024-01-10T05:00:00.000Z",
+   "published": {
+    "direction": "BULLISH",
+    "direction_label": null,
+    "conviction": 2
+   },
+   "recomputed": {
+    "direction": "BULLISH",
+    "direction_label": "BULLISH",
+    "conviction": 2,
+    "reason": "9 of 9 mechanisms live, net +2.5 (36% agreement, 100% participation)"
+   },
+   "status": "allowed",
+   "validation_accepted": true,
+   "results": {
+    "EURUSD": "miss",
+    "XAUUSD": "miss",
+    "XAGUSD": "no_outcome",
+    "NAS100": "miss",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "published_results": {
+    "EURUSD": "miss",
+    "XAUUSD": "miss",
+    "XAGUSD": "no_outcome",
+    "NAS100": "miss",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "matches_published_call": true,
+   "scoring_recomputed_from_outcomes": true,
+   "prediction_fields_present": [],
+   "bundle_version": "usd-l1-cloud-runtime-v3",
+   "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1"
+  },
+  {
+   "date": "2024-03-26",
+   "model": "challenger",
+   "case": "call_only",
+   "cutoff_at_utc": "2024-03-26T05:00:00.000Z",
+   "published": {
+    "direction": "BEARISH",
+    "direction_label": null,
+    "conviction": 2
+   },
+   "recomputed": {
+    "direction": "BEARISH",
+    "direction_label": "BEARISH",
+    "conviction": 2,
+    "reason": "9 of 9 mechanisms live, net -3 (33% agreement, 100% participation)"
+   },
+   "status": "allowed",
+   "validation_accepted": true,
+   "results": {
+    "EURUSD": "no_outcome",
+    "XAUUSD": "no_outcome",
+    "XAGUSD": "no_outcome",
+    "NAS100": "no_outcome",
+    "BTCUSD": "no_outcome",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "published_results": null,
+   "matches_published_call": true,
+   "scoring_recomputed_from_outcomes": null,
+   "prediction_fields_present": [],
+   "bundle_version": "usd-l1-cloud-runtime-v3",
+   "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1"
+  },
+  {
+   "date": "2024-03-26",
+   "model": "challenger_v1",
+   "case": "call_only",
+   "cutoff_at_utc": "2024-03-26T05:00:00.000Z",
+   "published": {
+    "direction": "BEARISH",
+    "direction_label": null,
+    "conviction": 2
+   },
+   "recomputed": {
+    "direction": "BEARISH",
+    "direction_label": "BEARISH",
+    "conviction": 2,
+    "reason": "9 of 9 mechanisms live, net -3 (43% agreement, 100% participation)"
+   },
+   "status": "allowed",
+   "validation_accepted": true,
+   "results": {
+    "EURUSD": "no_outcome",
+    "XAUUSD": "no_outcome",
+    "XAGUSD": "no_outcome",
+    "NAS100": "no_outcome",
+    "BTCUSD": "no_outcome",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "published_results": null,
+   "matches_published_call": true,
+   "scoring_recomputed_from_outcomes": null,
+   "prediction_fields_present": [],
+   "bundle_version": "usd-l1-cloud-runtime-v3",
+   "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1"
+  },
+  {
+   "date": "2024-03-26",
+   "model": "challenger",
+   "case": "call_and_scoring",
+   "cutoff_at_utc": "2024-03-26T05:00:00.000Z",
+   "published": {
+    "direction": "BEARISH",
+    "direction_label": null,
+    "conviction": 2
+   },
+   "recomputed": {
+    "direction": "BEARISH",
+    "direction_label": "BEARISH",
+    "conviction": 2,
+    "reason": "9 of 9 mechanisms live, net -3 (33% agreement, 100% participation)"
+   },
+   "status": "allowed",
+   "validation_accepted": true,
+   "results": {
+    "EURUSD": "miss",
+    "XAUUSD": "hit",
+    "XAGUSD": "no_outcome",
+    "NAS100": "flat",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "published_results": {
+    "EURUSD": "miss",
+    "XAUUSD": "hit",
+    "XAGUSD": "no_outcome",
+    "NAS100": "flat",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "matches_published_call": true,
+   "scoring_recomputed_from_outcomes": true,
+   "prediction_fields_present": [],
+   "bundle_version": "usd-l1-cloud-runtime-v3",
+   "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1"
+  },
+  {
+   "date": "2024-03-26",
+   "model": "challenger_v1",
+   "case": "call_and_scoring",
+   "cutoff_at_utc": "2024-03-26T05:00:00.000Z",
+   "published": {
+    "direction": "BEARISH",
+    "direction_label": null,
+    "conviction": 2
+   },
+   "recomputed": {
+    "direction": "BEARISH",
+    "direction_label": "BEARISH",
+    "conviction": 2,
+    "reason": "9 of 9 mechanisms live, net -3 (43% agreement, 100% participation)"
+   },
+   "status": "allowed",
+   "validation_accepted": true,
+   "results": {
+    "EURUSD": "miss",
+    "XAUUSD": "hit",
+    "XAGUSD": "no_outcome",
+    "NAS100": "flat",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "published_results": {
+    "EURUSD": "miss",
+    "XAUUSD": "hit",
+    "XAGUSD": "no_outcome",
+    "NAS100": "flat",
+    "BTCUSD": "flat",
+    "WTIUSD": "no_outcome",
+    "GBPUSD": "no_outcome"
+   },
+   "matches_published_call": true,
+   "scoring_recomputed_from_outcomes": true,
+   "prediction_fields_present": [],
+   "bundle_version": "usd-l1-cloud-runtime-v3",
+   "bundle_sha256": "9c722a0efc8554212f5b5eae98fcd539b16c33c6b91b6f3c1e5b37092b6ad7e1"
+  }
+ ],
+ "payload_inspection": [
+  {
+   "date": "2024-01-10",
+   "model": "challenger",
+   "case": "call_only",
+   "child_input_keys": [
+    "batch",
+    "batch_total",
+    "dataset_meta",
+    "dataset_window",
+    "date",
+    "model",
+    "registry_fingerprint",
+    "registry_version",
+    "requested_models",
+    "session",
+    "session_found",
+    "tests",
+    "validation"
+   ],
+   "session_keys": [
+    "audit_values",
+    "cutoff_at_utc",
+    "cutoff_offset_abbrev",
+    "date",
+    "endpoint_at_utc",
+    "input_meta",
+    "inputs",
+    "inputs_missing",
+    "saved_inputs",
+    "source_legend",
+    "split",
+    "split_key",
+    "window_hours"
+   ],
+   "dataset_meta_keys": [
+    "generated_at",
+    "input_source_legend",
+    "market_matrix",
+    "markets",
+    "path",
+    "run_version",
+    "schema_version",
+    "sessions"
+   ],
+   "prediction_fields_present": [],
+   "not_scanned": [
+    "outcomes"
+   ]
+  },
+  {
+   "date": "2024-01-10",
+   "model": "challenger_v1",
+   "case": "call_only",
+   "child_input_keys": [
+    "batch",
+    "batch_total",
+    "dataset_meta",
+    "dataset_window",
+    "date",
+    "model",
+    "registry_fingerprint",
+    "registry_version",
+    "requested_models",
+    "session",
+    "session_found",
+    "tests",
+    "validation"
+   ],
+   "session_keys": [
+    "audit_values",
+    "cutoff_at_utc",
+    "cutoff_offset_abbrev",
+    "date",
+    "endpoint_at_utc",
+    "input_meta",
+    "inputs",
+    "inputs_missing",
+    "saved_inputs",
+    "source_legend",
+    "split",
+    "split_key",
+    "window_hours"
+   ],
+   "dataset_meta_keys": [
+    "generated_at",
+    "input_source_legend",
+    "market_matrix",
+    "markets",
+    "path",
+    "run_version",
+    "schema_version",
+    "sessions"
+   ],
+   "prediction_fields_present": [],
+   "not_scanned": [
+    "outcomes"
+   ]
+  }
+ ],
+ "live_call": {
+  "status": "captured",
+  "captured_at": "2026-11-24T06:43:03Z",
+  "instance_base_url": "https://silver17.app.n8n.cloud",
+  "workflow": {
+   "id": "89uk5JnPbWPL5lGD",
+   "name": "USD Layer 1 - paired controller (Cloud)",
+   "url": "https://silver17.app.n8n.cloud/workflow/89uk5JnPbWPL5lGD",
+   "was_active": false,
+   "activated_for_capture": true,
+   "deactivated_after_capture": true
+  },
+  "execution": {
+   "id": "7260",
+   "url": "https://silver17.app.n8n.cloud/execution/7260",
+   "workflow_id": "89uk5JnPbWPL5lGD",
+   "workflow_name": "USD Layer 1 - paired controller (Cloud)"
+  },
+  "request": {
+   "dates": [
+    "2024-01-10"
+   ],
+   "models": [
+    "challenger",
+    "challenger_v1"
+   ],
+   "validation": "structural",
+   "dataset_url": "https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/data/usd-layer1-backtester/run-v1.json"
+  },
+  "capture_file": "data/usd-layer1-backtester/n8n/execution-7260-fresh-call.json",
+  "capture_sha256": "5b7147180f912e4055128c496cbcec403baef8ac221c97c2e968cbfec13e89e1",
+  "child_executions": [
+   {
+    "model": "challenger",
+    "workflow_id": "giGJKNQw5WLh1xbX",
+    "execution_id": "7261",
+    "execution_url": "https://silver17.app.n8n.cloud/execution/7261"
+   },
+   {
+    "model": "challenger_v1",
+    "workflow_id": "42sxXHScRvE3qSTX",
+    "execution_id": "7262",
+    "execution_url": "https://silver17.app.n8n.cloud/execution/7262"
+   }
+  ],
+  "calls": [
+   {
+    "date": "2024-01-10",
+    "model": "challenger",
+    "live": {
+     "direction": "BULLISH",
+     "conviction": 2,
+     "status": "allowed",
+     "results": {
+      "EURUSD": "miss",
+      "XAUUSD": "miss",
+      "XAGUSD": "no_outcome",
+      "NAS100": "miss",
+      "BTCUSD": "flat",
+      "WTIUSD": "no_outcome",
+      "GBPUSD": "no_outcome"
+     }
+    },
+    "recomputed": {
+     "direction": "BULLISH",
+     "conviction": 2,
+     "status": "allowed",
+     "results": {
+      "EURUSD": "miss",
+      "XAUUSD": "miss",
+      "XAGUSD": "no_outcome",
+      "NAS100": "miss",
+      "BTCUSD": "flat",
+      "WTIUSD": "no_outcome",
+      "GBPUSD": "no_outcome"
+     }
+    },
+    "agrees": true
+   },
+   {
+    "date": "2024-01-10",
+    "model": "challenger_v1",
+    "live": {
+     "direction": "BULLISH",
+     "conviction": 2,
+     "status": "allowed",
+     "results": {
+      "EURUSD": "miss",
+      "XAUUSD": "miss",
+      "XAGUSD": "no_outcome",
+      "NAS100": "miss",
+      "BTCUSD": "flat",
+      "WTIUSD": "no_outcome",
+      "GBPUSD": "no_outcome"
+     }
+    },
+    "recomputed": {
+     "direction": "BULLISH",
+     "conviction": 2,
+     "status": "allowed",
+     "results": {
+      "EURUSD": "miss",
+      "XAUUSD": "miss",
+      "XAGUSD": "no_outcome",
+      "NAS100": "miss",
+      "BTCUSD": "flat",
+      "WTIUSD": "no_outcome",
+      "GBPUSD": "no_outcome"
+     }
+    },
+    "agrees": true
+   }
+  ],
+  "agrees_with_recomputation": true
+ },
+ "sensitivity": [
+  {
+   "date": "2024-01-10",
+   "model": "challenger",
+   "baseline": {
+    "direction": "BULLISH",
+    "conviction": 2
+   },
+   "probes": [
+    {
+     "input": "vix_level",
+     "was": 12.76,
+     "now": -12.76,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "vix_d5_chg",
+     "was": -0.44,
+     "now": 0.44,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_d5_bps",
+     "was": 3,
+     "now": -3,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_real_d5_bps",
+     "was": 6,
+     "now": -6,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "broad_dollar_d5_pct",
+     "was": 0.8167,
+     "now": -0.8167,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "gold_d5_pct",
+     "was": -1.8119,
+     "now": 1.8119,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "nasdaq100_d5_pct",
+     "was": 0.8374,
+     "now": -0.8374,
+     "direction": "BULLISH",
+     "conviction": 3,
+     "changed": true
+    },
+    {
+     "input": "eurusd_d5_pct",
+     "was": -0.9492,
+     "now": 0.9492,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "usdjpy_d5_pct",
+     "was": 2.5546,
+     "now": -2.5546,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "usdjpy_d1_pct",
+     "was": 0,
+     "now": 1,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "usdchf_d1_pct",
+     "was": 0,
+     "now": 1,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_yield",
+     "was": 4.36,
+     "now": -4.36,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "de_2y_yield",
+     "was": 2.53,
+     "now": -2.53,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_de_2y_spread",
+     "was": 1.83,
+     "now": -1.83,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_de_2y_spread_d5_bps",
+     "was": -10,
+     "now": 10,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_real_yield",
+     "was": 1.8,
+     "now": -1.8,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_yield",
+     "was": 4.02,
+     "now": -4.02,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_d5_bps",
+     "was": 7,
+     "now": -7,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "vix_d1_chg",
+     "was": -0.32,
+     "now": 0.32,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar",
+     "was": 119.388,
+     "now": -119.388,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar_d1_pct",
+     "was": 0,
+     "now": 1,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_price",
+     "was": 2026.745,
+     "now": -2026.745,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_d1_pct",
+     "was": -0.3006,
+     "now": 0.3006,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_price",
+     "was": 16690.4,
+     "now": -16690.4,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_d1_pct",
+     "was": 0.3125,
+     "now": -0.3125,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    }
+   ]
+  },
+  {
+   "date": "2024-01-10",
+   "model": "challenger_v1",
+   "baseline": {
+    "direction": "BULLISH",
+    "conviction": 2
+   },
+   "probes": [
+    {
+     "input": "vix_level",
+     "was": 12.76,
+     "now": -12.76,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "vix_d5_chg",
+     "was": -0.44,
+     "now": 0.44,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_d5_bps",
+     "was": 3,
+     "now": -3,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_real_d5_bps",
+     "was": 6,
+     "now": -6,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "broad_dollar_d5_pct",
+     "was": 0.8167,
+     "now": -0.8167,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "gold_d5_pct",
+     "was": -1.8119,
+     "now": 1.8119,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "nasdaq100_d5_pct",
+     "was": 0.8374,
+     "now": -0.8374,
+     "direction": "BULLISH",
+     "conviction": 4,
+     "changed": true
+    },
+    {
+     "input": "eurusd_d5_pct",
+     "was": -0.9492,
+     "now": 0.9492,
+     "direction": "BULLISH",
+     "conviction": 1,
+     "changed": true
+    },
+    {
+     "input": "usdjpy_d5_pct",
+     "was": 2.5546,
+     "now": -2.5546,
+     "direction": "BULLISH",
+     "conviction": 1,
+     "changed": true
+    },
+    {
+     "input": "usdjpy_d1_pct",
+     "was": 0,
+     "now": 1,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "usdchf_d1_pct",
+     "was": 0,
+     "now": 1,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_yield",
+     "was": 4.36,
+     "now": -4.36,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "de_2y_yield",
+     "was": 2.53,
+     "now": -2.53,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_de_2y_spread",
+     "was": 1.83,
+     "now": -1.83,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_de_2y_spread_d5_bps",
+     "was": -10,
+     "now": 10,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_real_yield",
+     "was": 1.8,
+     "now": -1.8,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_yield",
+     "was": 4.02,
+     "now": -4.02,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_d5_bps",
+     "was": 7,
+     "now": -7,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "vix_d1_chg",
+     "was": -0.32,
+     "now": 0.32,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar",
+     "was": 119.388,
+     "now": -119.388,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar_d1_pct",
+     "was": 0,
+     "now": 1,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_price",
+     "was": 2026.745,
+     "now": -2026.745,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_d1_pct",
+     "was": -0.3006,
+     "now": 0.3006,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_price",
+     "was": 16690.4,
+     "now": -16690.4,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_d1_pct",
+     "was": 0.3125,
+     "now": -0.3125,
+     "direction": "BULLISH",
+     "conviction": 2,
+     "changed": false
+    }
+   ]
+  },
+  {
+   "date": "2024-03-26",
+   "model": "challenger",
+   "baseline": {
+    "direction": "BEARISH",
+    "conviction": 2
+   },
+   "probes": [
+    {
+     "input": "vix_level",
+     "was": 13.19,
+     "now": -13.19,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "vix_d5_chg",
+     "was": -1.14,
+     "now": 1.14,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "us_2y_d5_bps",
+     "was": -19,
+     "now": 19,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "us_10y_real_d5_bps",
+     "was": -11,
+     "now": 11,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "broad_dollar_d5_pct",
+     "was": 0.6511,
+     "now": -0.6511,
+     "direction": "BEARISH",
+     "conviction": 3,
+     "changed": true
+    },
+    {
+     "input": "gold_d5_pct",
+     "was": 0.7103,
+     "now": -0.7103,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "nasdaq100_d5_pct",
+     "was": 2.01,
+     "now": -2.01,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "eurusd_d5_pct",
+     "was": -0.6521,
+     "now": 0.6521,
+     "direction": "BEARISH",
+     "conviction": 3,
+     "changed": true
+    },
+    {
+     "input": "usdjpy_d5_pct",
+     "was": 1.4818,
+     "now": -1.4818,
+     "direction": "BEARISH",
+     "conviction": 3,
+     "changed": true
+    },
+    {
+     "input": "usdjpy_d1_pct",
+     "was": 1.4818,
+     "now": -1.4818,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "usdchf_d1_pct",
+     "was": 1.6521,
+     "now": -1.6521,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_yield",
+     "was": 4.54,
+     "now": -4.54,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "de_2y_yield",
+     "was": 2.81,
+     "now": -2.81,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_de_2y_spread",
+     "was": 1.73,
+     "now": -1.73,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_de_2y_spread_d5_bps",
+     "was": -9,
+     "now": 9,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_d20_bps",
+     "was": -15,
+     "now": 15,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_real_yield",
+     "was": 1.92,
+     "now": -1.92,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_real_d20_bps",
+     "was": -5,
+     "now": 5,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_yield",
+     "was": 4.25,
+     "now": -4.25,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_d5_bps",
+     "was": -9,
+     "now": 9,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "vix_d1_chg",
+     "was": 0.13,
+     "now": -0.13,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar",
+     "was": 121.1842,
+     "now": -121.1842,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar_d1_pct",
+     "was": 0.6511,
+     "now": -0.6511,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar_d20_pct",
+     "was": 0.1217,
+     "now": -0.1217,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_price",
+     "was": 2172.995,
+     "now": -2172.995,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_d1_pct",
+     "was": 0.1424,
+     "now": -0.1424,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_d20_pct",
+     "was": 6.8493,
+     "now": -6.8493,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_price",
+     "was": 18346.5,
+     "now": -18346.5,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_d1_pct",
+     "was": 0.0038,
+     "now": -0.0038,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_d20_pct",
+     "was": 2.495,
+     "now": -2.495,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    }
+   ]
+  },
+  {
+   "date": "2024-03-26",
+   "model": "challenger_v1",
+   "baseline": {
+    "direction": "BEARISH",
+    "conviction": 2
+   },
+   "probes": [
+    {
+     "input": "vix_level",
+     "was": 13.19,
+     "now": -13.19,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "vix_d5_chg",
+     "was": -1.14,
+     "now": 1.14,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_d5_bps",
+     "was": -19,
+     "now": 19,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "us_10y_real_d5_bps",
+     "was": -11,
+     "now": 11,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "broad_dollar_d5_pct",
+     "was": 0.6511,
+     "now": -0.6511,
+     "direction": "BEARISH",
+     "conviction": 4,
+     "changed": true
+    },
+    {
+     "input": "gold_d5_pct",
+     "was": 0.7103,
+     "now": -0.7103,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "nasdaq100_d5_pct",
+     "was": 2.01,
+     "now": -2.01,
+     "direction": "NO_CALL",
+     "conviction": null,
+     "changed": true
+    },
+    {
+     "input": "eurusd_d5_pct",
+     "was": -0.6521,
+     "now": 0.6521,
+     "direction": "BEARISH",
+     "conviction": 3,
+     "changed": true
+    },
+    {
+     "input": "usdjpy_d5_pct",
+     "was": 1.4818,
+     "now": -1.4818,
+     "direction": "BEARISH",
+     "conviction": 3,
+     "changed": true
+    },
+    {
+     "input": "usdjpy_d1_pct",
+     "was": 1.4818,
+     "now": -1.4818,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "usdchf_d1_pct",
+     "was": 1.6521,
+     "now": -1.6521,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_yield",
+     "was": 4.54,
+     "now": -4.54,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "de_2y_yield",
+     "was": 2.81,
+     "now": -2.81,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_de_2y_spread",
+     "was": 1.73,
+     "now": -1.73,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_de_2y_spread_d5_bps",
+     "was": -9,
+     "now": 9,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_2y_d20_bps",
+     "was": -15,
+     "now": 15,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_real_yield",
+     "was": 1.92,
+     "now": -1.92,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_real_d20_bps",
+     "was": -5,
+     "now": 5,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_yield",
+     "was": 4.25,
+     "now": -4.25,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "us_10y_d5_bps",
+     "was": -9,
+     "now": 9,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "vix_d1_chg",
+     "was": 0.13,
+     "now": -0.13,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar",
+     "was": 121.1842,
+     "now": -121.1842,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar_d1_pct",
+     "was": 0.6511,
+     "now": -0.6511,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "broad_dollar_d20_pct",
+     "was": 0.1217,
+     "now": -0.1217,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_price",
+     "was": 2172.995,
+     "now": -2172.995,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_d1_pct",
+     "was": 0.1424,
+     "now": -0.1424,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "gold_d20_pct",
+     "was": 6.8493,
+     "now": -6.8493,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_price",
+     "was": 18346.5,
+     "now": -18346.5,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_d1_pct",
+     "was": 0.0038,
+     "now": -0.0038,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    },
+    {
+     "input": "nasdaq100_d20_pct",
+     "was": 2.495,
+     "now": -2.495,
+     "direction": "BEARISH",
+     "conviction": 2,
+     "changed": false
+    }
+   ]
+  }
+ ],
+ "totals": {
+  "cases": 8,
+  "calls_matching_published": 8,
+  "scoring_cases_matching": 4,
+  "input_probes": 110,
+  "probes_that_moved_the_call": 27,
+  "inputs_that_moved_a_call": [
+   "broad_dollar_d5_pct",
+   "eurusd_d5_pct",
+   "gold_d5_pct",
+   "nasdaq100_d5_pct",
+   "us_10y_real_d5_bps",
+   "us_2y_d5_bps",
+   "usdjpy_d5_pct",
+   "vix_d5_chg"
+  ]
+ },
+ "reproduce": [
+  "node scripts/capture_usd_l1_fresh_call.js --date 2024-01-10   # spend one Cloud execution and keep it",
+  "node scripts/prove_usd_l1_fresh_call.js --write    # recompute and write this record",
+  "node scripts/prove_usd_l1_fresh_call.js --check    # prove the committed record follows from run-v1.json, the bundle and the capture",
+  "node --test tests/usd_l1_fresh_call.test.js        # the same claims as assertions"
+ ],
+ "not_claimed": [
+  "no accuracy, hit rate, edge or predictive advantage",
+  "no claim that one captured execution is a survey: it is one morning, kept because it is inspectable",
+  "no claim that the parent's HTTP fetch was exercised by the rehearsal: that dataset was read from the checkout",
+  "no claim that a saved input was known before the cutoff: that is the receipted validation mode's question, not this one"
+ ]
+}
