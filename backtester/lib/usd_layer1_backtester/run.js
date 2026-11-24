@@ -42,7 +42,14 @@ const LADDER_PATHS = Object.freeze([
   path.join("data", "l2l-levels.json"),
   path.join("backtester", "tmp", "usd-session-research", "raw", "main", "data__l2l-levels.json")
 ]);
-const TICK_SWEEP_PATH = path.join("data", "usd-layer1-backtester", "l2l-tick-sweep-v1.json");
+const TICK_SWEEP_PATH = path.join("data", "usd-layer1-backtester", "l2l-tick-sweep-v2.json");
+/** The sweep v2 replaced. v1 stays on disk byte for byte, and the record beside it says what moved. */
+const TICK_SWEEP_SUPERSEDED_PATH = path.join("data", "usd-layer1-backtester", "l2l-tick-sweep-v1.json");
+const TICK_SWEEP_SUPERSESSION_PATH = path.join(
+  "data",
+  "usd-layer1-backtester",
+  "l2l-tick-sweep-v1-supersession.json"
+);
 
 /**
  * Every derived value the two models read, saved beside each session so the day can be re-run from the
@@ -503,12 +510,35 @@ function buildLeadNumbers({ broker, levelProvenance = null, tickSweep = null }) 
       value: sweepRules ? sweepRules.reduce((total, rule) => total + (rule.fills || 0), 0) : null,
       unit: "fills",
       per_rule: sweepRules,
-      source: "data/usd-layer1-backtester/l2l-tick-sweep-v1.json",
+      per_exit_reason: sweepRules
+        ? {
+            targets: sweepRules.reduce((total, rule) => total + (rule.targets || 0), 0),
+            stops: sweepRules.reduce((total, rule) => total + (rule.stops || 0), 0),
+            session_end: sweepRules.reduce((total, rule) => total + (rule.session_end || 0), 0),
+            working: sweepRules.reduce((total, rule) => total + (rule.working || 0), 0),
+            cancelled_at_session_end: sweepRules.reduce(
+              (total, rule) =>
+                total + (rule.by_model || []).reduce((inner, model) => inner + (model.cancelled_at_session_end || 0), 0),
+              0
+            )
+          }
+        : null,
+      sessions_bounded: tickSweep && tickSweep.horizon && Array.isArray(tickSweep.horizon.sessions)
+        ? {
+            sessions: tickSweep.horizon.sessions.length,
+            rule: tickSweep.horizon.rule,
+            moved: tickSweep.horizon.moved
+          }
+        : null,
+      supersedes: tickSweep && tickSweep.supersedes ? tickSweep.supersedes : null,
+      source: "data/usd-layer1-backtester/l2l-tick-sweep-v2.json",
       note: sweepRules
         ? "one call per session per model, one percent of the running balance risked per filled trade on each " +
           `${
             contracts.ACCOUNT.currency === "GBP" ? "\u00a3" : `${contracts.ACCOUNT.currency} `
-          }${contracts.ACCOUNT.starting_balance.toLocaleString("en-GB")} account`
+          }${contracts.ACCOUNT.starting_balance.toLocaleString("en-GB")} account; every trade is priced inside ` +
+          "its own 05:00-to-05:00 London session, so a target or stop that printed after the endpoint is not " +
+          "counted and a position still open is closed at the endpoint"
         : "run node backtester/scripts/run_l2l_tick_sweep.js --publish to produce it"
     }
   ];
@@ -1080,18 +1110,46 @@ function buildArtefact({ rootDir, generatedAt, matrixPath } = {}) {
   // The matrix carried by this run: the selection, its fingerprint, and one row per market per test. Each
   // combination keeps its readiness and, where this run produced sessions, its own scored count.
   const matrixDescription = marketMatrixModule.describeMatrix(matrix, matrixLoad);
+  // The tape a market can be replayed on comes from two places and they are not interchangeable: the
+  // committed M5 archive (mid-price, a handful of recent sessions) and the tick replay (both sides of the
+  // book, the six sessions the archived ladder can price). The replay's set is preferred where it exists,
+  // because it is the only one the two L2L tests could be priced on at all; its provenance travels with
+  // the row so a reader can see which tape a status rests on.
+  const replayTapes = {};
+  if (tickSweep && Array.isArray(tickSweep.per_symbol)) {
+    for (const block of tickSweep.per_symbol) {
+      replayTapes[block.symbol] = {
+        sessions: (block.usable_sessions || []).length,
+        mid_tape_sessions: 0,
+        bid_ask: true,
+        dates: (block.usable_sessions || []).slice(),
+        source: "tick_replay",
+        rule: tickSweep.horizon && tickSweep.horizon.rule ? tickSweep.horizon.rule.positions : null
+      };
+    }
+  }
   const m5ByMarket = {};
   for (const market of configuredMarkets) {
     const wanted = [market.key, market.broker_symbol, market.ladder_symbol].filter(Boolean);
     const row = (m5Coverage.instruments || []).find(
       (instrument) => wanted.includes(instrument.key) || wanted.includes(instrument.feed_symbol)
     );
-    if (!row) continue;
+    const archive = row
+      ? {
+          sessions: (row.sessions_covered || []).length,
+          mid_tape_sessions: row.sessions_with_a_mid_tape || 0,
+          bid_ask: row.bid_ask === true,
+          dates: Array.isArray(row.sessions_covered) ? row.sessions_covered : [],
+          source: "m5_archive"
+        }
+      : null;
+    const replay = wanted.map((name) => replayTapes[name]).find(Boolean) || null;
+    const chosen = replay || archive;
+    if (!chosen) continue;
     m5ByMarket[market.key] = {
-      sessions: (row.sessions_covered || []).length,
-      mid_tape_sessions: row.sessions_with_a_mid_tape || 0,
-      bid_ask: row.bid_ask === true,
-      dates: Array.isArray(row.sessions_covered) ? row.sessions_covered : []
+      ...chosen,
+      archive,
+      replay
     };
   }
   const ladderByMarket = Object.fromEntries(
@@ -1283,6 +1341,15 @@ function buildArtefact({ rootDir, generatedAt, matrixPath } = {}) {
     },
     level_provenance: levelProvenance,
     l2l_tick_sweep: tickSweep,
+    l2l_tick_sweep_lineage: {
+      current: TICK_SWEEP_PATH.split(path.sep).join("/"),
+      superseded: TICK_SWEEP_SUPERSEDED_PATH.split(path.sep).join("/"),
+      supersession_record: TICK_SWEEP_SUPERSESSION_PATH.split(path.sep).join("/"),
+      why:
+        "the sweep was re-priced inside the 05:00-to-05:00 London session: a fill that landed in a later session " +
+        "is cancelled, and a position open at the endpoint is closed there rather than carried. Both files are " +
+        "kept so the correction can be audited against what was published before it."
+    },
     shadow_inputs: shadowInputs,
     cutoff_study: cutoffStudy,
     assumption_ledger: assumptionLedger,

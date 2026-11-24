@@ -1,0 +1,188 @@
+{
+ "schema_version": "l2l-tick-sweep-supersession-v1",
+ "created_at": "2026-11-23T21:32:03Z",
+ "superseded": {
+  "schema": "l2l-tick-sweep-v1",
+  "path": "data/usd-layer1-backtester/l2l-tick-sweep-v1.json",
+  "bytes": 312792,
+  "sha256": "de045191389a27c4905757d415df0044a407a7e8fc7d01af0b34633ba2027ec0",
+  "generated_at_utc": "2026-11-12T21:32:19Z",
+  "sessions_streamed": 24,
+  "totals": {
+   "fills": 153,
+   "targets": 33,
+   "stops": 120,
+   "working": 4
+  }
+ },
+ "current": {
+  "schema": "l2l-tick-sweep-v2",
+  "path": "data/usd-layer1-backtester/l2l-tick-sweep-v2.json",
+  "bytes": 346859,
+  "sha256": "56edf9fdfa8cbe3a2d227db8d23bc929d7b13ebbdb07b22bc83cc5dd756ccd8f",
+  "generated_at_utc": "2026-11-23T21:32:03Z",
+  "totals": {
+   "fills": 153,
+   "targets": 24,
+   "stops": 109,
+   "session_end": 20,
+   "working": 0,
+   "fills_cancelled_at_session_end": 4
+  },
+  "moved": {
+   "fills_cancelled_at_session_end": 4,
+   "exits_closed_at_session_end": 20,
+   "exits_already_inside_window": 133
+  }
+ },
+ "why_a_new_version_instead_of_an_edit": "v1 is the record of what the lane measured on 2026-11-12 and is kept byte for byte. v2 changes exactly one thing - the horizon each recorded decision is priced inside - so the two files can be compared and the correction audited. Editing v1 in place would have removed the evidence of what the earlier figure rested on.",
+ "what_changed": [
+  "a fill stamped outside the 05:00-to-05:00 window of its own session is cancelled at that endpoint and reported as cancelled_at_session_end; it is not counted as a trade",
+  "a position with no exit inside its window is closed at the last M5 bar inside it, on the side of the book that would have paid it, and its exit reason becomes session_end",
+  "every other trade keeps the price, the instant and the R it was recorded with",
+  "totals carry session_end and fills_cancelled_at_session_end beside targets and stops, so no exit reason hides inside another",
+  "each symbol block and account carries its own count of cancelled fills and endpoint closes",
+  "the artefact carries the session window, tape hash, bar count and endpoint close for every session it priced"
+ ],
+ "what_did_not_change": {
+  "decisions": "the ladder, the calls, the level that triggered each order, the order's entry, stop and target, and the set of fills v1 recorded",
+  "sizing": "one percent of the running balance risked per fill, lots rounded down to the instrument's own step",
+  "tapes": "the same six sessions per market, streamed 05:00 London to 05:00 London",
+  "bars_check": {
+   "sessions": 24,
+   "matched": 6481,
+   "within_tolerance": 6481,
+   "exact": 6481,
+   "mismatched_instants": 0,
+   "verdict": "every rebuilt bar that overlaps the broker's own M5 history agrees to within one instrument point"
+  },
+  "per_symbol": [
+   {
+    "symbol": "EURUSD",
+    "sessions": 6,
+    "fills": 49,
+    "session_end_closes": 4,
+    "cancelled_at_session_end": 1,
+    "r_gross": 14.8739,
+    "sessions_with_a_cancelled_fill": [
+     "2026-10-09"
+    ]
+   },
+   {
+    "symbol": "XAUUSD",
+    "sessions": 6,
+    "fills": 22,
+    "session_end_closes": 6,
+    "cancelled_at_session_end": 1,
+    "r_gross": 0.4652,
+    "sessions_with_a_cancelled_fill": [
+     "2026-10-06"
+    ]
+   },
+   {
+    "symbol": "NAS100",
+    "sessions": 6,
+    "fills": 38,
+    "session_end_closes": 4,
+    "cancelled_at_session_end": 2,
+    "r_gross": -7.8548,
+    "sessions_with_a_cancelled_fill": [
+     "2026-10-06",
+     "2026-10-07"
+    ]
+   },
+   {
+    "symbol": "BTCUSD",
+    "sessions": 6,
+    "fills": 44,
+    "session_end_closes": 6,
+    "cancelled_at_session_end": 0,
+    "r_gross": -9.9271,
+    "sessions_with_a_cancelled_fill": []
+   }
+  ]
+ },
+ "accounts_whose_balance_moved": [
+  {
+   "symbol": "EURUSD",
+   "account": "current-full",
+   "ending_balance_v1": 105748.96,
+   "ending_balance_v2": 109439.75,
+   "delta": 3690.79
+  },
+  {
+   "symbol": "EURUSD",
+   "account": "current-half",
+   "ending_balance_v1": 104654.3,
+   "ending_balance_v2": 105144.28,
+   "delta": 489.98
+  },
+  {
+   "symbol": "XAUUSD",
+   "account": "current-full",
+   "ending_balance_v1": 95138,
+   "ending_balance_v2": 99443.34,
+   "delta": 4305.34
+  },
+  {
+   "symbol": "XAUUSD",
+   "account": "current-half",
+   "ending_balance_v1": 100869.43,
+   "ending_balance_v2": 104052.74,
+   "delta": 3183.31
+  },
+  {
+   "symbol": "XAUUSD",
+   "account": "challenger-full",
+   "ending_balance_v1": 98026.6,
+   "ending_balance_v2": 99829.6,
+   "delta": 1803
+  },
+  {
+   "symbol": "NAS100",
+   "account": "current-full",
+   "ending_balance_v1": 95921.41,
+   "ending_balance_v2": 95827.8,
+   "delta": -93.61
+  },
+  {
+   "symbol": "NAS100",
+   "account": "current-half",
+   "ending_balance_v1": 104780.6,
+   "ending_balance_v2": 103132.35,
+   "delta": -1648.25
+  },
+  {
+   "symbol": "BTCUSD",
+   "account": "current-full",
+   "ending_balance_v1": 93074.92,
+   "ending_balance_v2": 90862.58,
+   "delta": -2212.34
+  },
+  {
+   "symbol": "BTCUSD",
+   "account": "current-half",
+   "ending_balance_v1": 99633.87,
+   "ending_balance_v2": 96591.84,
+   "delta": -3042.03
+  },
+  {
+   "symbol": "BTCUSD",
+   "account": "challenger-full",
+   "ending_balance_v1": 103948.46,
+   "ending_balance_v2": 102773.03,
+   "delta": -1175.43
+  }
+ ],
+ "deliberately_not_done": [
+  "no decision was re-derived: a slot freed by an earlier 05:00 close was not re-filled, because v1 recorded only the orders that filled",
+  "no new session was streamed and no market was added; the tapes are the ones v1 already used",
+  "the tapes remain local evidence: the artefact carries their hashes and endpoint closes, not their bytes",
+  "nothing here is claimed as predictive advantage: this is a correction to how an existing measurement was priced"
+ ],
+ "reproduction": {
+  "command": "node scripts/rebuild_l2l_tick_sweep_session_bounded.js --check",
+  "tape_root": "D:/trading-agent-dashboard-codex/.local/tmp/l2l-ticks-sweep",
+  "rule": "v1 is reproduced from its own audit before any bound is applied; a reproduction that misses v1's totals, accounts or model summaries refuses to write"
+ }
+}
