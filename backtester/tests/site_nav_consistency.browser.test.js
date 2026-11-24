@@ -1,6 +1,6 @@
-// The same top bar and the same side rail on all fourteen served pages is a promise about the bytes a reader is
+// The same top bar and the same side rail on all fifteen served pages is a promise about the bytes a reader is
 // served, so this guard proves both halves of it: first that each page's marker block is the partial's render
-// byte for byte, then that the fourteen pages, opened in a browser, show one bar, one rail, working links and no
+// byte for byte, then that the fifteen pages, opened in a browser, show one bar, one rail, working links and no
 // layout damage. A page edited on its own, a lost or re-ordered entry, a renamed label, a rail entry that
 // points at nothing, a rail that covers a table or a page the block widened all fail here.
 //
@@ -59,7 +59,7 @@ const HEAD_LABEL = "Control Room";
 const FOOT = "Published dashboard";
 // The widths the other page guards already use. gold-factor-wip.html scrolled 59px sideways at 390px before
 // this change - measured by opening the published page, which carries no rail and no bar - so the draft page
-// is held to that ceiling while the thirteen other standalone pages and the dashboard are held to the viewport.
+// is held to that ceiling while the fourteen other standalone pages and the dashboard are held to the viewport.
 const WIDTHS = [1440, 1180, 860, 768, 721, 390];
 const PUBLISHED_OVERFLOW = { "gold-factor-wip.html": 59 };
 const ONE_REQUEST_PAGES = ["gold-factor-wip.html"];
@@ -142,7 +142,7 @@ test("every page carries the partial's render byte for byte, in the page's own l
   } catch (error) {
     report = error.stdout || "";
   }
-  assert.match(report, /--check: 14 pages, 21 rail entries, 8 outbound, 0 change\(s\)/, "--check must find all fourteen pages current");
+  assert.match(report, /--check: 15 pages, 21 rail entries, 8 outbound, 0 change\(s\)/, "--check must find all fifteen pages current");
   assert.doesNotMatch(report, /: (refreshed|placed)$/m, "no page may still need the block written into it");
   nav.PAGES.forEach(page => {
     const source = read(page.file);
@@ -223,7 +223,7 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     }
   });
 });
-test("all fourteen served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
+test("all fifteen served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
   // The gold page's strip was re-ordered and widened on 2026-10-03 - Start here, Direction, Movement - L2L and half
   // L2L, Factor tables (draft) and Archive census - so the direction read and the two movement ranges sit together
   // and the two archive censuses moved to the end, and it gained a first tab on 2026-10-04, What moves gold, framing
