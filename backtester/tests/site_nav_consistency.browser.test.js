@@ -602,3 +602,81 @@ test("the block widens no page and covers no table", async () => {
     server.close();
   }
 });
+
+// The bar and the rail are the one thing all fifteen pages share, so a keyboard reader must see where they are
+// in both shapes of the block, and no label the block draws may be smaller than twelve pixels: the rail's group
+// headings, its mark, its foot and the clocks are words, not decoration.
+test("the block rings where the keyboard is, and sets no label under twelve pixels", async () => {
+  const server = await serve();
+  const browser = await chromium.launch({ headless: true });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const focusedRing = view => view.evaluate(() => {
+    const node = document.activeElement;
+    if (!node || node === document.body) return null;
+    const style = getComputedStyle(node);
+    return {
+      label: (node.textContent || "").trim().slice(0, 40),
+      inBlock: Boolean(node.closest(".site-nav")),
+      inDocs: Boolean(node.closest(".side-rail-details-body")),
+      width: parseFloat(style.outlineWidth),
+      outline: style.outlineStyle,
+      offset: style.outlineOffset
+    };
+  });
+  try {
+    for (const file of ["index.html", "backtest-engine-v2.html"]) {
+      for (const width of [1440, 390]) {
+        const context = await browser.newContext({ viewport: { width, height: 900 } });
+        const view = await context.newPage();
+        await view.goto(`${base}/${file}`, { waitUntil: "load" });
+        const where = `${file} at ${width}px`;
+
+        let entry = null;
+        for (let press = 0; press < 80 && !(entry && entry.inBlock); press += 1) {
+          await view.keyboard.press("Tab");
+          entry = await focusedRing(view);
+        }
+        assert.ok(entry && entry.inBlock, `${where} must put the keyboard in the block first: ${JSON.stringify(entry)}`);
+        assert.ok(entry.width >= 2 && entry.outline !== "none", `${where} must ring around ${entry.label}: ${entry.width}px ${entry.outline}`);
+        assert.equal(entry.offset, "-2px", `${where} must draw the ring inside the entry, where the rail's own clip cannot cut it`);
+
+        // The disclosure's eight links are part of the same column and must ring the same way once opened.
+        await view.evaluate(() => {
+          const details = document.querySelector(".side-rail nav details.side-rail-details");
+          if (details) details.open = true;
+        });
+        let doc = null;
+        for (let press = 0; press < 40 && !(doc && doc.inDocs); press += 1) {
+          await view.keyboard.press("Tab");
+          doc = await focusedRing(view);
+        }
+        assert.ok(doc && doc.inDocs, `${where} must let the keyboard into the disclosed links: ${JSON.stringify(doc)}`);
+        assert.ok(doc.width >= 2 && doc.outline !== "none", `${where} must ring around ${doc.label}: ${doc.width}px ${doc.outline}`);
+        assert.equal(doc.offset, "-2px", `${where} must draw the disclosed ring inside the entry`);
+
+        const small = await view.evaluate(() => {
+          const rows = [];
+          document.querySelectorAll(".site-nav *").forEach(node => {
+            const own = Array.from(node.childNodes)
+              .filter(child => child.nodeType === 3)
+              .map(child => child.textContent.trim())
+              .join("");
+            if (!own) return;
+            const box = node.getBoundingClientRect();
+            if (!box.width || !box.height) return;
+            const style = getComputedStyle(node);
+            if (style.visibility === "hidden") return;
+            rows.push({ size: parseFloat(style.fontSize), text: own.slice(0, 40) });
+          });
+          return rows.filter(row => row.size < 12);
+        });
+        assert.deepEqual(small, [], `${where} must set no label in the block below 12px: ${JSON.stringify(small.slice(0, 5))}`);
+        await context.close();
+      }
+    }
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+

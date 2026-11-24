@@ -470,3 +470,74 @@ test("the fresh-call proof and the published readiness are read from their artef
     server.close();
   }
 });
+
+// A phone reader and a keyboard reader are the same reader. Nothing this page draws is set below twelve pixels -
+// the smallest thing here is a word (a chip, a pip, a stamp), not a caption - and the ring that shows where the
+// keyboard is sits inside the control, because the stage scrolls, the panel scrolls and the sheet clips.
+test("no word on the page is smaller than twelve pixels, and the keyboard ring is drawn inside the control", async () => {
+  const server = await serve();
+  const browser = await chromium.launch({ headless: true });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const smallestText = view => view.evaluate(() => {
+    const rows = [];
+    document.querySelectorAll(".cr-page *").forEach(node => {
+      const own = Array.from(node.childNodes)
+        .filter(child => child.nodeType === 3)
+        .map(child => child.textContent.trim())
+        .join("");
+      if (!own) return;
+      const box = node.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      const style = getComputedStyle(node);
+      if (style.visibility === "hidden") return;
+      rows.push({ size: parseFloat(style.fontSize), text: own.slice(0, 40) });
+    });
+    return rows.filter(row => row.size < 12);
+  });
+  const ring = view => view.evaluate(() => {
+    const node = document.activeElement;
+    if (!node || node === document.body) return null;
+    const style = getComputedStyle(node);
+    return {
+      tag: node.tagName.toLowerCase(),
+      label: (node.textContent || "").trim().slice(0, 40),
+      inRail: Boolean(node.closest(".site-nav")),
+      isStep: Boolean(node.classList && node.classList.contains("cr-node")),
+      width: parseFloat(style.outlineWidth),
+      outline: style.outlineStyle,
+      offset: style.outlineOffset
+    };
+  });
+  try {
+    for (const width of [1440, 390]) {
+      const { context, view } = await open(browser, base, width);
+      // The panel carries labels of its own, so a wide reader selects a step before the words are measured.
+      if (width === 1440) await view.click('[data-node="freshcall"]');
+      const small = await smallestText(view);
+      assert.deepEqual(small, [], `at ${width}px no word may be set below 12px: ${JSON.stringify(small.slice(0, 5))}`);
+
+      // Wherever the keyboard meets the shared rail, it has to see where it is.
+      let railRing = null;
+      let stepRing = null;
+      for (let press = 0; press < 80 && !(railRing && stepRing); press += 1) {
+        await view.keyboard.press("Tab");
+        const seen = await ring(view);
+        if (seen && seen.inRail && !railRing) railRing = seen;
+        if (seen && seen.isStep && !stepRing) stepRing = seen;
+      }
+      assert.ok(railRing, `at ${width}px the keyboard must reach the rail`);
+      assert.ok(railRing.width >= 2 && railRing.outline !== "none", `at ${width}px the rail must ring around ${railRing.label}: ${railRing.width}px ${railRing.outline}`);
+      assert.equal(railRing.offset, "-2px", `at ${width}px the rail's ring must sit inside the entry, where the rail's own clip cannot cut it`);
+
+      // And the page's own controls ring the same way, in the page's gold.
+      assert.ok(stepRing, `at ${width}px the keyboard must reach a step`);
+      assert.ok(stepRing.width >= 2 && stepRing.outline !== "none", `at ${width}px a step must ring around ${stepRing.label}: ${stepRing.width}px ${stepRing.outline}`);
+      assert.equal(stepRing.offset, "-2px", "a step's ring must sit inside the step, where the stage's own scroll cannot cut it");
+      await context.close();
+    }
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
