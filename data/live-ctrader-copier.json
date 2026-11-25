@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-25T15:00:23.897Z",
+  "generated_at_utc": "2026-11-25T15:10:23.824Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,7 +12,7 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-25T14:59:22.380999Z",
+    "probed_at_utc": "2026-11-25T15:09:22.621223Z",
     "positions_seen": 0
   },
   "destination": {
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-25T15:00:23.145Z",
+    "read_at_utc": "2026-11-25T15:10:23.216Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -45,16 +45,16 @@
       "state": "ok",
       "label": "OK",
       "age_seconds": 61,
-      "last_poll_utc": "2026-11-25T14:59:23.219Z",
-      "last_success_utc": "2026-11-25T14:59:23.219Z",
+      "last_poll_utc": "2026-11-25T15:09:22.797Z",
+      "last_success_utc": "2026-11-25T15:09:22.797Z",
       "detail": "the last poll finished 61s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-25T14:59:23.219Z",
-    "last_success_utc": "2026-11-25T14:59:23.219Z",
+    "last_poll_utc": "2026-11-25T15:09:22.797Z",
+    "last_success_utc": "2026-11-25T15:09:22.797Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-25T14:59:21.191Z",
-      "finished_utc": "2026-11-25T14:59:23.219Z",
+      "started_utc": "2026-11-25T15:09:21.612Z",
+      "finished_utc": "2026-11-25T15:09:22.797Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -66,8 +66,20 @@
         "positions": 0,
         "rows": [],
         "cause": null,
-        "probed_at_utc": "2026-11-25T14:59:22.380999Z",
-        "orders": []
+        "probed_at_utc": "2026-11-25T15:09:22.621223Z",
+        "orders": [
+          {
+            "ticket": "310717631",
+            "symbol": "BTCUSD",
+            "side": "sell",
+            "kind": "limit",
+            "volume": 0.01,
+            "price": 58380.87,
+            "stop": 58671.84,
+            "target": 56926,
+            "expiry_utc": null
+          }
+        ]
       },
       "destination": {
         "account_id": "42585819",
@@ -75,12 +87,12 @@
           "BTCUSD"
         ],
         "references": {
-          "BTCUSD": 58113.25
+          "BTCUSD": 57979.79
         },
         "exposure": {
           "BTCUSD": {
             "positions": 0,
-            "orders": 0
+            "orders": 1
           }
         },
         "spec_summary": {
@@ -120,10 +132,7 @@
         "filled": 0,
         "gone": 0
       },
-      "notes": [
-        "ticket 310667789: position 62540924 was absent from the BTCUSD read and the broker's own record says it closed at 2026-11-25T14:58:57.150Z; the mapping is retired to history and its slot is free",
-        "1 mapping(s) released to history on the broker's own record; 0 remain live"
-      ]
+      "notes": []
     }
   },
   "account": {
@@ -135,14 +144,14 @@
     "leverage": 100,
     "money_digits": 2,
     "open_positions": 0,
-    "pending_orders": 0,
+    "pending_orders": 1,
     "closed_trades": 32,
-    "read_at_utc": "2026-11-25T15:00:23.145Z"
+    "read_at_utc": "2026-11-25T15:10:23.216Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-26T15:00:23.145Z",
-    "to_utc": "2026-11-25T15:00:23.145Z"
+    "from_utc": "2026-10-26T15:10:23.216Z",
+    "to_utc": "2026-11-25T15:10:23.216Z"
   },
   "closed_trades": [
     {
@@ -1695,12 +1704,43 @@
       "copied_utc": "2026-11-25T14:37:23.504Z",
       "closed_utc": "2026-11-25T14:47:22.591Z",
       "reconciled": false
+    },
+    {
+      "source_ticket": "310717631",
+      "target_position_id": null,
+      "source_symbol": "BTCUSD",
+      "symbol": "BTCUSD",
+      "side": "sell",
+      "status": "not_open",
+      "status_detail": "the mapping store holds this copy but the broker read no open position for it",
+      "volume_lots": 0.01,
+      "protocol_units": 1,
+      "base_units": 0.01,
+      "entry_price": null,
+      "stop_price": 58671.84,
+      "target_price": null,
+      "expiry_utc": null,
+      "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
+      "order_kind": "limit",
+      "target_order_id": "178922139",
+      "sltp_utc": null,
+      "last_partial_utc": null,
+      "request_id": "lim-310717631",
+      "copied_utc": "2026-11-25T15:07:22.935Z",
+      "reconciled": false
     }
   ],
   "differences": {
-    "count": 0,
+    "count": 1,
     "missing_copies": [],
-    "orphaned_mappings": [],
+    "orphaned_mappings": [
+      {
+        "source_ticket": "310717631",
+        "target_position_id": null,
+        "symbol": "BTCUSD",
+        "detail": "the source no longer holds the ticket; the close is due on the next poll"
+      }
+    ],
     "unresolved_pending": [],
     "unattributed_closes": []
   },
@@ -1729,7 +1769,7 @@
     {
       "behaviour": "Copying a resting source order",
       "state": "broker_observed",
-      "detail": "the mapping for order 178348935 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178349950 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178453658 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178454788 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178464128 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178676877 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178696276 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178730908 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178775799 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178798947 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178826043 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178841758 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178861948 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178906095 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178908934 US100.cash limit records a broker order the copier placed, no longer working"
+      "detail": "the mapping for order 178348935 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178349950 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178453658 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178454788 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178464128 XAUUSD limit records a broker order the copier placed, no longer working; the mapping for order 178676877 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178696276 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178730908 EURUSD limit records a broker order the copier placed, no longer working; the mapping for order 178775799 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178798947 BTCUSD limit records a broker order the copier placed, no longer working; the mapping for order 178826043 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178841758 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178861948 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178906095 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178908934 US100.cash limit records a broker order the copier placed, no longer working; the mapping for order 178922139 BTCUSD limit records a broker order the copier placed, no longer working"
     },
     {
       "behaviour": "Cancelling a resting source order",
