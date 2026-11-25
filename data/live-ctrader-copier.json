@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-25T10:20:22.489Z",
+  "generated_at_utc": "2026-11-25T10:30:22.823Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,8 +12,8 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-25T10:19:21.319405Z",
-    "positions_seen": 0
+    "probed_at_utc": "2026-11-25T10:29:22.443641Z",
+    "positions_seen": 1
   },
   "destination": {
     "login": 7348195,
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-25T10:20:22.119Z",
+    "read_at_utc": "2026-11-25T10:30:22.271Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -44,17 +44,17 @@
     "heartbeat": {
       "state": "ok",
       "label": "OK",
-      "age_seconds": 61,
-      "last_poll_utc": "2026-11-25T10:19:21.428Z",
-      "last_success_utc": "2026-11-25T10:19:21.428Z",
-      "detail": "the last poll finished 61s ago and reported ok"
+      "age_seconds": 60,
+      "last_poll_utc": "2026-11-25T10:29:22.612Z",
+      "last_success_utc": "2026-11-25T10:29:22.612Z",
+      "detail": "the last poll finished 60s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-25T10:19:21.428Z",
-    "last_success_utc": "2026-11-25T10:19:21.428Z",
+    "last_poll_utc": "2026-11-25T10:29:22.612Z",
+    "last_success_utc": "2026-11-25T10:29:22.612Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-25T10:19:20.373Z",
-      "finished_utc": "2026-11-25T10:19:21.428Z",
+      "started_utc": "2026-11-25T10:29:21.411Z",
+      "finished_utc": "2026-11-25T10:29:22.612Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -63,18 +63,51 @@
           "login": 511428614,
           "server": "FTMO-Server"
         },
-        "positions": 0,
-        "rows": [],
+        "positions": 1,
+        "rows": [
+          {
+            "ticket": "310580395",
+            "symbol": "US100.cash",
+            "side": "sell",
+            "volume": 0.01,
+            "entry": 25553.63,
+            "current": 25533.88,
+            "stop": 25607.99,
+            "target": 25278.21,
+            "open_time_utc": "2026-11-25T12:26:33Z"
+          }
+        ],
         "cause": null,
-        "probed_at_utc": "2026-11-25T10:19:21.319405Z",
+        "probed_at_utc": "2026-11-25T10:29:22.443641Z",
         "orders": []
       },
       "destination": {
         "account_id": "42585819",
-        "symbols": [],
-        "references": {},
-        "exposure": {},
-        "spec_summary": {},
+        "symbols": [
+          "US100.cash"
+        ],
+        "references": {
+          "US100.cash": 25533.88
+        },
+        "exposure": {
+          "US100.cash": {
+            "positions": 1,
+            "orders": 0
+          }
+        },
+        "spec_summary": {
+          "US100.cash": {
+            "digits": 2,
+            "lotSizeBtc": 1,
+            "volumeScale": 100,
+            "minVolume": 0.01,
+            "maxVolume": 1000,
+            "volumeStep": 0.01,
+            "tradeMode": "full",
+            "minStopDistance": 0,
+            "minStopPercent": null
+          }
+        },
         "spec_refusals": []
       },
       "reconcile": {
@@ -104,21 +137,21 @@
   },
   "account": {
     "balance": 23694.66,
-    "equity": 23694.66,
+    "equity": 23695.07,
     "equity_basis": "broker balance plus the open positions marked at the broker's own reference price",
     "equity_estimated": true,
     "currency": "USD",
     "leverage": 100,
     "money_digits": 2,
-    "open_positions": 0,
+    "open_positions": 1,
     "pending_orders": 0,
     "closed_trades": 30,
-    "read_at_utc": "2026-11-25T10:20:22.119Z"
+    "read_at_utc": "2026-11-25T10:30:22.271Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-26T10:20:22.119Z",
-    "to_utc": "2026-11-25T10:20:22.119Z"
+    "from_utc": "2026-10-26T10:30:22.271Z",
+    "to_utc": "2026-11-25T10:30:22.271Z"
   },
   "closed_trades": [
     {
@@ -1515,6 +1548,30 @@
       "copied_utc": "2026-11-25T09:52:22.453Z",
       "closed_utc": "2026-11-25T09:55:39.501Z",
       "reconciled": false
+    },
+    {
+      "source_ticket": "310580395",
+      "target_position_id": "62528470",
+      "source_symbol": "US100.cash",
+      "symbol": "US100.cash",
+      "side": "sell",
+      "status": "open",
+      "status_detail": null,
+      "volume_lots": 0.01,
+      "protocol_units": 1,
+      "base_units": 0.01,
+      "entry_price": 25565.43,
+      "stop_price": 25607.99,
+      "target_price": 25278.21,
+      "expiry_utc": null,
+      "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
+      "order_kind": null,
+      "target_order_id": null,
+      "sltp_utc": "2026-11-25T10:28:22.438Z",
+      "last_partial_utc": null,
+      "request_id": "copy-310580395",
+      "copied_utc": "2026-11-25T10:27:21.958Z",
+      "reconciled": false
     }
   ],
   "differences": {
@@ -1528,23 +1585,23 @@
   "verification": [
     {
       "behaviour": "Copying a filled FTMO-1 position",
-      "state": "awaiting_live_proof",
-      "detail": "no copy is open on the destination in this read"
+      "state": "broker_observed",
+      "detail": "broker read 2026-11-25T10:30:22.271Z: #62528470 US100.cash sell 0.01 lot from source 310580395"
     },
     {
       "behaviour": "Size conversion through the destination contract",
-      "state": "tested",
-      "detail": "the adapter regression sends 0.01 lot of EURUSD as 100,000 protocol units, XAUUSD as 100, BTCUSD as 1 and the index as 1 on this account"
+      "state": "broker_observed",
+      "detail": "the adapter regression sends 0.01 lot of EURUSD as 100,000 protocol units, XAUUSD as 100, BTCUSD as 1 and the index as 1 on this account; the open copies above read back at 0.01 lot"
     },
     {
       "behaviour": "Stop carried at entry",
-      "state": "tested",
-      "detail": "the market send carries a stop derived from the destination reference; no open copy proves it on this read"
+      "state": "broker_observed",
+      "detail": "the broker holds the stop the copier sent, placed as a distance from the destination's own reference price, so it differs from the source stop by the fill"
     },
     {
       "behaviour": "Amending a stop or target after the copy",
-      "state": "tested",
-      "detail": "the copier compares the source's own stop and target with the destination's on every poll and amends only a difference, sending the protection as a stop-loss rather than as an entry; exercised on fixtures through the adapter, and no source trail has moved a copy on this account yet"
+      "state": "broker_observed",
+      "detail": "the mapping for #62528470 US100.cash records the amendment the broker accepted at 2026-11-25T10:28:22.438Z"
     },
     {
       "behaviour": "Copying a resting source order",
@@ -1612,7 +1669,7 @@
       "target_symbol": "US100.cash",
       "mapped": true,
       "excluded": false,
-      "held": false,
+      "held": true,
       "digits": 2,
       "lot_units": 1,
       "protocol_units_per_lot": 100,
