@@ -1,6 +1,6 @@
 {
   "schema_version": "live-ctrader-copier-v1",
-  "generated_at_utc": "2026-11-27T14:40:22.080Z",
+  "generated_at_utc": "2026-11-27T14:50:21.932Z",
   "stale_after_seconds": 1800,
   "publisher": "scripts/publish-ctrader-copier.js",
   "note": "Read-only. One destination read plus the copier's own files; no order function is called to build this document, and nothing on the tab can trade.",
@@ -12,8 +12,8 @@
     "account_login_masked": "***614",
     "account_server": "FTMO-Server",
     "probe": "C:\\ctrader-relay\\live-trading-positions-probe.py",
-    "probed_at_utc": "2026-11-27T14:39:22.240078Z",
-    "positions_seen": 1
+    "probed_at_utc": "2026-11-27T14:49:21.616293Z",
+    "positions_seen": 0
   },
   "destination": {
     "login": 7348195,
@@ -24,7 +24,7 @@
   },
   "connection": {
     "connected": true,
-    "read_at_utc": "2026-11-27T14:40:21.694Z",
+    "read_at_utc": "2026-11-27T14:50:21.524Z",
     "account_id": "42585819",
     "broker": "ftmo",
     "environment": "demo",
@@ -45,16 +45,16 @@
       "state": "ok",
       "label": "OK",
       "age_seconds": 60,
-      "last_poll_utc": "2026-11-27T14:39:22.455Z",
-      "last_success_utc": "2026-11-27T14:39:22.455Z",
+      "last_poll_utc": "2026-11-27T14:49:21.730Z",
+      "last_success_utc": "2026-11-27T14:49:21.730Z",
       "detail": "the last poll finished 60s ago and reported ok"
     },
-    "last_poll_utc": "2026-11-27T14:39:22.455Z",
-    "last_success_utc": "2026-11-27T14:39:22.455Z",
+    "last_poll_utc": "2026-11-27T14:49:21.730Z",
+    "last_success_utc": "2026-11-27T14:49:21.730Z",
     "health": {
       "status": "ok",
-      "started_utc": "2026-11-27T14:39:21.356Z",
-      "finished_utc": "2026-11-27T14:39:22.455Z",
+      "started_utc": "2026-11-27T14:49:20.749Z",
+      "finished_utc": "2026-11-27T14:49:21.730Z",
       "polls": 1,
       "dry_run": false,
       "source": {
@@ -63,51 +63,18 @@
           "login": 511428614,
           "server": "FTMO-Server"
         },
-        "positions": 1,
-        "rows": [
-          {
-            "ticket": "311380086",
-            "symbol": "XAUUSD",
-            "side": "buy",
-            "volume": 0.01,
-            "entry": 3639.97,
-            "current": 3626.53,
-            "stop": 3625.85,
-            "target": 3711.63,
-            "open_time_utc": "2026-11-27T16:02:39Z"
-          }
-        ],
+        "positions": 0,
+        "rows": [],
         "cause": null,
-        "probed_at_utc": "2026-11-27T14:39:22.240078Z",
+        "probed_at_utc": "2026-11-27T14:49:21.616293Z",
         "orders": []
       },
       "destination": {
         "account_id": "42585819",
-        "symbols": [
-          "XAUUSD"
-        ],
-        "references": {
-          "XAUUSD": 3626.91
-        },
-        "exposure": {
-          "XAUUSD": {
-            "positions": 1,
-            "orders": 0
-          }
-        },
-        "spec_summary": {
-          "XAUUSD": {
-            "digits": 2,
-            "lotSizeBtc": 100,
-            "volumeScale": 10000,
-            "minVolume": 0.01,
-            "maxVolume": 100000,
-            "volumeStep": 0.01,
-            "tradeMode": "full",
-            "minStopDistance": 0,
-            "minStopPercent": null
-          }
-        },
+        "symbols": [],
+        "references": {},
+        "exposure": {},
+        "spec_summary": {},
         "spec_refusals": []
       },
       "reconcile": {
@@ -146,12 +113,12 @@
     "open_positions": 0,
     "pending_orders": 0,
     "closed_trades": 38,
-    "read_at_utc": "2026-11-27T14:40:21.694Z"
+    "read_at_utc": "2026-11-27T14:50:21.524Z"
   },
   "horizon": {
     "window_days": 30,
-    "from_utc": "2026-10-28T14:40:21.694Z",
-    "to_utc": "2026-11-27T14:40:21.694Z"
+    "from_utc": "2026-10-28T14:50:21.524Z",
+    "to_utc": "2026-11-27T14:50:21.524Z"
   },
   "closed_trades": [
     {
@@ -2029,8 +1996,8 @@
       "source_symbol": "XAUUSD",
       "symbol": "XAUUSD",
       "side": "buy",
-      "status": "not_open",
-      "status_detail": "the mapping store holds this copy but the broker read no open position for it",
+      "status": "closed",
+      "status_detail": "closed on the destination: destination_closed",
       "volume_lots": 0.01,
       "protocol_units": 100,
       "base_units": 1,
@@ -2038,27 +2005,21 @@
       "stop_price": 3625.85,
       "target_price": null,
       "expiry_utc": null,
-      "expiry_note": "market order: a filled source position is copied at the market, so there is no expiry to carry",
+      "expiry_note": "market order: there was no expiry",
       "order_kind": "limit",
       "target_order_id": "179178246",
       "sltp_utc": null,
       "last_partial_utc": null,
       "request_id": "lim-311380086",
       "copied_utc": "2026-11-27T13:32:22.179Z",
+      "closed_utc": "2026-11-27T14:39:48.466Z",
       "reconciled": false
     }
   ],
   "differences": {
-    "count": 1,
+    "count": 0,
     "missing_copies": [],
-    "orphaned_mappings": [
-      {
-        "source_ticket": "311380086",
-        "target_position_id": "62661676",
-        "symbol": "XAUUSD",
-        "detail": "the source still holds the ticket, the mapping exists and the broker read no open position: the copy is not on the account"
-      }
-    ],
+    "orphaned_mappings": [],
     "unresolved_pending": [],
     "unattributed_closes": []
   },
@@ -2102,7 +2063,7 @@
     {
       "behaviour": "Full close after a source exit",
       "state": "broker_observed",
-      "detail": "#62272218 XAUUSD closed at 3626.39 on 2026-11-19T21:42:26.546Z, net 40.77 in the account's own deals, from source 309101669; #62272219 EURUSD closed at 1.09847 on 2026-11-20T06:12:21.795Z, net -1 in the account's own deals, from source 309180633; #62308557 EURUSD closed at 1.09783 on 2026-11-20T15:05:27.748Z, net -0.08 in the account's own deals, from source 309462132; #62309024 XAUUSD closed at 3583.21 on 2026-11-20T15:00:11.833Z, net -14.36 in the account's own deals, from source 309464502; #62322343 EURUSD closed at 1.09775 on 2026-11-20T17:42:24.582Z, net -0.16 in the account's own deals, from source 309523908; #62322344 XAUUSD closed at 3566.62 on 2026-11-22T23:07:23.045Z, net 9.41 in the account's own deals, from source 309523915; #null BTCUSD closed in the account's own deals, from source 309636663; #62352837 BTCUSD closed at 59839.59 on 2026-11-22T08:31:26.477Z, net -0.58 in the account's own deals, from source 309640315; #62357296 XAUUSD closed at 3587.23 on 2026-11-23T02:09:53.976Z, net 18.5 in the account's own deals, from source 309663598; #62448129 BTCUSD closed at 59542.97 on 2026-11-24T10:49:22.881Z, net -3.47 in the account's own deals, from source 310153561; #62456195 BTCUSD closed at 59830.26 on 2026-11-24T15:15:22.642Z, net -0.59 in the account's own deals, from source 310196099; #null EURUSD closed in the account's own deals, from source 310279363; #62477067 BTCUSD closed at 59542.53 on 2026-11-24T16:02:55.527Z, net -2.42 in the account's own deals, from source 310305463; #62489603 BTCUSD closed at 59543.57 on 2026-11-24T20:29:17.387Z, net -3.44 in the account's own deals, from source 310363052; #62498947 BTCUSD closed at 59488.32 on 2026-11-25T00:10:23.504Z, net -4.53 in the account's own deals, from source 310405194; #62510805 US100.cash closed at 25882.28 on 2026-11-25T06:12:17.921Z, net -0.54 in the account's own deals, from source 310491015; #62512907 US100.cash closed at 25732.78 on 2026-11-25T08:01:00.334Z, net 1.19 in the account's own deals, from source 310507622; #62513079 EURUSD closed at 1.09444 on 2026-11-25T08:42:09.928Z, net -0.92 in the account's own deals, from source 310508729; #62517850 US100.cash closed at 25552.58 on 2026-11-25T09:46:52.709Z, net 2.77 in the account's own deals, from source 310531580; #62525222 EURUSD closed at 1.09446 on 2026-11-25T10:10:37.491Z, net -0.93 in the account's own deals, from source 310565152; #62526377 US100.cash closed at 25609.08 on 2026-11-25T09:55:39.501Z, net -0.51 in the account's own deals, from source 310570509; #62528470 US100.cash closed at 25277.88 on 2026-11-25T14:31:09.024Z, net 2.88 in the account's own deals, from source 310580395; #62540924 BTCUSD closed at 58149.39 on 2026-11-25T14:58:57.150Z, net 2 in the account's own deals, from source 310667789; #null US100.cash closed in the account's own deals, from source 310689228; #null US100.cash closed in the account's own deals, from source 310693985; #62551657 BTCUSD closed at 58388.16 on 2026-11-25T15:52:45.906Z, net -0.31 in the account's own deals, from source 310717631; #null US100.cash closed in the account's own deals, from source 310725847; #62558972 BTCUSD closed at 58672.14 on 2026-11-25T16:14:15.813Z, net -3.26 in the account's own deals, from source 310753674; #62562089 BTCUSD closed at 58673.27 on 2026-11-25T17:02:55.662Z, net -3.48 in the account's own deals, from source 310769342; #62566450 US100.cash closed at 25610.38 on 2026-11-25T17:42:12.924Z, net -0.57 in the account's own deals, from source 310795556; #62637623 XAUUSD closed at 3642.34 on 2026-11-27T13:31:21.475Z, net 2.24 in the account's own deals, from source 311235058"
+      "detail": "#62272218 XAUUSD closed at 3626.39 on 2026-11-19T21:42:26.546Z, net 40.77 in the account's own deals, from source 309101669; #62272219 EURUSD closed at 1.09847 on 2026-11-20T06:12:21.795Z, net -1 in the account's own deals, from source 309180633; #62308557 EURUSD closed at 1.09783 on 2026-11-20T15:05:27.748Z, net -0.08 in the account's own deals, from source 309462132; #62309024 XAUUSD closed at 3583.21 on 2026-11-20T15:00:11.833Z, net -14.36 in the account's own deals, from source 309464502; #62322343 EURUSD closed at 1.09775 on 2026-11-20T17:42:24.582Z, net -0.16 in the account's own deals, from source 309523908; #62322344 XAUUSD closed at 3566.62 on 2026-11-22T23:07:23.045Z, net 9.41 in the account's own deals, from source 309523915; #null BTCUSD closed in the account's own deals, from source 309636663; #62352837 BTCUSD closed at 59839.59 on 2026-11-22T08:31:26.477Z, net -0.58 in the account's own deals, from source 309640315; #62357296 XAUUSD closed at 3587.23 on 2026-11-23T02:09:53.976Z, net 18.5 in the account's own deals, from source 309663598; #62448129 BTCUSD closed at 59542.97 on 2026-11-24T10:49:22.881Z, net -3.47 in the account's own deals, from source 310153561; #62456195 BTCUSD closed at 59830.26 on 2026-11-24T15:15:22.642Z, net -0.59 in the account's own deals, from source 310196099; #null EURUSD closed in the account's own deals, from source 310279363; #62477067 BTCUSD closed at 59542.53 on 2026-11-24T16:02:55.527Z, net -2.42 in the account's own deals, from source 310305463; #62489603 BTCUSD closed at 59543.57 on 2026-11-24T20:29:17.387Z, net -3.44 in the account's own deals, from source 310363052; #62498947 BTCUSD closed at 59488.32 on 2026-11-25T00:10:23.504Z, net -4.53 in the account's own deals, from source 310405194; #62510805 US100.cash closed at 25882.28 on 2026-11-25T06:12:17.921Z, net -0.54 in the account's own deals, from source 310491015; #62512907 US100.cash closed at 25732.78 on 2026-11-25T08:01:00.334Z, net 1.19 in the account's own deals, from source 310507622; #62513079 EURUSD closed at 1.09444 on 2026-11-25T08:42:09.928Z, net -0.92 in the account's own deals, from source 310508729; #62517850 US100.cash closed at 25552.58 on 2026-11-25T09:46:52.709Z, net 2.77 in the account's own deals, from source 310531580; #62525222 EURUSD closed at 1.09446 on 2026-11-25T10:10:37.491Z, net -0.93 in the account's own deals, from source 310565152; #62526377 US100.cash closed at 25609.08 on 2026-11-25T09:55:39.501Z, net -0.51 in the account's own deals, from source 310570509; #62528470 US100.cash closed at 25277.88 on 2026-11-25T14:31:09.024Z, net 2.88 in the account's own deals, from source 310580395; #62540924 BTCUSD closed at 58149.39 on 2026-11-25T14:58:57.150Z, net 2 in the account's own deals, from source 310667789; #null US100.cash closed in the account's own deals, from source 310689228; #null US100.cash closed in the account's own deals, from source 310693985; #62551657 BTCUSD closed at 58388.16 on 2026-11-25T15:52:45.906Z, net -0.31 in the account's own deals, from source 310717631; #null US100.cash closed in the account's own deals, from source 310725847; #62558972 BTCUSD closed at 58672.14 on 2026-11-25T16:14:15.813Z, net -3.26 in the account's own deals, from source 310753674; #62562089 BTCUSD closed at 58673.27 on 2026-11-25T17:02:55.662Z, net -3.48 in the account's own deals, from source 310769342; #62566450 US100.cash closed at 25610.38 on 2026-11-25T17:42:12.924Z, net -0.57 in the account's own deals, from source 310795556; #62637623 XAUUSD closed at 3642.34 on 2026-11-27T13:31:21.475Z, net 2.24 in the account's own deals, from source 311235058; #62661676 XAUUSD closed at 3625.83 on 2026-11-27T14:39:48.466Z, net -14.36 in the account's own deals, from source 311380086"
     }
   ],
   "symbols": [
